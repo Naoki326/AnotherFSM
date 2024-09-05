@@ -1,0 +1,207 @@
+﻿@using System.Reflection
+@using System.Collections
+@using System.Text.Json.Serialization
+@typeparam T
+
+@inject I18n I18n
+
+@if(TargetObject is not null && properties is not null)
+{
+    <MCard Class="@Class" Style="@Style">
+        <MCardSubtitle>
+            @(I18n.T(Title))
+        </MCardSubtitle>
+        <MDivider />
+        <MCardText>
+            <MList>
+                @foreach (var property in properties)
+                {
+                    @if (property.GetCustomAttribute<JsonIgnoreAttribute>() is null)
+                    {
+                        <MListItem @bind-Value="_selectedItem">
+                            @if (typeof(IList).IsAssignableFrom(property.PropertyType) && property.PropertyType.IsGenericType)
+                            {
+                                @DynamicListInstance(TargetObject, property)
+                            }
+                            else if (property.PropertyType.IsInterface || (property.PropertyType.IsClass && property.PropertyType != typeof(string)))
+                            {
+                                @DynamicInstance(TargetObject, property)
+                            }
+                            else if (property.PropertyType == typeof(bool))
+                            {
+                                <MSwitch Label="@I18n.T(property.Name)" TValue="bool"
+                                                Value="Convert.ToBoolean(GetPropertyValue(TargetObject, property))" OnChange="@((bool v) => UpdateProperty(TargetObject, property, v))" />
+                            }
+                            else if (property.PropertyType == typeof(int))
+                            {
+                                <MTextField Label="@I18n.T(property.Name)" Type="number" UpdateOnChange
+                                            Value="@(Convert.ToInt32(GetPropertyValue(TargetObject, property)))" OnChange="@((int v) => UpdateProperty(TargetObject, property, v))" />
+                            }
+                            else if (property.PropertyType == typeof(long))
+                            {
+                                <MTextField Label="@I18n.T(property.Name)" Type="number" UpdateOnChange
+                                            Value="@(Convert.ToInt64(GetPropertyValue(TargetObject, property)))" OnChange="@((long v) => UpdateProperty(TargetObject, property, v))" />
+                            }
+                            else if (property.PropertyType == typeof(double))
+                            {
+                                <MTextField Label="@I18n.T(property.Name)" Type="number" UpdateOnChange
+                                            Value="@(Convert.ToDouble(GetPropertyValue(TargetObject, property)))" OnChange="@((double v) => UpdateProperty(TargetObject, property, v))" />
+                            }
+                            else if (property.PropertyType == typeof(string))
+                            {
+                                <MTextField Label="@I18n.T(property.Name)" TValue="string" UpdateOnChange
+                                            Value="@(GetPropertyValue(TargetObject, property)?.ToString())" OnChange="@((string v) => UpdateProperty(TargetObject, property, v))" />
+                            }
+                            else if (typeof(Enum).IsAssignableFrom(property.PropertyType))
+                            {
+                                <DynamicEnumSelect T="T" Property="property" TargetObject="TargetObject" OnInputChanged="OnInputChanged" />
+                            }
+                            else
+                            {
+                                <p>Unsupported type: @property.PropertyType.Name</p>
+                            }
+                        </MListItem>
+                    }
+                }
+            </MList>
+        </MCardText>
+
+        <MCardActions>
+            @* <MButton Color="deep-purple lighten-2" Text @onclick="@Add">@I18n.T("AddItem")></MButton>
+            <MButton Color="deep-purple lighten-2" Text @onclick="@Delete">@I18n.T("DeleteItem")></MButton>
+            <MButton Color="deep-purple lighten-2" Text @onclick="@Clear">@I18n.T("ClearItems")></MButton> *@
+        </MCardActions>
+    </MCard>
+}
+
+@code {
+    StringNumber _selectedItem = -1;
+
+
+    RenderFragment DynamicListInstance(object target, PropertyInfo property)
+    {
+        if (property.PropertyType.GenericTypeArguments[0].IsClass)
+        {
+            return builder =>
+            {
+                var type = typeof(DynamicListEditor<>).MakeGenericType(new[] { property.PropertyType.GenericTypeArguments[0] });
+                builder.OpenComponent(1, type);
+                builder.AddAttribute(2, "List", GetPropertyValue(target, property));
+                builder.AddAttribute(3, "Title", property.Name);
+                builder.AddAttribute(4, "ItemTypes", TType);
+                builder.AddAttribute(5, "OnInputChanged", OnInputChanged);
+                builder.AddAttribute(6, "SpecialTypeRender", SpecialTypeRender);
+                builder.CloseComponent();
+            };
+        }
+        else
+        {
+            return builder =>
+            {
+                var type = typeof(DynamicListInterfaceEditor<>).MakeGenericType(new[] { property.PropertyType.GenericTypeArguments[0] });
+                builder.OpenComponent(1, type);
+                builder.AddAttribute(2, "List", GetPropertyValue(target, property));
+                builder.AddAttribute(3, "ItemTypes", TType);
+                builder.AddAttribute(4, "Title", property.Name);
+                builder.AddAttribute(5, "OnInputChanged", OnInputChanged);
+                builder.AddAttribute(6, "SpecialTypeRender", SpecialTypeRender);
+                builder.CloseComponent();
+            };
+        }
+    }
+
+    RenderFragment DynamicInstance(object target, PropertyInfo property)
+    {
+        if (SpecialTypeRender is not null
+            && SpecialTypeRender.FirstOrDefault(p => p.Key.IsAssignableFrom(property.PropertyType)) is KeyValuePair<Type, Func<object, EventCallback, RenderFragment>> typeRender)
+        {
+            return typeRender.Value.Invoke(target, OnInputChanged);
+        }
+        if (property.PropertyType.IsInterface)
+        {
+            if (TType.FirstOrDefault(t => t.IsAssignableFrom(property.PropertyType)) is Type deriveType)
+            {
+                return builder =>
+                {
+                    var type = typeof(DynamicObjectEditor<>).MakeGenericType(new[] { deriveType });
+                    builder.OpenComponent(1, type);
+                    builder.AddAttribute(2, "TargetObject", GetPropertyValue(target, property));
+                    builder.AddAttribute(3, "TType", TType);
+                    builder.AddAttribute(4, "OnInputChanged", OnInputChanged);
+                    builder.AddAttribute(5, "Title", property.Name);
+                    builder.AddAttribute(6, "SpecialTypeRender", SpecialTypeRender);
+                    builder.CloseComponent();
+                };
+            }
+        }
+        else if (property.PropertyType.IsClass)
+        {
+            return builder =>
+            {
+                var type = typeof(DynamicObjectEditor<>).MakeGenericType(new[] { property.PropertyType });
+                builder.OpenComponent(1, type);
+                builder.AddAttribute(2, "TargetObject", GetPropertyValue(target, property));
+                builder.AddAttribute(3, "TType", TType);
+                builder.AddAttribute(4, "OnInputChanged", OnInputChanged);
+                builder.AddAttribute(5, "Title", property.Name);
+                builder.AddAttribute(6, "SpecialTypeRender", SpecialTypeRender);
+                builder.CloseComponent();
+            };
+        }
+        return builder => { };
+    }
+
+    [Parameter]
+    public Dictionary<Type, Func<object, EventCallback, RenderFragment>>? SpecialTypeRender { get; set; }
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    [Parameter]
+    public string? Style { get; set; }
+
+    [Parameter]
+    public List<Type> TType { get; set; } = default!;
+
+    [Parameter]
+    public T TargetObject { get; set; } = default!;
+
+    [Parameter]
+    public string? Title{ get; set; }
+
+    private PropertyInfo[] properties = default!;
+
+    [Parameter]
+    public Func<T, PropertyInfo[]> Filter { get; set; } = (t => t!.GetType().GetProperties());
+
+    [Parameter]
+    public EventCallback OnInputChanged{ get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (TargetObject != null)
+        {
+            properties = Filter(TargetObject);
+        }
+        else
+        {
+            properties = default!;
+        }
+    }
+
+    private void UpdateProperty(object target, PropertyInfo property, object value)
+    {
+        if (target is not null && property.CanWrite)
+        {
+            property.SetValue(target, value);
+            OnInputChanged.InvokeAsync();
+        }
+    }
+
+    private object GetPropertyValue(object target, PropertyInfo property)
+    {
+        if (target is null)
+            return null;
+        return property.GetValue(target)!;
+    }
+}

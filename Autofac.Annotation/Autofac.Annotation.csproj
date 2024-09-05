@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+	<LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <Import Project="..\Autofac.Annotation.Src\Autofac.Annotation.Src.projitems" Label="Shared" />
+  
+  <ItemGroup>
+	<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="Autofac" Version="8.0.0" />
+    <PackageReference Include="Castle.Core" Version="5.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.2" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,124 @@
+﻿@using System.Reflection
+@using System.Collections
+@using System.Linq
+@typeparam T where T : new()
+@implements IDisposable
+
+@inject IPopupService PopupService
+@inject I18n I18n
+
+<MCard Style="width:600px;">
+    <MCardSubtitle>
+        @(I18n.T(Title))
+    </MCardSubtitle>
+    <MDivider />
+    <MCardText>
+        <MList Subheader>
+            @if (List is not null)
+            {
+                <MListItemGroup @bind-Value="_selectedItem">
+                    @{
+                        int index = 0;
+                        @foreach (var item in List)
+                        {
+                            var k = index;
+                            <MListGroup NoAction>
+                                <ActivatorContent>
+                                    <MListItemContent>
+                                        @I18n.T("ListItem") @(k+1)
+                                    </MListItemContent>
+                                </ActivatorContent>
+                                <ChildContent>
+                                    <DynamicObjectEditor TType="@ItemTypes" T="T" TargetObject="@(item)" OnInputChanged="OnInputChanged" SpecialTypeRender="SpecialTypeRender" />
+                                </ChildContent>
+                            </MListGroup>
+                            index++;
+                        }
+                    }
+                </MListItemGroup>
+            }
+        </MList>
+    </MCardText>
+
+    <MCardActions>
+        <MButton Rounded Color="primary" OnClick="@Add">
+            @I18n.T("AddItem")
+        </MButton>
+        <MButton Rounded Color="primary" OnClick="@Delete">
+            @I18n.T("DeleteItem")
+        </MButton>
+        <MButton Rounded Color="primary" OnClick="@Clear">
+            @I18n.T("ClearItems")
+        </MButton>
+    </MCardActions>
+</MCard>
+
+@code {
+    private StringNumber _selectedItem { get; set; } = -1;
+
+    [Parameter]
+    public Dictionary<Type, Func<object, EventCallback, RenderFragment>>? SpecialTypeRender { get; set; }
+
+    [Parameter]
+    public List<Type> ItemTypes { get; set; } = default!;
+
+    [Parameter]
+    public List<T> List { get; set; } = default!;
+
+    [Parameter]
+    public string Title { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback OnInputChanged { get; set; }
+
+    protected override Task OnInitializedAsync()
+    {
+        I18n.CultureChanged += OnCultureChanged;
+        return base.OnInitializedAsync();
+    }
+
+    public void Dispose()
+    {
+        I18n.CultureChanged -= OnCultureChanged;
+    }
+
+    private void OnCultureChanged(object? sender, EventArgs e)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task Add()
+    {
+        if(List is null)
+        {
+            await PopupService.EnqueueSnackbarAsync("List should not be null", AlertTypes.Error);
+            return;
+        }
+        else
+        {
+            List.Add(new T());
+        }
+        await OnInputChanged.InvokeAsync();
+    }
+
+    async Task Delete()
+    {
+        if (List is null
+            || _selectedItem is null
+            || _selectedItem.AsT1 < 0
+            || _selectedItem.AsT1 >= List.Count)
+        {
+            await PopupService.EnqueueSnackbarAsync("Index is illegal!", AlertTypes.Error);
+            return;
+        }
+        List.Remove(List[_selectedItem.AsT1]);
+        await OnInputChanged.InvokeAsync();
+    }
+
+    async Task Clear()
+    {
+        List?.Clear();
+        await OnInputChanged.InvokeAsync();
+    }
+
+}

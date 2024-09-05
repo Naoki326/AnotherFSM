@@ -1,0 +1,136 @@
+﻿@using StateMachine
+@inject I18n I18n
+@inject IPopupService PopupService
+
+@namespace StateMachine
+
+<div class="sm-board">
+
+    <div class="sm-nodes" style="flex: 0;">
+        @if(NodeTypes is not null && NodeTypes.Count > 0)
+        {
+            <MList>
+                @foreach (var nodeType in NodeTypes)
+                {
+                    <MListItem>
+                        <MDrag DataValue="@(nodeType.Key)"
+                                Style="width:stretch;text-overflow:ellipsis;white-space:nowrap;overflow:hidden;"
+                                Class="@($"example-drawflow-node {nodeType.Value}")">
+                            @nodeType.Key
+                        </MDrag>
+                    </MListItem>
+                }
+            </MList>
+        }
+    </div>
+
+    <div style="flex: 1;">
+        <MStateMachineFlow Class="@Class" Style="@Style"
+                   OnNodeSelected="@InnerNodeSelected"
+                   OnNodeUnselected="@InnerNodeUnselected"
+                   OnDrop="@DropAsync"
+                   OnNodeCreated="@NodeCreated"
+                   OnNodeRemoved="@NodeRemoved"
+                   OnConnectionCreated="@ConnectionCreated"
+                   OnConnectionRemoved="@ConnectionRemoved"
+                   OnConnectionCancel="@ConnectionCancel"
+                   OnConnectionDblClick="@ConnectionDblClick"
+                   OnConnectionSelected="@ConnectionSelected"
+                   OnConnectionUnselected="@OnConnectionUnselected"
+                   OnNodeDblClick="@NodeDblClick"
+                   OnNodeMoved="@NodeMoved"
+                   Mode="Mode"
+                   Zoom="Zoom"
+                   DataInitializer="@DataInitializer"
+                   @ref="_drawflow">
+        </MStateMachineFlow>
+    </div>
+
+</div>
+
+<MDialog @bind-Value="changeConnectionNameDialog" Persistent
+         MaxWidth="500">
+    <MCard>
+        <MCardTitle>
+            <span>@I18n.T("SetConnectionName")</span>
+        </MCardTitle>
+        <MCardText>
+            <MTextField @bind-value="inputName"
+                        TValue="string"
+                        Solo
+                        PrependIcon="mdi-text-box"
+                        OnKeyUp=OnCDKeyUp
+                        Clearable>
+            </MTextField>
+        </MCardText>
+        <MCardActions>
+            <MButton Color="primary"
+                     Outlined
+                     Text
+                     OnClick=ChangeConnectionName>
+                @I18n.T("Confirm")
+            </MButton>
+            <MButton Color="primary"
+                     Outlined
+                     Text
+                     OnClick=CancelChangeConnectionName>
+                @I18n.T("Cancel")
+            </MButton>
+        </MCardActions>
+    </MCard>
+</MDialog>
+
+<MDialog @bind-Value="changeNodeNameDialog" Persistent
+         MaxWidth="500">
+    <MCard>
+        <MCardTitle>
+            <span>@I18n.T("SetNodeName")</span>
+        </MCardTitle>
+        <MCardText>
+            <MTextField @bind-value="inputName"
+                        TValue="string"
+                        Solo
+                        PrependIcon="mdi-text-box"
+                        OnKeyUp=OnNodeNameKeyUp
+                        Clearable>
+            </MTextField>
+        </MCardText>
+        <MCardActions>
+            <MButton Color="primary"
+                     Outlined
+                     Text
+                     OnClick=ChangeNodeName>
+                @I18n.T("Confirm")
+            </MButton>
+            <MButton Color="primary"
+                     Outlined
+                     Text
+                     OnClick=CancelChangeNodeName>
+                @I18n.T("Cancel")
+            </MButton>
+        </MCardActions>
+    </MCard>
+</MDialog>
+
+<style>
+    .sm-board {
+        display: flex;
+        flex-direction: row;
+    }
+
+    .sm-nodes {
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* just for DEMO */
+    .example-drawflow-node {
+        width: 120px;
+        min-height: 40px;
+        border-radius: 4px;
+        padding: 15px;
+        margin-right: 8px;
+    }
+</style>
+
+

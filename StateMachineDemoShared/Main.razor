@@ -1,0 +1,23 @@
+﻿
+<Router AppAssembly="@typeof(Main).Assembly">
+    <Found Context="routeData">
+        <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(EmptyLayout)">
+            <NotAuthorized>
+                <MOverlay Value="true" Contained>
+                    <p><MI18n Key="Not Authorized" Style="font-size:xx-large;" /></p>
+                </MOverlay>
+            </NotAuthorized>
+            <Authorizing>
+                <p><MI18n Key="Authentication in progress" Style="font-size:xx-large;" /></p>
+            </Authorizing>
+        </AuthorizeRouteView>
+        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+    </Found>
+    <NotFound>
+        <LayoutView Layout="@typeof(EmptyLayout)">
+            <p role="alert" Style="font-size:xx-large;">
+                <MI18n Key="Sorry, there's nothing" Style="font-size:xx-large;" />
+            </p>
+        </LayoutView>
+    </NotFound>
+</Router>

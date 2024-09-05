@@ -1,0 +1,99 @@
+﻿@using System.Reflection
+
+@typeparam T
+@implements IDisposable
+
+@inject I18n I18n
+
+<MSelect TItem="Enum"
+        TItemValue="string"
+        TValue="string"
+        @bind-Value="@Select"
+        OnSelect="@OnSelect"
+        Items="enumDict.Keys.ToList()"
+        ItemText="@(r=>I18n.T(enumDict[r]))"
+        ItemValue="@(r=>enumDict[r])">
+</MSelect>
+
+@code {
+
+    [Parameter]
+    public T TargetObject { get; set; } = default!;
+
+    [Parameter]
+    public PropertyInfo Property { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback OnInputChanged { get; set; }
+
+    Dictionary<Enum, string> enumDict = default!;
+    Dictionary<string, Enum> enumDict2 = default!;
+    PropertyInfo property = default!;
+
+    protected override Task OnParametersSetAsync()
+    {
+        if(property != Property)
+        {
+            property = Property;
+            enumDict = EnumHelper.EnumStrList(Property.PropertyType).ToDictionary(v => v.Key, k => k.Value);
+            enumDict2 = EnumHelper.EnumStrList(Property.PropertyType).ToDictionary(v => v.Value, k => k.Key);
+        }
+        return base.OnParametersSetAsync();
+    }
+
+    public string Select
+    {
+        get
+        {
+            var c = (Enum)GetPropertyValue(TargetObject!, Property);
+            return enumDict[c];
+        }
+        set
+        {
+            UpdateProperty(TargetObject!, Property, enumDict2[value]);
+        }
+    }
+
+    protected override Task OnInitializedAsync()
+    {
+        I18n.CultureChanged += OnCultureChanged;
+        return base.OnInitializedAsync();
+    }
+
+    public void Dispose()
+    {
+        I18n.CultureChanged -= OnCultureChanged;
+    }
+
+    private void OnCultureChanged(object? sender, EventArgs e)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        return base.OnAfterRenderAsync(firstRender);
+    }
+
+    void OnSelect((Enum e, bool select) item)
+    {
+        if (item.select)
+        {
+            Select = enumDict[item.e];
+        }
+    }
+
+    private void UpdateProperty(object target, PropertyInfo property, object value)
+    {
+        if (property.CanWrite)
+        {
+            property.SetValue(target, value);
+            OnInputChanged.InvokeAsync();
+        }
+    }
+
+    private object GetPropertyValue(object target, PropertyInfo property)
+    {
+        return property.GetValue(target)!;
+    }
+}

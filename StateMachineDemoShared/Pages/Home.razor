@@ -1,0 +1,72 @@
+﻿@page "/"
+@inject I18n I18n
+
+<div class="Home">
+
+    <div style="flex:1;" >
+        <ProcedureView @ref="pv" />
+    </div>
+    <div style="flex:0;">
+        <div class="Home-bar">
+            <div class="Home-barbutton">
+                <MButton Color="primary"
+                         Width="80" Height="60" Fab Rounded OnClick="Start"
+                         Disabled="!canStart">
+                    @I18n.T("Start")
+                    <MIcon Color="green">mdi-play</MIcon>
+                </MButton>
+            </div>
+            <div class="Home-barbutton">
+                <MButton Color="primary"
+                         Width="80" Height="60" Fab Rounded OnClick="Pause"
+                         Disabled="!canPause">
+                    @I18n.T("Pause")
+                    <MIcon Color="green">mdi-pause</MIcon>
+                </MButton>
+            </div>
+            <div class="Home-barbutton">
+                <MButton Color="primary"
+                         Width="80" Height="60" Fab Rounded OnClick="Continue"
+                         Disabled="!canContinue">
+                    @I18n.T("Continue")
+                    <MIcon Color="green">mdi-step-forward</MIcon>
+                </MButton>
+            </div>
+            <div class="Home-barbutton">
+                <MButton Color="primary"
+                         Width="80" Height="60" Fab Rounded OnClick="Stop"
+                         Disabled="false">
+                    @I18n.T("Stop")
+                    <MIcon Color="green">mdi-stop</MIcon>
+                </MButton>
+            </div>
+        </div>
+    </div>
+
+</div>
+<style>
+    .Home{
+        display:flex;
+        flex-direction:row;
+    }
+
+    .Home-bar {
+        margin-right: 20px;
+        padding: 20px;
+        flex: 1,0,auto;
+        min-height: 60vh;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: space-around;
+        border: 2px solid #ccc;
+        border-radius: 30px;
+        background-color: #e0e0e0;
+        box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.1), inset -2px -2px 5px rgba(255, 255, 255, 0.7);
+        transform: translateY(0%);
+    }
+
+        .Home-bar .Home-barbutton {
+            flex: 1,0,auto;
+        }
+</style>

@@ -1,0 +1,195 @@
+﻿@using StateMachine
+@using StateMachine.Interface
+@using System.Linq
+@using StateMachineDemoShared.DynamicObjectEditor
+@inject I18n I18n
+@inject IPopupService PopupService
+
+<div class="Procedure-body">
+    <div class="Procedure-controlbt">
+        <MButton Rounded Color="primary" Disabled="State is null"
+                 OnClick="@DeleteNodeAsync">
+            @I18n.T("DeleteNode")
+        </MButton>
+        <MButton Rounded Color="primary" Disabled="selectedConnection is null"
+                 OnClick="@DeleteConnectionAsync">
+            @I18n.T("DeleteConnection")
+        </MButton>
+        <MButton Rounded Color="primary" OnClick="@ClearAsync">@I18n.T("Clear")</MButton>
+        <MButton Rounded Color="primary" OnClick="@Import">@I18n.T("Import")</MButton>
+        <MButton Rounded Color="primary" OnClick="@Export">@I18n.T("Export")</MButton>
+    </div>
+    <div class="Procedure-board">
+        <StateMachineBoard @ref="smBoard" Style="height:90vh;width:70vw;" Class="Procedure-workspace"
+                           StateMachineEngine="Engine"
+                           OnNodeCreated="NodeCreated"
+                           OnNodeSelected="NodeSelected"
+                           OnNodeUnselected="NodeUnselected"
+                           DataInitializer="InitDraw"
+                           OnConnectionSelected="ConnectionSelected"
+                           OnConnectionUnselected="ConnectionUnselected"
+                           NodeTypeNames="@nodeTypes">
+        </StateMachineBoard>
+        @if (State is not null)
+        {
+            var fsmNodeInfo = State?.GetType().GetCustomAttributes(typeof(FSMNodeAttribute), true).FirstOrDefault() as FSMNodeAttribute;
+            <div class="Procedure-state">
+                <div class="Procedure-stateset">
+                    <div class="child">
+                        <DynamicObjectEditor Style="height:max-content;"
+                                             Title="@State.Name"
+                                             Filter="@(t => t?.GetType().GetProperties()
+                                                .Where(p => (p.GetCustomAttributes(typeof(FSMPropertyAttribute), true).FirstOrDefault() is FSMPropertyAttribute fsmAttr) && fsmAttr.IsVisible)
+                                                .OrderBy(p => ((FSMPropertyAttribute)p.GetCustomAttributes(typeof(FSMPropertyAttribute), true)[0]).Priority)
+                                                .ToArray())"
+                                             TargetObject="State" />
+                    </div>
+                </div>
+                <div class="Procedure-stateinfo">
+                    <MCard Class="mx-auto" Style="align-self:center;">
+                        <MCardTitle>@(I18n.T(State?.Name) + "(" + I18n.T(fsmNodeInfo?.NodeDescription) + ")")</MCardTitle>
+                        <MCardText>
+                            <MList>
+                                <MDivider></MDivider>
+                                <MTextField TValue="string" Prefix=@I18n.T("Node Name: ")
+                                            Value="State.Name" ValueChanged="async (s)=>{ string oldName = State.Name; await smBoard.ChangeNodeNameAsync(oldName, s); await SetActive(State); }"></MTextField>
+                                <MTextField TValue="string" Prefix=@I18n.T("Node Discription: ")
+                                            Value="State.Discription" ValueChanged="(s)=>{ State.Discription = s; }"></MTextField>
+                                <MListItemGroup>
+                                    @foreach (var i in Enumerable.Range(0, State.EventDescriptions.Count))
+                                    {
+                                        <MListItem>
+                                            <MTextField TValue="string" Prefix="@(State.EventDescriptions[i].Index + "->")"
+                                                        Value="State.EventDescriptions[i].Description"
+                                                        ValueChanged="(s)=>
+                                                        {
+                                                            State.EventDescriptions[i].Description = s;
+                                                            if(!Engine.TryGetEvent(s, out FSMEvent e))
+                                                            { e = new FSMEvent(s); Engine.AddEvent(e); }
+                                                            State.SetBranchEvent(i, e);
+                                                        }"></MTextField>
+                                        </MListItem>
+                                    }
+                                </MListItemGroup>
+                            </MList>
+                        </MCardText>
+                        <MCardActions>
+                            <MButton Rounded Color="primary" OnClick="@ResetEventDescriptions"> @I18n.T("ResetEventDescriptions") </MButton>
+                        </MCardActions>
+                    </MCard>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<MDialog @bind-Value="_exportDialog" ContentClass="pa-6" Width="500">
+    <MTextarea @bind-Value="_exportData" Outlined Label="@I18n.T("Export")" Rows="10"></MTextarea>
+</MDialog>
+
+<MDialog draggable="true" @bind-Value="_importDialog" ContentClass="pa-6" Width="500">
+    <MTextarea @bind-Value="_importData" Outlined Label="@I18n.T("Import")" Rows="10"></MTextarea>
+    <MButton OnClick="@ImportConfirm">@I18n.T("Import")</MButton>
+</MDialog>
+
+<style>
+    .Procedure-body {
+        display: flex;
+        flex-direction: column;
+    }
+
+        .Procedure-body .Procedure-controlbt {
+            margin-top: 1vh;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items:center;
+        }
+
+        .Procedure-body .Procedure-board {
+            position: relative;
+            overflow: hidden;
+        }
+            .Procedure-body .Procedure-board .Procedure-state {
+                position: absolute;
+                bottom: 0;
+                width: 88%;
+                left: 6vw;
+                height: 42vh;
+                padding: 10px;
+
+                display: flex;
+                justify-content: center;
+                flex-direction: row;
+                align-items: center;
+            }
+
+                .Procedure-body .Procedure-board .Procedure-state .Procedure-stateset {
+                    flex: 1;
+                    align-self: stretch;
+                    overflow-y: auto;
+                    border: 2px solid gray;
+                    background: white;
+                    border-radius: 8px;
+                    position: relative;
+                }
+
+                    .Procedure-body .Procedure-board .Procedure-state .Procedure-stateset .child {
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        bottom: 0;
+                        margin: auto;
+                    }
+
+                .Procedure-body .Procedure-board .Procedure-state .Procedure-stateinfo {
+                    flex: 1;
+                    align-self: stretch;
+                    overflow-y: auto;
+                    border: 2px solid gray;
+                    background: white;
+                    border-radius: 8px;
+                    position: relative;
+                }
+
+    .Procedure-workspace {
+        position: relative;
+        background: white;
+        background-size: 25px 25px;
+        background-image: linear-gradient(to right, #f1f1f1 1px, transparent 1px),linear-gradient(to bottom, #f1f1f1 1px, transparent 1px);
+    }
+
+    .Procedure-select-block {
+        display: block;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        /* animation: block-color-blink 5s infinite; */
+    }
+
+        .Procedure-select-block::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 200%; /* 确保背景足够宽以便滚动 */
+            height: 100%; /* 高度与父容器一致 */
+            background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5) 10px, transparent 10px, transparent 20px);
+            z-index: -1;
+            transition: transform 0.5s;
+            pointer-events: none; /* 确保伪元素不影响用户交互 */
+            animation: scroll-bg 1s linear infinite;
+        }
+
+    @@keyframes scroll-bg {
+        0% {
+            transform: translateX(-28.28px);
+        }
+
+        100% {
+            transform: translateX(0);
+        }
+    }
+
+</style>

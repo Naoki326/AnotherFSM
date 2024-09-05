@@ -1,0 +1,204 @@
+﻿@using System.Reflection
+@using System.Collections
+@using System.Linq
+@typeparam T
+@implements IDisposable
+
+@inject IPopupService PopupService
+@inject I18n I18n
+
+<MCard Style="width:600px;">
+    <MCardSubtitle>
+        @(I18n.T(Title))
+    </MCardSubtitle>
+    <MDivider />
+    <MCardText>
+        <MList Subheader>
+            @if (List is not null)
+            {
+                <MListItemGroup @bind-Value="_selectedItem">
+                    @{
+                        int index = 0;
+                        @foreach (var item in List)
+                        {
+                            var k = index;
+                            <MListGroup NoAction>
+                                <ActivatorContent>
+                                    <MListItemContent>
+                                        @I18n.T("ListItem") @(k+1)
+                                    </MListItemContent>
+                                </ActivatorContent>
+                                <ChildContent>
+                                    @DynamicListInstance(item)
+                                </ChildContent>
+                            </MListGroup>
+                            index++;
+                        }
+                    }
+                </MListItemGroup>
+            }
+        </MList>
+    </MCardText>
+
+    <MCardActions>
+        <MButton Rounded Color="primary" OnClick="@Add">
+            @I18n.T("AddItem")
+        </MButton>
+        <MButton Rounded Color="primary" OnClick="@Delete">
+            @I18n.T("DeleteItem")
+        </MButton>
+        <MButton Rounded Color="primary" OnClick="@Clear">
+            @I18n.T("ClearItems")
+        </MButton>
+    </MCardActions>
+</MCard>
+
+<MDialog @bind-Value="addItemDialog"
+         MaxWidth="500">
+    <MCard>
+        <MCardTitle>
+            <span>@I18n.T("AddItem")</span>
+        </MCardTitle>
+        <MCardText>
+            <MSelect TItem="Type"
+                     TItemValue="string"
+                     TValue="string"
+                     @bind-Value="@Select"
+                     OnSelect="@OnSelect"
+                     Items="ItemTypes"
+                     ItemText="@(r=>r.Name)"
+                     ItemValue="@(r=>r.Name)">
+            </MSelect>
+        </MCardText>
+        <MCardActions>
+            <MButton Color="primary"
+                     Outlined
+                     Text
+                     OnClick=AddItem>
+                @I18n.T("Confirm")
+            </MButton>
+            <MButton Color="primary"
+                     Text
+                     OnClick="() => { addItemDialog = false; }">
+                @I18n.T("Close")
+            </MButton>
+        </MCardActions>
+    </MCard>
+</MDialog>
+
+@code {
+
+    RenderFragment DynamicListInstance(T item)
+    {
+        if (item is not null
+            && ItemTypes.FirstOrDefault(t => t.IsAssignableFrom(item.GetType())) is Type deriveType)
+        {
+            return builder =>
+            {
+                var type = typeof(DynamicObjectEditor<>).MakeGenericType(new[] { deriveType });
+                builder.OpenComponent(1, type);
+                builder.AddAttribute(2, "TargetObject", item);
+                builder.AddAttribute(3, "TType", ItemTypes);
+                builder.AddAttribute(4, "OnInputChanged", OnInputChanged);
+                builder.AddAttribute(5, "SpecialTypeRender", SpecialTypeRender);
+                builder.CloseComponent();
+            };
+        }
+        return builder => { };
+    }
+
+    private StringNumber _selectedItem { get; set; } = -1;
+
+    [Parameter]
+    public Dictionary<Type, Func<object, EventCallback, RenderFragment>>? SpecialTypeRender { get; set; }
+
+    [Parameter]
+    public List<Type> ItemTypes { get; set; } = default!;
+
+    [Parameter]
+    public List<T> List { get; set; } = default!;
+
+    [Parameter]
+    public string Title { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback OnInputChanged { get; set; }
+
+    protected override Task OnInitializedAsync()
+    {
+        I18n.CultureChanged += OnCultureChanged;
+        return base.OnInitializedAsync();
+    }
+
+    public void Dispose()
+    {
+        I18n.CultureChanged -= OnCultureChanged;
+    }
+
+    private void OnCultureChanged(object? sender, EventArgs e)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    bool addItemDialog = false;
+    void Add()
+    {
+        addItemDialog = true;
+    }
+    async Task AddItem()
+    {
+        if (selectType is null)
+        {
+            await PopupService.EnqueueSnackbarAsync("Item type not selected!", AlertTypes.Error);
+            return;
+        }
+        if (Activator.CreateInstance(selectType) is not T tobject)
+        {
+            await PopupService.EnqueueSnackbarAsync("Item type not supported!", AlertTypes.Error);
+            return;
+        }
+
+        if (List is null)
+        {
+            List = [tobject];
+        }
+        else
+        {
+            List.Add(tobject);
+        }
+        await OnInputChanged.InvokeAsync();
+        addItemDialog = false;
+        return;
+    }
+
+    string Select { get; set; } = default!;
+    Type selectType = default!;
+    void OnSelect((Type, bool) item)
+    {
+        if (item.Item2)
+        {
+            selectType = item.Item1;
+        }
+    }
+
+    async Task Delete()
+    {
+        if (List is null
+            || _selectedItem is null
+            || _selectedItem.AsT1 < 0
+            || _selectedItem.AsT1 >= List.Count)
+        {
+            await PopupService.EnqueueSnackbarAsync("Index is illegal!", AlertTypes.Error);
+            return;
+        }
+        List.Remove(List[_selectedItem.AsT1]);
+        await OnInputChanged.InvokeAsync();
+    }
+
+    async Task Clear()
+    {
+        List?.Clear();
+        await OnInputChanged.InvokeAsync();
+    }
+
+}

@@ -1,0 +1,109 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>998adbd4-9f23-44db-b8d2-3655d0842798</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>Autofac.Annotation.Src</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Anotation\AliasFor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Anotation\AutoConfiguration.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Anotation\AutofacScope.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Anotation\Autowired.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Anotation\AutowiredParmeter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Anotation\Bean.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Anotation\Component.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Anotation\DependsOn.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Anotation\EnvironmentVariableMode.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Anotation\IgnoreAop.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Anotation\Import.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Anotation\Order.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Anotation\Ownership.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Anotation\PostConstruct.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Anotation\PropertySource.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Anotation\Value.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)AutoConfigurationSource.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Autofac.Events\BuilderExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Autofac.Events\EventPublisher.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Autofac.Events\IAsyncEventPublisher.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Autofac.Events\IEventPublisher.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Autofac.Events\IHandleEvent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Autofac.Events\IHandleEventAsync.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Autofac.Events\LifetimeScopeExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Autofac.Extras.DynamicProxy\InterceptAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Autofac.Extras.DynamicProxy\RegistrationExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Autofac.Generics\OpenGenericRegistrationSource.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)AutofacAnnotationLoadTypes.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)AutofacAnnotationModule.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)AutofacSpring.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Condition\Condition.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Condition\Conditional.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Condition\OnBean.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Condition\OnClass.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Condition\OnMissingBean.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Condition\OnMissingClass.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Condition\OnProperty.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Config\BeanPostProcessor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)EmbeddedConfiguration.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IComponentDetector.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AspectIntercepter\AdviceIntercept.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AspectIntercepter\Advice\ApsectAdviceMethodInvokeCache.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AspectIntercepter\Advice\AspectAttributeChainBuilder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AspectIntercepter\Advice\Attribute\Aspect.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AspectIntercepter\Advice\Attribute\AspectAfter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AspectIntercepter\Advice\Attribute\AspectAfterReturn.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AspectIntercepter\Advice\Attribute\AspectAfterThrows.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AspectIntercepter\Advice\Attribute\AspectArround.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AspectIntercepter\Advice\Attribute\AspectBefore.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AspectIntercepter\Advice\Attribute\AspectInvokeAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AspectIntercepter\Advice\Attribute\ClassInterceptorAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AspectIntercepter\Advice\Attribute\InterfaceInterceptorAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AspectIntercepter\AspectContext.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AspectIntercepter\AspectDelegate.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AspectIntercepter\AspectMiddlewareBuilder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AspectIntercepter\AspectMiddlewareComponentNode.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AspectIntercepter\IAdvice.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AspectIntercepter\Impl\AspectAfterInterceptor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AspectIntercepter\Impl\AspectAfterReturnInterceptor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AspectIntercepter\Impl\AspectAroundInterceptor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AspectIntercepter\Impl\AspectBeforeInterceptor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AspectIntercepter\Impl\AspectThrowingInterceptor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AspectIntercepter\PointcutIntercept.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AspectIntercepter\Pointcut\Attribute\After.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AspectIntercepter\Pointcut\Attribute\AfterReturn.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AspectIntercepter\Pointcut\Attribute\AfterThrows.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AspectIntercepter\Pointcut\Attribute\Around.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AspectIntercepter\Pointcut\Attribute\Before.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AspectIntercepter\Pointcut\Attribute\Pointcut.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AspectIntercepter\Pointcut\Attribute\PointcutBasicAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AspectIntercepter\Pointcut\PointcutConfigurationInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AspectIntercepter\Pointcut\PointCutConfigurationList.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AspectIntercepter\Pointcut\PointcutMethodChainBuilder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AspectIntercepter\Pointcut\PointcutMethodInvokeCache.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AsyncInterceptor+AsyncInvocation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AsyncInterceptor+AsyncStateMachine.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AsyncInterceptor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\AsyncMethodBuilder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\Awaiter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\IAsyncInvocation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\ProxyGeneratorExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intercepter\RethrowHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ObjectFactory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Util\ComponentDetectorExtension.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Util\ConfigurationUtil.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Util\ConfiguredDictionaryParameter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Util\ConfiguredListParameter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Util\DeadlockDetectionSynchronizationContext.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Util\ReflectionExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Util\SqlLikeStringUtilities.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Util\TypeManipulation.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)Autofac.Events\readme.txt" />
+    <Content Include="$(MSBuildThisFileDirectory)Intercepter\read.txt" />
+  </ItemGroup>
+</Project>

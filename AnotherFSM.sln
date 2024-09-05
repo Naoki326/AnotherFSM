@@ -1,0 +1,67 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35027.167
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StateMachine", "StateMachine\StateMachine.csproj", "{854A29F2-058B-4D98-819B-6F72CB7A10F4}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Autofac.Annotation.Src", "Autofac.Annotation.Src\Autofac.Annotation.Src.shproj", "{998ADBD4-9F23-44DB-B8D2-3655D0842798}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StateMachine.FlowComponent", "StateMachine.FlowComponent\StateMachine.FlowComponent.csproj", "{135C7026-5EF8-4801-8DF7-9A4F2F4FB11A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Demo", "Demo", "{78E37597-4C51-40B9-915F-E820AE4EBCE2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FSMImpl", "FSMImpl", "{1E5DB267-A0E4-410A-9EF0-C8309C721000}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StateMachineWPFDemo", "StateMachineWPFDemo\StateMachineWPFDemo.csproj", "{E89268E2-DB79-46D8-BD37-51BCB8396024}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StateMachineDemoShared", "StateMachineDemoShared\StateMachineDemoShared.csproj", "{70D60C49-DEAA-495C-8A27-183EAB33F3FB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Autofac.Annotation", "Autofac.Annotation\Autofac.Annotation.csproj", "{69624F0F-DC43-48C2-9449-BA9F2BCA287E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{854A29F2-058B-4D98-819B-6F72CB7A10F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{854A29F2-058B-4D98-819B-6F72CB7A10F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{854A29F2-058B-4D98-819B-6F72CB7A10F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{854A29F2-058B-4D98-819B-6F72CB7A10F4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{135C7026-5EF8-4801-8DF7-9A4F2F4FB11A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{135C7026-5EF8-4801-8DF7-9A4F2F4FB11A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{135C7026-5EF8-4801-8DF7-9A4F2F4FB11A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{135C7026-5EF8-4801-8DF7-9A4F2F4FB11A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E89268E2-DB79-46D8-BD37-51BCB8396024}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E89268E2-DB79-46D8-BD37-51BCB8396024}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E89268E2-DB79-46D8-BD37-51BCB8396024}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E89268E2-DB79-46D8-BD37-51BCB8396024}.Release|Any CPU.Build.0 = Release|Any CPU
+		{70D60C49-DEAA-495C-8A27-183EAB33F3FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{70D60C49-DEAA-495C-8A27-183EAB33F3FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{70D60C49-DEAA-495C-8A27-183EAB33F3FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{70D60C49-DEAA-495C-8A27-183EAB33F3FB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{69624F0F-DC43-48C2-9449-BA9F2BCA287E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{69624F0F-DC43-48C2-9449-BA9F2BCA287E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{69624F0F-DC43-48C2-9449-BA9F2BCA287E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{69624F0F-DC43-48C2-9449-BA9F2BCA287E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{854A29F2-058B-4D98-819B-6F72CB7A10F4} = {1E5DB267-A0E4-410A-9EF0-C8309C721000}
+		{998ADBD4-9F23-44DB-B8D2-3655D0842798} = {1E5DB267-A0E4-410A-9EF0-C8309C721000}
+		{135C7026-5EF8-4801-8DF7-9A4F2F4FB11A} = {1E5DB267-A0E4-410A-9EF0-C8309C721000}
+		{E89268E2-DB79-46D8-BD37-51BCB8396024} = {78E37597-4C51-40B9-915F-E820AE4EBCE2}
+		{70D60C49-DEAA-495C-8A27-183EAB33F3FB} = {78E37597-4C51-40B9-915F-E820AE4EBCE2}
+		{69624F0F-DC43-48C2-9449-BA9F2BCA287E} = {1E5DB267-A0E4-410A-9EF0-C8309C721000}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {AF73E11D-B0BB-4494-9B79-025687E834AB}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		Autofac.Annotation.Src\Autofac.Annotation.Src.projitems*{69624f0f-dc43-48c2-9449-ba9f2bca287e}*SharedItemsImports = 5
+		Autofac.Annotation.Src\Autofac.Annotation.Src.projitems*{998adbd4-9f23-44db-b8d2-3655d0842798}*SharedItemsImports = 13
+	EndGlobalSection
+EndGlobal
