@@ -2,9 +2,9 @@
 using Autofac.Core;
 using StateMachine;
 
-namespace StateMachineWPFDemo
+namespace StateMachineDemoShared
 {
-    internal class ContainerWrapper : IContainerWrapper
+    public class ContainerWrapper : IContainerWrapper
     {
         protected ILifetimeScope Container { get; }
 

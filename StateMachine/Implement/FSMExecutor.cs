@@ -121,7 +121,7 @@ namespace StateMachine
         private async Task ConsumerTask()
         {
             long threadId = Thread.CurrentThread.ManagedThreadId;
-            Thread.CurrentThread.Name = $"Node Task({threadId})";
+            Thread.CurrentThread.Name = $"State Machine Task({threadId})";
             using ((this as IObservable<StateTrackInfo>).Subscribe(observer))
             {
                 eventAggregator.Subscribe(this);

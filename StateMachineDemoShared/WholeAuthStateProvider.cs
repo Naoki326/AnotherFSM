@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components.Authorization;
 using System.Security.Claims;
 
-namespace StateMachineWPFDemo
+namespace StateMachineDemoShared
 {
     public class WholeAuthStateProvider : AuthenticationStateProvider
     {

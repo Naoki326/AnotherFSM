@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using StateMachine;
+using StateMachineDemoShared;
 using System.Reflection;
 using Application = System.Windows.Application;
 
