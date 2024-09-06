@@ -18,7 +18,7 @@ jobs:
         dotnet-version: 8.0
 
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore StateMachineWebDemo/StateMachineWebDemo.csproj
 
     - name: Build
       run: dotnet publish StateMachineWebDemo/StateMachineWebDemo.csproj -c Release -o release --nologo
