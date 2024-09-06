@@ -18,13 +18,10 @@ jobs:
         dotnet-version: 8.0
 
     - name: Restore dependencies
-      run: dotnet restore StateMachineWebDemo/StateMachineWebDemo.csproj
+      run: dotnet restore StateMachineWebAssemblyDemo/StateMachineWebAssemblyDemo.csproj
 
     - name: Build
-      run: dotnet publish StateMachineWebDemo/StateMachineWebDemo.csproj -c Release -o release --nologo
-
-    - name: Add .nojekyll file
-      run: touch release/wwwroot/.nojekyll
+      run: dotnet publish StateMachineWebAssemblyDemo/StateMachineWebAssemblyDemo.csproj -c Release -o release --nologo
       
     # changes the base-tag in index.html from '/' to 'AnotherFSM/StateMachineWebDemo' to match GitHub Pages repository subdirectory
     # - name: Change base-tag in index.html from / to AnotherFSM/StateMachineWebDemo

@@ -15,7 +15,7 @@ namespace StateMachineDemoShared.Pages
 
         protected override Task OnInitializedAsync()
         {
-            Task.Factory.StartNew(NodeStateCosumer);
+            //Task.Factory.StartNew(NodeStateCosumer);
             return base.OnInitializedAsync();
         }
 
@@ -91,16 +91,16 @@ namespace StateMachineDemoShared.Pages
         {
             if (pv is null)
                 return;
-            //await pc.SetInactive(e);
-            nodeState.Add((e, false));
+            await pv.SetInactive(e);
+            //nodeState.Add((e, false));
         }
 
-        private void Executor_NodeStateChanged(object? sender, string e)
+        private async void Executor_NodeStateChanged(object? sender, string e)
         {
             if (pv is null)
                 return;
-            //await pc.SetActive(e);
-            nodeState.Add((e, true));
+            await pv.SetActive(e);
+            //nodeState.Add((e, true));
         }
 
         private void Executor_FSMStateChanged(FSMExecutor arg1, FSMNodeState newState, FSMNodeState oldState)
