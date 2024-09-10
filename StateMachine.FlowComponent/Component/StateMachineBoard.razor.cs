@@ -231,7 +231,7 @@ namespace StateMachine
 
     }
 
-    //´´½¨¡¢É¾³ı½ÚµãºÍÁ¬Ïß
+    //åˆ›å»ºã€åˆ é™¤èŠ‚ç‚¹å’Œè¿çº¿
     public partial class StateMachineBoard
     {
 
@@ -320,7 +320,7 @@ namespace StateMachine
             string nodeNameSuffix = "";
             int suffixI = 1;
 
-            //Ô­ÏÈÊÇÓĞÍ¬ÃûNode¾ÍÍË³ö£¬ÕâÀï¸Ä³É×Ô¶¯¸ÄÃû³Æ
+            //åŸå…ˆæ˜¯æœ‰åŒåNodeå°±é€€å‡ºï¼Œè¿™é‡Œæ”¹æˆè‡ªåŠ¨æ”¹åç§°
             //await PopupService.EnqueueSnackbarAsync($"Node {nodeType} create failed! Exception: {nodeType} already exist", AlertTypes.Error);
             //return;
             while(engine.TryGetNode(nodeType + nodeNameSuffix, out _))
@@ -375,7 +375,7 @@ namespace StateMachine
                     state.Color = node.Data.Color;
                     state.ClassType = node.Data.Type;
                     state.FlowID = nodeId;
-                    //³õÊ¼»¯½ÚµãÄÚ²¿·¢³öµÄÊÂ¼ş
+                    //åˆå§‹åŒ–èŠ‚ç‚¹å†…éƒ¨å‘å‡ºçš„äº‹ä»¶
                     if (state.GetType().GetCustomAttributes(typeof(FSMNodeAttribute), true).FirstOrDefault() is FSMNodeAttribute info
                         && info.Indexes.Length == info.EventDescriptions.Length)
                     {
@@ -523,14 +523,14 @@ namespace StateMachine
             {
                 string eventNameSuffix = "";
                 int suffixI = 1;
-                string defaultEventName = "DefaultEvent";
+                string defaultEventName = "NextEvent";
                 if (engine.TryGetEvent(defaultEventName, out FSMEvent? sEvent))
                 {
-                    //Á÷³ÌÒıÇæÖĞÒÑÓĞ¸ÃÊÂ¼ş
+                    //æµç¨‹å¼•æ“ä¸­å·²æœ‰è¯¥äº‹ä»¶
 
                     while (engine[nodeOutput.Name].HasTransition(sEvent))
                     {
-                        //µ±Ç°output½ÚµãÒÑÓĞ¸ÃÊÂ¼ş
+                        //å½“å‰outputèŠ‚ç‚¹å·²æœ‰è¯¥äº‹ä»¶
                         eventNameSuffix = suffixI.ToString();
                         suffixI++;
                         if (!engine.TryGetEvent(defaultEventName + eventNameSuffix, out sEvent))
