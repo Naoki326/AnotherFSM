@@ -89,6 +89,11 @@ namespace StateMachine
             return transitions.Values;
         }
 
+        public FSMTransition GetFSMTransition(string target)
+        {
+            return transitions.First(p => p.Value.Target.Name == target).Value;
+        }
+
         public override string ToString()
         {
             IFSMNode node = this;

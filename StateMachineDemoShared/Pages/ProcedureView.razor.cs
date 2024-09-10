@@ -169,6 +169,15 @@ public partial class ProcedureView : IDisposable
             await SetInactive(node);
         }
     }
+    private void ChangeNodeName()
+    {
+        smBoard.OpenChangeNodeNameDialog(selectedNodeName);
+    }
+
+    private void ChangeConnectionName()
+    {
+        smBoard.OpenChangeConnectionNameDialog(selectedConnection.FromNodeName, selectedConnection.ToNodeName);
+    }
 
     ConnectionData? selectedConnection;
     private void ConnectionSelected(ConnectionData data)

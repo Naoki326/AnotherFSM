@@ -64,6 +64,8 @@ namespace StateMachine
         IEnumerator<IFSMNode> GetEnumerator();
 
         IEnumerable<FSMTransition> GetFSMTransitions();
+
+        FSMTransition GetFSMTransition(string inputNodeName);
     }
 
     public interface IFSMNode : ITransitionContainer, IVisualNode, IDisposable

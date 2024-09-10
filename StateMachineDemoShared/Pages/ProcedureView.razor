@@ -8,8 +8,16 @@
 <div class="Procedure-body">
     <div class="Procedure-controlbt">
         <MButton Rounded Color="primary" Disabled="State is null"
+                 OnClick="@ChangeNodeName">
+            @I18n.T("ChangeNodeName")
+        </MButton>
+        <MButton Rounded Color="primary" Disabled="State is null"
                  OnClick="@DeleteNodeAsync">
             @I18n.T("DeleteNode")
+        </MButton>
+        <MButton Rounded Color="primary" Disabled="selectedConnection is null"
+                 OnClick="@ChangeConnectionName">
+            @I18n.T("ChangeConnectionName")
         </MButton>
         <MButton Rounded Color="primary" Disabled="selectedConnection is null"
                  OnClick="@DeleteConnectionAsync">

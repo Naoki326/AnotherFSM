@@ -240,9 +240,11 @@ namespace StateMachine
         private string inputName = "";
 
         private string tempNodeId = "";
-        private void NodeDblClick(string id)
+        private async Task NodeDblClick(string id)
         {
             tempNodeId = id;
+            var nodeInput = await _drawflow.GetNodeFromIdAsync<NodeData>(tempNodeId);
+            inputName = nodeInput.Name;
             changeNodeNameDialog = true;
         }
 
@@ -370,7 +372,7 @@ namespace StateMachine
                 {
                     engine.CreateNode(node.Data.Type, node.Name);
                     var state = engine[node.Name];
-                    state.PosX = Math.Round(node.Pos_X);    
+                    state.PosX = Math.Round(node.Pos_X);
                     state.PosY = Math.Round(node.Pos_Y);
                     state.Color = node.Data.Color;
                     state.ClassType = node.Data.Type;
@@ -419,6 +421,28 @@ namespace StateMachine
                 engine.TryDeleteNode(nd.Name);
                 ScriptChanged?.Invoke(engine.ToString());
             }
+        }
+
+        public void OpenChangeNodeNameDialog(string nodeName)
+        {
+            if (!engine.ContainsNode(nodeName))
+                return;
+            tempNodeId = engine[nodeName].FlowID;
+            inputName = nodeName;
+            changeNodeNameDialog = true;
+        }
+
+        public void OpenChangeConnectionNameDialog(string outputNodeName, string inputNodeName)
+        {
+            tempConnectArgs = new FlowConnectionArgs()
+            {
+                InputClass = "input_1",
+                OutputClass = "output_1",
+                InputId = engine[inputNodeName].FlowID,
+                OutputId = engine[outputNodeName].FlowID,
+            };
+            inputName = engine[outputNodeName].GetFSMTransition(inputNodeName).Trigger.EventName;
+            changeConnectionNameDialog = true;
         }
 
         private bool changeConnectionNameDialog = false;
@@ -582,11 +606,18 @@ namespace StateMachine
             }
         }
 
-        private void ConnectionDblClick(FlowConnectionArgs args)
+        private async Task ConnectionDblClick(FlowConnectionArgs args)
         {
             if (isImport)
                 return;
             tempConnectArgs = args;
+            if (await _drawflow.GetNodeFromIdAsync<NodeData>(args.InputId) is StateMachineFlowNode<NodeData> nodeInput
+                && nodeInput.Class != null && nodeInput.Name != null
+                && await _drawflow.GetNodeFromIdAsync<NodeData>(args.OutputId) is StateMachineFlowNode<NodeData> nodeOutput
+                && nodeOutput.Class != null && nodeOutput.Name != null)
+            {
+                inputName = engine[nodeOutput.Name].GetFSMTransition(nodeInput.Name).Trigger.EventName;
+            }
             changeConnectionNameDialog = true;
         }
 
