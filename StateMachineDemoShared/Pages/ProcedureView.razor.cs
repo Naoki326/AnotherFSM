@@ -1,4 +1,5 @@
 using Masa.Blazor;
+using Microsoft.AspNetCore.Components;
 using StateMachine;
 using System.Reflection;
 
@@ -47,15 +48,19 @@ public partial class ProcedureView : IDisposable
         //IFSMNode state = Engine[nodeName];
     }
 
+    [Parameter]
+    public EventCallback AfterInit { get; set; }
+    
     private async void InitDraw()
     {
         await smBoard.ZoomAsync(0.8);
         //await ImportFromScript();
         ////这里不打开两次，drawflow会有奇怪的bug
         //await ImportFromScript();
+        await AfterInit.InvokeAsync();
     }
 
-    private async Task ImportFromScript(string importScript)
+    public async Task ImportFromScript(string importScript)
     {
         if (string.IsNullOrEmpty(importScript))
         {
