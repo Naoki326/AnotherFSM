@@ -31,6 +31,7 @@ namespace StateMachineDemoShared.Pages
 
         private void CreateExecutor()
         {
+            pv.Engine.ReinitGroupNode();
             if (executor is not null)
             {
                 executor.FSMStateChanged -= Executor_FSMStateChanged;

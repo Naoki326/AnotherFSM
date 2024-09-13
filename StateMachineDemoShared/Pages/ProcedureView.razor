@@ -74,7 +74,7 @@
                                                             State.EventDescriptions[i].Description = s;
                                                             if(!Engine.TryGetEvent(s, out FSMEvent e))
                                                             { e = new FSMEvent(s); Engine.AddEvent(e); }
-                                                            State.SetBranchEvent(i, e);
+                                                            State.SetBranchEvent(State.EventDescriptions[i].Index, e);
                                                         }"></MTextField>
                                         </MListItem>
                                     }

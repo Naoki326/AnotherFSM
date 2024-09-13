@@ -30,6 +30,12 @@ namespace StateMachine
             HandleGroupNode();
         }
 
+        public void ReinitGroupNode()
+        {
+            UnhandleGroupNode();
+            HandleGroupNode();
+        }
+
         private void UnhandleGroupNode()
         {
             foreach (var node in NodeDict.Where(n => n.Value is BaseGroupNode))
