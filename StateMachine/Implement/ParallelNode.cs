@@ -17,7 +17,7 @@ namespace StateMachine.Implement
     public class ParallelNode : BaseGroupNode
     {
 
-        private List<FSMExecutor> executors = [];
+        private List<FSMSingleThreadExecutor> executors = [];
 
         [FSMProperty("Parrllel FSM", true, 3)]
         public List<FSMDescribe> FSMs { get; set; } = [];
@@ -28,7 +28,7 @@ namespace StateMachine.Implement
             executors.Clear();
             foreach (var fsm in FSMs)
             {
-                var executor = new FSMExecutor(Engine[fsm.StartNode], Engine.GetEvent(fsm.EndEvent));
+                var executor = new FSMSingleThreadExecutor(Engine[fsm.StartNode], Engine.GetEvent(fsm.EndEvent));
                 executors.Add(executor);
                 executor.NodeStateChanged += OnNodeStateChanged;
                 executor.NodeExitChanged += OnNodeExitChanged;
@@ -49,21 +49,29 @@ namespace StateMachine.Implement
         Begin:
             if (executors.Any(p => p.State == FSMNodeState.Paused))
             {
-                executors.ForEach(p => p.Continue());
+                executors.ForEach(p =>
+                {
+                    if (!p.ExecutorTask.IsCompleted)
+                    { p.Continue(); }
+                });
             }
             else
             {
-                executors.ForEach(p => p.Restart());
+                executors.ForEach(async p => await p.RestartAsync());
             }
             yield return null;
-            using (Context.TokenSource.Token.Register(() => executors.ForEach(p => p.Pause())))
+            using (Context.TokenSource.Token.Register(() => executors.ForEach(p =>
+            {
+                if (!p.ExecutorTask.IsCompleted)
+                { p.Pause(); }
+            })))
             {
                 try
                 {
                     await Task.WhenAny(Task.WhenAll(executors.Select(p => p.ExecutorTask)), Task.Delay(-1, Context.Token));
                     if (Context.IsPaused)
                     {
-                        Task.WaitAll(executors.Select(p => p.CurrentNodeTask).ToArray());
+                        await Task.WhenAny(Task.WhenAll(executors.Select(p => p.CurrentNodeTask)), Task.Delay(-1, Context.Token));
                     }
                 }
                 catch (OperationCanceledException ex)

@@ -10,8 +10,7 @@ namespace StateMachineDemoShared.Pages
     {
 
         private ProcedureView pv = default!;
-        private FSMExecutor? executor;
-        private BlockingCollection<(string, bool)> nodeState = [];
+        private FSMSingleThreadExecutor? executor;
 
         protected override Task OnInitializedAsync()
         {
@@ -31,7 +30,6 @@ namespace StateMachineDemoShared.Pages
 
         private void CreateExecutor()
         {
-            pv.Engine.ReinitGroupNode();
             if (executor is not null)
             {
                 executor.FSMStateChanged -= Executor_FSMStateChanged;
@@ -44,47 +42,11 @@ namespace StateMachineDemoShared.Pages
                 {
                     end = new FSMEvent("EndEvent");
                 }
-                executor = new FSMExecutor(StateState, end);
+                pv.Engine.ReinitGroupNode();
+                executor = new FSMSingleThreadExecutor(StateState, end);
                 executor.FSMStateChanged += Executor_FSMStateChanged;
                 executor.NodeStateChanged += Executor_NodeStateChanged;
                 executor.NodeExitChanged += Executor_NodeExitChanged;
-            }
-        }
-
-
-        private async Task NodeStateCosumer()
-        {
-            string lastNodeName = "";
-            foreach ((string nodeName, bool isIn) nstate in nodeState.GetConsumingEnumerable())
-            {
-                //if (string.IsNullOrEmpty(nstate.nodeName))
-                //{
-                //    if (!string.IsNullOrEmpty(lastNodeName))
-                //    {
-                //        if (nstate.isIn)
-                //        {
-                //            await pc.SetHalfActive(lastNodeName);
-                //        }
-                //        else
-                //        {
-                //            await pc.SetInactive(lastNodeName);
-                //        }
-                //    }
-                //    continue;
-                //}
-                if (string.IsNullOrEmpty(nstate.nodeName))
-                {
-                    //await pc.SetInactive(lastNodeName);
-                }
-                else if (nstate.isIn)
-                {
-                    lastNodeName = nstate.nodeName;
-                    await pv.SetActive(nstate.nodeName);
-                }
-                else
-                {
-                    await pv.SetInactive(nstate.nodeName);
-                }
             }
         }
 
@@ -104,7 +66,7 @@ namespace StateMachineDemoShared.Pages
             //nodeState.Add((e, true));
         }
 
-        private void Executor_FSMStateChanged(FSMExecutor arg1, FSMNodeState newState, FSMNodeState oldState)
+        private void Executor_FSMStateChanged(FSMSingleThreadExecutor arg1, FSMNodeState newState, FSMNodeState oldState)
         {
             switch (newState)
             {
@@ -131,7 +93,6 @@ namespace StateMachineDemoShared.Pages
                     canStart = false;
                     canPause = false;
                     canContinue = true;
-                    nodeState.Add(("", true));
                     break;
                 case FSMNodeState.Stopping:
                     canStart = false;
@@ -142,13 +103,11 @@ namespace StateMachineDemoShared.Pages
                     canStart = true;
                     canPause = false;
                     canContinue = false;
-                    nodeState.Add(("", false));
                     break;
                 case FSMNodeState.Stoped:
                     canStart = true;
                     canPause = false;
                     canContinue = false;
-                    nodeState.Add(("", true));
                     break;
                 default:
                     canStart = false;
@@ -159,10 +118,13 @@ namespace StateMachineDemoShared.Pages
             InvokeAsync(StateHasChanged);
         }
         private bool canStart = true;
-        public void Start()
+        public async Task Start()
         {
             CreateExecutor();
-            executor?.Restart();
+            if (executor is not null)
+            {
+                await executor.RestartAsync();
+            }
         }
 
         private bool canPause = false;

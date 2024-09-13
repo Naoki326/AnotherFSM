@@ -517,6 +517,7 @@ namespace StateMachine
             if (!engine.TryGetEvent(newName, out FSMEvent? sEvent))
             {
                 sEvent = new FSMEvent(newName);
+                engine.AddEvent(sEvent);
             }
             if (!engine[fromNodeName].HasTransition(sEvent))
             {

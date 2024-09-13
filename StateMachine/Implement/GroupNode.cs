@@ -9,7 +9,7 @@ namespace StateMachine.Implement
     public class GroupNode : BaseGroupNode
     {
 
-        private FSMExecutor executor;
+        private FSMSingleThreadExecutor executor;
 
         [FSMProperty("Start node's name", true, 3)]
         public string StartName { get; set; }
@@ -20,7 +20,7 @@ namespace StateMachine.Implement
         public override void InitBeforeStart()
         {
             executor?.Dispose();
-            executor = new FSMExecutor(Engine[StartName], Engine.GetEvent(EndEvent));
+            executor = new FSMSingleThreadExecutor(Engine[StartName], Engine.GetEvent(EndEvent));
             executor.NodeStateChanged += OnNodeStateChanged;
             executor.NodeExitChanged += OnNodeExitChanged;
         }
@@ -44,7 +44,7 @@ Begin:
             }
             else
             {
-                executor.Restart();
+                await executor.RestartAsync();
             }
             yield return null;
             using (Context.TokenSource.Token.Register(executor.Pause))
@@ -54,7 +54,7 @@ Begin:
                     await Task.WhenAny(executor.ExecutorTask, Task.Delay(-1, Context.Token));
                     if (Context.IsPaused)
                     {
-                        executor.CurrentNodeTask.Wait();
+                        await Task.WhenAny(executor.CurrentNodeTask, Task.Delay(-1, Context.Token));
                     }
                 }
                 catch (OperationCanceledException ex)
