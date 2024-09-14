@@ -176,22 +176,6 @@ namespace StateMachineDemoShared.Pages
             (pv.Engine.GetNode("Group") as GroupNode).EndEvent = "End3Event";
         }
 
-        private void ResetEventDescriptions(IFSMNode state)
-        {
-            if (state?.GetType().GetCustomAttributes(typeof(FSMNodeAttribute), true).FirstOrDefault() as FSMNodeAttribute is FSMNodeAttribute fsmNodeInfo
-                && fsmNodeInfo.Indexes.Length == fsmNodeInfo.EventDescriptions.Length)
-            {
-                state.EventDescriptions = Enumerable.Range(0, fsmNodeInfo.Indexes.Length)
-                    .Select(p => new NodeEventDescription() { Index = fsmNodeInfo.Indexes[p], Description = fsmNodeInfo.EventDescriptions[p] }).ToList();
-                foreach (var ed in state.EventDescriptions)
-                {
-                    if (!pv.Engine.TryGetEvent(ed.Description, out FSMEvent e))
-                    { e = new FSMEvent(ed.Description); pv.Engine.AddEvent(e); }
-                    state.SetBranchEvent(ed.Index, e);
-                }
-            }
-        }
-
         protected override Task OnAfterRenderAsync(bool firstRender)
         {
             if (firstRender)

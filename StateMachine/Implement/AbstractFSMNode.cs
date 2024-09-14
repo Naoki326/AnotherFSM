@@ -122,6 +122,14 @@ namespace StateMachine
         void IFSMNode.SetBranchEvent(int index, FSMEvent @event)
         {
             BranchDict[index] = @event;
+            if (EventDescriptions.FirstOrDefault(p => p.Index == index) is NodeEventDescription description)
+            {
+                description.Description = @event.EventName;
+            }
+            else
+            {
+                EventDescriptions.Add(new NodeEventDescription() { Index = index, Description = @event.EventName });
+            }
         }
 
         //状态机的上下文
@@ -171,18 +179,15 @@ namespace StateMachine
             }
             catch (OperationCanceledException)
             {
-                if (!tcs.Task.IsCompleted)
-                { tcs.TrySetResult(false); }
+                tcs.TrySetResult(false);
                 await Interupt();
-                if (Context != null)
-                { Context.SetPause(true); }
+                Context.SetPause(true);
                 return false;
             }
             finally
             {
                 await ExitAsync();
-                if (!tcs.Task.IsCompleted)
-                { tcs.TrySetResult(true); }
+                tcs.TrySetResult(true);
             }
         }
 
