@@ -72,10 +72,6 @@ namespace StateMachineWPFDemo
                     services.AddWpfBlazorWebView();
 
                     services.AddSingleton(serviceProvider => new MainWindow() { ServiceProvider = serviceProvider });
-
-                    services.AddCascadingAuthenticationState();
-                    services.AddAuthorizationCore();
-                    services.AddScoped<AuthenticationStateProvider, WholeAuthStateProvider>();
                     services.AddMasaBlazor();
                 });
         }

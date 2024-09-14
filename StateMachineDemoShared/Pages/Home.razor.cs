@@ -164,6 +164,10 @@ namespace StateMachineDemoShared.Pages
         private async Task InitAExample()
         {
             await pv.ImportFromScript(initScript);
+            foreach (var state in pv.Engine)
+            {
+                ResetEventDescriptions(state);
+            }
             (pv.Engine.GetNode("Check") as AccumulateNode).Count = 6;
             (pv.Engine.GetNode("Sleep1") as SleepNode).Duration = 5000;
             (pv.Engine.GetNode("Sleep2") as SleepNode).Duration = 3000;
@@ -174,10 +178,6 @@ namespace StateMachineDemoShared.Pages
                 };
             (pv.Engine.GetNode("Group") as GroupNode).StartName = "Start3";
             (pv.Engine.GetNode("Group") as GroupNode).EndEvent = "End3Event";
-            foreach(var state in pv.Engine)
-            {
-                ResetEventDescriptions(state);
-            }
         }
 
         private void ResetEventDescriptions(IFSMNode state)
