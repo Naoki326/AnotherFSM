@@ -166,10 +166,10 @@ namespace StateMachineDemoShared.Pages
             await pv.ImportFromScript(initScript);
             //这里不打开两次，drawflow会有奇怪的bug
             await pv.ImportFromScript(initScript);
-            (pv.Engine.GetNode("Check") as AccumulateNode).Count = 6;
-            (pv.Engine.GetNode("Sleep1") as SleepNode).Duration = 5000;
-            (pv.Engine.GetNode("Sleep2") as SleepNode).Duration = 3000;
-            (pv.Engine.GetNode("Parallel") as ParallelNode).FSMs = new List<FSMDescribe>()
+            (pv.Engine["Check"] as AccumulateNode).Count = 6;
+            (pv.Engine["Sleep1"] as SleepNode).Duration = 5000;
+            (pv.Engine["Sleep2"] as SleepNode).Duration = 3000;
+            (pv.Engine["Parallel"] as ParallelNode).FSMs = new List<FSMDescribe>()
                 {
                     new FSMDescribe(){ StartNode = "Start1", EndEvent = "End1Event" },
                     new FSMDescribe(){ StartNode = "Start2", EndEvent = "End2Event" },
