@@ -10,23 +10,24 @@ AnotherFSM 是一个**基于有限状态机、快速构建流程的工具库**�
 唯一与状态机不同的地方在于：有限状态机的节点仅仅表示状态，而本工具节点上附有额外的执行代码。
 
 ### Demo
+
 [演示流程的控制、修改、执行](https://naoki326.github.io/AnotherFSM)
 
 ### 依赖项
+ 
+- Proj与界面无关的部分，即**StateMachine**项目，依赖Antofac.Annotation项目，两者基于.**NetStandard2.0**编写
 
-Proj与界面无关的部分，即**StateMachine**项目，依赖Antofac.Annotation项目，两者基于.**NetStandard2.0**编写
+- 界面相关部分，即**StateMachine.FlowComponent**项目基于.**Net8.0**采用blazor编写
 
-界面相关部分，即**StateMachine.FlowComponent**项目基于.**Net8.0**采用blazor编写
+- **StateMachine**项目的功能完整，可以独立使用，不依赖于**StateMachine.FlowComponent**
 
-**StateMachine**项目的功能完整，可以独立使用，不依赖于**StateMachine.FlowComponent**
+- 其他为[Demo](https://naoki326.github.io/AnotherFSM)的实现
 
-其他为[Demo](https://naoki326.github.io/AnotherFSM)的实现
+### 简单使用教程(仅StateMachine项目)
 
-### 简单使用教程
+#### 1. IoC配置
 
-1.IoC配置
-
-若使用IHostBuilder，可以参考Demo，如下所示配置IoC：
+- 若使用IHostBuilder，可以参考Demo，如下所示配置IoC：
 
 ```C#
 Host.CreateDefaultBuilder(args)
@@ -54,7 +55,7 @@ Host.CreateDefaultBuilder(args)
     })
 ```
 
-不使用IHostBuilder的参考方式：
+- 不使用IHostBuilder的参考方式：
 
 ```C#
 var containerBuilder = new ContainerBuilder();
@@ -80,11 +81,11 @@ containerBuilder.RegisterBuildCallback(c =>
 containerBuilder.Build();
 ```
 
-两种方法均为参考，若熟悉IoC的配置方式，可自行灵活配置。
+- 两种方法均为参考，若熟悉IoC的配置方式，可自行灵活配置。
 
-2.流程结构管理类：FSMEngine
+#### 2. 流程结构管理类：FSMEngine
 
-该类型负责保存一个整体状态图结构，一个FSMEngine对象内部包括若干节点、事件及节点与节点之间通过事件相连接的关系。
+- 该类型负责保存一个整体状态图结构，一个FSMEngine对象内部包括若干节点、事件及节点与节点之间通过事件相连接的关系。
 
 | 常用函数 | 描述 |
 | --- | --- |
@@ -97,7 +98,7 @@ containerBuilder.Build();
 | ClearTransition | 删除当前节点的所有连线 |
 | AddEvent | 为当前节点添加可发出的事件 |
 
-另外利用Antlr实现了一套简单的有限状态机脚本语法，可用脚本快速构建状态图，填充FSMEngine，可在Demo中用Export查看对应脚本。
+- 另外利用Antlr实现了一套简单的有限状态机脚本语法，可用脚本快速构建状态图，填充FSMEngine，可在Demo中用Export查看对应脚本。
 
 | 常用函数 | 描述 |
 | --- | --- |
@@ -107,9 +108,9 @@ containerBuilder.Build();
 | TransformByFile | 通过脚本文件对当前状态图进行重组 |
 | ToString | 将当前对应的状态图输出为脚本 |
 
-3.流程执行类：FSMExecutor FSMSingleThreadExecutor(单线程，适用于WebAssembly，接口与FSMExecutor一致)
+#### 3. 流程执行类：FSMExecutor FSMSingleThreadExecutor(单线程，适用于WebAssembly，接口与FSMExecutor一致)
 
-每个FSMExecutor实例管理一个执行状态机的对象，该对象可以控制、监控状态机的执行。
+  - 每个FSMExecutor实例管理一个执行状态机的对象，该对象可以控制、监控状态机的执行。
 
 | 函数 | 描述 |
 | --- | --- |
@@ -119,7 +120,8 @@ containerBuilder.Build();
 | Continue | 继续，该方法为同步方法，当流程暂停时可调用该方法从暂停位置继续执行，这一过程不需要等待即可执行 |
 | StopAsync | 停止，停止需要等待当前节点中的阻塞操作 |
 
-监控相关：
+- 监控相关
+
 | 接口 | 类型 | 描述 |
 | --- | --- | --- |
 | State | 属性 | 当前流程执行的状态 |
@@ -131,13 +133,35 @@ containerBuilder.Build();
 | TrackStateEvent | 事件 | 以事件方式传递上面IObservable接口发出的所有事件 |
 | TrackCallEvent | 事件 | 流程控制方法调用时发出该事件，包括：RestartAsync、PauseAsync、Continue、StopAsync |
 
-其他：实现IEnumerable接口，返回从开始节点起，枚举与其相连的所有后继节点(深度优先搜索)
+- 其他：实现IEnumerable接口，返回从开始节点起，枚举与其相连的所有后继节点(深度优先搜索)
 
-4.节点基础类：AbstractFSMNode SimpleFSMNode EnumFSMNode AsyncEnumFSMNode
+#### 4. 节点基础类：AbstractFSMNode SimpleFSMNode EnumFSMNode AsyncEnumFSMNode
 
-节点使用特性 FSMNode FSMProperty
+| 类 | 描述 |
+| --- | --- |
+| AbstractFSMNode | 节点的初始抽象类，定义了基本的方法，继承该类的任意类型都可以作为节点使用在本框架 |
+| SimpleFSMNode | 最基础的节点类型，继承该类型的自定义节点只要自行实现ExecuteMethodAsync方法即可用于本框架，该ExecuteMethodAsync方法定义了状态机进入本节点时执行的动作，调用执行器的暂停时，将会等待该方法执行完毕后才会暂停 |
+| EnumFSMNode | 基于C#的yield机制实现了局部暂停继续的节点，继承该类型的自定义节点要自行实现ExecuteEnumerable方法，该方法返回IEnumerable\<object\> ，方法中任意位置可以插入yield return x;的语句，以便在当前位置增加一个暂停的检查点，当流程执行对象调用PauseAsync时，遇到检查点即暂停执行，继续时将会在暂停点自动恢复 |
+| AsyncEnumFSMNode | 同EnumFSMNode，在其基础上增加了异步执行的环境，即ExecuteEnumerable使用了IAsyncEnumerable\<object\> |
 
-5.节点常用类： 提供常见节点的实现
+- 另外所有节点基础类型中包含一个Context作为流程上下文
+
+| Context的属性 | 描述 |
+| --- | --- |
+| TriggerEvent | 触发导致进入当前节点的事件 |
+| Data | 从之前节点传入的数据，若未传入则可忽略 |
+| ManualLevel | 手动调试的级别 |
+| Token | 当前流程的Token，暂停或停止时Token变为取消状态，通常用于阻塞操作(如Web、IO操作)，以响应外部的暂停或停止 |
+| EnumResult | 暂留，未使用 |
+
+- 节点使用特性 FSMNode FSMProperty
+
+| 特性 | 使用范围 | 说明 |
+| --- | --- | --- |
+| FSMNodeAttribute | 添加在类定义上  | 定义节点在脚本中的名称，另外可以设定该节点可能发出的事件，设定界面显示信息及界面可用节点的排序号 |
+| FSMPropertyAttribute | 属性定义上 | 定义节点上需要额外赋值的属性，这里在Demo中与动态控件(DynamicObjectEditor)联合使用，实现界面赋值操作 |
+
+#### 5. 节点常用类： 提供常见节点的实现
 
 | 类 | 描述 |
 | --- | --- |
@@ -148,7 +172,7 @@ containerBuilder.Build();
 | ParallelNode | 并行流程包装节点，可在内部包装多个流程，需要对该类的FSMs属性赋值，可输入多个流程的StartNode名称和EndEvent名称。执行时按并行执行，完成时抛出NextEvent事件，若内部流程中止，抛出CancelEvent事件 |
 | AccumulateNode | 累积计数节点，用于实现计次的for循环，需要对Count属性赋值。完成时抛出NextEvent事件，若计数到Count次数，则发出BreakEvent事件 |
 
-注意，所有通用节点执行部分增加了演示用的延时，若需要正常使用，需删除延时部分代码，如AccumulateNode的执行方法：
+- 注意，所有通用节点执行部分增加了演示用的延时，若需要正常使用，需删除延时部分代码，如AccumulateNode的执行方法：
 ```C#
 protected override async IAsyncEnumerable<object> ExecuteEnumerable()
 {
@@ -176,8 +200,8 @@ protected override async IAsyncEnumerable<object> ExecuteEnumerable()
 
 ### 引用
 
-1.使用了依赖注入工具Autofac，和Autofac.Annotation(用.netstandard2.0重新编译)
+1. 使用了依赖注入工具Autofac，和Autofac.Annotation(用.netstandard2.0重新编译)
 
-2.脚本语言处理部分使用了工具Antlr4生成语法解析代码
+2. 脚本语言处理部分使用了工具Antlr4生成语法解析代码
 
-3.界面部分基于Masa Blazor和Drawflow编写
+3. 界面部分基于Masa Blazor和Drawflow编写

@@ -39,10 +39,6 @@ namespace StateMachine
 
         //在写流程的时候要通过这些东西来实现暂停的功能
         internal CancellationTokenSource TokenSource { get; private set; }
-        public void Delay(int mills)
-        {
-            Task.Delay(mills, TokenSource.Token).Wait();
-        }
 
         internal void Pause()
         {
