@@ -7,7 +7,8 @@
 ### 介绍
 
 AnotherFSM 是一个**基于有限状态机、快速构建流程的工具库**，不同于常见的工作流引擎，它的工作流部分仅仅基于有限状态机，除了节点、事件，没有定义其他特别的结构
-唯一与状态机不同的地方在于：有限状态机的节点仅仅表示状态，而本工具节点上附有额外的执行代码。
+
+唯一与状态机不同的地方在于：有限状态机的节点仅仅表示状态，而本工具在转到状态节点上时会执行自定义代码
 
 ### Demo
 
@@ -15,13 +16,23 @@ AnotherFSM 是一个**基于有限状态机、快速构建流程的工具库**�
 
 ### 依赖项
  
-- Proj与界面无关的部分，即**StateMachine**项目，依赖Antofac.Annotation项目，两者基于.**NetStandard2.0**编写
+- 本工程与界面无关的部分，即**StateMachine**项目，依赖Antofac.Annotation项目[^annotation]，两者基于**NetStandard2.0**编写
 
-- 界面相关部分，即**StateMachine.FlowComponent**项目基于.**Net8.0**采用blazor编写
+[^annotation]: 项目链接[Antofac.Annotation](https://github.com/yuzd/Autofac.Annotation)
+
+- 本工程界面相关部分，即**StateMachine.FlowComponent**项目基于**Net8.0**采用blazor编写，是**StateMachine**项目功能的扩展，便于通过界面快速构建流程
 
 - **StateMachine**项目的功能完整，可以独立使用，不依赖于**StateMachine.FlowComponent**
 
-- 其他为[Demo](https://naoki326.github.io/AnotherFSM)的实现
+- 本工程中其他项目均为[Demo](https://naoki326.github.io/AnotherFSM)的实现
+
+### 引用
+
+1. 使用了依赖注入工具Autofac，和[Antofac.Annotation](https://github.com/yuzd/Autofac.Annotation)(用.netstandard2.0重新编译)
+
+2. 脚本语言处理部分使用了工具Antlr4生成语法解析代码
+
+3. 界面部分基于[Masa Blazor](https://github.com/masastack/MASA.Blazor)和[Drawflow](https://github.com/jerosoler/Drawflow)编写
 
 ### 简单使用教程(仅StateMachine项目)
 
@@ -197,11 +208,3 @@ protected override async IAsyncEnumerable<object> ExecuteEnumerable()
     yield break;
 }
 ```
-
-### 引用
-
-1. 使用了依赖注入工具Autofac，和Autofac.Annotation(用.netstandard2.0重新编译)
-
-2. 脚本语言处理部分使用了工具Antlr4生成语法解析代码
-
-3. 界面部分基于Masa Blazor和Drawflow编写
