@@ -16,11 +16,11 @@ namespace StateMachine
     {
         public bool IsEnter { get; set; }
         public TrackType TrackType { get; set; }
-        public string StateName { get; set; }
-        public string PrevStateName { get; set; }
-        public string EventName { get; set; }
-        public IFSMNode CurrentNode { get; set; }
-        public FSMEvent FSMEvent { get; set; }
+        public string StateName { get; set; } = "";
+        public string PrevStateName { get; set; } = "";
+        public string EventName { get; set; } = "";
+        public IFSMNode CurrentNode { get; set; } = default!;
+        public FSMEvent FSMEvent { get; set; } = default!;
         public long ThreadId { get; set; }
 
     }

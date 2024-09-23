@@ -70,7 +70,7 @@
             Context.CheckPause();
         }
 
-        private IAsyncEnumerator<object> executor;
+        private IAsyncEnumerator<object>? executor;
 
         protected override void Dispose(bool Disposing)
         {
@@ -154,7 +154,7 @@
             }
         }
 
-        private IAsyncEnumerator<object> executor;
+        private IAsyncEnumerator<object>? executor;
 
         protected override void Dispose(bool Disposing)
         {
@@ -234,7 +234,7 @@
             }
         }
 
-        private IAsyncEnumerator<object> executor;
+        private IAsyncEnumerator<object>? executor;
 
         protected override void Dispose(bool Disposing)
         {

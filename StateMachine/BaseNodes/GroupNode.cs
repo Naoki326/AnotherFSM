@@ -2,24 +2,27 @@
 
 namespace StateMachine
 {
-    [FSMNode("Group", "流程包装节点", [1, 5], ["NextEvent", "CancelEvent"], Id = 3)]
+    [FSMNode("Group", "流程包装节点", [1, 3, 5], ["NextEvent", "ErrorEvent", "CancelEvent"], Id = 3)]
     public class GroupNode : BaseGroupNode
     {
 
-        private FSMSingleThreadExecutor executor;
+        private FSMSingleThreadExecutor? executor;
 
         [FSMProperty("Start node's name", true, 3)]
-        public string StartName { get; set; }
+        public string StartName { get; set; } = "";
 
         [FSMProperty("End event's name", true, 4)]
-        public string EndEvent { get; set; }
+        public string EndEvent { get; set; } = "";
 
         public override void InitBeforeStart()
         {
-            executor?.Dispose();
-            executor = new FSMSingleThreadExecutor(Engine[StartName], Engine.GetEvent(EndEvent));
-            executor.NodeStateChanged += OnNodeStateChanged;
-            executor.NodeExitChanged += OnNodeExitChanged;
+            if(Engine is not null)
+            {
+                executor?.Dispose();
+                executor = new FSMSingleThreadExecutor(Engine[StartName], Engine.GetEvent(EndEvent));
+                executor.NodeStateChanged += OnNodeStateChanged;
+                executor.NodeExitChanged += OnNodeExitChanged;
+            }
         }
 
         public GroupNode()
@@ -34,6 +37,11 @@ namespace StateMachine
 
         protected override async IAsyncEnumerable<object> ExecuteEnumerable()
         {
+            if(executor is null)
+            {
+                PublishEvent(FSMEnum.Error);
+                yield break;
+            }
         Begin:
             if (executor.State == FSMNodeState.Paused)
             {
@@ -54,7 +62,7 @@ namespace StateMachine
                         await Task.WhenAny(executor.CurrentNodeTask, Task.Delay(-1, Context.Token));
                     }
                 }
-                catch (OperationCanceledException ex)
+                catch (OperationCanceledException)
                 {
                 }
             }

@@ -4,12 +4,12 @@ namespace StateMachine
 {
     public class FSMDescribe
     {
-        public string StartNode { get; set; }
+        public string StartNode { get; set; } = "";
 
-        public string EndEvent { get; set; }
+        public string EndEvent { get; set; } = "";
     }
 
-    [FSMNode("Parallel", "并行流程包装节点", [1, 5], ["NextEvent", "CancelEvent"], Id = 4)]
+    [FSMNode("Parallel", "并行流程包装节点", [1, 3, 5], ["NextEvent", "ErrorEvent", "CancelEvent"], Id = 4)]
     public class ParallelNode : BaseGroupNode
     {
 
@@ -20,14 +20,17 @@ namespace StateMachine
 
         public override void InitBeforeStart()
         {
-            executors.ForEach(p => p.Dispose());
-            executors.Clear();
-            foreach (var fsm in FSMs)
+            if (Engine is not null)
             {
-                var executor = new FSMSingleThreadExecutor(Engine[fsm.StartNode], Engine.GetEvent(fsm.EndEvent));
-                executors.Add(executor);
-                executor.NodeStateChanged += OnNodeStateChanged;
-                executor.NodeExitChanged += OnNodeExitChanged;
+                executors.ForEach(p => p.Dispose());
+                executors.Clear();
+                foreach (var fsm in FSMs)
+                {
+                    var executor = new FSMSingleThreadExecutor(Engine[fsm.StartNode], Engine.GetEvent(fsm.EndEvent));
+                    executors.Add(executor);
+                    executor.NodeStateChanged += OnNodeStateChanged;
+                    executor.NodeExitChanged += OnNodeExitChanged;
+                }
             }
         }
 
@@ -42,6 +45,11 @@ namespace StateMachine
 
         protected override async IAsyncEnumerable<object> ExecuteEnumerable()
         {
+            if(executors.Count == 0)
+            {
+                PublishEvent(FSMEnum.Error);
+                yield break;
+            }
         Begin:
             if (executors.Any(p => p.State == FSMNodeState.Paused))
             {
@@ -70,7 +78,7 @@ namespace StateMachine
                         await Task.WhenAny(Task.WhenAll(executors.Select(p => p.CurrentNodeTask)), Task.Delay(-1, Context.Token));
                     }
                 }
-                catch (OperationCanceledException ex)
+                catch (OperationCanceledException)
                 {
                 }
             }

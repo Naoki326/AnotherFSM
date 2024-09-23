@@ -56,7 +56,7 @@
 
         public void CreateNode<T>(string name, string namePrev = "") where T : IFSMNode
         {
-            IFSMNode proc = default;
+            IFSMNode proc = default!;
             //预定义的Node
             try
             {
@@ -74,7 +74,7 @@
 
         public bool TryCreateNode<T>(string name, string namePrev = "") where T : IFSMNode
         {
-            IFSMNode proc = default;
+            IFSMNode proc = default!;
             //预定义的Node
             try
             {

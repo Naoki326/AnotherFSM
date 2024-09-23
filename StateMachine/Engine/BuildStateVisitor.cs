@@ -18,7 +18,7 @@ namespace StateMachine
             //}
         }
 
-        private IFSMNode node;
+        private IFSMNode node = default!;
         public Dictionary<string, FSMEvent> EventDict;
         public Dictionary<string, IFSMNode> NodeDict;
 
@@ -215,7 +215,7 @@ namespace StateMachine
 
         protected virtual IFSMNode CreateNode(string state_type)
         {
-            IFSMNode proc = default;
+            IFSMNode proc = default!;
             //预定义的Node
             switch (state_type.ToLower())
             {

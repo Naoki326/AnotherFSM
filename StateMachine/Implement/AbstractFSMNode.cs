@@ -129,7 +129,7 @@ namespace StateMachine
 
         //状态机的上下文
         //[Obsolete("建议使用LastContext和NextContext")]
-        public FSMNodeContext Context { get; set; }
+        public FSMNodeContext Context { get; set; } = default!;
 
         protected object LastData => Context.Data;
         protected object NextData { set => Context.Data = value; }
@@ -153,9 +153,9 @@ namespace StateMachine
         public string Name { get; set; } = "";
 
         [FSMProperty("NamePrev", false, true, -1)]
-        public string NamePrev { get; set; }
+        public string NamePrev { get; set; } = "";
 
-        IExcecuterContext IFSMNode.ExecuterContext { get; set; }
+        IExcecuterContext IFSMNode.ExecuterContext { get; set; } = default!;
         //当前线程的上下文，隐藏set方法
         public IExcecuterContext ExecuterContext => (this as IFSMNode).ExecuterContext;
 
@@ -224,7 +224,7 @@ namespace StateMachine
             if (BranchDict.TryGetValue(index, out FSMEvent value)
                 && value.Clone() is FSMEvent eventValue)
             {
-                eventValue.EventContext = eventContext;
+                eventValue.EventContext = eventContext!;
                 FSMEventAggregator.EventAggregator?.Publish(eventValue);
             }
         }

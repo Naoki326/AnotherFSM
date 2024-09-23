@@ -71,7 +71,7 @@ namespace StateMachine
             }
             catch (Exception)
             {
-                node = default;
+                node = default!;
                 return false;
             }
             return true;
@@ -108,7 +108,7 @@ namespace StateMachine
             }
             catch (Exception)
             {
-                e = default;
+                e = default!;
                 return false;
             }
         }
@@ -151,7 +151,7 @@ namespace StateMachine
             if (!EventDict.TryGetValue(name, out FSMEvent value))
             { return; }
             var eventValue = value;
-            eventValue.EventContext = eventContext;
+            eventValue.EventContext = eventContext!;
             FSMEventAggregator.EventAggregator.Publish(eventValue);
         }
 

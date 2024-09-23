@@ -86,11 +86,7 @@ namespace StateMachine
 
         [Parameter] public EventCallback OnConnectionUnselected { get; set; }
 
-        private bool _dialog;
-        private bool _importDialog;
-
-        [Parameter]
-        public FSMEngine StateMachineEngine { get; set; } = default!;
+        [Parameter] public FSMEngine StateMachineEngine { get; set; } = default!;
 
         private FSMEngine engine = default!;
         protected override async Task OnParametersSetAsync()
@@ -309,7 +305,6 @@ namespace StateMachine
             }
         }
 
-        string tempNodeType = default!;
         ExDragEventArgs tempArgs = default!;
 
         private async Task DropAsync(ExDragEventArgs args)

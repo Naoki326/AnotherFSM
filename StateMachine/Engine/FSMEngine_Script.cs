@@ -54,16 +54,16 @@ namespace StateMachine
 
         private void Gn_NodeExitChanged(object sender, string e)
         {
-            GroupNodeExitChanged(sender, e);
+            GroupNodeExitChanged?.Invoke(sender, e);
         }
 
         private void Gn_NodeStateChanged(object sender, string e)
         {
-            GroupNodeStateChanged(sender, e);
+            GroupNodeStateChanged?.Invoke(sender, e);
         }
 
-        public event EventHandler<string> GroupNodeStateChanged;
-        public event EventHandler<string> GroupNodeExitChanged;
+        public event EventHandler<string>? GroupNodeStateChanged;
+        public event EventHandler<string>? GroupNodeExitChanged;
 
         public bool TryCreateStateMachine(string input)
         {

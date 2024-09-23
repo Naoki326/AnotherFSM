@@ -6,9 +6,9 @@
 
         public bool Condition { get; set; } = false;
 
-        public string LastNodeName { get; set; }
+        public string LastNodeName { get; set; } = "";
 
-        public string CurrentNodeName { get; set; }
+        public string CurrentNodeName { get; set; } = "";
 
         string IExcecuterContext.LastNodeName => LastNodeName;
         string IExcecuterContext.CurrentNodeName => CurrentNodeName;

@@ -38,10 +38,6 @@ namespace StateMachine
             {
                 executor = ExecuteEnumerable().GetEnumerator();
             }
-            if (executor is null)
-            {
-                return Task.CompletedTask;
-            }
             while (true)
             {
                 Context.CheckPause();
@@ -79,7 +75,7 @@ namespace StateMachine
             return Task.CompletedTask;
         }
 
-        private IEnumerator executor;
+        private IEnumerator? executor;
 
         protected override void Dispose(bool Disposing)
         {
@@ -164,7 +160,7 @@ namespace StateMachine
             return Task.CompletedTask;
         }
 
-        private IEnumerator executor;
+        private IEnumerator? executor;
 
         protected override void Dispose(bool Disposing)
         {
@@ -245,7 +241,7 @@ namespace StateMachine
             return Task.CompletedTask;
         }
 
-        private IEnumerator executor;
+        private IEnumerator? executor;
 
         protected override void Dispose(bool Disposing)
         {

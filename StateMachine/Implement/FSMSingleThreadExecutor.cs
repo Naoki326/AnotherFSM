@@ -27,7 +27,7 @@ namespace StateMachine
 
         protected Channel<FSMEvent> EventConsumer;
 
-        protected IFSMNode CurrentNode;
+        protected IFSMNode CurrentNode = default!;
 
         protected IFSMNode Start;
         protected FSMEvent EndEvent;
@@ -41,7 +41,7 @@ namespace StateMachine
         private FSMEvent interuptEvent = new("InteruptEvent");
         public FSMEvent InteruptEvent => interuptEvent;
 
-        public Task ExecutorTask { get; private set; }
+        public Task ExecutorTask { get; private set; } = default!;
         public Task CurrentNodeTask => CurrentNode.WaitCurrentTask;
 
 
@@ -58,10 +58,10 @@ namespace StateMachine
             }
         }
 
-        public event EventHandler<string> NodeStateChanged;
-        public event EventHandler<string> NodeExitChanged;
+        public event EventHandler<string>? NodeStateChanged;
+        public event EventHandler<string>? NodeExitChanged;
         //事件的参数：solver实例，新状态，前一状态
-        public event Action<FSMSingleThreadExecutor, FSMNodeState, FSMNodeState> FSMStateChanged;
+        public event Action<FSMSingleThreadExecutor, FSMNodeState, FSMNodeState>? FSMStateChanged;
 
         private ExcecuterContext SolverContext { get; set; } = new ExcecuterContext();
 
@@ -160,7 +160,7 @@ namespace StateMachine
                     });
                     while (await EventConsumer.Reader.WaitToReadAsync())
                     {
-                        while (EventConsumer.Reader.TryRead(out FSMEvent @event))
+                        while (EventConsumer.Reader.TryRead(out FSMEvent? @event))
                         {
                             if (@event.EventID == ContinueEvent.EventID)
                             {
@@ -494,7 +494,7 @@ namespace StateMachine
             pausing = true;
             while (EventConsumer.Reader.Count > 0)
             {
-                if (EventConsumer.Reader.TryRead(out FSMEvent fSMEvent))
+                if (EventConsumer.Reader.TryRead(out FSMEvent? fSMEvent))
                 {
                     midEventList.Enqueue(fSMEvent);
                 }
@@ -510,7 +510,7 @@ namespace StateMachine
                 {
                     while (EventConsumer.Reader.Count > 0)
                     {
-                        if (EventConsumer.Reader.TryRead(out FSMEvent fSMEvent))
+                        if (EventConsumer.Reader.TryRead(out FSMEvent? fSMEvent))
                         {
                             midEventList.Enqueue(fSMEvent);
                         }
@@ -532,7 +532,7 @@ namespace StateMachine
             pausing = true;
             while (EventConsumer.Reader.Count > 0)
             {
-                if (EventConsumer.Reader.TryRead(out FSMEvent fSMEvent))
+                if (EventConsumer.Reader.TryRead(out FSMEvent? fSMEvent))
                 {
                     midEventList.Enqueue(fSMEvent);
                 }
@@ -546,7 +546,7 @@ namespace StateMachine
             {
                 while (EventConsumer.Reader.Count > 0)
                 {
-                    if (EventConsumer.Reader.TryRead(out FSMEvent fSMEvent))
+                    if (EventConsumer.Reader.TryRead(out FSMEvent? fSMEvent))
                     {
                         midEventList.Enqueue(fSMEvent);
                     }

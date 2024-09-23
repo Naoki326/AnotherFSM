@@ -106,7 +106,7 @@ namespace StateMachine
             if (!EventDict.TryGetValue(name, out FSMEvent value))
             { return; }
             var eventValue = value;
-            eventValue.EventContext = eventContext;
+            eventValue.EventContext = eventContext!;
             FSMEventAggregator.EventAggregator.Publish(eventValue);
         }
 

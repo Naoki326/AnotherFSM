@@ -14,7 +14,7 @@
             {
                 await Task.Delay(500, Context.Token);
             }
-            catch (OperationCanceledException ex)
+            catch (OperationCanceledException)
             { }
             yield return null;
             PublishEvent(FSMEnum.Next);

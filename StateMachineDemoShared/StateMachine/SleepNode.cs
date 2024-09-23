@@ -20,7 +20,7 @@ namespace DemoShared.StateMachine
             {
                 await Task.Delay(Duration, Context.Token);
             }
-            catch (OperationCanceledException ex)
+            catch (OperationCanceledException)
             { }
             yield return null;
             PublishEvent(FSMEnum.Next);

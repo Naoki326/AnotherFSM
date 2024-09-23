@@ -26,7 +26,7 @@ namespace StateMachine
 
         protected BlockingCollection<FSMEvent> EventConsumer;
 
-        protected IFSMNode CurrentNode;
+        protected IFSMNode CurrentNode = default!;
 
         protected IFSMNode Start;
         protected FSMEvent EndEvent;
@@ -40,7 +40,7 @@ namespace StateMachine
         private FSMEvent interuptEvent = new("InteruptEvent");
         public FSMEvent InteruptEvent => interuptEvent;
 
-        public Task ExecutorTask { get; private set; }
+        public Task ExecutorTask { get; private set; } = default!;
         public Task CurrentNodeTask => CurrentNode.WaitCurrentTask;
 
 
@@ -57,10 +57,10 @@ namespace StateMachine
             }
         }
 
-        public event EventHandler<string> NodeStateChanged;
-        public event EventHandler<string> NodeExitChanged;
+        public event EventHandler<string>? NodeStateChanged;
+        public event EventHandler<string>? NodeExitChanged;
         //事件的参数：solver实例，新状态，前一状态
-        public event Action<FSMExecutor, FSMNodeState, FSMNodeState> FSMStateChanged;
+        public event Action<FSMExecutor, FSMNodeState, FSMNodeState>? FSMStateChanged;
 
         private ExcecuterContext SolverContext { get; set; } = new ExcecuterContext();
 
