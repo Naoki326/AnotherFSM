@@ -1,7 +1,6 @@
 ﻿using Autofac;
 using Autofac.Annotation;
 using Autofac.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

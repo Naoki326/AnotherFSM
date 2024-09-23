@@ -64,8 +64,8 @@ namespace Autofac.AspectIntercepter.Pointcut
                     }
                 }
 
-                while(componentModel.MethodsNeedPointcuts.TryTake(out _)) { }
-                while(componentModel.DynamicGenricMethodsNeedPointcuts.TryTake(out _)) { }
+                while (componentModel.MethodsNeedPointcuts.TryTake(out _)) { }
+                while (componentModel.DynamicGenricMethodsNeedPointcuts.TryTake(out _)) { }
             }
         }
 

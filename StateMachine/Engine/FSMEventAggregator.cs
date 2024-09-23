@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace StateMachine
+﻿namespace StateMachine
 {
     internal static class FSMEventAggregator
     {

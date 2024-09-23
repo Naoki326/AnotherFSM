@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
-namespace StateMachine.Implement
+﻿namespace StateMachine
 {
-    [FSMNode("End", "结束节点", [1], ["EndEvent"], Id = 1)]
-    public class EndNode : AsyncEnumFSMNode
+    [FSMNode("Idle", "空转节点", [1], ["NextEvent"], Id = 2)]
+    public class IdleNode : AsyncEnumFSMNode
     {
-        public EndNode()
+        public IdleNode()
         {
         }
 

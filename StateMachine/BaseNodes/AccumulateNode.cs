@@ -1,6 +1,6 @@
 ﻿using StateMachine.Interface;
 
-namespace StateMachine.Implement
+namespace StateMachine
 {
     [FSMNode("Accumulate", "累积计数节点", [1, 4], ["NextEvent", "BreakEvent"], Id = 5)]
     public class AccumulateNode : AsyncEnumFSMNode

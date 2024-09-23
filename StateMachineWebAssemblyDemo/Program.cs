@@ -3,7 +3,6 @@ using Autofac.Annotation;
 using Autofac.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using Microsoft.Extensions.DependencyInjection;
 using StateMachine;
 using StateMachineDemoShared;
 using StateMachineWebAssemblyDemo;

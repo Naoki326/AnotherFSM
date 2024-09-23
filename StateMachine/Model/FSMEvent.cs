@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace StateMachine
+﻿namespace StateMachine
 {
     //事件类
     public class FSMEvent : ICloneable

@@ -50,7 +50,7 @@ public partial class ProcedureView : IDisposable
 
     [Parameter]
     public EventCallback AfterInit { get; set; }
-    
+
     private async void InitDraw()
     {
         await smBoard.ZoomAsync(0.8);

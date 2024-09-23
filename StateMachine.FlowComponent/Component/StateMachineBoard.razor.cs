@@ -1,4 +1,3 @@
-using Antlr4.Runtime.Misc;
 using Masa.Blazor;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -325,7 +324,7 @@ namespace StateMachine
             //原先是有同名Node就退出，这里改成自动改名称
             //await PopupService.EnqueueSnackbarAsync($"Node {nodeType} create failed! Exception: {nodeType} already exist", AlertTypes.Error);
             //return;
-            while(engine.TryGetNode(nodeType + nodeNameSuffix, out _))
+            while (engine.TryGetNode(nodeType + nodeNameSuffix, out _))
             {
                 nodeNameSuffix = suffixI.ToString();
                 suffixI++;

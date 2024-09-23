@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-namespace StateMachine
+﻿namespace StateMachine
 {
     public abstract class SimpleFSMNode : AbstractFSMNode, IFSMNode
     {

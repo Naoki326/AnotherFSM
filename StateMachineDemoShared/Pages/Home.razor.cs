@@ -3,7 +3,7 @@ using DemoShared.StateMachine;
 using Masa.Blazor.Components.Treeview;
 using OneOf.Types;
 using StateMachine;
-using StateMachine.Implement;
+using StateMachine;
 using System.Collections.Concurrent;
 
 namespace StateMachineDemoShared.Pages

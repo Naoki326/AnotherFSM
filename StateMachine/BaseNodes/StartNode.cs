@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
-namespace StateMachine.Implement
+﻿namespace StateMachine
 {
     [FSMNode("Start", "启动节点", [1], ["NextEvent"], Id = 0)]
     public class StartNode : AsyncEnumFSMNode

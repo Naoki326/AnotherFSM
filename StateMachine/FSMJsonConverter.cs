@@ -1,7 +1,4 @@
 ﻿using StateMachine.Interface;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -59,17 +56,17 @@ namespace StateMachine
             string id = reader.GetString();
             reader.Read();
             string idStr = reader.GetString();
-            
+
             reader.Read();
             string fsmNodeType = reader.GetString();
-            if(fsmNodeType != "IFSMNode")
+            if (fsmNodeType != "IFSMNode")
             {
                 throw new JsonException();
             }
             reader.Read();
             string typeName = reader.GetString();
 
-            var typeType = DeriveTypes.Value.First(p=>p.Name.Contains(typeName));
+            var typeType = DeriveTypes.Value.First(p => p.Name.Contains(typeName));
             var instance = Activator.CreateInstance(typeType);
 
             while (reader.Read())

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace StateMachine.Interface
+﻿namespace StateMachine.Interface
 {
     /// <summary>
     /// 节点属性，用于快速生成流程配置界面

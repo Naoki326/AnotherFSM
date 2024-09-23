@@ -1,7 +1,4 @@
-﻿using StateMachine.Implement;
-using System;
-
-namespace StateMachine
+﻿namespace StateMachine
 {
     //另一种方式创建流程结构
     public partial class FSMEngine
@@ -26,7 +23,7 @@ namespace StateMachine
                 throw new ScriptException("Node " + node_type + " 获取失败！");
             proc.Name = name;
             proc.NamePrev = namePrev;
-            if(proc is BaseGroupNode bNode)
+            if (proc is BaseGroupNode bNode)
             {
                 bNode.NodeStateChanged += GroupNodeStateChanged;
                 bNode.NodeExitChanged += GroupNodeExitChanged;

@@ -1,9 +1,6 @@
 ﻿using StateMachine.Interface;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
-namespace StateMachine.Implement
+namespace StateMachine
 {
     [FSMNode("Group", "流程包装节点", [1, 5], ["NextEvent", "CancelEvent"], Id = 3)]
     public class GroupNode : BaseGroupNode
@@ -37,7 +34,7 @@ namespace StateMachine.Implement
 
         protected override async IAsyncEnumerable<object> ExecuteEnumerable()
         {
-Begin:
+        Begin:
             if (executor.State == FSMNodeState.Paused)
             {
                 executor.Continue();
@@ -71,7 +68,7 @@ Begin:
             {
                 PublishEvent(FSMEnum.Next);
             }
-            else if(executor.State == FSMNodeState.Stoped)
+            else if (executor.State == FSMNodeState.Stoped)
             {
                 PublishEvent(FSMEnum.Cancel);
             }

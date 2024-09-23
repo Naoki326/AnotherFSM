@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace StateMachine.Implement
+﻿namespace StateMachine
 {
     public abstract class BaseGroupNode : AsyncEnumFSMNode
     {

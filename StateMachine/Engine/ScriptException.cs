@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace StateMachine
+﻿namespace StateMachine
 {
     public class ScriptException : Exception
     {

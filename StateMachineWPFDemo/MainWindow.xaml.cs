@@ -1,6 +1,6 @@
-﻿using System.Windows;
-using Microsoft.AspNetCore.Components.WebView.Wpf;
+﻿using Microsoft.AspNetCore.Components.WebView.Wpf;
 using StateMachineDemoShared;
+using System.Windows;
 
 namespace StateMachineWPFDemo
 {

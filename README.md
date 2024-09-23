@@ -8,7 +8,7 @@
 
 AnotherFSM 是一个**基于有限状态机、快速构建流程的工具库**，不同于常见的工作流引擎，它的工作流部分仅仅基于有限状态机，除了节点、事件，没有定义其他特别的结构
 
-唯一与状态机不同的地方在于：有限状态机的节点仅仅表示状态，而本工具在转到状态节点上时会执行自定义代码
+与通常的状态机不同的地方在于：通常有限状态机的节点仅仅表示状态(State)，另有一个动作(Action)的概念以执行相应操作。而本工具在跳转到某一状态节点上时会自动执行该节点对应类的执行代码，也就是将动作(Action)和状态(State)结合在一起，是简化的状态机
 
 ### Demo
 
@@ -94,7 +94,9 @@ containerBuilder.Build();
 
 - 两种方法均为参考，若熟悉IoC的配置方式，可自行灵活配置。
 
-#### 2. 流程结构管理类：FSMEngine
+#### 2. 流程结构管理类
+
+  - ***FSMEngine***
 
 - 该类型负责保存一个整体状态图结构，一个FSMEngine对象内部包括若干节点、事件及节点与节点之间通过事件相连接的关系。
 
@@ -119,7 +121,11 @@ containerBuilder.Build();
 | TransformByFile | 通过脚本文件对当前状态图进行重组 |
 | ToString | 将当前对应的状态图输出为脚本 |
 
-#### 3. 流程执行类：FSMExecutor FSMSingleThreadExecutor(单线程，适用于WebAssembly，接口与FSMExecutor一致)
+#### 3. 流程执行类
+
+  - ***FSMExecutor***
+
+  - ***FSMSingleThreadExecutor***(单线程，适用于WebAssembly，接口与FSMExecutor一致)
 
   - 每个FSMExecutor实例管理一个执行状态机的对象，该对象可以控制、监控状态机的执行。
 
@@ -146,7 +152,9 @@ containerBuilder.Build();
 
 - 其他：实现IEnumerable接口，返回从开始节点起，枚举与其相连的所有后继节点(深度优先搜索)
 
-#### 4. 节点基础类：AbstractFSMNode SimpleFSMNode EnumFSMNode AsyncEnumFSMNode
+#### 4. 节点基础类
+
+  - 自定义的执行代码需继承节点基础类来编写，可实现跳转到该节点时执行相对应的节点代码
 
 | 类 | 描述 |
 | --- | --- |
@@ -172,7 +180,9 @@ containerBuilder.Build();
 | FSMNodeAttribute | 添加在类定义上  | 定义节点在脚本中的名称，另外可以设定该节点可能发出的事件，设定界面显示信息及界面可用节点的排序号 |
 | FSMPropertyAttribute | 属性定义上 | 定义节点上需要额外赋值的属性，这里在Demo中与动态控件(DynamicObjectEditor)联合使用，实现界面赋值操作 |
 
-#### 5. 节点常用类： 提供常见节点的实现
+#### 5. 节点常用类
+
+  - 提供常见节点的原生实现，不需要自己实现即可使用
 
 | 类 | 描述 |
 | --- | --- |

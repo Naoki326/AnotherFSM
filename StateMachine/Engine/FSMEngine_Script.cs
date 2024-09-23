@@ -1,9 +1,4 @@
 ﻿using Antlr4.Runtime;
-using StateMachine.Implement;
-using System;
-using System.IO;
-using System.Linq;
-using System.Xml.Linq;
 
 namespace StateMachine
 {
@@ -88,8 +83,8 @@ namespace StateMachine
         public void CreateStateMachineByFile(string path)
         {
             using (FileStream f = new FileStream(path, FileMode.Open))
-                using(StreamReader reader = new StreamReader(f))
-                    CreateStateMachine(reader.ReadToEnd());
+            using (StreamReader reader = new StreamReader(f))
+                CreateStateMachine(reader.ReadToEnd());
         }
 
         public bool TryCreateStateMachineByFile(string path)
@@ -145,8 +140,8 @@ namespace StateMachine
         public void TransformByFile(string path)
         {
             using (FileStream f = new FileStream(path, FileMode.Open))
-                using (StreamReader reader = new StreamReader(f))
-                    Transform(reader.ReadToEnd());
+            using (StreamReader reader = new StreamReader(f))
+                Transform(reader.ReadToEnd());
         }
 
         public bool TryTransformByFile(string path)
