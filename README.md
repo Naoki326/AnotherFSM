@@ -1,44 +1,49 @@
-
-
 <h1 align="center">AnotherFSM</h1>
 
-<p align="center">基于有限状态机快速构建流程的工具</p>
+<p align="center">A tool for quickly building processes based on finite state machines</p>
 
-### 介绍
-
-AnotherFSM 是一个**基于有限状态机、快速构建流程的工具库**，不同于常见的工作流引擎，它的工作流部分仅仅基于有限状态机，除了节点、事件，没有定义其他特别的结构
-
-与通常的状态机不同的地方在于：通常有限状态机的节点仅仅表示状态(State)，另有一个动作(Action)的概念以执行相应操作。而本工具在跳转到某一状态节点上时会自动执行该节点对应类的执行代码，也就是将动作(Action)和状态(State)结合在一起，是简化的状态机
+English| [简体中文](./README.zh-CN.md)
 
 ### Demo
 
-[演示流程的控制、修改、执行](https://naoki326.github.io/AnotherFSM)
+[Control, modify, and execute the demo process](https://naoki326.github.io/AnotherFSM)
 
-### 依赖项
- 
-- 本工程与界面无关的部分，即**StateMachine**项目，依赖Antofac.Annotation项目[^annotation]，两者基于**NetStandard2.0**编写
+### Introduction
 
-[^annotation]: 项目链接[Antofac.Annotation](https://github.com/yuzd/Autofac.Annotation)
+AnotherFSM is a **tool library for quickly building processes based on finite state machines**. Unlike common workflow engines, its workflow part is solely based on finite state machines. Aside from nodes and events, no other special structures are defined.
 
-- 本工程界面相关部分，即**StateMachine.FlowComponent**项目基于**Net8.0**采用blazor编写，是**StateMachine**项目功能的扩展，便于通过界面快速构建流程
+The difference between this tool and usual state machines is that, in typical finite state machines, nodes only represent states, and there's an additional concept of actions to execute corresponding operations. This tool automatically executes the code corresponding to the node class when transitioning to a state node, combining actions and states into a simplified state machine.
 
-- **StateMachine**项目的功能完整，可以独立使用，不依赖于**StateMachine.FlowComponent**
+### Dependencies
 
-- 本工程中其他项目均为[Demo](https://naoki326.github.io/AnotherFSM)的实现
+- The part of this project unrelated to the interface, i.e., the **StateMachine** project, depends on the Antofac.Annotation project[^annotation], both written in **NetStandard2.0**.
 
-### 引用
+[^annotation]: Project link: [Antofac.Annotation](https://github.com/yuzd/Autofac.Annotation)
 
-1. 使用了依赖注入工具Autofac，和[Antofac.Annotation](https://github.com/yuzd/Autofac.Annotation)(用.netstandard2.0重新编译)
+- The interface-related part of this project, i.e., the **StateMachine.FlowComponent** project, is written in **Net8.0** using Blazor. It extends the functionality of the **StateMachine** project, facilitating quick process construction through the interface.
 
-2. 脚本语言处理部分使用了工具Antlr4生成语法解析代码
+- The **StateMachine** project is fully functional and can be used independently, without relying on **StateMachine.FlowComponent**.
 
-3. 界面部分基于[Masa Blazor](https://github.com/masastack/MASA.Blazor)和[Drawflow](https://github.com/jerosoler/Drawflow)编写
+- Other projects in this repository are implementations of the [Demo](https://naoki326.github.io/AnotherFSM).
 
-### 简单使用教程(仅StateMachine项目)
+### References
 
-#### 1. IoC配置
+1. Utilizes the dependency injection tool Autofac and [Antofac.Annotation](https://github.com/yuzd/Autofac.Annotation)[^annotation] (recompiled with .netstandard2.0).
 
-- 若使用IHostBuilder，可以参考Demo，如下所示配置IoC：
+2. The script language processing part uses Antlr4[^antlr4] to generate syntax parsing code.
+
+[^antlr4]: ANTLR (ANother Tool for Language Recognition) is a powerful parser generator for reading, processing, executing, or translating structured text or binary files. Project link: [Antlr4](https://github.com/antlr/antlr4)
+
+3. The interface part is written based on [Masa Blazor](https://github.com/masastack/MASA.Blazor)[^masablazor] and [Drawflow](https://github.com/jerosoler/Drawflow)[^drawflow].
+
+[^masablazor]: Masa Blazor is a blazor UI component library based on Material Design. Project link: [Masa Blazor](https://github.com/masastack/MASA.Blazor)
+[^drawflow]: Drawflow is a Simple flow library. Project link: [Drawflow](https://github.com/jerosoler/Drawflow)
+
+### Simple Usage Tutorial (StateMachine project only)
+
+#### 1. IoC Configuration
+
+- If using IHostBuilder, refer to the Demo and configure IoC as follows:
 
 ```C#
 Host.CreateDefaultBuilder(args)
@@ -48,37 +53,35 @@ Host.CreateDefaultBuilder(args)
         Assembly assembly = Assembly.Load("StateMachine");
         Assembly assembly2 = Assembly.Load("StateMachine.FlowComponent");
         Assembly assembly3 = Assembly.Load("StateMachineDemoShared");
-        //这里的assemblies需要覆盖所有包含实现了节点的程序集，以实现脚本自动构建节点
+        // The assemblies here need to cover all assemblies containing implemented nodes to enable script-based node construction
         Assembly[] assemblies = [Assembly.GetEntryAssembly(), assembly, assembly2, assembly3];
-        //注册所有的Module
+        // Register all modules
         containerBuilder.RegisterAssemblyModules(assemblies);
-        //注册所有包含Component特性的类型
-        //包括自定义的流程节点
+        // Register all types with the Component attribute, including custom process nodes
         containerBuilder.RegisterModule(new AutofacAnnotationModule(assemblies)
             .SetAutoRegisterInterface(true)
             .SetAutoRegisterParentClass(false)
             .SetIgnoreAutoRegisterAbstractClass(true));
         containerBuilder.RegisterBuildCallback(c =>
         {
-            //配置默认的全局IoC实例
+            // Configure the default global IoC instance
             IoC.ContainerWrapper = new ContainerWrapper(c);
         });
     })
 ```
 
-- 不使用IHostBuilder的参考方式：
+- Non-IHostBuilder configuration reference:
 
 ```C#
 var containerBuilder = new ContainerBuilder();
 Assembly assembly = Assembly.Load("StateMachine");
 Assembly assembly2 = Assembly.Load("StateMachine.FlowComponent");
 Assembly assembly3 = Assembly.Load("StateMachineDemoShared");
-//这里的assemblies需要覆盖所有包含实现了节点的程序集，以实现脚本自动构建节点
+// The assemblies here need to cover all assemblies containing implemented nodes to enable script-based node construction
 Assembly[] assemblies = [Assembly.GetEntryAssembly(), assembly, assembly2, assembly3];
-//注册所有的Module
+// Register all modules
 containerBuilder.RegisterAssemblyModules(assemblies);
-//注册所有包含Component特性的类型
-//包括自定义的流程节点
+// Register all types with the Component attribute, including custom process nodes
 containerBuilder.RegisterModule(new AutofacAnnotationModule(assemblies)
     .SetAutoRegisterInterface(true)
     .SetAutoRegisterParentClass(false)
@@ -86,114 +89,114 @@ containerBuilder.RegisterModule(new AutofacAnnotationModule(assemblies)
 
 containerBuilder.RegisterBuildCallback(c =>
 {
-    //配置默认的全局IoC实例
+    // Configure the default global IoC instance
     IoC.ContainerWrapper = new ContainerWrapper(c);
 });
 containerBuilder.Build();
 ```
 
-- 两种方法均为参考，若熟悉IoC的配置方式，可自行灵活配置。
+- Both methods are references. If familiar with IoC configuration, feel free to configure as needed.
 
-#### 2. 流程结构管理类
+#### 2. Process Structure Management Class
 
-  - ***FSMEngine***
+- ***FSMEngine***
 
-- 该类型负责保存一个整体状态图结构，一个FSMEngine对象内部包括若干节点、事件及节点与节点之间通过事件相连接的关系。
+- This type is responsible for saving an overall state graph structure. An FSMEngine object includes several nodes, events, and the relationships connecting nodes via events.
 
-| 常用函数 | 描述 |
+| Common Functions | Description |
 | --- | --- |
-| CreateNode | 创建一个节点，需要输入节点类型，节点名称 |
-| ReinitGroupNode | 由于GroupNode需要反过来引用当前FSMEngine，若通过CreateNode创建了GroupNode或ParallelNode之后，需要在FSMEngine中调用该方法对GroupNode初始化一下 |
-| ConnectNode | 创建节点之间的连线，输入事件名称、出节点名、进入节点名，表示该事件使得出节点转化为入节点 |
-| ChangeNodeName | 修改节点名称 |
-| ChangeTransitionName | 修改连线名称 |
-| DeleteTransition | 删除一条节点连线 |
-| ClearTransition | 删除当前节点的所有连线 |
-| AddEvent | 为当前节点添加可发出的事件 |
+| CreateNode | Creates a node, requiring the node type and node name |
+| ReinitGroupNode | Since GroupNode needs to reference the current FSMEngine, after creating GroupNode or ParallelNode using CreateNode, this method should be called in FSMEngine to initialize the GroupNode |
+| ConnectNode | Creates connections between nodes, input event name, from-node name, and to-node name to indicate that the event transitions the from-node to the to-node |
+| ChangeNodeName | Changes the node name |
+| ChangeTransitionName | Changes the transition name |
+| DeleteTransition | Deletes a node transition |
+| ClearTransition | Deletes all transitions of the current node |
+| AddEvent | Adds an event that the current node can emit |
 
-- 另外利用Antlr实现了一套简单的有限状态机脚本语法，可用脚本快速构建状态图，填充FSMEngine，可在Demo中用Export查看对应脚本。
+- Additionally, a simple finite state machine script syntax implemented using Antlr is available, allowing quick construction of state graphs and filling FSMEngine using scripts. The corresponding script can be viewed using Export in the Demo.
 
-| 常用函数 | 描述 |
+| Common Functions | Description |
 | --- | --- |
-| CreateStateMachine | 通过脚本创建FSMEngine |
-| CreateStateMachineByFile | 通过脚本文件创建FSMEngine |
-| Transform | 对当前状态图进行重组，已有节点内的各种属性不变，连线改变，可新增节点、事件 |
-| TransformByFile | 通过脚本文件对当前状态图进行重组 |
-| ToString | 将当前对应的状态图输出为脚本 |
+| CreateStateMachine | Creates FSMEngine using a script |
+| CreateStateMachineByFile | Creates FSMEngine using a script file |
+| Transform | Reorganizes the current state graph, keeping the properties of existing nodes unchanged while changing transitions and allowing the addition of new nodes and events |
+| TransformByFile | Reorganizes the current state graph using a script file |
+| ToString | Outputs the current state graph as a script |
 
-#### 3. 流程执行类
+#### 3. Process Execution Class
 
-  - ***FSMExecutor***
+- ***FSMExecutor***
 
-  - ***FSMSingleThreadExecutor***(单线程，适用于WebAssembly，接口与FSMExecutor一致)
+- ***FSMSingleThreadExecutor*** (single-threaded, suitable for WebAssembly, with the same interface as FSMExecutor)
 
-  - 每个FSMExecutor实例管理一个执行状态机的对象，该对象可以控制、监控状态机的执行。
+- Each FSMExecutor instance manages an object executing the state machine, capable of controlling and monitoring the state machine execution.
 
-| 函数 | 描述 |
+| Function | Description |
 | --- | --- |
-| FSMExecutor | 构造函数，需要传入一个启动节点与一个完成事件 |
-| RestartAsync | 重启动，注意控制方法均为异步方法，重启动会自动调用停止，以停止前次的执行，该过程需等待前次执行的正确退出 |
-| PauseAsync | 暂停，暂停需要等待当前执行节点的正确暂停，若当前节点正运行到阻塞方法中，暂停方法亦会阻塞直到阻塞方法正确执行完毕 |
-| Continue | 继续，该方法为同步方法，当流程暂停时可调用该方法从暂停位置继续执行，这一过程不需要等待即可执行 |
-| StopAsync | 停止，停止需要等待当前节点中的阻塞操作 |
+| FSMExecutor | Constructor, requiring a start node and a completion event |
+| RestartAsync | Restarts, note that control methods are asynchronous. Restarting will automatically stop the previous execution, awaiting its proper termination |
+| PauseAsync | Pauses, requiring the current node to correctly pause. If the current node is at a blocking method, the pause method will block until the blocking method completes correctly |
+| Continue | Continues, this method is synchronous and can be called to resume execution from the pause point without waiting |
+| StopAsync | Stops, requiring the current node's blocking operations to terminate |
 
-- 监控相关
+- Monitoring
 
-| 接口 | 类型 | 描述 |
+| Interface | Type | Description |
 | --- | --- | --- |
-| State | 属性 | 当前流程执行的状态 |
-| FSMStateChanged | 事件 | 流程执行的状态即State的改变事件 |
-| NodeStateChanged | 事件 | 节点进入事件 |
-| NodeExitChanged | 事件 | 节点退出事件 |
-| NodeExceptionEvent | 事件 | 节点抛出异常事件 |
-| IObservable | 接口 | 基于IObservable，提供订阅所有的节点相关事件，包括节点的进入、启动节点进入、取消、暂停、继续、错误、多余事件抛弃等 |
-| TrackStateEvent | 事件 | 以事件方式传递上面IObservable接口发出的所有事件 |
-| TrackCallEvent | 事件 | 流程控制方法调用时发出该事件，包括：RestartAsync、PauseAsync、Continue、StopAsync |
+| State | Property | The current execution state of the process |
+| FSMStateChanged | Event | Event triggered when the process execution state (State) changes |
+| NodeStateChanged | Event | Node entry event |
+| NodeExitChanged | Event | Node exit event |
+| NodeExceptionEvent | Event | Node exception event |
+| IObservable | Interface | Provides subscription to all node-related events, including node entry, start node entry, cancellation, pause, continue, error, and extra event discarding |
+| TrackStateEvent | Event | Transmits all events emitted by the IObservable interface as events |
+| TrackCallEvent | Event | Event emitted when process control methods are called, including RestartAsync, PauseAsync, Continue, StopAsync |
 
-- 其他：实现IEnumerable接口，返回从开始节点起，枚举与其相连的所有后继节点(深度优先搜索)
+- Others: Implements IEnumerable interface, returning all successor nodes connected from the start node (depth-first search).
 
-#### 4. 节点基础类
+#### 4. Node Base Class
 
-  - 自定义的执行代码需继承节点基础类来编写，可实现跳转到该节点时执行相对应的节点代码
+- Custom execution code needs to inherit from the node base class to implement the code executed when transitioning to the node.
 
-| 类 | 描述 |
+| Class | Description |
 | --- | --- |
-| AbstractFSMNode | 节点的初始抽象类，定义了基本的方法，继承该类的任意类型都可以作为节点使用在本框架 |
-| SimpleFSMNode | 最基础的节点类型，继承该类型的自定义节点只要自行实现ExecuteMethodAsync方法即可用于本框架，该ExecuteMethodAsync方法定义了状态机进入本节点时执行的动作，调用执行器的暂停时，将会等待该方法执行完毕后才会暂停 |
-| EnumFSMNode | 基于C#的yield机制实现了局部暂停继续的节点，继承该类型的自定义节点要自行实现ExecuteEnumerable方法，该方法返回IEnumerable\<object\> ，方法中任意位置可以插入yield return x;的语句，以便在当前位置增加一个暂停的检查点，当流程执行对象调用PauseAsync时，遇到检查点即暂停执行，继续时将会在暂停点自动恢复 |
-| AsyncEnumFSMNode | 同EnumFSMNode，在其基础上增加了异步执行的环境，即ExecuteEnumerable使用了IAsyncEnumerable\<object\> |
+| AbstractFSMNode | Initial abstract class for nodes, defining basic methods. Any type inheriting this class can be used as a node in this framework |
+| SimpleFSMNode | The most basic node type. Custom nodes inheriting this type only need to implement the ExecuteMethodAsync method for use in this framework, defining the action executed upon entering this node. The pause method will wait for this method to complete before pausing |
+| EnumFSMNode | Implements nodes with local pause and continue using C#'s yield mechanism. Custom nodes inheriting this type need to implement the ExecuteEnumerable method, which returns IEnumerable\<object\>. The method can have yield return x; statements to insert pause checkpoints. The process execution object will pause at these checkpoints when PauseAsync is called and resume at the pause point when continued |
+| AsyncEnumFSMNode | Similar to EnumFSMNode, but adds asynchronous execution, with ExecuteEnumerable using IAsyncEnumerable\<object\> |
 
-- 另外所有节点基础类型中包含一个Context作为流程上下文
+- Additionally, all node base types include a Context as the process context.
 
-| Context的属性 | 描述 |
+| Context Property | Description |
 | --- | --- |
-| TriggerEvent | 触发导致进入当前节点的事件 |
-| Data | 从之前节点传入的数据，若未传入则可忽略 |
-| ManualLevel | 手动调试的级别 |
-| Token | 当前流程的Token，暂停或停止时Token变为取消状态，通常用于阻塞操作(如Web、IO操作)，以响应外部的暂停或停止 |
-| EnumResult | 暂留，未使用 |
+| TriggerEvent | The event that triggered entry into the current node |
+| Data | Data passed from the previous node, if any, can be ignored if not passed |
+| ManualLevel | Manual debugging level |
+| Token | The current process's token, which becomes a cancellation state when pausing or stopping, typically used for blocking operations (e.g., Web, IO operations) to respond to external pause or stop requests |
+| EnumResult | Reserved, not used |
 
-- 节点使用特性 FSMNode FSMProperty
+- Node attributes FSMNode FSMProperty
 
-| 特性 | 使用范围 | 说明 |
+| Attribute | Scope | Description |
 | --- | --- | --- |
-| FSMNodeAttribute | 添加在类定义上  | 定义节点在脚本中的名称，另外可以设定该节点可能发出的事件，设定界面显示信息及界面可用节点的排序号 |
-| FSMPropertyAttribute | 属性定义上 | 定义节点上需要额外赋值的属性，这里在Demo中与动态控件(DynamicObjectEditor)联合使用，实现界面赋值操作 |
+| FSMNodeAttribute | Class definition  | Defines the node name in the script, can also set possible emitted events, interface display information, and interface usable node sort order |
+| FSMPropertyAttribute | Property definition | Defines additional properties to be assigned to the node, used in conjunction with DynamicObjectEditor in the Demo for interface assignment operations |
 
-#### 5. 节点常用类
+#### 5. Common Node Classes
 
-  - 提供常见节点的原生实现，不需要自己实现即可使用
+- Provides native implementations of common nodes, ready to use without custom implementation.
 
-| 类 | 描述 |
+| Class | Description |
 | --- | --- |
-| StartNode | 启动节点，默认抛出NextEvent事件 |
-| EndNode | 结束节点，默认抛出EndEvent事件 |
-| IdleNode | 空闲节点，默认抛出NextEvent事件 |
-| GroupNode | 流程包装节点，可在内部包装另一个流程，需要对该类的StartName和EndEvent属性赋值。完成时抛出NextEvent事件，若内部流程中止，抛出CancelEvent事件 |
-| ParallelNode | 并行流程包装节点，可在内部包装多个流程，需要对该类的FSMs属性赋值，可输入多个流程的StartNode名称和EndEvent名称。执行时按并行执行，完成时抛出NextEvent事件，若内部流程中止，抛出CancelEvent事件 |
-| AccumulateNode | 累积计数节点，用于实现计次的for循环，需要对Count属性赋值。完成时抛出NextEvent事件，若计数到Count次数，则发出BreakEvent事件 |
+| StartNode | Start node, emits NextEvent by default |
+| EndNode | End node, emits EndEvent by default |
+| IdleNode | Idle node, emits NextEvent by default |
+| GroupNode | Process wrapper node, wraps another process inside. Requires StartName and EndEvent properties to be set. Emits NextEvent upon completion, and CancelEvent if the internal process aborts |
+| ParallelNode | Parallel process wrapper node, wraps multiple processes inside. Requires FSMs property to be set with multiple processes' StartNode names and EndEvent names. Executes in parallel, emits NextEvent upon completion, and CancelEvent if any internal process aborts |
+| AccumulateNode | Accumulation count node for implementing counted for-loops, requires Count property to be set. Emits NextEvent upon completion, and BreakEvent when counting reaches Count |
 
-- 注意，所有通用节点执行部分增加了演示用的延时，若需要正常使用，需删除延时部分代码，如AccumulateNode的执行方法：
+- Note: All common nodes include a demo delay. For normal use, remove the delay code, e.g., AccumulateNode's execution method:
 ```C#
 protected override async IAsyncEnumerable<object> ExecuteEnumerable()
 {
@@ -217,4 +220,5 @@ protected override async IAsyncEnumerable<object> ExecuteEnumerable()
     }
     yield break;
 }
+```
 ```
