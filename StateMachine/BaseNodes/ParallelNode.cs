@@ -13,7 +13,7 @@ namespace StateMachine
     public class ParallelNode : BaseGroupNode
     {
 
-        private List<FSMSingleThreadExecutor> executors = [];
+        private List<FSMExecutor> executors = [];
 
         [FSMProperty("Parrllel FSM", true, 3)]
         public List<FSMDescribe> FSMs { get; set; } = [];
@@ -26,7 +26,7 @@ namespace StateMachine
                 executors.Clear();
                 foreach (var fsm in FSMs)
                 {
-                    var executor = new FSMSingleThreadExecutor(Engine[fsm.StartNode], Engine.GetEvent(fsm.EndEvent));
+                    var executor = new FSMExecutor(Engine[fsm.StartNode], Engine.GetEvent(fsm.EndEvent));
                     executors.Add(executor);
                     executor.NodeStateChanged += OnNodeStateChanged;
                     executor.NodeExitChanged += OnNodeExitChanged;

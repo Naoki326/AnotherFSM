@@ -128,8 +128,6 @@ containerBuilder.Build();
 
 - ***FSMExecutor***
 
-- ***FSMSingleThreadExecutor*** (single-threaded, suitable for WebAssembly, with the same interface as FSMExecutor)
-
 - Each FSMExecutor instance manages an object executing the state machine, capable of controlling and monitoring the state machine execution.
 
 | Function | Description |

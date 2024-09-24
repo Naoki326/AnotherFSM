@@ -130,8 +130,6 @@ containerBuilder.Build();
 
   - ***FSMExecutor***
 
-  - ***FSMSingleThreadExecutor***(单线程，适用于WebAssembly，接口与FSMExecutor一致)
-
   - 每个FSMExecutor实例管理一个执行状态机的对象，该对象可以控制、监控状态机的执行。
 
 | 函数 | 描述 |

@@ -8,7 +8,7 @@ namespace StateMachineDemoShared.Pages
     {
 
         private ProcedureView pv = default!;
-        private FSMSingleThreadExecutor? executor;
+        private FSMExecutor? executor;
 
         protected override Task OnInitializedAsync()
         {
@@ -199,7 +199,7 @@ namespace StateMachineDemoShared.Pages
                     end = new FSMEvent("EndEvent");
                 }
                 pv.Engine.ReinitGroupNode();
-                executor = new FSMSingleThreadExecutor(StateState, end);
+                executor = new FSMExecutor(StateState, end);
                 executor.FSMStateChanged += Executor_FSMStateChanged;
                 executor.NodeStateChanged += Executor_NodeStateChanged;
                 executor.NodeExitChanged += Executor_NodeExitChanged;
@@ -222,7 +222,7 @@ namespace StateMachineDemoShared.Pages
             //nodeState.Add((e, true));
         }
 
-        private void Executor_FSMStateChanged(FSMSingleThreadExecutor arg1, FSMNodeState newState, FSMNodeState oldState)
+        private void Executor_FSMStateChanged(FSMExecutor arg1, FSMNodeState newState, FSMNodeState oldState)
         {
             switch (newState)
             {

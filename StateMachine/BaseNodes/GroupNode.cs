@@ -6,7 +6,7 @@ namespace StateMachine
     public class GroupNode : BaseGroupNode
     {
 
-        private FSMSingleThreadExecutor? executor;
+        private FSMExecutor? executor;
 
         [FSMProperty("Start node's name", true, 3)]
         public string StartName { get; set; } = "";
@@ -19,7 +19,7 @@ namespace StateMachine
             if(Engine is not null)
             {
                 executor?.Dispose();
-                executor = new FSMSingleThreadExecutor(Engine[StartName], Engine.GetEvent(EndEvent));
+                executor = new FSMExecutor(Engine[StartName], Engine.GetEvent(EndEvent));
                 executor.NodeStateChanged += OnNodeStateChanged;
                 executor.NodeExitChanged += OnNodeExitChanged;
             }
