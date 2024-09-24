@@ -131,6 +131,8 @@ containerBuilder.Build();
   - ***FSMExecutor***
 
   - 每个FSMExecutor实例管理一个执行状态机的对象，该对象可以控制、监控状态机的执行。
+  
+  - 强调：状态流将在Task中执行，若流程出现异常，Task自动退出，对于流程出现的任何异常，可检查IObservable接口的OnError或者NodeExceptionEvent事件
 
 | 函数 | 描述 |
 | --- | --- |
@@ -146,10 +148,10 @@ containerBuilder.Build();
 | --- | --- | --- |
 | State | 属性 | 当前流程执行的状态 |
 | FSMStateChanged | 事件 | 流程执行的状态即State的改变事件 |
+| IObservable | 接口 | 基于IObservable，提供订阅所有的节点相关事件，包括下面所有的事件，如：节点的进入、启动节点进入、取消、暂停、继续、错误、多余事件抛弃等。注意：状态流将在Task中执行，若流程出现异常，Task自动退出，对于流程出现的任何异常，可检查IObservable接口的OnError或者NodeExceptionEvent事件 |
 | NodeStateChanged | 事件 | 节点进入事件 |
 | NodeExitChanged | 事件 | 节点退出事件 |
 | NodeExceptionEvent | 事件 | 节点抛出异常事件 |
-| IObservable | 接口 | 基于IObservable，提供订阅所有的节点相关事件，包括节点的进入、启动节点进入、取消、暂停、继续、错误、多余事件抛弃等 |
 | TrackStateEvent | 事件 | 以事件方式传递上面IObservable接口发出的所有事件 |
 | TrackCallEvent | 事件 | 流程控制方法调用时发出该事件，包括：RestartAsync、PauseAsync、Continue、StopAsync |
 

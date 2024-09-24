@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Collections.Concurrent;
-using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 
 namespace StateMachine
@@ -16,12 +15,10 @@ namespace StateMachine
             EventConsumer = Channel.CreateUnbounded<FSMEvent>();
             State = FSMNodeState.Initialized;
 
-            observer = new FSMNodeObserver(this);
-            observerDisposeObj = (this as IObservable<string>).Subscribe(observer);
+            InitObserver();
 
             eventAggregator = FSMEventAggregator.EventAggregator;
         }
-        private IDisposable observerDisposeObj;
 
         private IEventAggregator eventAggregator;
 
@@ -98,11 +95,6 @@ namespace StateMachine
             }
             catch (OperationCanceledException) { isCancel = true; }
             catch (Exception ex) when (ex.InnerException is OperationCanceledException) { isCancel = true; }
-            catch (Exception ex)
-            {
-                NodeExceptionEvent?.Invoke(ex);
-                throw new FSMException($"流程{CurrentNode.Name}运行异常");
-            }
             finally
             {
                 CurrentNode.RaiseInterrupt -= CurrentNode_RaiseInterrupt;
@@ -112,180 +104,124 @@ namespace StateMachine
             return isCancel;
         }
 
-        public event Action<Exception> NodeExceptionEvent;
-
         private async Task ConsumerTask()
         {
             long threadId = Thread.CurrentThread.ManagedThreadId;
             Thread.CurrentThread.Name = $"State Machine Task({threadId})";
-            using ((this as IObservable<StateTrackInfo>).Subscribe(observer))
+            eventAggregator.Subscribe(this);
+            try
             {
-                eventAggregator.Subscribe(this);
-                try
+                bool isCancel = false;
+
+                //这里是第一个启动节点
+                //Track Start Enter
+                TrackState(new StateTrackInfo()
                 {
-                    bool isCancel = false;
+                    IsEnter = true, TrackType = TrackType.Start,
+                    PrevStateName = "", CurrentNode = Start, StateName = Start.Name,
+                    FSMEvent = default!, EventName = "",
+                    ThreadId = threadId,
+                });
 
-                    //这里是第一个启动节点
-                    //Track Start Enter
-                    TrackState(new StateTrackInfo()
+                isCancel = await RunCurrentNodeAsync(true);
+
+                //Track Start Exit
+                TrackState(new StateTrackInfo()
+                {
+                    IsEnter = false, TrackType = isCancel ? TrackType.Cancel : TrackType.Normal,
+                    PrevStateName = "", CurrentNode = Start, StateName = Start.Name,
+                    FSMEvent = default!, EventName = "",
+                    ThreadId = threadId,
+                });
+                while (await EventConsumer.Reader.WaitToReadAsync())
+                {
+                    while (EventConsumer.Reader.TryRead(out FSMEvent? @event))
                     {
-                        IsEnter = true,
-                        TrackType = TrackType.Start,
-
-                        PrevStateName = "",
-                        CurrentNode = Start,
-                        StateName = Start.Name,
-
-                        FSMEvent = default!,
-                        EventName = "",
-
-                        ThreadId = threadId,
-                    });
-                    isCancel = await RunCurrentNodeAsync(true);
-
-                    //Track Start Exit
-                    TrackState(new StateTrackInfo()
-                    {
-                        IsEnter = false,
-                        TrackType = isCancel ? TrackType.Cancel : TrackType.Normal,
-
-                        PrevStateName = "",
-                        CurrentNode = Start,
-                        StateName = Start.Name,
-
-                        FSMEvent = default!,
-                        EventName = "",
-
-                        ThreadId = threadId,
-                    });
-                    while (await EventConsumer.Reader.WaitToReadAsync())
-                    {
-                        while (EventConsumer.Reader.TryRead(out FSMEvent? @event))
+                        if (@event.EventID == ContinueEvent.EventID)
                         {
-                            if (@event.EventID == ContinueEvent.EventID)
+                            //这里是暂停之后继续的分支
+                            //Track Continue Enter
+                            TrackState(new StateTrackInfo()
                             {
-                                //这里是暂停之后继续的分支
-                                //Track Continue Enter
-                                TrackState(new StateTrackInfo()
-                                {
-                                    IsEnter = true,
-                                    TrackType = TrackType.Continue,
+                                IsEnter = true, TrackType = TrackType.Continue,
+                                PrevStateName = CurrentNode.Name, CurrentNode = CurrentNode, StateName = CurrentNode.Name,
+                                EventName = ContinueEvent.EventName, FSMEvent = ContinueEvent,
+                                ThreadId = threadId,
+                            });
 
-                                    PrevStateName = CurrentNode.Name,
-                                    CurrentNode = CurrentNode,
-                                    StateName = CurrentNode.Name,
+                            isCancel = await RunCurrentNodeAsync(false);
 
-                                    EventName = ContinueEvent.EventName,
-                                    FSMEvent = ContinueEvent,
-
-                                    ThreadId = threadId,
-                                });
-
-                                isCancel = await RunCurrentNodeAsync(false);
-
-                                //Track Continue Exit
-                                TrackState(new StateTrackInfo()
-                                {
-                                    IsEnter = false,
-                                    TrackType = isCancel ? TrackType.Cancel : TrackType.Normal,
-
-                                    PrevStateName = "",
-                                    CurrentNode = CurrentNode,
-                                    StateName = CurrentNode.Name,
-
-                                    FSMEvent = default!,
-                                    EventName = "",
-
-                                    ThreadId = threadId,
-                                });
-                            }
-                            else if (CurrentNode.HasTransition(@event))
+                            //Track Continue Exit
+                            TrackState(new StateTrackInfo()
                             {
-                                //这里是正常执行节点的分支
-                                CurrentNode.Context.TriggerEvent = @event;
-                                SolverContext.LastNodeName = CurrentNode.Name;
-                                var nextNode = CurrentNode.TargetState(@event);
-                                nextNode.Context = CurrentNode.Context;
+                                IsEnter = false, TrackType = isCancel ? TrackType.Cancel : TrackType.Normal,
+                                PrevStateName = "", CurrentNode = CurrentNode, StateName = CurrentNode.Name,
+                                FSMEvent = default!, EventName = "",
+                                ThreadId = threadId,
+                            });
+                        }
+                        else if (CurrentNode.HasTransition(@event))
+                        {
+                            //这里是正常执行节点的分支
+                            CurrentNode.Context.TriggerEvent = @event;
+                            SolverContext.LastNodeName = CurrentNode.Name;
+                            var nextNode = CurrentNode.TargetState(@event);
+                            nextNode.Context = CurrentNode.Context;
 
-                                //Track Enter
-                                TrackState(new StateTrackInfo()
-                                {
-                                    IsEnter = true,
-                                    TrackType = TrackType.Normal,
-
-                                    PrevStateName = CurrentNode.Name,
-                                    StateName = nextNode.Name,
-                                    CurrentNode = nextNode,
-
-                                    FSMEvent = @event,
-                                    EventName = @event.EventName,
-
-                                    ThreadId = threadId,
-                                });
-
-                                CurrentNode = nextNode;
-
-                                isCancel = await RunCurrentNodeAsync(true);
-
-                                //Track Exit
-                                TrackState(new StateTrackInfo()
-                                {
-                                    IsEnter = false,
-                                    TrackType = isCancel ? TrackType.Cancel : TrackType.Normal,
-
-                                    PrevStateName = CurrentNode.Name,
-                                    StateName = CurrentNode.Name,
-                                    CurrentNode = CurrentNode,
-
-                                    FSMEvent = default!,
-                                    EventName = "",
-
-                                    ThreadId = threadId,
-                                });
-                            }
-                            else
+                            //Track Enter
+                            TrackState(new StateTrackInfo()
                             {
-                                //无用的Event
-                                TrackState(new StateTrackInfo()
-                                {
-                                    TrackType = TrackType.DiscardEvent,
+                                IsEnter = true, TrackType = TrackType.Normal,
+                                PrevStateName = CurrentNode.Name, StateName = nextNode.Name, CurrentNode = nextNode,
+                                FSMEvent = @event, EventName = @event.EventName,
+                                ThreadId = threadId,
+                            });
 
-                                    PrevStateName = "",
-                                    CurrentNode = CurrentNode,
-                                    StateName = CurrentNode.Name,
+                            CurrentNode = nextNode;
 
-                                    FSMEvent = @event,
-                                    EventName = @event.EventName,
+                            isCancel = await RunCurrentNodeAsync(true);
 
-                                    ThreadId = threadId,
-                                });
-                            }
+                            //Track Exit
+                            TrackState(new StateTrackInfo()
+                            {
+                                IsEnter = false, TrackType = isCancel ? TrackType.Cancel : TrackType.Normal,
+                                PrevStateName = CurrentNode.Name, StateName = CurrentNode.Name, CurrentNode = CurrentNode,
+                                FSMEvent = default!, EventName = "",
+                                ThreadId = threadId,
+                            });
+                        }
+                        else
+                        {
+                            //无用的Event
+                            TrackState(new StateTrackInfo()
+                            {
+                                TrackType = TrackType.DiscardEvent,
+                                PrevStateName = "", CurrentNode = CurrentNode, StateName = CurrentNode.Name,
+                                FSMEvent = @event, EventName = @event.EventName,
+                                ThreadId = threadId,
+                            });
                         }
                     }
                 }
-                catch (Exception ex)
-                {
-                    //Track Exit
-                    TrackState(new StateTrackInfo()
-                    {
-                        IsEnter = false,
-                        TrackType = TrackType.StateError,
-
-                        PrevStateName = CurrentNode.Name,
-                        StateName = CurrentNode.Name,
-                        CurrentNode = CurrentNode,
-
-                        FSMEvent = default!,
-                        EventName = "",
-
-                        ThreadId = threadId,
-                    });
-
-                    throw new FSMException($"Consumer Task Exit with error: {ex.Message}");
-                }
-                finally
-                { eventAggregator.Unsubscribe(this); }
             }
+            catch (Exception ex)
+            {
+                //Track Exit
+                TrackState(new StateTrackInfo()
+                {
+                    IsEnter = false, TrackType = TrackType.StateError,
+                    PrevStateName = CurrentNode.Name, StateName = CurrentNode.Name, CurrentNode = CurrentNode,
+                    FSMEvent = default!, EventName = "",
+                    ThreadId = threadId,
+                });
+                TrackException(ex);
+
+                //这里位于Task中，若流程出现异常，Task自动退出
+                //注意遇到任何异常，都需要检查IObservable的OnError或者NodeExceptionEvent事件
+                return;
+            }
+            finally
+            { eventAggregator.Unsubscribe(this); }
         }
 
         private void CurrentNode_RaiseInterrupt()
@@ -616,100 +552,6 @@ namespace StateMachine
         }
     }
 
-
-
-    public partial class FSMExecutor : IObservable<StateTrackInfo>, IObservable<string>
-    {
-        //流程节点进出事件
-        public event Action<StateTrackInfo> TrackStateEvent;
-
-        //FSMNode类的方法调用事件
-        public event Action<string> TrackCallEvent;
-
-        private FSMNodeObserver observer;
-        private class FSMNodeObserver : IObserver<StateTrackInfo>, IObserver<string>
-        {
-            private FSMExecutor solver;
-            public FSMNodeObserver(FSMExecutor solver_)
-            {
-                solver = solver_;
-            }
-
-            public void OnCompleted()
-            {
-            }
-
-            public void OnError(Exception error)
-            {
-            }
-
-            public void OnNext(StateTrackInfo value)
-            {
-                solver.TrackStateEvent?.Invoke(value);
-            }
-
-            public void OnNext(string value)
-            {
-                solver.TrackCallEvent?.Invoke(value);
-            }
-        }
-
-        private List<IObserver<StateTrackInfo>> observers = new List<IObserver<StateTrackInfo>>();
-        IDisposable IObservable<StateTrackInfo>.Subscribe(IObserver<StateTrackInfo> observer)
-        {
-            observers.Add(observer);
-            return new Unsubscriber<StateTrackInfo>(observers, observer);
-        }
-
-        private void TrackState(StateTrackInfo info)
-        {
-            foreach (var observer in observers)
-                observer.OnNext(info);
-        }
-
-        public void StopTrack()
-        {
-            foreach (var observer in observers)
-                observer.OnCompleted();
-            foreach (var observer in stringObservers)
-                observer.OnCompleted();
-
-            observers.Clear();
-            stringObservers.Clear();
-        }
-
-        private void TrackCallname([CallerMemberName] string info = default!)
-        {
-            foreach (var observer in stringObservers)
-                observer.OnNext(info);
-        }
-
-        private List<IObserver<string>> stringObservers = new List<IObserver<string>>();
-        IDisposable IObservable<string>.Subscribe(IObserver<string> observer)
-        {
-            stringObservers.Add(observer);
-            return new Unsubscriber<string>(stringObservers, observer);
-        }
-
-        private class Unsubscriber<T> : IDisposable
-        {
-            private List<IObserver<T>> _observers;
-            private IObserver<T> _observer;
-
-            public Unsubscriber(List<IObserver<T>> observers, IObserver<T> observer)
-            {
-                this._observers = observers;
-                this._observer = observer;
-            }
-
-            public void Dispose()
-            {
-                if (_observer != null && _observers.Contains(_observer))
-                    _observers.Remove(_observer);
-            }
-        }
-    }
-
     public partial class FSMExecutor : IDisposable
     {
         private bool disposedValue;
@@ -721,7 +563,6 @@ namespace StateMachine
                 if (disposing)
                 {
                     // TODO: 释放托管状态(托管对象)
-                    observerDisposeObj?.Dispose();
                     if (EventConsumer != null)
                     {
                         eventAggregator.Unsubscribe(this);

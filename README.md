@@ -130,6 +130,8 @@ containerBuilder.Build();
 
 - Each FSMExecutor instance manages an object executing the state machine, capable of controlling and monitoring the state machine execution.
 
+- IMPORTANT: The state flow will execute within a Task. If the process encounters an exception, the Task will automatically exit. For any exceptions that occur during the process, you can check the IObservable's OnError or the NodeExceptionEvent event.
+
 | Function | Description |
 | --- | --- |
 | FSMExecutor | Constructor, requiring a start node and a completion event |
@@ -144,10 +146,10 @@ containerBuilder.Build();
 | --- | --- | --- |
 | State | Property | The current execution state of the process |
 | FSMStateChanged | Event | Event triggered when the process execution state (State) changes |
+| IObservable | Interface | Based on IObservable, it provides subscription to all node-related events, including the following events: node entry, start node entry, cancellation, pause, continue, error, extra event discarding, etc. Note: The state flow will execute within a Task. If the process encounters an exception, the Task will automatically exit. For any exceptions that occur during the process, you can check the IObservable's OnError or the NodeExceptionEvent event. |
 | NodeStateChanged | Event | Node entry event |
 | NodeExitChanged | Event | Node exit event |
 | NodeExceptionEvent | Event | Node exception event |
-| IObservable | Interface | Provides subscription to all node-related events, including node entry, start node entry, cancellation, pause, continue, error, and extra event discarding |
 | TrackStateEvent | Event | Transmits all events emitted by the IObservable interface as events |
 | TrackCallEvent | Event | Event emitted when process control methods are called, including RestartAsync, PauseAsync, Continue, StopAsync |
 
