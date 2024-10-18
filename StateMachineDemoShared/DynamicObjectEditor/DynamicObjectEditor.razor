@@ -75,10 +75,46 @@
 }
 
 @code {
-    StringNumber _selectedItem = -1;
+    /// <summary>
+    /// 当前控件所解析的复杂对象，可对其进行赋值
+    /// </summary>
+    [Parameter]
+    public T TargetObject { get; set; } = default!;
 
+    /// <summary>
+    /// 自定义的界面渲染方式，针对key类型可自动匹配渲染器
+    /// </summary>
+    [Parameter]
+    public Dictionary<Type, Func<object, EventCallback, RenderFragment>>? SpecialTypeRender { get; set; }
 
-    RenderFragment DynamicListInstance(object target, PropertyInfo property)
+    /// <summary>
+    /// 仅用于创建List<T>的子项，当T是Interface类型时，在TType中查找可赋值给T的类型，将该类型作为可选的新建项目
+    /// </summary>
+    [Parameter]
+    public List<Type> TType { get; set; } = default!;
+
+    /// <summary>
+    /// 传入过滤器，仅处理当前对象通过过滤器返回的属性
+    /// </summary>
+    [Parameter]
+    public Func<T, PropertyInfo[]> Filter { get; set; } = (t => t!.GetType().GetProperties());
+
+    [Parameter]
+    public string? Title { get; set; }
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    [Parameter]
+    public string? Style { get; set; }
+
+    [Parameter]
+    public EventCallback OnInputChanged { get; set; }
+
+    private PropertyInfo[] properties = default!;
+    private StringNumber _selectedItem = -1;
+
+    private RenderFragment DynamicListInstance(object target, PropertyInfo property)
     {
         if (property.PropertyType.GenericTypeArguments[0].IsClass)
         {
@@ -110,7 +146,7 @@
         }
     }
 
-    RenderFragment DynamicInstance(object target, PropertyInfo property)
+    private RenderFragment DynamicInstance(object target, PropertyInfo property)
     {
         if (SpecialTypeRender is not null
             && SpecialTypeRender.FirstOrDefault(p => p.Key.IsAssignableFrom(property.PropertyType)) is KeyValuePair<Type, Func<object, EventCallback, RenderFragment>> typeRender)
@@ -150,32 +186,6 @@
         }
         return builder => { };
     }
-
-    [Parameter]
-    public Dictionary<Type, Func<object, EventCallback, RenderFragment>>? SpecialTypeRender { get; set; }
-
-    [Parameter]
-    public string? Class { get; set; }
-
-    [Parameter]
-    public string? Style { get; set; }
-
-    [Parameter]
-    public List<Type> TType { get; set; } = default!;
-
-    [Parameter]
-    public T TargetObject { get; set; } = default!;
-
-    [Parameter]
-    public string? Title{ get; set; }
-
-    private PropertyInfo[] properties = default!;
-
-    [Parameter]
-    public Func<T, PropertyInfo[]> Filter { get; set; } = (t => t!.GetType().GetProperties());
-
-    [Parameter]
-    public EventCallback OnInputChanged{ get; set; }
 
     protected override void OnParametersSet()
     {

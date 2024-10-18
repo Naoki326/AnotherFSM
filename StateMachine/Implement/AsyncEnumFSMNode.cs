@@ -60,6 +60,9 @@
                         {
                             throw new Exception($"Node {(this as IFSMNode).Name} 存在异常未处理", e);
                         }
+                        await executor.DisposeAsync();
+                        executor = default;
+                        break;
                     }
                     catch (Exception e2)
                     {
@@ -136,19 +139,13 @@
                 }
                 catch (Exception e)
                 {
-                    bool flag;
-                    try
+                    if (!HandleException(e))
                     {
-                        flag = HandleException(e);
+                        throw new Exception($"Node {(this as IFSMNode).Name} 存在异常未处理", e);
                     }
-                    catch (Exception e2)
-                    {
-                        throw new Exception($"State {(this as IFSMNode).Name} 处理函数抛出异常！", e2);
-                    }
-                    if (!flag)
-                    {
-                        throw new Exception($"State {(this as IFSMNode).Name} 存在异常未处理", e);
-                    }
+                    await executor.DisposeAsync();
+                    executor = default;
+                    break;
                 }
                 Context?.CheckPause();
             }
@@ -216,19 +213,13 @@
                 }
                 catch (Exception e)
                 {
-                    bool flag;
-                    try
+                    if (!HandleException(e))
                     {
-                        flag = HandleException(e);
+                        throw new Exception($"Node {(this as IFSMNode).Name} 存在异常未处理", e);
                     }
-                    catch (Exception e2)
-                    {
-                        throw new Exception($"State {(this as IFSMNode).Name} 处理函数抛出异常！", e2);
-                    }
-                    if (!flag)
-                    {
-                        throw new Exception($"State {(this as IFSMNode).Name} 存在异常未处理", e);
-                    }
+                    await executor.DisposeAsync();
+                    executor = default;
+                    break;
                 }
                 Context.CheckPause();
             }

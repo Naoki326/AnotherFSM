@@ -141,7 +141,7 @@ namespace StateMachine
 
         public void PublishEvent(string name)
         {
-            if (!EventDict.TryGetValue(name, out FSMEvent value))
+            if (!EventDict.TryGetValue(name, out FSMEvent? value))
             { return; }
             FSMEventAggregator.EventAggregator.Publish(value);
         }

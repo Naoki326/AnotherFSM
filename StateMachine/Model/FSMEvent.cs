@@ -10,8 +10,8 @@
 
         public string EventID { get; } = Guid.NewGuid().ToString();
 
-        protected object eventContext;
-        public object EventContext
+        protected object? eventContext;
+        public object? EventContext
         {
             get => eventContext;
             set => eventContext = value;
@@ -37,7 +37,7 @@
         {
         }
 
-        public new T EventContext
+        public new T? EventContext
         {
             get => eventContext is T t ? t : default;
             set

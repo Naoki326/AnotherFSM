@@ -10,6 +10,7 @@
         TValue="string"
         @bind-Value="@Select"
         OnSelect="@OnSelect"
+        Label="@I18n.T(Property.Name)"
         Items="enumDict.Keys.ToList()"
         ItemText="@(r=>I18n.T(enumDict[r]))"
         ItemValue="@(r=>enumDict[r])">

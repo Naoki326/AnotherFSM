@@ -46,7 +46,7 @@ namespace StateMachine
                     if (!executor.MoveNext())
                     {
                         (executor as IEnumerator<object>)?.Dispose();
-                        executor = default!;
+                        executor = default;
                         break;
                     }
                     if (CheckPriority(executor.Current))
@@ -56,18 +56,19 @@ namespace StateMachine
                 }
                 catch (Exception e)
                 {
-                    bool flag;
                     try
                     {
-                        flag = HandleException(e);
+                        if (!HandleException(e))
+                        {
+                            throw new Exception($"Node {(this as IFSMNode).Name} 存在异常未处理", e);
+                        }
+                        (executor as IEnumerator<object>)?.Dispose();
+                        executor = default;
+                        break;
                     }
                     catch (Exception e2)
                     {
-                        throw new Exception($"State {(this as IFSMNode).Name} 处理函数抛出异常！", e2);
-                    }
-                    if (!flag)
-                    {
-                        throw new Exception($"State {(this as IFSMNode).Name} 存在异常未处理", e);
+                        throw new Exception($"Node {(this as IFSMNode).Name} 处理函数抛出异常！", e2);
                     }
                 }
             }
@@ -140,18 +141,19 @@ namespace StateMachine
                 }
                 catch (Exception e)
                 {
-                    bool flag;
                     try
                     {
-                        flag = HandleException(e);
+                        if (!HandleException(e))
+                        {
+                            throw new Exception($"Node {(this as IFSMNode).Name} 存在异常未处理", e);
+                        }
+                        (executor as IEnumerator<object>)?.Dispose();
+                        executor = default;
+                        break;
                     }
                     catch (Exception e2)
                     {
-                        throw new Exception($"State {(this as IFSMNode).Name} 处理函数抛出异常！", e2);
-                    }
-                    if (!flag)
-                    {
-                        throw new Exception($"State {(this as IFSMNode).Name} 存在异常未处理", e);
+                        throw new Exception($"Node {(this as IFSMNode).Name} 处理函数抛出异常！", e2);
                     }
                 }
                 Context?.CheckPause();
@@ -221,18 +223,19 @@ namespace StateMachine
                 }
                 catch (Exception e)
                 {
-                    bool flag;
                     try
                     {
-                        flag = HandleException(e);
+                        if (!HandleException(e))
+                        {
+                            throw new Exception($"Node {(this as IFSMNode).Name} 存在异常未处理", e);
+                        }
+                        (executor as IEnumerator<object>)?.Dispose();
+                        executor = default;
+                        break;
                     }
                     catch (Exception e2)
                     {
-                        throw new Exception($"State {(this as IFSMNode).Name} 处理函数抛出异常！", e2);
-                    }
-                    if (!flag)
-                    {
-                        throw new Exception($"State {(this as IFSMNode).Name} 存在异常未处理", e);
+                        throw new Exception($"Node {(this as IFSMNode).Name} 处理函数抛出异常！", e2);
                     }
                 }
                 Context.CheckPause();

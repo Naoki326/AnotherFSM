@@ -28,7 +28,11 @@ namespace StateMachine
             catch (OperationCanceledException)
             { }
             yield return null;
-            if (i < Count)
+            if (Count < 0)
+            {
+                PublishEvent(FSMEnum.Next);
+            }
+            else if (i < Count)
             {
                 i++;
                 PublishEvent(FSMEnum.Next);

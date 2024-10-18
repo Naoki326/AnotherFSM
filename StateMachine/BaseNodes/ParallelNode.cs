@@ -20,17 +20,14 @@ namespace StateMachine
 
         public override void InitBeforeStart()
         {
-            if (Engine is not null)
+            executors.ForEach(p => p.Dispose());
+            executors.Clear();
+            foreach (var fsm in FSMs)
             {
-                executors.ForEach(p => p.Dispose());
-                executors.Clear();
-                foreach (var fsm in FSMs)
-                {
-                    var executor = new FSMExecutor(Engine[fsm.StartNode], Engine.GetEvent(fsm.EndEvent));
-                    executors.Add(executor);
-                    executor.NodeStateChanged += OnNodeStateChanged;
-                    executor.NodeExitChanged += OnNodeExitChanged;
-                }
+                var executor = new FSMExecutor(Engine[fsm.StartNode], Engine.GetEvent(fsm.EndEvent));
+                executors.Add(executor);
+                executor.NodeStateChanged += OnNodeStateChanged;
+                executor.NodeExitChanged += OnNodeExitChanged;
             }
         }
 
@@ -45,12 +42,8 @@ namespace StateMachine
 
         protected override async IAsyncEnumerable<object> ExecuteEnumerable()
         {
-            if(executors.Count == 0)
-            {
-                PublishEvent(FSMEnum.Error);
-                yield break;
-            }
         Begin:
+            yield return null;
             if (executors.Any(p => p.State == FSMNodeState.Paused))
             {
                 executors.ForEach(p =>
@@ -64,6 +57,7 @@ namespace StateMachine
                 executors.ForEach(async p => await p.RestartAsync());
             }
             yield return null;
+            executors.ForEach(p => p.FSMStateChanged += Executor_FSMStateChanged);
             using (Context.TokenSource.Token.Register(() => executors.ForEach(p =>
             {
                 if (!p.ExecutorTask.IsCompleted)
@@ -78,10 +72,12 @@ namespace StateMachine
                         await Task.WhenAny(Task.WhenAll(executors.Select(p => p.CurrentNodeTask)), Task.Delay(-1, Context.Token));
                     }
                 }
-                catch (OperationCanceledException)
+                catch (OperationCanceledException ex)
                 {
+                    executors.ForEach(p => p.FSMStateChanged -= Executor_FSMStateChanged);
                 }
             }
+            executors.ForEach(p => p.FSMStateChanged -= Executor_FSMStateChanged);
             if (Context.IsPaused)
             {
                 yield return null;
@@ -95,6 +91,14 @@ namespace StateMachine
             else
             {
                 PublishEvent(FSMEnum.Next);
+            }
+        }
+
+        private void Executor_FSMStateChanged(FSMExecutor executor, FSMNodeState state1, FSMNodeState state2)
+        {
+            if (state1 == FSMNodeState.Paused)
+            {
+                this.Pause();
             }
         }
 

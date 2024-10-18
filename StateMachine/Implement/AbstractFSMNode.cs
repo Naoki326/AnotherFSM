@@ -93,38 +93,30 @@ namespace StateMachine
         {
             IFSMNode node = this;
 
-            StringBuilder outStringB = new StringBuilder();
-            outStringB.AppendLine($"def {node.Name}({node.ClassType})");
-            outStringB.AppendLine($"{{");
-            outStringB.Append($"{EventDescriptions?.Aggregate("", (p, q) => p + "\t" + q.Index + "->" + q.Description + ";\r\n") + "\t"}Pos:({node.PosX}, {node.PosY});\r\n");
-            outStringB.AppendLine($"\tColor: \"{node.Color}\";");
-            outStringB.AppendLine($"\tType: {node.ClassType};");
-            outStringB.AppendLine($"\tFlowID: {node.FlowID};");
-            outStringB.AppendLine($"}}");
-
+            string outString =
+            $$"""
+            def {{node.Name}}({{node.ClassType}})
+            {
+            {{EventDescriptions?.Aggregate("", (p, q) => p + "\t" + q.Index + "->" + q.Description + ";\r\n") + "\t"}}Pos:({{node.PosX}}, {{node.PosY}});
+                Color: "{{node.Color}}";
+                Type: {{node.ClassType}};
+                FlowID: {{node.FlowID}};
+            }
+            """ + "\r\n";
             foreach (var transition in transitions)
             {
-                outStringB.Append(transition.Value.ToString());
+                outString += transition.Value.ToString();
             }
-            outStringB.AppendLine();
-            return outStringB.ToString();
+            return outString + "\r\n";
         }
     }
 
     public abstract partial class AbstractFSMNode : IFSMNode
     {
-        private Dictionary<int, FSMEvent> BranchDict = new Dictionary<int, FSMEvent>();
+        private Dictionary<int, FSMEvent> BranchDict = [];
         void IFSMNode.SetBranchEvent(int index, FSMEvent @event)
         {
             BranchDict[index] = @event;
-            if (EventDescriptions.FirstOrDefault(p => p.Index == index) is NodeEventDescription description)
-            {
-                description.Description = @event.EventName;
-            }
-            else
-            {
-                EventDescriptions.Add(new NodeEventDescription() { Index = index, Description = @event.EventName });
-            }
         }
 
         //状态机的上下文
@@ -138,14 +130,14 @@ namespace StateMachine
         event Action IFSMNode.RaiseInterrupt
         {
             add { raiseInterrupt += value; }
-            remove { raiseInterrupt = (Action)Delegate.Remove(raiseInterrupt, value); }
+            remove { raiseInterrupt = (Action)Delegate.Remove(raiseInterrupt, value)!; }
         }
 
         private Action raisePause;
         event Action IFSMNode.RaisePause
         {
             add { raisePause += value; }
-            remove { raisePause = (Action)Delegate.Remove(raiseInterrupt, value); }
+            remove { raisePause = (Action)Delegate.Remove(raiseInterrupt, value)!; }
         }
 
 
@@ -162,7 +154,7 @@ namespace StateMachine
 
         async Task<bool> IFSMNode.GoAsync()
         {
-            TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
+            TaskCompletionSource<bool> tcs = new();
             waitCurrentTask = tcs.Task;
             try
             {
@@ -174,15 +166,18 @@ namespace StateMachine
             }
             catch (OperationCanceledException)
             {
-                tcs.TrySetResult(false);
+                if (!tcs.Task.IsCompleted)
+                { tcs.TrySetResult(false); }
                 await Interupt();
-                Context.SetPause(true);
+                if (Context != null)
+                { Context.SetPause(true); }
                 return false;
             }
             finally
             {
                 await ExitAsync();
-                tcs.TrySetResult(true);
+                if (!tcs.Task.IsCompleted)
+                { tcs.TrySetResult(true); }
             }
         }
 
@@ -207,7 +202,7 @@ namespace StateMachine
 
 
         [FSMProperty("EventDescriptions", false, true, -1)]
-        public List<NodeEventDescription> EventDescriptions { get; set; } = new List<NodeEventDescription>();
+        public List<NodeEventDescription> EventDescriptions { get; set; } = [];
 
         async Task IFSMNode.CreateNewAsync() { await RestartAsync(); }
 
@@ -304,6 +299,9 @@ namespace StateMachine
         {
         }
 
+        /// <summary>
+        /// 状态机Restart的时候调用一次，用于初始化一些服务实例
+        /// </summary>
         public virtual void InitBeforeStart()
         {
         }
