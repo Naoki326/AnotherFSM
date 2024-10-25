@@ -222,45 +222,44 @@ namespace StateMachineDemoShared.Pages
             //nodeState.Add((e, true));
         }
 
-        private void Executor_FSMStateChanged(FSMExecutor arg1, FSMNodeState newState, FSMNodeState oldState)
+        private void Executor_FSMStateChanged(FSMExecutor arg1, FSMState newState, FSMState oldState)
         {
             switch (newState)
             {
-                case FSMNodeState.Uninitialized:
+                case FSMState.Uninitialized:
                     break;
-                case FSMNodeState.Initialized:
+                case FSMState.Initialized:
                     canStart = true;
                     canPause = false;
                     canContinue = false;
                     break;
-                case FSMNodeState.Proceeding:
-                case FSMNodeState.Running:
+                case FSMState.Proceeding:
+                case FSMState.Running:
                     canStart = false;
                     canPause = true;
                     canContinue = false;
                     break;
-                case FSMNodeState.Pausing:
+                case FSMState.Pausing:
                     canStart = false;
                     canPause = false;
                     canContinue = false;
                     break;
-                case FSMNodeState.Interrupted:
-                case FSMNodeState.Paused:
+                case FSMState.Paused:
                     canStart = false;
                     canPause = false;
                     canContinue = true;
                     break;
-                case FSMNodeState.Stopping:
+                case FSMState.Stopping:
                     canStart = false;
                     canPause = false;
                     canContinue = false;
                     break;
-                case FSMNodeState.Finished:
+                case FSMState.Finished:
                     canStart = true;
                     canPause = false;
                     canContinue = false;
                     break;
-                case FSMNodeState.Stoped:
+                case FSMState.Stoped:
                     canStart = true;
                     canPause = false;
                     canContinue = false;

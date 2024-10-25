@@ -90,7 +90,6 @@
         //当前节点对应的异步Task
         Task WaitCurrentTask { get; }
 
-        event Action RaiseInterrupt;
         event Action RaisePause;
 
         Task CreateNewAsync();

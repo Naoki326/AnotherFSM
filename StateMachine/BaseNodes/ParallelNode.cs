@@ -42,9 +42,8 @@ namespace StateMachine
 
         protected override async IAsyncEnumerable<object> ExecuteEnumerable()
         {
-        Begin:
-            yield return null;
-            if (executors.Any(p => p.State == FSMNodeState.Paused))
+            yield return Yield.None;
+            if (executors.Any(p => p.State == FSMState.Paused))
             {
                 executors.ForEach(p =>
                 {
@@ -56,7 +55,7 @@ namespace StateMachine
             {
                 executors.ForEach(async p => await p.RestartAsync());
             }
-            yield return null;
+            yield return Yield.None;
             executors.ForEach(p => p.FSMStateChanged += Executor_FSMStateChanged);
             using (Context.TokenSource.Token.Register(() => executors.ForEach(p =>
             {
@@ -80,11 +79,10 @@ namespace StateMachine
             executors.ForEach(p => p.FSMStateChanged -= Executor_FSMStateChanged);
             if (Context.IsPaused)
             {
-                yield return null;
-                goto Begin;
+                yield return Yield.Retry;
             }
-            yield return null;
-            if (executors.Any(p => p.State == FSMNodeState.Stoped))
+            yield return Yield.None;
+            if (executors.Any(p => p.State == FSMState.Stoped))
             {
                 PublishEvent(FSMEnum.Cancel);
             }
@@ -94,9 +92,9 @@ namespace StateMachine
             }
         }
 
-        private void Executor_FSMStateChanged(FSMExecutor executor, FSMNodeState state1, FSMNodeState state2)
+        private void Executor_FSMStateChanged(FSMExecutor executor, FSMState state1, FSMState state2)
         {
-            if (state1 == FSMNodeState.Paused)
+            if (state1 == FSMState.Paused)
             {
                 this.Pause();
             }

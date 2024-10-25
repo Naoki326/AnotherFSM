@@ -13,7 +13,7 @@ namespace StateMachine
             EndEvent = endEvent ?? throw new FSMException("结束事件不能为空！");
 
             EventConsumer = Channel.CreateUnbounded<FSMEvent>();
-            State = FSMNodeState.Initialized;
+            State = FSMState.Initialized;
 
             InitObserver();
 
@@ -35,15 +35,12 @@ namespace StateMachine
         protected FSMEvent continueEvent = new("ContinueEvent");
         protected FSMEvent ContinueEvent => continueEvent;
 
-        private FSMEvent interuptEvent = new("InteruptEvent");
-        public FSMEvent InteruptEvent => interuptEvent;
-
         public Task ExecutorTask { get; private set; } = default!;
         public Task CurrentNodeTask => CurrentNode.WaitCurrentTask;
 
 
-        private FSMNodeState state = FSMNodeState.Uninitialized;
-        public FSMNodeState State
+        private FSMState state = FSMState.Uninitialized;
+        public FSMState State
         {
             get => state; private set
             {
@@ -58,7 +55,7 @@ namespace StateMachine
         public event EventHandler<string>? NodeStateChanged;
         public event EventHandler<string>? NodeExitChanged;
         //事件的参数：solver实例，新状态，前一状态
-        public event Action<FSMExecutor, FSMNodeState, FSMNodeState>? FSMStateChanged;
+        public event Action<FSMExecutor, FSMState, FSMState>? FSMStateChanged;
 
         private ExcecuterContext SolverContext { get; set; } = new ExcecuterContext();
 
@@ -74,12 +71,11 @@ namespace StateMachine
             if (CurrentNode is null)
                 throw new FSMException("CurrentNode is null");
             NodeStateChanged?.Invoke(this, CurrentNode.Name);
-            CurrentNode.RaiseInterrupt += CurrentNode_RaiseInterrupt;
             CurrentNode.RaisePause += CurrentNode_RaisePause;
             CurrentNode.ExecuterContext = SolverContext;
             try
             {
-                State = FSMNodeState.Running;
+                State = FSMState.Running;
                 if (isCreateNew)
                 { await CurrentNode.CreateNewAsync(); }
                 CurrentNode.Context.ManualLevel = ManualLevel;
@@ -97,7 +93,6 @@ namespace StateMachine
             catch (Exception ex) when (ex.InnerException is OperationCanceledException) { isCancel = true; }
             finally
             {
-                CurrentNode.RaiseInterrupt -= CurrentNode_RaiseInterrupt;
                 CurrentNode.RaisePause -= CurrentNode_RaisePause;
             }
 
@@ -224,11 +219,6 @@ namespace StateMachine
             { eventAggregator.Unsubscribe(this); }
         }
 
-        private void CurrentNode_RaiseInterrupt()
-        {
-            eventAggregator.Publish(InteruptEvent);
-        }
-
         private void CurrentNode_RaisePause()
         {
             eventAggregator.Publish(PauseEvent);
@@ -265,7 +255,7 @@ namespace StateMachine
         public void Stop()
         {
             TrackCallname();
-            State = FSMNodeState.Stopping;
+            State = FSMState.Stopping;
             while (EventConsumer.Reader.Count > 0)
             { EventConsumer.Reader.TryRead(out _); }
             Exception e = default!;
@@ -301,7 +291,7 @@ namespace StateMachine
                         throw new FSMException($"NodeTask 等待异常. {ex.Message}");
                     }
                 }
-                State = FSMNodeState.Stoped;
+                State = FSMState.Stoped;
             });
             return;
         }
@@ -309,7 +299,7 @@ namespace StateMachine
         public async Task<bool> StopAsync()
         {
             TrackCallname();
-            State = FSMNodeState.Stopping;
+            State = FSMState.Stopping;
             while (EventConsumer.Reader.Count > 0)
             { EventConsumer.Reader.TryRead(out _); }
             Exception e = default!;
@@ -343,7 +333,7 @@ namespace StateMachine
                     throw new FSMException($"NodeTask 等待异常. {ex.Message}");
                 }
             }
-            State = FSMNodeState.Stoped;
+            State = FSMState.Stoped;
             return true;
         }
 
@@ -430,7 +420,7 @@ namespace StateMachine
             if (CurrentNode.Context.IsPaused || pausing)
             { return; }
 
-            State = FSMNodeState.Pausing;
+            State = FSMState.Pausing;
             pausing = true;
             while (EventConsumer.Reader.Count > 0)
             {
@@ -456,7 +446,7 @@ namespace StateMachine
                         }
                     }
                     pausing = false;
-                    State = FSMNodeState.Paused;
+                    State = FSMState.Paused;
                 }
             });
             return;
@@ -468,7 +458,7 @@ namespace StateMachine
             if (CurrentNode.Context.IsPaused || pausing)
             { return false; }
 
-            State = FSMNodeState.Pausing;
+            State = FSMState.Pausing;
             pausing = true;
             while (EventConsumer.Reader.Count > 0)
             {
@@ -492,7 +482,7 @@ namespace StateMachine
                     }
                 }
                 pausing = false;
-                State = FSMNodeState.Paused;
+                State = FSMState.Paused;
             }
             return true;
         }
@@ -503,27 +493,15 @@ namespace StateMachine
             TrackCallname();
             if (CurrentNode.Context.IsPaused || pausing)
             {
-                State = FSMNodeState.Proceeding;
+                State = FSMState.Proceeding;
                 EventConsumer.Writer.TryWrite(ContinueEvent);
                 while (midEventList.TryDequeue(out FSMEvent? e))
                 { EventConsumer.Writer.TryWrite(e); }
-                State = FSMNodeState.Running;
+                State = FSMState.Running;
                 return true;
             }
 
             return false;
-        }
-
-        //打断
-        public bool Interupt()
-        {
-            TrackCallname();
-            if (CurrentNode.Context.IsPaused || pausing)
-            { return true; }
-
-            CurrentNode.Context.Pause();
-            State = FSMNodeState.Interrupted;
-            return true;
         }
 
         public void Handle(FSMEvent @event)
@@ -531,15 +509,11 @@ namespace StateMachine
             if (@event.EventID == EndEvent.EventID)
             {
                 EventConsumer.Writer.TryComplete();
-                State = FSMNodeState.Finished;
+                State = FSMState.Finished;
             }
             else if (@event.EventID == PauseEvent.EventID)
             {
                 Pause();
-            }
-            else if (@event.EventID == InteruptEvent.EventID)
-            {
-                Interupt();
             }
             else if (CurrentNode.Context.IsPaused)
             {

@@ -8,16 +8,16 @@
             Engine = e;
         }
 
-        public FSMEngine? Engine { get; private set; }
+        internal FSMEngine? Engine { get; private set; }
 
 
-        public event EventHandler<string>? NodeStateChanged;
+        internal event EventHandler<string>? NodeStateChanged;
         protected void OnNodeStateChanged(object sender, string name)
         {
             NodeStateChanged?.Invoke(sender, name);
         }
 
-        public event EventHandler<string>? NodeExitChanged;
+        internal event EventHandler<string>? NodeExitChanged;
         protected void OnNodeExitChanged(object sender, string name)
         {
             NodeExitChanged?.Invoke(sender, name);

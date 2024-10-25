@@ -183,7 +183,17 @@ containerBuilder.Build();
 | FSMNodeAttribute | Class definition  | Defines the node name in the script, can also set possible emitted events, interface display information, and interface usable node sort order |
 | FSMPropertyAttribute | Property definition | Defines additional properties to be assigned to the node, used in conjunction with DynamicObjectEditor in the Demo for interface assignment operations |
 
-#### 5. Common Node Classes
+#### 5. Yield Classes
+  - The `Yield` class is used only in the derived classes of `EnumFSMNode` and `AsyncEnumFSMNode`. In their execution method `ExecuteEnumerable`, inserting `yield return xxx;` will add a pause checkpoint at the current position and perform the corresponding action.
+
+| Class | Description |
+| --- | --- |
+| `IYieldAction` | A base interface. By inheriting this interface, you can customize the operation when executing `yield return (IYieldAction);` and the actions for the current process. You need to implement the `InvokeAsync` method, which will be executed at the current position and then set the `Result`. This `Result` indicates the action on the process after executing the `InvokeAsync` method, including four scenarios: `None`, `Pause`, `Retry`, and `PauseRetry`. |
+| `Yield` | A static class containing four static objects: `Yield.None`, `Yield.Pause`, `Yield.Retry`, and `Yield.PauseRetry`. `Yield.None` means doing nothing, only checking for pauses at `yield return Yield.None;`; `Yield.Pause` means the process will automatically pause at the current position; `Yield.Retry` means the process will restart from the beginning of the current node; `Yield.PauseRetry` means the process will automatically pause at the current position and, when continued, will restart from the beginning of the current node. |
+| `YieldPriority` | Pauses nodes based on priority. Usage: `yield return (YieldPriority)4;` means comparing `Context.ManualLevel` with the number 4 at the current position. If greater than 4, it will automatically pause; otherwise, it only checks for pauses. You can also use an enum variable instead of a number. |
+| `YieldDelay` | Delay node. Usage: `yield return (YieldDelay)TimeSpan.FromSeconds(5);` means delaying 5 seconds at the current position and checking for pauses. You can also use a number instead of `TimeSpan`; if using a number, it represents the delay in milliseconds. |
+
+#### 6. Common Node Classes
 
 - Provides native implementations of common nodes, ready to use without custom implementation.
 

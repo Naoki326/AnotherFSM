@@ -56,12 +56,12 @@
 
 
 
-        public FSMEvent TriggerEvent { get; set; }
+        public FSMEvent TriggerEvent { get; set; } = default!;
 
 
 
 
-        public object Data { get; set; }
+        public object Data { get; set; } = default!;
 
 
 

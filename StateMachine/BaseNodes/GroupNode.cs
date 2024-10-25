@@ -1,26 +1,34 @@
-﻿using StateMachine;
-using StateMachine.Interface;
+﻿using StateMachine.Interface;
 
 namespace StateMachine
 {
-    [FSMNode("Group", "流程包装节点", [1, 5], ["NextEvent", "CancelEvent"], Id = 3)]
+    [FSMNode("Group", "流程包装节点", [1, 3, 5], ["NextEvent", "ErrorEvent", "CancelEvent"], Id = 3)]
     public class GroupNode : BaseGroupNode
     {
 
-        private FSMExecutor executor;
+        private FSMExecutor? executor;
 
         [FSMProperty("Start node's name", true, 3)]
-        public string StartName { get; set; }
+        public string StartName { get; set; } = default!;
 
         [FSMProperty("End event's name", true, 4)]
-        public string EndEvent { get; set; }
+        public string EndEvent { get; set; } = default!;
 
         public override void InitBeforeStart()
         {
             executor?.Dispose();
-            executor = new FSMExecutor(Engine[StartName], Engine.GetEvent(EndEvent));
-            executor.NodeStateChanged += OnNodeStateChanged;
-            executor.NodeExitChanged += OnNodeExitChanged;
+            if (Engine is not null)
+            {
+                try
+                {
+                    executor = new FSMExecutor(Engine[StartName], Engine.GetEvent(EndEvent));
+                    executor.NodeStateChanged += OnNodeStateChanged;
+                    executor.NodeExitChanged += OnNodeExitChanged;
+                }
+                catch (Exception)
+                {
+                }
+            }
         }
 
         public GroupNode()
@@ -35,9 +43,13 @@ namespace StateMachine
 
         protected override async IAsyncEnumerable<object> ExecuteEnumerable()
         {
-        Begin:
-            yield return null;
-            if (executor.State == FSMNodeState.Paused)
+            yield return Yield.None;
+            if (executor is null)
+            {
+                PublishEvent(FSMEnum.Error);
+                yield break;
+            }
+            if (executor.State == FSMState.Paused)
             {
                 executor.Continue();
             }
@@ -45,7 +57,7 @@ namespace StateMachine
             {
                 await executor.RestartAsync();
             }
-            yield return null;
+            yield return Yield.None;
             executor.FSMStateChanged += Executor_FSMStateChanged;
             using (Context.TokenSource.Token.Register(executor.Pause))
             {
@@ -59,29 +71,30 @@ namespace StateMachine
                 }
                 catch (OperationCanceledException ex)
                 {
+                }
+                finally
+                {
                     executor.FSMStateChanged -= Executor_FSMStateChanged;
                 }
             }
-            executor.FSMStateChanged -= Executor_FSMStateChanged;
             if (Context.IsPaused)
             {
-                yield return null;
-                goto Begin;
+                yield return Yield.Retry;
             }
-            yield return null;
-            if (executor.State == FSMNodeState.Finished)
+            yield return Yield.None;
+            if (executor.State == FSMState.Finished)
             {
                 PublishEvent(FSMEnum.Next);
             }
-            else if (executor.State == FSMNodeState.Stoped)
+            else if (executor.State == FSMState.Stoped)
             {
                 PublishEvent(FSMEnum.Cancel);
             }
         }
 
-        private void Executor_FSMStateChanged(FSMExecutor arg1, FSMNodeState arg2, FSMNodeState arg3)
+        private void Executor_FSMStateChanged(FSMExecutor arg1, FSMState newState, FSMState oldState)
         {
-            if (arg2 == FSMNodeState.Paused)
+            if (newState == FSMState.Paused && oldState != FSMState.Paused)
             {
                 this.Pause();
             }

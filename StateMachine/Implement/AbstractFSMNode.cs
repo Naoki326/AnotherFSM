@@ -126,18 +126,11 @@ namespace StateMachine
         protected object LastData => Context.Data;
         protected object NextData { set => Context.Data = value; }
 
-        private Action raiseInterrupt;
-        event Action IFSMNode.RaiseInterrupt
-        {
-            add { raiseInterrupt += value; }
-            remove { raiseInterrupt = (Action)Delegate.Remove(raiseInterrupt, value)!; }
-        }
-
         private Action raisePause;
         event Action IFSMNode.RaisePause
         {
             add { raisePause += value; }
-            remove { raisePause = (Action)Delegate.Remove(raiseInterrupt, value)!; }
+            remove { raisePause = (Action)Delegate.Remove(raisePause, value)!; }
         }
 
 
@@ -241,33 +234,9 @@ namespace StateMachine
             PublishEvent<object>(index, eventContext);
         }
 
-        protected void PublisEventWithInterupt(int index)
-        {
-            raiseInterrupt?.Invoke();
-            PublishEvent(index);
-        }
-
-        protected void PublisEventWithInterupt<T>(int index, T eventContext)
-        {
-            raiseInterrupt?.Invoke();
-            PublishEvent(index, eventContext);
-        }
-
         protected void PublishEvent(FSMEnum pEnum, object eventContext)
         {
             PublishEvent<object>(pEnum, eventContext);
-        }
-
-        protected void PublisEventWithInterupt(FSMEnum pEnum)
-        {
-            raiseInterrupt?.Invoke();
-            PublishEvent(pEnum);
-        }
-
-        protected void PublisEventWithInterupt<T>(FSMEnum pEnum, T eventContext)
-        {
-            raiseInterrupt?.Invoke();
-            PublishEvent(pEnum, eventContext);
         }
 
         //启动时触发

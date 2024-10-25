@@ -17,17 +17,15 @@
             return false;
         }
 
-        private bool CheckPriority(object current)
+        private async Task<YieldEnum> CheckYield(IYieldAction? current)
         {
-            if (current is int priority && priority < Context.ManualLevel)
+            if (current is null)
             {
-                return true;
+                return YieldEnum.None;
             }
-            else if (current is Enum epriority && Convert.ToInt64(epriority) < Context.ManualLevel)
-            {
-                return true;
-            }
-            return false;
+            current.Context = Context;
+            await current.InvokeAsync();
+            return current.Result;
         }
 
         protected override async Task ExecuteMethodAsync()
@@ -47,9 +45,20 @@
                         executor = default!;
                         break;
                     }
-                    if (CheckPriority(executor.Current))
+                    switch (await CheckYield((IYieldAction?)executor.Current))
                     {
-                        Pause();
+                        case YieldEnum.PauseRetry:
+                            Pause();
+                            await RestartAsync();
+                            break;
+                        case YieldEnum.Pause:
+                            Pause();
+                            break;
+                        case YieldEnum.Retry:
+                            break;
+                        case YieldEnum.None:
+                        default:
+                            break;
                     }
                 }
                 catch (Exception e)
@@ -100,21 +109,15 @@
             return false;
         }
 
-        private bool CheckPriority(object current)
+        private async Task<YieldEnum> CheckYield(IYieldAction? current)
         {
-            if (Context is null)
+            if (current is null)
             {
-                return false;
+                return YieldEnum.None;
             }
-            if (current is int priority && priority < Context.ManualLevel)
-            {
-                return true;
-            }
-            else if (current is Enum epriority && Convert.ToInt64(epriority) < Context.ManualLevel)
-            {
-                return true;
-            }
-            return false;
+            current.Context = Context;
+            await current.InvokeAsync();
+            return current.Result;
         }
 
         protected override async Task ExecuteMethodAsync()
@@ -132,9 +135,21 @@
                         executor = ExecuteEnumerable().GetAsyncEnumerator();
                         break;
                     }
-                    if (CheckPriority(executor.Current))
+                    switch (await CheckYield((IYieldAction?)executor.Current))
                     {
-                        Pause();
+                        case YieldEnum.PauseRetry:
+                            Pause();
+                            await RestartAsync();
+                            break;
+                        case YieldEnum.Pause:
+                            Pause();
+                            break;
+                        case YieldEnum.Retry:
+                            await RestartAsync();
+                            break;
+                        case YieldEnum.None:
+                        default:
+                            break;
                     }
                 }
                 catch (Exception e)
@@ -177,18 +192,15 @@
         {
             return false;
         }
-
-        private bool CheckPriority(object current)
+        private async Task<YieldEnum> CheckYield(IYieldAction? current)
         {
-            if (current is int priority && priority < Context.ManualLevel)
+            if (current is null)
             {
-                return true;
+                return YieldEnum.None;
             }
-            else if (current is Enum epriority && Convert.ToInt64(epriority) < Context.ManualLevel)
-            {
-                return true;
-            }
-            return false;
+            current.Context = Context;
+            await current.InvokeAsync();
+            return current.Result;
         }
 
         protected override async Task ExecuteMethodAsync()
@@ -206,9 +218,21 @@
                         executor = ExecuteEnumerable().GetAsyncEnumerator();
                         break;
                     }
-                    if (CheckPriority(executor.Current))
+                    switch (await CheckYield((IYieldAction?)executor.Current))
                     {
-                        Pause();
+                        case YieldEnum.PauseRetry:
+                            Pause();
+                            await RestartAsync();
+                            break;
+                        case YieldEnum.Pause:
+                            Pause();
+                            break;
+                        case YieldEnum.Retry:
+                            await RestartAsync();
+                            break;
+                        case YieldEnum.None:
+                        default:
+                            break;
                     }
                 }
                 catch (Exception e)

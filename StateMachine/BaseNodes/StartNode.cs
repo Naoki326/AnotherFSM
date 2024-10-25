@@ -6,14 +6,14 @@
 
         protected override async IAsyncEnumerable<object> ExecuteEnumerable()
         {
-            yield return null;
+            yield return Yield.None;
             try
             {
                 await Task.Delay(1000, Context.Token);
             }
             catch (OperationCanceledException)
             { }
-            yield return null;
+            yield return Yield.None;
             PublishEvent(FSMEnum.Next);
         }
     }

@@ -165,7 +165,7 @@ containerBuilder.Build();
 | --- | --- |
 | AbstractFSMNode | 节点的初始抽象类，定义了基本的方法，继承该类的任意类型都可以作为节点使用在本框架 |
 | SimpleFSMNode | 最基础的节点类型，继承该类型的自定义节点只要自行实现ExecuteMethodAsync方法即可用于本框架，该ExecuteMethodAsync方法定义了状态机进入本节点时执行的动作，调用执行器的暂停时，将会等待该方法执行完毕后才会暂停 |
-| EnumFSMNode | 基于C#的yield机制实现了局部暂停继续的节点，继承该类型的自定义节点要自行实现ExecuteEnumerable方法，该方法返回IEnumerable\<object\> ，方法中任意位置可以插入yield return x;的语句，以便在当前位置增加一个暂停的检查点，当流程执行对象调用PauseAsync时，遇到检查点即暂停执行，继续时将会在暂停点自动恢复 |
+| EnumFSMNode | 基于C#的yield机制实现了局部暂停继续的节点，继承该类型的自定义节点要自行实现ExecuteEnumerable方法，该方法返回IEnumerable\<object\> ，方法中任意位置可以插入yield return (IYieldAction);的语句，以便在当前位置增加一个暂停的检查点，当流程执行对象调用PauseAsync时，遇到检查点即暂停执行，继续时将会在暂停点自动恢复 |
 | AsyncEnumFSMNode | 同EnumFSMNode，在其基础上增加了异步执行的环境，即ExecuteEnumerable使用了IAsyncEnumerable\<object\> |
 
 - 另外所有节点基础类型中包含一个Context作为流程上下文
@@ -185,7 +185,18 @@ containerBuilder.Build();
 | FSMNodeAttribute | 添加在类定义上  | 定义节点在脚本中的名称，另外可以设定该节点可能发出的事件，设定界面显示信息及界面可用节点的排序号 |
 | FSMPropertyAttribute | 属性定义上 | 定义节点上需要额外赋值的属性，这里在Demo中与动态控件(DynamicObjectEditor)联合使用，实现界面赋值操作 |
 
-#### 5. 节点常用类
+#### 5. Yield类
+  - 这里的Yield类只用于EnumFSMNode和AsyncEnumFSMNode这两种基础节点的派生类中，在他们的执行方法ExecuteEnumerable中插入yield return xxx;的语句后，会在当前位置增加一个暂停的检查点，并且执行相应的操作
+
+| 类 | 描述 |
+| --- | --- |
+| IYieldAction | 基础接口，继承该接口可自定义执行到yield return (IYieldAction);时的操作，和针对当前流程的操作。需要实现InvokeAsync方法，会在当前位置执行，然后设置Result，该Result表示执行完InvokeAsync方法后对流程的操作，包括 None\Pause\Retry\PauseRetry 四种情况。 |
+| Yield | 一个静态类，包含 Yield.None\Yield.Pause\Yield.Retry\Yield.PauseRetry 四个静态对象。Yield.None表示什么都不做，在yield return Yield.None;处只进行暂停的检查；Yield.Pause表示运行到当前位置时流程自动暂停；Yield.Retry表示运行到当前位置时从当前节点的头部重新开始流程；Yield.RetryPause表示运行到当前位置时流程自动暂停，继续时将从当前节点的头部重新开始流程 |
+| YieldPriority | 按优先级暂停节点，使用方式：yield return (YieldPriority)4; 表示运行到当前位置时用Context.ManualLevel与数字4进行对比，若大于4则自动暂停，否则只检查暂停；这里除了使用数字也可以使用枚举变量 |
+| YieldDelay | 延时节点，使用方式：yield return (YieldDelay)TimeSpan.FromSeconds(5); 表示运行到当前位置时延时5秒，并检查暂停；这里除了使用TimeSpan也可以使用数字，若使用数字则代表延时的毫秒数 |
+
+
+#### 6. 节点常用类
 
   - 提供常见节点的原生实现，不需要自己实现即可使用
 
@@ -202,14 +213,14 @@ containerBuilder.Build();
 ```C#
 protected override async IAsyncEnumerable<object> ExecuteEnumerable()
 {
-    yield return null;
+    yield return Yield.None;
     //try
     //{
     //    await Task.Delay(500, Context.Token);
     //}
     //catch (OperationCanceledException ex)
     //{ }
-    //yield return null;
+    //yield return Yield.None;
     if (i < Count)
     {
         i++;
