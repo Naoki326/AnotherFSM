@@ -1,5 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 
 namespace StateMachine
@@ -65,6 +68,7 @@ namespace StateMachine
             set { ManualLevel = Convert.ToInt64(value); }
         }
 
+        [DebuggerStepThrough]
         private async Task<bool> RunCurrentNodeAsync(bool isCreateNew)
         {
             bool isCancel = false;
@@ -99,6 +103,7 @@ namespace StateMachine
             return isCancel;
         }
 
+        [DebuggerStepThrough]
         private async Task ConsumerTask()
         {
             long threadId = Thread.CurrentThread.ManagedThreadId;
@@ -110,7 +115,7 @@ namespace StateMachine
 
                 //这里是第一个启动节点
                 //Track Start Enter
-                TrackState(new StateTrackInfo()
+                observable.OnNext(new StateTrackInfo()
                 {
                     IsEnter = true, TrackType = TrackType.Start,
                     PrevStateName = "", CurrentNode = Start, StateName = Start.Name,
@@ -121,7 +126,7 @@ namespace StateMachine
                 isCancel = await RunCurrentNodeAsync(true);
 
                 //Track Start Exit
-                TrackState(new StateTrackInfo()
+                observable.OnNext(new StateTrackInfo()
                 {
                     IsEnter = false, TrackType = isCancel ? TrackType.Cancel : TrackType.Normal,
                     PrevStateName = "", CurrentNode = Start, StateName = Start.Name,
@@ -136,7 +141,7 @@ namespace StateMachine
                         {
                             //这里是暂停之后继续的分支
                             //Track Continue Enter
-                            TrackState(new StateTrackInfo()
+                            observable.OnNext(new StateTrackInfo()
                             {
                                 IsEnter = true, TrackType = TrackType.Continue,
                                 PrevStateName = CurrentNode.Name, CurrentNode = CurrentNode, StateName = CurrentNode.Name,
@@ -147,7 +152,7 @@ namespace StateMachine
                             isCancel = await RunCurrentNodeAsync(false);
 
                             //Track Continue Exit
-                            TrackState(new StateTrackInfo()
+                            observable.OnNext(new StateTrackInfo()
                             {
                                 IsEnter = false, TrackType = isCancel ? TrackType.Cancel : TrackType.Normal,
                                 PrevStateName = "", CurrentNode = CurrentNode, StateName = CurrentNode.Name,
@@ -164,7 +169,7 @@ namespace StateMachine
                             nextNode.Context = CurrentNode.Context;
 
                             //Track Enter
-                            TrackState(new StateTrackInfo()
+                            observable.OnNext(new StateTrackInfo()
                             {
                                 IsEnter = true, TrackType = TrackType.Normal,
                                 PrevStateName = CurrentNode.Name, StateName = nextNode.Name, CurrentNode = nextNode,
@@ -177,7 +182,7 @@ namespace StateMachine
                             isCancel = await RunCurrentNodeAsync(true);
 
                             //Track Exit
-                            TrackState(new StateTrackInfo()
+                            observable.OnNext(new StateTrackInfo()
                             {
                                 IsEnter = false, TrackType = isCancel ? TrackType.Cancel : TrackType.Normal,
                                 PrevStateName = CurrentNode.Name, StateName = CurrentNode.Name, CurrentNode = CurrentNode,
@@ -188,7 +193,7 @@ namespace StateMachine
                         else
                         {
                             //无用的Event
-                            TrackState(new StateTrackInfo()
+                            observable.OnNext(new StateTrackInfo()
                             {
                                 TrackType = TrackType.DiscardEvent,
                                 PrevStateName = "", CurrentNode = CurrentNode, StateName = CurrentNode.Name,
@@ -202,14 +207,14 @@ namespace StateMachine
             catch (Exception ex)
             {
                 //Track Exit
-                TrackState(new StateTrackInfo()
+                observable.OnNext(new StateTrackInfo()
                 {
                     IsEnter = false, TrackType = TrackType.StateError,
                     PrevStateName = CurrentNode.Name, StateName = CurrentNode.Name, CurrentNode = CurrentNode,
                     FSMEvent = default!, EventName = "",
                     ThreadId = threadId,
                 });
-                TrackException(ex);
+                observable.OnError(ex);
 
                 //这里位于Task中，若流程出现异常，Task自动退出
                 //注意遇到任何异常，都需要检查IObservable的OnError或者NodeExceptionEvent事件
@@ -250,6 +255,11 @@ namespace StateMachine
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        private void TrackCallname([CallerMemberName] string info = default!)
+        {
+            observable.OnNext(new StateTrackInfo() { IsCallEvent = true, CallMethodName = info });
         }
 
         public void Stop()

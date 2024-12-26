@@ -1,5 +1,6 @@
 ﻿using StateMachine.Interface;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Text;
 
 namespace StateMachine
@@ -121,6 +122,8 @@ namespace StateMachine
 
         //状态机的上下文
         //[Obsolete("建议使用LastContext和NextContext")]
+
+        [DebuggerNonUserCode]
         public FSMNodeContext Context { get; set; } = default!;
 
         protected object LastData => Context.Data;
@@ -144,7 +147,7 @@ namespace StateMachine
         //当前线程的上下文，隐藏set方法
         public IExcecuterContext ExecuterContext => (this as IFSMNode).ExecuterContext;
 
-
+        [DebuggerStepThrough]
         async Task<bool> IFSMNode.GoAsync()
         {
             TaskCompletionSource<bool> tcs = new();

@@ -1,9 +1,12 @@
-﻿namespace StateMachine
+﻿using System.Diagnostics;
+
+namespace StateMachine
 {
     public abstract class AsyncEnumFSMNode : SimpleFSMNode
     {
         protected abstract IAsyncEnumerable<object> ExecuteEnumerable();
 
+        [DebuggerStepThrough]
         protected sealed override async Task RestartAsync()
         {
             if (executor != null)
@@ -17,6 +20,7 @@
             return false;
         }
 
+        [DebuggerStepThrough]
         private async Task<YieldEnum> CheckYield(IYieldAction? current)
         {
             if (current is null)
@@ -28,6 +32,7 @@
             return current.Result;
         }
 
+        [DebuggerStepThrough]
         protected override async Task ExecuteMethodAsync()
         {
             if (executor is null)
@@ -96,6 +101,7 @@
     {
         protected abstract IAsyncEnumerable<object> ExecuteEnumerable();
 
+        [DebuggerStepThrough]
         protected sealed override async Task RestartAsync()
         {
             if (executor != null)
@@ -109,6 +115,7 @@
             return false;
         }
 
+        [DebuggerStepThrough]
         private async Task<YieldEnum> CheckYield(IYieldAction? current)
         {
             if (current is null)
@@ -120,6 +127,7 @@
             return current.Result;
         }
 
+        [DebuggerStepThrough]
         protected override async Task ExecuteMethodAsync()
         {
             if (executor == null)
@@ -180,6 +188,7 @@
     {
         protected abstract IAsyncEnumerable<object> ExecuteEnumerable();
 
+        [DebuggerStepThrough]
         protected sealed override async Task RestartAsync()
         {
             if (executor != null)
@@ -192,6 +201,8 @@
         {
             return false;
         }
+
+        [DebuggerStepThrough]
         private async Task<YieldEnum> CheckYield(IYieldAction? current)
         {
             if (current is null)
@@ -203,6 +214,7 @@
             return current.Result;
         }
 
+        [DebuggerStepThrough]
         protected override async Task ExecuteMethodAsync()
         {
             if (executor == null)
