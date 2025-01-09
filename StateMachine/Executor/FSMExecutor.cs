@@ -51,14 +51,29 @@ namespace StateMachine
                     return;
                 var prev_state = state;
                 state = value;
-                FSMStateChanged?.Invoke(this, value, prev_state);
+                FSMStateChangedInvoke(value, prev_state);
             }
         }
 
         public event EventHandler<string>? NodeStateChanged;
+        [DebuggerStepThrough]
+        private void NodeStateChangedInvoke(string nodeName)
+        {
+            NodeStateChanged?.Invoke(this, nodeName);
+        }
         public event EventHandler<string>? NodeExitChanged;
+        [DebuggerStepThrough]
+        private void NodeExitChangedInvoke(string nodeName)
+        {
+            NodeExitChanged?.Invoke(this, nodeName);
+        }
         //事件的参数：solver实例，新状态，前一状态
         public event Action<FSMExecutor, FSMState, FSMState>? FSMStateChanged;
+        [DebuggerStepThrough]
+        private void FSMStateChangedInvoke(FSMState current, FSMState previousState)
+        {
+            FSMStateChanged?.Invoke(this, current, previousState);
+        }
 
         private ExcecuterContext SolverContext { get; set; } = new ExcecuterContext();
 
@@ -74,7 +89,7 @@ namespace StateMachine
             bool isCancel = false;
             if (CurrentNode is null)
                 throw new FSMException("CurrentNode is null");
-            NodeStateChanged?.Invoke(this, CurrentNode.Name);
+            NodeStateChangedInvoke(CurrentNode.Name);
             CurrentNode.RaisePause += CurrentNode_RaisePause;
             CurrentNode.ExecuterContext = SolverContext;
             try
@@ -85,7 +100,7 @@ namespace StateMachine
                 CurrentNode.Context.ManualLevel = ManualLevel;
                 bool isExit = await CurrentNode.GoAsync();
                 if (isExit)
-                { NodeExitChanged?.Invoke(this, CurrentNode.Name); }
+                { NodeExitChangedInvoke(CurrentNode.Name); }
                 if (CurrentNode.Context.IsPaused)
                 {
                     while (EventConsumer.Reader.Count > 0)
@@ -514,6 +529,7 @@ namespace StateMachine
             return false;
         }
 
+        [DebuggerStepThrough]
         public void Handle(FSMEvent @event)
         {
             if (@event.EventID == EndEvent.EventID)

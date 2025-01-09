@@ -54,7 +54,7 @@ namespace StateMachineWPFDemo
                     containerBuilder.RegisterBuildCallback(c =>
                     {
                         //配置默认的全局IoC实例
-                        IoC.ContainerWrapper = new ContainerWrapper(c);
+                        //IoC.ContainerWrapper = new ContainerWrapper(c);
                     });
                 })
                 .ConfigureAppConfiguration((context, configBuilder) =>

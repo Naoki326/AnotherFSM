@@ -29,7 +29,7 @@ builder.ConfigureContainer(new AutofacServiceProviderFactory((containerBuilder) 
     containerBuilder.RegisterBuildCallback(c =>
     {
         //用一个全局静态的IoC类来获取IoC内部实例
-        IoC.ContainerWrapper = new ContainerWrapper(c);
+        //IoC.ContainerWrapper = new ContainerWrapper(c);
     });
 }));
 

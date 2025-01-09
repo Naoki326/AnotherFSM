@@ -15,14 +15,14 @@ namespace DemoShared.StateMachine
 
         protected override async IAsyncEnumerable<object> ExecuteEnumerable()
         {
-            yield return null;
+            yield return Yield.None;
             try
             {
                 await Task.Delay(Duration, Context.Token);
             }
             catch (OperationCanceledException)
             { }
-            yield return null;
+            yield return Yield.None;
             PublishEvent(FSMEnum.Next);
             yield break;
         }

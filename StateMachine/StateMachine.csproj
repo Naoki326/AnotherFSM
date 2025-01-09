@@ -10,13 +10,9 @@
 
   <ItemGroup>
     <PackageReference Include="Antlr4.Runtime.Standard" Version="4.13.1" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.0" />
     <PackageReference Include="System.Reactive" Version="6.0.1" />
-    <PackageReference Include="System.Text.Json" Version="8.0.4" />
-    <PackageReference Include="System.Threading.Channels" Version="8.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Autofac.Annotation\Autofac.Annotation.csproj" />
+    <PackageReference Include="System.Threading.Channels" Version="9.0.0" />
   </ItemGroup>
 
 </Project>

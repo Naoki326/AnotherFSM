@@ -1,3 +1,4 @@
+using DemoShared.StateMachine;
 using Masa.Blazor;
 using Microsoft.AspNetCore.Components;
 using StateMachine;
@@ -13,13 +14,13 @@ public partial class ProcedureView : IDisposable
 
     protected override Task OnInitializedAsync()
     {
-        nodeTypes =
-            [..
-                IoC.GetAllKeyTypePairs<IFSMNode>()
-                    .Where(p => p.Value.GetCustomAttributes<FSMNodeAttribute>().Any() && !((string)p.Key).StartsWith('`'))
-                    .OrderBy(p=>p.Value.GetCustomAttributes<FSMNodeAttribute>().First().Id)
-                    .Select(p => (string)p.Key)
-            ];
+        Engine = FSMEngineBuilder.Create()
+            .ConfigureAssembles(build => build
+                .AddAssemble(typeof(SleepNode).Assembly)
+                .AddAssemble(typeof(StartNode).Assembly)
+            )
+            .Build();
+        nodeTypes = [.. Engine.GetEnabledNodes().Select(p => p.Key)];
         return Task.CompletedTask;
     }
 
@@ -101,7 +102,7 @@ public partial class ProcedureView : IDisposable
     {
         try
         {
-            await smBoard.RemoveNode(State.Name);
+            await smBoard.RemoveNodeAsync(State.Name);
             State = null;
         }
         catch (Exception ex)

@@ -170,8 +170,8 @@ namespace StateMachineDemoShared.Pages
                     new FSMDescribe(){ StartNode = "Start1", EndEvent = "End1Event" },
                     new FSMDescribe(){ StartNode = "Start2", EndEvent = "End2Event" },
                 };
-            (pv.Engine.GetNode("Group") as GroupNode).StartName = "Start3";
-            (pv.Engine.GetNode("Group") as GroupNode).EndEvent = "End3Event";
+            pv.Engine.GetNode<GroupNode>("Group").StartName = "Start3";
+            pv.Engine.GetNode<GroupNode>("Group").EndEvent = "End3Event";
         }
 
         protected override Task OnAfterRenderAsync(bool firstRender)

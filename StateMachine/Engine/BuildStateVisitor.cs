@@ -2,10 +2,12 @@
 
 namespace StateMachine
 {
-    public class BuildStateVisitor : StateMachineScriptBaseVisitor<object>
+    internal class BuildStateVisitor : StateMachineScriptBaseVisitor<object>
     {
-        public BuildStateVisitor(Dictionary<string, FSMEvent> eventDict, Dictionary<string, IFSMNode> nodeDict)
+        private AssembleNodeHelper assembleNodeHelper;
+        public BuildStateVisitor(Dictionary<string, FSMEvent> eventDict, Dictionary<string, IFSMNode> nodeDict, AssembleNodeHelper assembleNodeHelper)
         {
+            this.assembleNodeHelper = assembleNodeHelper; ;
             EventDict = eventDict;
             NodeDict = nodeDict;
             //if(!EventDict.ContainsKey("InteruptEvent"))
@@ -222,7 +224,7 @@ namespace StateMachine
                 default:
                     try
                     {
-                        proc = IoC.Get<IFSMNode>(state_type);
+                        proc = assembleNodeHelper.CreateNode(state_type);
                     }
                     catch (Exception)
                     { throw new ScriptException("State " + state_type + " 定义出错, " + "该State未注入IoC中！"); }

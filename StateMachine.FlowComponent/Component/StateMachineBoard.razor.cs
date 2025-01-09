@@ -399,7 +399,7 @@ namespace StateMachine
         [Parameter]
         public EventCallback<string> OnNodeCreated { get; set; }
 
-        public async Task RemoveNode(string nodeName)
+        public async Task RemoveNodeAsync(string nodeName)
         {
             if (!engine.ContainsNode(nodeName))
                 throw new KeyNotFoundException($"Node {nodeName} not found!");

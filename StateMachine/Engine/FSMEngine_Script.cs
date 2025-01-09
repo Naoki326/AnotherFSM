@@ -1,4 +1,5 @@
-﻿using Antlr4.Runtime;
+﻿using System.Diagnostics;
+using Antlr4.Runtime;
 
 namespace StateMachine
 {
@@ -17,7 +18,7 @@ namespace StateMachine
             var parser = new StateMachineScriptParser(tokens);
             var tree = parser.machine();
 
-            var state = new BuildStateVisitor(EventDict, NodeDict);
+            var state = new BuildStateVisitor(EventDict, NodeDict, assembleNodeHelper);
             state.Visit(tree);
             var transition = new BuildTransitionVisitor(EventDict, NodeDict);
             transition.Visit(tree);
@@ -52,11 +53,13 @@ namespace StateMachine
             }
         }
 
+        [DebuggerStepThrough]
         private void Gn_NodeExitChanged(object sender, string e)
         {
             GroupNodeExitChanged?.Invoke(sender, e);
         }
 
+        [DebuggerStepThrough]
         private void Gn_NodeStateChanged(object sender, string e)
         {
             GroupNodeStateChanged?.Invoke(sender, e);

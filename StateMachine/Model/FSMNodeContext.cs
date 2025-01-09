@@ -44,7 +44,7 @@ namespace StateMachine
         internal CancellationTokenSource TokenSource { get; private set; }
 
         [DebuggerStepThrough]
-        internal void Pause()
+        public void Pause()
         {
             TokenSource?.Cancel();
             IsPaused = true;

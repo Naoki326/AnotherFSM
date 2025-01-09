@@ -1,9 +1,8 @@
-﻿using Autofac.Annotation;
-
+﻿
 namespace StateMachine
 {
     [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
-    public class FSMNodeAttribute : Component
+    public class FSMNodeAttribute : Attribute
     {
         //该Node发出的事件的index
         public int[] Indexes;
@@ -18,8 +17,11 @@ namespace StateMachine
         //用于界面排序
         public int Id { get; set; } = new Random().Next(100, int.MaxValue - 1);
 
-        public FSMNodeAttribute(string key, int[] indexes, string[] events) : base(key)
+        public string Key { get; set; }
+
+        public FSMNodeAttribute(string key, int[] indexes, string[] events)
         {
+            Key = key;
             Indexes = indexes;
             EventDescriptions = events;
         }

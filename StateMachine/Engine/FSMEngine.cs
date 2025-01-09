@@ -77,11 +77,40 @@ namespace StateMachine
             return true;
         }
 
+        public bool TryGetNode<T>(string name, out T node)
+        {
+            try
+            {
+                if (GetNode(name) is T result)
+                {
+                    node = result;
+                }
+                else
+                {
+                    node = default!;
+                    return false;
+                }
+            }
+            catch (Exception)
+            {
+                node = default!;
+                return false;
+            }
+            return true;
+        }
+
         public IFSMNode GetNode(string name)
         {
             if (!NodeDict.TryGetValue(name, out IFSMNode value))
             { throw new KeyNotFoundException($"Node {name} doesn't exist"); }
             return value;
+        }
+
+        public T GetNode<T>(string name)where T : IFSMNode
+        {
+            if (!NodeDict.TryGetValue(name, out IFSMNode value))
+            { throw new KeyNotFoundException($"Node {name} doesn't exist"); }
+            return (T)value;
         }
 
         public IEnumerable<string> GetNodeNames()

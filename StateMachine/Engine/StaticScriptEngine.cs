@@ -1,5 +1,6 @@
 ﻿using Antlr4.Runtime;
 using System.Collections;
+using System.Reflection;
 
 namespace StateMachine
 {
@@ -7,6 +8,12 @@ namespace StateMachine
     {
         protected static Dictionary<string, FSMEvent> EventDict = new Dictionary<string, FSMEvent>();
         protected Dictionary<string, IFSMNode> NodeDict = new Dictionary<string, IFSMNode>();
+        private static AssembleNodeHelper assembleNodeHelper = new AssembleNodeHelper();
+        public void AddAssemblyForNode(Assembly assembly)
+        {
+            assembleNodeHelper.AddAssemble(assembly);
+        }
+
         public bool CreateStateMachine(string input)
         {
             try
@@ -17,7 +24,7 @@ namespace StateMachine
                 var parser = new StateMachineScriptParser(tokens);
                 var tree = parser.machine();
 
-                var state = new BuildStateVisitor(EventDict, NodeDict);
+                var state = new BuildStateVisitor(EventDict, NodeDict, assembleNodeHelper);
                 state.Visit(tree);
                 var transition = new BuildTransitionVisitor(EventDict, NodeDict);
                 transition.Visit(tree);

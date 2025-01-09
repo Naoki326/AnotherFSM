@@ -1,8 +1,22 @@
-﻿namespace StateMachine
+﻿using System.Reflection;
+using Antlr4.Runtime.Atn;
+
+namespace StateMachine
 {
     //另一种方式创建流程结构
     public partial class FSMEngine
     {
+        AssembleNodeHelper assembleNodeHelper = new AssembleNodeHelper();
+
+        public void AddAssemblyForNode(Assembly assembly)
+        {
+            assembleNodeHelper.AddAssemble(assembly);
+        }
+
+        public IEnumerable<FSMNodeAttribute> GetEnabledNodes()
+        {
+            return assembleNodeHelper.GetEnabledNodes();
+        }
 
         public void CreateNode(string node_type, string name, string namePrev = "")
         {
@@ -13,7 +27,7 @@
                 default:
                     try
                     {
-                        proc = IoC.Get<IFSMNode>(node_type);
+                        proc = assembleNodeHelper.CreateNode(node_type);
                     }
                     catch (Exception)
                     { throw new ScriptException("Node " + node_type + " 定义出错, " + "该Node未注入IoC中！"); }
@@ -40,7 +54,7 @@
                 default:
                     try
                     {
-                        proc = IoC.Get<IFSMNode>(node_type);
+                        proc = assembleNodeHelper.CreateNode(node_type);
                     }
                     catch (Exception)
                     { return false; }
@@ -60,7 +74,8 @@
             //预定义的Node
             try
             {
-                proc = IoC.Get<IFSMNode>(typeof(T).Name);
+                proc = Activator.CreateInstance<T>();
+                //proc = IoC.Get<IFSMNode>(typeof(T).Name);
             }
             catch (Exception e)
             { throw new ScriptException("Node " + typeof(T) + " 定义出错, " + "该Node未注入IoC中！", e); }
@@ -78,7 +93,8 @@
             //预定义的Node
             try
             {
-                proc = IoC.Get<IFSMNode>(typeof(T).Name);
+                //proc = IoC.Get<IFSMNode>(typeof(T).Name);
+                proc = Activator.CreateInstance<T>();
             }
             catch (Exception)
             { return false; }
