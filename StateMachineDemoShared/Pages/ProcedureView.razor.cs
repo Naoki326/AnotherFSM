@@ -19,6 +19,13 @@ public partial class ProcedureView : IDisposable
                 .AddAssemble(typeof(SleepNode).Assembly)
                 .AddAssemble(typeof(StartNode).Assembly)
             )
+            .ConfigureFSMDefine(build =>
+                {
+                    //build
+                    //.AddNode<SleepNode>("Sleep")
+                    //.AddConnection("NextEvent", "Start", "Sleep");
+                }
+            )
             .Build();
         nodeTypes = [.. Engine.GetEnabledNodes().Select(p => p.Key)];
         return Task.CompletedTask;
