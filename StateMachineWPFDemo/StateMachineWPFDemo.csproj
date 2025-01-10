@@ -29,7 +29,6 @@
   </ItemGroup>
 	
   <ItemGroup>
-    <ProjectReference Include="..\Autofac.Annotation\Autofac.Annotation.csproj" />
     <ProjectReference Include="..\StateMachineDemoShared\StateMachineDemoShared.csproj" />
   </ItemGroup>
 	

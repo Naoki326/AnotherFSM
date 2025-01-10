@@ -16,9 +16,7 @@ The difference between this tool and usual state machines is that, in typical fi
 
 ### Dependencies
 
-- The part of this project unrelated to the interface, i.e., the **StateMachine** project, depends on the Antofac.Annotation project[^annotation], both written in **NetStandard2.0**.
-
-[^annotation]: Project link: [Antofac.Annotation](https://github.com/yuzd/Autofac.Annotation)
+- The part of this project unrelated to the interface, i.e., the **StateMachine** project, written in **NetStandard2.0**.
 
 - The interface-related part of this project, i.e., the **StateMachine.FlowComponent** project, is written in **Net8.0** using Blazor. It extends the functionality of the **StateMachine** project, facilitating quick process construction through the interface.
 
@@ -57,15 +55,11 @@ Host.CreateDefaultBuilder(args)
         Assembly[] assemblies = [Assembly.GetEntryAssembly(), assembly, assembly2, assembly3];
         // Register all modules
         containerBuilder.RegisterAssemblyModules(assemblies);
-        // Register all types with the Component attribute, including custom process nodes
-        containerBuilder.RegisterModule(new AutofacAnnotationModule(assemblies)
-            .SetAutoRegisterInterface(true)
-            .SetAutoRegisterParentClass(false)
-            .SetIgnoreAutoRegisterAbstractClass(true));
+		
         containerBuilder.RegisterBuildCallback(c =>
         {
             // Configure the default global IoC instance
-            IoC.ContainerWrapper = new ContainerWrapper(c);
+            // IoC.ContainerWrapper = new ContainerWrapper(c);
         });
     })
 ```
@@ -81,16 +75,11 @@ Assembly assembly3 = Assembly.Load("StateMachineDemoShared");
 Assembly[] assemblies = [Assembly.GetEntryAssembly(), assembly, assembly2, assembly3];
 // Register all modules
 containerBuilder.RegisterAssemblyModules(assemblies);
-// Register all types with the Component attribute, including custom process nodes
-containerBuilder.RegisterModule(new AutofacAnnotationModule(assemblies)
-    .SetAutoRegisterInterface(true)
-    .SetAutoRegisterParentClass(false)
-    .SetIgnoreAutoRegisterAbstractClass(true));
 
 containerBuilder.RegisterBuildCallback(c =>
 {
     // Configure the default global IoC instance
-    IoC.ContainerWrapper = new ContainerWrapper(c);
+    // IoC.ContainerWrapper = new ContainerWrapper(c);
 });
 containerBuilder.Build();
 ```

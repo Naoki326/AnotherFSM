@@ -1,5 +1,4 @@
 ﻿using Autofac;
-using Autofac.Annotation;
 using Autofac.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -46,10 +45,10 @@ namespace StateMachineWPFDemo
                     containerBuilder.RegisterAssemblyModules(assemlies);
                     //注册所有包含Component特性的类型
                     //包括自定义的流程节点
-                    containerBuilder.RegisterModule(new AutofacAnnotationModule(assemlies)
-                        .SetAutoRegisterInterface(true)
-                        .SetAutoRegisterParentClass(false)
-                        .SetIgnoreAutoRegisterAbstractClass(true));
+                    //containerBuilder.RegisterModule(new AutofacAnnotationModule(assemlies)
+                    //    .SetAutoRegisterInterface(true)
+                    //    .SetAutoRegisterParentClass(false)
+                    //    .SetIgnoreAutoRegisterAbstractClass(true));
 
                     containerBuilder.RegisterBuildCallback(c =>
                     {

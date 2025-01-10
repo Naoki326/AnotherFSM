@@ -16,9 +16,7 @@ AnotherFSM 是一个**基于有限状态机、快速构建流程的工具库**�
 
 ### 依赖项
  
-- 本工程与界面无关的部分，即**StateMachine**项目，依赖Antofac.Annotation项目[^annotation]，两者基于**NetStandard2.0**编写
-
-[^annotation]: 项目链接[Antofac.Annotation](https://github.com/yuzd/Autofac.Annotation)
+- 本工程与界面无关的部分，即**StateMachine**项目，基于**NetStandard2.0**编写
 
 - 本工程界面相关部分，即**StateMachine.FlowComponent**项目基于**Net8.0**采用blazor编写，是**StateMachine**项目功能的扩展，便于通过界面快速构建流程
 
@@ -28,9 +26,7 @@ AnotherFSM 是一个**基于有限状态机、快速构建流程的工具库**�
 
 ### 引用
 
-1. 使用了依赖注入工具Autofac，和[Antofac.Annotation](https://github.com/yuzd/Autofac.Annotation)[^annotation](用.netstandard2.0重新编译)
-
-2. 脚本语言处理部分使用了工具Antlr4[^antlr4]生成语法解析代码
+1. 脚本语言处理部分使用了工具Antlr4[^antlr4]生成语法解析代码
 
 [^antlr4]: Antlr4是一个语法解析生成工具 项目链接[Antlr4](https://github.com/antlr/antlr4)
 
