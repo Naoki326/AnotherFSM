@@ -1,5 +1,4 @@
 using Autofac;
-using Autofac.Annotation;
 using Autofac.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -20,11 +19,11 @@ builder.ConfigureContainer(new AutofacServiceProviderFactory((containerBuilder) 
     //注册所有的Module
     containerBuilder.RegisterAssemblyModules(assemblies);
     //注册所有使用Component特性的类型
-    //自定义的流程节点类型用基于Component特性的FSMNode特性修饰
-    containerBuilder.RegisterModule(new AutofacAnnotationModule(assemblies)
-        .SetAutoRegisterInterface(true)
-        .SetAutoRegisterParentClass(false)
-        .SetIgnoreAutoRegisterAbstractClass(true));
+    ////自定义的流程节点类型用基于Component特性的FSMNode特性修饰
+    //containerBuilder.RegisterModule(new AutofacAnnotationModule(assemblies)
+    //    .SetAutoRegisterInterface(true)
+    //    .SetAutoRegisterParentClass(false)
+    //    .SetIgnoreAutoRegisterAbstractClass(true));
 
     containerBuilder.RegisterBuildCallback(c =>
     {

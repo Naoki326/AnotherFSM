@@ -179,7 +179,7 @@ namespace StateMachine
             {
                 throw new ScriptException("Node " + nextNode + " 连线出错, " + "该Node未注入IoC中！");
             }
-            if (!last.HasTransition(fseEvent))
+            if (last.HasTransition(fseEvent))
             {
                 throw new ScriptException("Node " + nextNode + " 连线出错, " + "重复接线！");
             }
@@ -200,7 +200,7 @@ namespace StateMachine
             {
                 return false;
             }
-            if (!last.HasTransition(fsmEvent))
+            if (last.HasTransition(fsmEvent))
             {
                 return false;
             }

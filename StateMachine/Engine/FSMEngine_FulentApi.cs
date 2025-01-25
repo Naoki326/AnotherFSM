@@ -88,6 +88,8 @@ namespace StateMachine
         IFSMBuilderStepEnd ConfigureScript(string script);
         IFSMBuilderStepEnd ConfigureScriptFile(string fileName);
         IFSMBuilderStepEnd ConfigureFSMDefine(Action<IFSMDefineBuilder> definer);
+
+        //不使用Fluent api来构建状态机，而是使用其他api来构建
         FSMEngine Build();
     }
 
@@ -104,8 +106,6 @@ namespace StateMachine
         {
             engine = new FSMEngine();
         }
-
-        public static IFSMBuilder Default = new FSMEngineBuilder();
 
         public static IFSMBuilder Create() => new FSMEngineBuilder();
 
