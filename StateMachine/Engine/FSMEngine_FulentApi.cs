@@ -9,10 +9,13 @@ namespace StateMachine
     {
 
         IFSMDefineBuilder AddNode(string nodeName, string nodeType);
+        IFSMDefineBuilder AddNode(Enum nodeName, string nodeType);
 
         IFSMDefineBuilder AddNode<T>(string nodeName) where T : IFSMNode;
+        IFSMDefineBuilder AddNode<T>(Enum nodeName) where T : IFSMNode;
 
         IFSMDefineBuilder AddConnection(string connectionName, string fromNode, string toNode);
+        IFSMDefineBuilder AddConnection(Enum connectionName, Enum fromNode, Enum toNode);
     }
 
     internal class FSMDefineBuilder : IFSMDefineBuilder
@@ -25,6 +28,11 @@ namespace StateMachine
             engine.ConnectNode(connectionName, fromNode, toNode);
             return this;
         }
+        public IFSMDefineBuilder AddConnection(Enum connectionName, Enum fromNode, Enum toNode)
+        {
+            engine.ConnectNode(connectionName.ToString(), fromNode.ToString(), toNode.ToString());
+            return this;
+        }
 
         public IFSMDefineBuilder AddNode(string nodeName, string nodeType)
         {
@@ -32,9 +40,21 @@ namespace StateMachine
             return this;
         }
 
+        public IFSMDefineBuilder AddNode(Enum nodeName, string nodeType)
+        {
+            engine.CreateNode(nodeType, nodeName.ToString());
+            return this;
+        }
+
         public IFSMDefineBuilder AddNode<T>(string nodeName) where T : IFSMNode
         {
             engine.CreateNode<T>(nodeName);
+            return this;
+        }
+
+        public IFSMDefineBuilder AddNode<T>(Enum nodeName) where T : IFSMNode
+        {
+            engine.CreateNode<T>(nodeName.ToString());
             return this;
         }
     }
@@ -107,7 +127,14 @@ namespace StateMachine
             engine = new FSMEngine();
         }
 
+        private FSMEngineBuilder(FSMEngine e)
+        {
+            engine = e;
+        }
+
         public static IFSMBuilder Create() => new FSMEngineBuilder();
+
+        public static IFSMBuilder Create(FSMEngine e) => new FSMEngineBuilder(e);
 
         public IFSMBuilderStepEnd ConfigureScript(string script)
         {

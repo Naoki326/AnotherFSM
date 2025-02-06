@@ -42,7 +42,7 @@ namespace StateMachine
                 bNode.NodeStateChanged += GroupNodeStateChanged;
                 bNode.NodeExitChanged += GroupNodeExitChanged;
             }
-            this.NodeDict.Add(namePrev + name, proc);
+            this.nodeDict.Add(namePrev + name, proc);
             return;
         }
         public bool TryCreateNode(string node_type, string name, string namePrev = "")
@@ -64,7 +64,7 @@ namespace StateMachine
                 return false;
             proc.Name = name;
             proc.NamePrev = namePrev;
-            this.NodeDict.Add(namePrev + name, proc);
+            this.nodeDict.Add(namePrev + name, proc);
             return true;
         }
 
@@ -83,7 +83,7 @@ namespace StateMachine
             { throw new ScriptException("Node " + typeof(T) + " 获取失败！"); }
             proc.Name = name;
             proc.NamePrev = namePrev;
-            this.NodeDict.Add(namePrev + name, proc);
+            this.nodeDict.Add(namePrev + name, proc);
             return;
         }
 
@@ -102,7 +102,7 @@ namespace StateMachine
                 return false;
             proc.Name = name;
             proc.NamePrev = namePrev;
-            this.NodeDict.Add(namePrev + name, proc);
+            this.nodeDict.Add(namePrev + name, proc);
             return true;
         }
 
@@ -125,18 +125,18 @@ namespace StateMachine
             }
 
             node.Name = newName;
-            NodeDict.Remove(originName);
-            NodeDict.Add(newName, node);
+            nodeDict.Remove(originName);
+            nodeDict.Add(newName, node);
         }
 
         public bool TryChangeNodeName(string name, string newName)
         {
             if (name != newName
-                && NodeDict.TryGetValue(name, out IFSMNode last))
+                && nodeDict.TryGetValue(name, out IFSMNode last))
             {
                 last.Name = newName;
-                NodeDict.Remove(name);
-                NodeDict.Add(last.NamePrev + newName, last);
+                nodeDict.Remove(name);
+                nodeDict.Add(last.NamePrev + newName, last);
                 return true;
             }
             return false;
@@ -144,12 +144,12 @@ namespace StateMachine
 
         public void DeleteNode(string name)
         {
-            if (NodeDict[name] is BaseGroupNode bNode)
+            if (nodeDict[name] is BaseGroupNode bNode)
             {
                 bNode.NodeStateChanged -= GroupNodeStateChanged;
                 bNode.NodeExitChanged -= GroupNodeExitChanged;
             }
-            this.NodeDict.Remove(name);
+            this.nodeDict.Remove(name);
             return;
         }
 
@@ -157,7 +157,7 @@ namespace StateMachine
         {
             try
             {
-                this.NodeDict.Remove(name);
+                this.nodeDict.Remove(name);
             }
             catch (Exception)
             { return false; }
@@ -166,16 +166,16 @@ namespace StateMachine
 
         public void ConnectNode(string eventName, string lastNode, string nextNode)
         {
-            if (!EventDict.TryGetValue(eventName, out FSMEvent fseEvent))
+            if (!eventDict.TryGetValue(eventName, out FSMEvent fseEvent))
             {
                 fseEvent = new FSMEvent(eventName);
-                EventDict[eventName] = fseEvent;
+                eventDict[eventName] = fseEvent;
             }
-            if (!NodeDict.TryGetValue(lastNode, out IFSMNode last))
+            if (!nodeDict.TryGetValue(lastNode, out IFSMNode last))
             {
                 throw new ScriptException("Node " + lastNode + " 连线出错, " + "该Node未注入IoC中！");
             }
-            if (!NodeDict.TryGetValue(nextNode, out IFSMNode next))
+            if (!nodeDict.TryGetValue(nextNode, out IFSMNode next))
             {
                 throw new ScriptException("Node " + nextNode + " 连线出错, " + "该Node未注入IoC中！");
             }
@@ -190,13 +190,13 @@ namespace StateMachine
 
         public bool TryConnectNode(string eventName, string lastNode, string nextNode)
         {
-            if (!EventDict.TryGetValue(eventName, out FSMEvent fsmEvent))
+            if (!eventDict.TryGetValue(eventName, out FSMEvent fsmEvent))
             {
                 fsmEvent = new FSMEvent(eventName);
-                EventDict[eventName] = fsmEvent;
+                eventDict[eventName] = fsmEvent;
             }
-            if (!NodeDict.TryGetValue(lastNode, out IFSMNode last)
-                || !NodeDict.TryGetValue(nextNode, out IFSMNode next))
+            if (!nodeDict.TryGetValue(lastNode, out IFSMNode last)
+                || !nodeDict.TryGetValue(nextNode, out IFSMNode next))
             {
                 return false;
             }
@@ -211,12 +211,12 @@ namespace StateMachine
 
         public void DeleteTransition(string eventName, string lastNode)
         {
-            if (!EventDict.TryGetValue(eventName, out FSMEvent fsmEvent))
+            if (!eventDict.TryGetValue(eventName, out FSMEvent fsmEvent))
             {
                 fsmEvent = new FSMEvent(eventName);
-                EventDict[eventName] = fsmEvent;
+                eventDict[eventName] = fsmEvent;
             }
-            if (!NodeDict.TryGetValue(lastNode, out IFSMNode last))
+            if (!nodeDict.TryGetValue(lastNode, out IFSMNode last))
             {
                 throw new ScriptException("Node " + lastNode + " 删线出错, " + "该Node未注入IoC中！");
             }
@@ -228,12 +228,12 @@ namespace StateMachine
         }
         public bool TryDeleteTransition(string eventName, string lastNode)
         {
-            if (!EventDict.TryGetValue(eventName, out FSMEvent fsmEvent))
+            if (!eventDict.TryGetValue(eventName, out FSMEvent fsmEvent))
             {
                 fsmEvent = new FSMEvent(eventName);
-                EventDict[eventName] = fsmEvent;
+                eventDict[eventName] = fsmEvent;
             }
-            if (!NodeDict.TryGetValue(lastNode, out IFSMNode last))
+            if (!nodeDict.TryGetValue(lastNode, out IFSMNode last))
             {
                 return false;
             }
@@ -242,7 +242,7 @@ namespace StateMachine
 
         public void ClearTransition(string lastNode)
         {
-            if (!NodeDict.TryGetValue(lastNode, out IFSMNode value))
+            if (!nodeDict.TryGetValue(lastNode, out IFSMNode value))
             {
                 throw new ScriptException("Node " + lastNode + " 删线出错, " + "该Node未注入IoC中！");
             }
@@ -251,7 +251,7 @@ namespace StateMachine
         }
         public bool TryClearTransition(string lastNode)
         {
-            if (!NodeDict.TryGetValue(lastNode, out IFSMNode value))
+            if (!nodeDict.TryGetValue(lastNode, out IFSMNode value))
             {
                 return false;
             }
@@ -260,53 +260,48 @@ namespace StateMachine
             return true;
         }
 
-        public void AddEvent(string node, string eventName, FSMEnum branchEnum)
+        public void AttachEvent(string node, string eventName, FSMEnum branchEnum)
         {
-            AddEvent(node, eventName, (int)branchEnum);
+            AttachEvent(node, eventName, (int)branchEnum);
         }
-        public void AddEvent(string node, string eventName, int branch)
+        public void AttachEvent(string node, string eventName, int branch)
         {
-            if (!NodeDict.TryGetValue(node, out IFSMNode value))
+            if (!nodeDict.TryGetValue(node, out IFSMNode value))
             {
                 throw new ScriptException("Node " + node + " 添加事件出错, " + "该Node未注入IoC中！");
             }
-            if (!EventDict.TryGetValue(eventName, out FSMEvent fsmEvent))
+            if (!eventDict.TryGetValue(eventName, out FSMEvent fsmEvent))
             {
                 fsmEvent = new FSMEvent(eventName);
-                EventDict.Add(eventName, fsmEvent);
+                TryAddEvent(fsmEvent);
             }
 
             value.SetBranchEvent(branch, fsmEvent);
         }
 
-        public bool TryAddEvent(string node, string eventName, int branch)
+        public bool TryAttachEvent(string node, string eventName, int branch)
         {
-            if (!NodeDict.TryGetValue(node, out IFSMNode value))
+            if (!nodeDict.TryGetValue(node, out IFSMNode value))
             {
                 return false;
             }
-            if (!EventDict.TryGetValue(eventName, out FSMEvent fsmEvent))
+            if (!eventDict.TryGetValue(eventName, out FSMEvent fsmEvent))
             {
                 fsmEvent = new FSMEvent(eventName);
-                EventDict.Add(eventName, fsmEvent);
+                eventDict.Add(eventName, fsmEvent);
             }
 
             value.SetBranchEvent(branch, fsmEvent);
             return true;
         }
-        public bool TryAddEvent(string node, string eventName, FSMEnum branchEnum)
+        public bool TryAttachEvent(string node, string eventName, FSMEnum branchEnum)
         {
-            return TryAddEvent(node, eventName, (int)branchEnum);
+            return TryAttachEvent(node, eventName, (int)branchEnum);
         }
 
         public void ClearNodes()
         {
-            NodeDict.Clear();
-        }
-
-        public void ClearEvents()
-        {
-            EventDict.Clear();
+            nodeDict.Clear();
         }
 
     }

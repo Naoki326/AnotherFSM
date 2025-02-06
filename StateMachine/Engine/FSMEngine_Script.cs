@@ -18,9 +18,9 @@ namespace StateMachine
             var parser = new StateMachineScriptParser(tokens);
             var tree = parser.machine();
 
-            var state = new BuildStateVisitor(EventDict, NodeDict, assembleNodeHelper);
+            var state = new BuildStateVisitor(eventDict, nodeDict, assembleNodeHelper);
             state.Visit(tree);
-            var transition = new BuildTransitionVisitor(EventDict, NodeDict);
+            var transition = new BuildTransitionVisitor(eventDict, nodeDict);
             transition.Visit(tree);
 
             HandleGroupNode();
@@ -34,7 +34,7 @@ namespace StateMachine
 
         private void UnhandleGroupNode()
         {
-            foreach (var node in NodeDict.Where(n => n.Value is BaseGroupNode))
+            foreach (var node in nodeDict.Where(n => n.Value is BaseGroupNode))
             {
                 var gn = (BaseGroupNode)node.Value;
                 gn.NodeStateChanged -= Gn_NodeStateChanged;
@@ -44,7 +44,7 @@ namespace StateMachine
 
         private void HandleGroupNode()
         {
-            foreach (var node in NodeDict.Where(n => n.Value is BaseGroupNode))
+            foreach (var node in nodeDict.Where(n => n.Value is BaseGroupNode))
             {
                 var gn = (BaseGroupNode)node.Value;
                 gn.SetEngine(this);
@@ -114,12 +114,12 @@ namespace StateMachine
             var parser = new StateMachineScriptParser(tokens);
             var tree = parser.machine();
 
-            foreach (var state in NodeDict.Values)
+            foreach (var state in nodeDict.Values)
             {
                 state.ClearTransition();
             }
 
-            var transition = new BuildTransitionVisitor(EventDict, NodeDict);
+            var transition = new BuildTransitionVisitor(eventDict, nodeDict);
             transition.Visit(tree);
 
             HandleGroupNode();

@@ -38,8 +38,8 @@ namespace StateMachine
     public partial class FSMEngine : IEnumerable<IFSMNode>
     {
 
-        protected Dictionary<string, FSMEvent> EventDict = new Dictionary<string, FSMEvent>();
-        protected Dictionary<string, IFSMNode> NodeDict = new Dictionary<string, IFSMNode>();
+        protected Dictionary<string, FSMEvent> eventDict = new Dictionary<string, FSMEvent>();
+        protected Dictionary<string, IFSMNode> nodeDict = new Dictionary<string, IFSMNode>();
 
 
         public IFSMNode this[string name]
@@ -59,7 +59,7 @@ namespace StateMachine
 
         public bool ContainsNode(string name)
         {
-            return NodeDict.ContainsKey(name);
+            return nodeDict.ContainsKey(name);
         }
 
         //public bool TryGetNode(string name, [MaybeNullWhen(false)] out IFSMNode node)
@@ -101,31 +101,31 @@ namespace StateMachine
 
         public IFSMNode GetNode(string name)
         {
-            if (!NodeDict.TryGetValue(name, out IFSMNode value))
+            if (!nodeDict.TryGetValue(name, out IFSMNode value))
             { throw new KeyNotFoundException($"Node {name} doesn't exist"); }
             return value;
         }
 
         public T GetNode<T>(string name)where T : IFSMNode
         {
-            if (!NodeDict.TryGetValue(name, out IFSMNode value))
+            if (!nodeDict.TryGetValue(name, out IFSMNode value))
             { throw new KeyNotFoundException($"Node {name} doesn't exist"); }
             return (T)value;
         }
 
         public IEnumerable<string> GetNodeNames()
         {
-            return NodeDict.Keys;
+            return nodeDict.Keys;
         }
 
         public IEnumerable<string> GetEventNames()
         {
-            return EventDict.Keys;
+            return eventDict.Keys;
         }
 
         public bool ContainsEvent(string eventName)
         {
-            return EventDict.ContainsKey(eventName);
+            return eventDict.ContainsKey(eventName);
         }
 
         public bool TryGetEvent(string name, out FSMEvent e)
@@ -144,40 +144,45 @@ namespace StateMachine
 
         public FSMEvent GetEvent(string name)
         {
-            if (!EventDict.TryGetValue(name, out FSMEvent value))
+            if (!eventDict.TryGetValue(name, out FSMEvent value))
             { throw new KeyNotFoundException($"Event {name} doesn't exist"); }
             return value;
         }
 
         public void AddEvent(FSMEvent e)
         {
-            if (EventDict.TryGetValue(e.EventName, out _))
+            if (eventDict.TryGetValue(e.EventName, out _))
             {
                 throw new InvalidOperationException($"Event {e.EventName} already exist");
             }
-            EventDict.Add(e.EventName, e);
+            eventDict.Add(e.EventName, e);
         }
 
         public bool TryAddEvent(FSMEvent e)
         {
-            if (!EventDict.TryGetValue(e.EventName, out _))
+            if (!eventDict.TryGetValue(e.EventName, out _))
             {
-                EventDict.Add(e.EventName, e);
+                eventDict.Add(e.EventName, e);
                 return true;
             }
             return false;
         }
 
+        public void ClearEvents()
+        {
+            eventDict.Clear();
+        }
+
         public void PublishEvent(string name)
         {
-            if (!EventDict.TryGetValue(name, out FSMEvent? value))
+            if (!eventDict.TryGetValue(name, out FSMEvent? value))
             { return; }
             FSMEventAggregator.EventAggregator.Publish(value);
         }
 
         public void PublishEvent<T>(string name, T eventContext)
         {
-            if (!EventDict.TryGetValue(name, out FSMEvent value))
+            if (!eventDict.TryGetValue(name, out FSMEvent value))
             { return; }
             var eventValue = value;
             eventValue.EventContext = eventContext!;
@@ -191,7 +196,7 @@ namespace StateMachine
 
         public IEnumerator<IFSMNode> GetEnumerator()
         {
-            return NodeDict.Values.GetEnumerator();
+            return nodeDict.Values.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
