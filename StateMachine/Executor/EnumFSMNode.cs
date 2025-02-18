@@ -89,10 +89,10 @@ namespace StateMachine
 
         private IEnumerator? executor;
 
-        protected override void Dispose(bool Disposing)
+        protected override void Dispose(bool disposing)
         {
             (executor as IEnumerator<object>)?.Dispose();
-            base.Dispose(Disposing);
+            base.Dispose(disposing);
         }
     }
 

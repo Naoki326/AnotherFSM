@@ -1,8 +1,6 @@
-using DemoShared.StateMachine;
 using Masa.Blazor;
 using Microsoft.AspNetCore.Components;
 using StateMachine;
-using System.Reflection;
 
 namespace StateMachineDemoShared.Pages;
 
@@ -10,15 +8,15 @@ public partial class ProcedureView : IDisposable
 {
     private StateMachineBoard smBoard = default!;
     private List<string> nodeTypes = default!;
-    public FSMEngine Engine { get; set; } = new FSMEngine();
+    public FSMEngine Engine { get; set; }
+
+    [Inject]
+    public IFSMNodeFactory NodeFactory { get; set; } = default!;
 
     protected override Task OnInitializedAsync()
     {
         Engine = FSMEngineBuilder.Create()
-            .ConfigureAssembles(build => build
-                .AddAssemble(typeof(SleepNode).Assembly)
-                .AddAssemble(typeof(StartNode).Assembly)
-            )
+            .ConfigureNodeFactory(NodeFactory)
             .ConfigureFSMDefine(build =>
                 {
                     //build

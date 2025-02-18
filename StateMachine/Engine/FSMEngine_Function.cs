@@ -1,21 +1,25 @@
 ﻿using System.Reflection;
-using Antlr4.Runtime.Atn;
 
 namespace StateMachine
 {
+
     //另一种方式创建流程结构
     public partial class FSMEngine
     {
-        AssembleNodeHelper assembleNodeHelper = new AssembleNodeHelper();
+        IFSMNodeFactory nodeFactory;
 
-        public void AddAssemblyForNode(Assembly assembly)
+        public FSMEngine(IFSMNodeFactory nodeFactory)
         {
-            assembleNodeHelper.AddAssemble(assembly);
+            this.nodeFactory = nodeFactory;
         }
 
         public IEnumerable<FSMNodeAttribute> GetEnabledNodes()
         {
-            return assembleNodeHelper.GetEnabledNodes();
+            return [.. nodeFactory.GetNodeTypes()
+                    .Where(p => p.GetCustomAttributes<FSMNodeAttribute>().Any())
+                    .OrderBy(p => p.GetCustomAttributes<FSMNodeAttribute>().First().Id)
+                    .Select(p => p.GetCustomAttributes<FSMNodeAttribute>().First())
+            ];
         }
 
         public void CreateNode(string node_type, string name, string namePrev = "")
@@ -27,7 +31,7 @@ namespace StateMachine
                 default:
                     try
                     {
-                        proc = assembleNodeHelper.CreateNode(node_type);
+                        proc = nodeFactory.CreateNode(node_type);
                     }
                     catch (Exception)
                     { throw new ScriptException("Node " + node_type + " 定义出错, " + "该Node未注入IoC中！"); }
@@ -54,7 +58,7 @@ namespace StateMachine
                 default:
                     try
                     {
-                        proc = assembleNodeHelper.CreateNode(node_type);
+                        proc = nodeFactory.CreateNode(node_type);
                     }
                     catch (Exception)
                     { return false; }

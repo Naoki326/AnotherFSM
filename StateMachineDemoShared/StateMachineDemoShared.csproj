@@ -22,6 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\BaseNodes\BaseNodes.csproj" />
     <ProjectReference Include="..\StateMachine.FlowComponent\StateMachine.FlowComponent.csproj" />
     <ProjectReference Include="..\StateMachine\StateMachine.csproj" />
   </ItemGroup>

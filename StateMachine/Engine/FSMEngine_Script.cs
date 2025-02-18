@@ -18,7 +18,7 @@ namespace StateMachine
             var parser = new StateMachineScriptParser(tokens);
             var tree = parser.machine();
 
-            var state = new BuildStateVisitor(eventDict, nodeDict, assembleNodeHelper);
+            var state = new BuildStateVisitor(eventDict, nodeDict, nodeFactory);
             state.Visit(tree);
             var transition = new BuildTransitionVisitor(eventDict, nodeDict);
             transition.Visit(tree);

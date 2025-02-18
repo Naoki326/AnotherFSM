@@ -100,10 +100,10 @@ namespace StateMachine
             }
         }
 
-        protected override void Dispose(bool Disposing)
+        protected override void Dispose(bool disposing)
         {
             executor?.Dispose();
-            base.Dispose(Disposing);
+            base.Dispose(disposing);
         }
     }
 }

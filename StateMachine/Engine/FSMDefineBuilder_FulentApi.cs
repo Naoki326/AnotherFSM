@@ -59,90 +59,38 @@ namespace StateMachine
         }
     }
 
-    public interface IFSMAssemblesBuilder
-    {
-        IFSMAssemblesBuilder AddAssemble(Assembly assembly);
-        IFSMAssemblesBuilder AddAssembles(IEnumerable<Assembly> assemblies);
-        IFSMAssemblesBuilder AddAssemblePath(string path);
-
-        IEnumerable<Assembly> Build();
-    }
-    internal class FSMAssemblesBuilder : IFSMAssemblesBuilder
-    {
-        private IEnumerable<Assembly> fsmAssemblies = Enumerable.Empty<Assembly>();
-
-        public static IFSMAssemblesBuilder Create() => new FSMAssemblesBuilder();
-
-        public IEnumerable<Assembly> Build()
-        {
-            return fsmAssemblies;
-        }
-
-        public IFSMAssemblesBuilder AddAssemble(Assembly assembly)
-        {
-            fsmAssemblies = [.. fsmAssemblies, assembly];
-            return this;
-        }
-
-        public IFSMAssemblesBuilder AddAssemblePath(string path)
-        {
-            Assembly assembly = Assembly.LoadFrom(path);
-            fsmAssemblies = [.. fsmAssemblies, assembly];
-            return this;
-        }
-
-        public IFSMAssemblesBuilder AddAssembles(IEnumerable<Assembly> assemblies)
-        {
-            fsmAssemblies = [.. fsmAssemblies, ..assemblies];
-            return this;
-        }
-    }
-
     public interface IFSMBuilder
     {
-        IFSMBuilderStepConstruct ConfigureAssembles(Action<IFSMAssemblesBuilder> assembleBuilder);
+        IFSMBuilderStepConstruct ConfigureNodeFactory(IFSMNodeFactory nodeFactory);
     }
 
     public interface IFSMBuilderStepConstruct
     {
-        IFSMBuilderStepEnd ConfigureScript(string script);
-        IFSMBuilderStepEnd ConfigureScriptFile(string fileName);
-        IFSMBuilderStepEnd ConfigureFSMDefine(Action<IFSMDefineBuilder> definer);
+        IFSMBuilderStepConstruct ConfigureScript(string script);
+        IFSMBuilderStepConstruct ConfigureScriptFile(string fileName);
+        IFSMBuilderStepConstruct ConfigureFSMDefine(Action<IFSMDefineBuilder> definer);
 
         //不使用Fluent api来构建状态机，而是使用其他api来构建
         FSMEngine Build();
     }
 
-    public interface IFSMBuilderStepEnd
-    {
-        FSMEngine Build();
-    }
-
-    public class FSMEngineBuilder : IFSMBuilder, IFSMBuilderStepEnd, IFSMBuilderStepConstruct
+    public class FSMEngineBuilder : IFSMBuilder, IFSMBuilderStepConstruct
     {
         protected FSMEngine engine;
 
-        private FSMEngineBuilder()
-        {
-            engine = new FSMEngine();
-        }
-
-        private FSMEngineBuilder(FSMEngine e)
-        {
-            engine = e;
-        }
-
         public static IFSMBuilder Create() => new FSMEngineBuilder();
 
-        public static IFSMBuilder Create(FSMEngine e) => new FSMEngineBuilder(e);
+        public static IFSMBuilderStepConstruct Create(FSMEngine e) => new FSMEngineBuilder() { engine = e };
 
-        public IFSMBuilderStepEnd ConfigureScript(string script)
+        public static IFSMBuilderStepConstruct Create(IFSMNodeFactory f) => new FSMEngineBuilder().ConfigureNodeFactory(f);
+
+        public IFSMBuilderStepConstruct ConfigureScript(string script)
         {
             engine.CreateStateMachine(script);
             return this;
         }
 
-        public IFSMBuilderStepEnd ConfigureScriptFile(string fileName)
+        public IFSMBuilderStepConstruct ConfigureScriptFile(string fileName)
         {
             engine.CreateStateMachineByFile(fileName);
             return this;
@@ -153,18 +101,13 @@ namespace StateMachine
             return engine;
         }
 
-        public IFSMBuilderStepConstruct ConfigureAssembles(Action<IFSMAssemblesBuilder> assembleBuilder)
+        public IFSMBuilderStepConstruct ConfigureNodeFactory(IFSMNodeFactory nodeFactory)
         {
-            var assBuilder = FSMAssemblesBuilder.Create();
-            assembleBuilder(assBuilder);
-            foreach(var ass in assBuilder.Build())
-            {
-                engine.AddAssemblyForNode(ass);
-            }
+            engine = new FSMEngine(nodeFactory);
             return this;
         }
 
-        public IFSMBuilderStepEnd ConfigureFSMDefine(Action<IFSMDefineBuilder> definer)
+        public IFSMBuilderStepConstruct ConfigureFSMDefine(Action<IFSMDefineBuilder> definer)
         {
             var builder = FSMDefineBuilder.Create(engine);
             definer(builder);

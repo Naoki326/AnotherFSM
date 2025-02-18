@@ -1,5 +1,5 @@
 ﻿using Autofac;
-using Autofac.Extensions.DependencyInjection;
+using BaseNodes;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -34,27 +34,14 @@ namespace StateMachineWPFDemo
         {
 
             return Host.CreateDefaultBuilder(args)
-                .UseServiceProviderFactory(new AutofacServiceProviderFactory())
+                .UseServiceProviderFactory(new Autofac.Extensions.DependencyInjection.AutofacServiceProviderFactory())
                 .ConfigureContainer<ContainerBuilder>((context, containerBuilder) =>
                 {
-                    Assembly assembly = Assembly.Load("StateMachine");
+                    //注册Module
+                    Assembly assembly1 = Assembly.Load("StateMachineDemoShared");
                     Assembly assembly2 = Assembly.Load("StateMachine.FlowComponent");
-                    Assembly assembly3 = Assembly.Load("StateMachineDemoShared");
-                    Assembly[] assemlies = [Assembly.GetEntryAssembly(), assembly, assembly2, assembly3];
-                    //注册所有的Module
-                    containerBuilder.RegisterAssemblyModules(assemlies);
-                    //注册所有包含Component特性的类型
-                    //包括自定义的流程节点
-                    //containerBuilder.RegisterModule(new AutofacAnnotationModule(assemlies)
-                    //    .SetAutoRegisterInterface(true)
-                    //    .SetAutoRegisterParentClass(false)
-                    //    .SetIgnoreAutoRegisterAbstractClass(true));
-
-                    containerBuilder.RegisterBuildCallback(c =>
-                    {
-                        //配置默认的全局IoC实例
-                        //IoC.ContainerWrapper = new ContainerWrapper(c);
-                    });
+                    Assembly assembly3 = Assembly.Load("BaseNodes");
+                    containerBuilder.RegisterAssemblyModules([assembly1, assembly2, assembly3]);
                 })
                 .ConfigureAppConfiguration((context, configBuilder) =>
                 {
