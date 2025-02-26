@@ -69,7 +69,7 @@ namespace StateMachine
                         await Task.WhenAny(executor.CurrentNodeTask, Task.Delay(-1, Context.Token));
                     }
                 }
-                catch (OperationCanceledException ex)
+                catch (OperationCanceledException)
                 {
                 }
                 finally

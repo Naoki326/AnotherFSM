@@ -91,7 +91,7 @@ namespace StateMachine
         {
             return new FSMNodeContext<U>(this);
         }
-        public new T Data
+        public new T? Data
         {
             get
             {

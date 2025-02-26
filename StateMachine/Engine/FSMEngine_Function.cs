@@ -40,7 +40,7 @@ namespace StateMachine
             if (proc is null)
                 throw new ScriptException("Node " + node_type + " 获取失败！");
             proc.Name = name;
-            proc.NamePrev = namePrev;
+            proc.NamePrefix = namePrev;
             if (proc is BaseGroupNode bNode)
             {
                 bNode.NodeStateChanged += GroupNodeStateChanged;
@@ -67,7 +67,7 @@ namespace StateMachine
             if (proc is null)
                 return false;
             proc.Name = name;
-            proc.NamePrev = namePrev;
+            proc.NamePrefix = namePrev;
             this.nodeDict.Add(namePrev + name, proc);
             return true;
         }
@@ -86,7 +86,7 @@ namespace StateMachine
             if (proc is null)
             { throw new ScriptException("Node " + typeof(T) + " 获取失败！"); }
             proc.Name = name;
-            proc.NamePrev = namePrev;
+            proc.NamePrefix = namePrev;
             this.nodeDict.Add(namePrev + name, proc);
             return;
         }
@@ -105,7 +105,7 @@ namespace StateMachine
             if (proc is null)
                 return false;
             proc.Name = name;
-            proc.NamePrev = namePrev;
+            proc.NamePrefix = namePrev;
             this.nodeDict.Add(namePrev + name, proc);
             return true;
         }
@@ -140,7 +140,7 @@ namespace StateMachine
             {
                 last.Name = newName;
                 nodeDict.Remove(name);
-                nodeDict.Add(last.NamePrev + newName, last);
+                nodeDict.Add(last.NamePrefix + newName, last);
                 return true;
             }
             return false;

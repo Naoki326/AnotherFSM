@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Text;
-
-namespace StateMachine
+﻿namespace StateMachine
 {
     public interface IFSMDefineBuilder
     {
@@ -76,7 +71,7 @@ namespace StateMachine
 
     public class FSMEngineBuilder : IFSMBuilder, IFSMBuilderStepConstruct
     {
-        protected FSMEngine engine;
+        protected FSMEngine? engine;
 
         public static IFSMBuilder Create() => new FSMEngineBuilder();
 

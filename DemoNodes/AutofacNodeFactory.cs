@@ -1,12 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Autofac;
+﻿using Autofac;
 using Autofac.Core;
 using StateMachine;
 
-namespace BaseNodes
+namespace DemoNodes
 {
+    /// <summary>
+    /// 当使用Autofac作为容器时，实现该接口
+    /// 该接口将作为StateMachine的FSMEngine类型的节点构造工厂
+    /// </summary>
     public class AutofacNodeFactory : IFSMNodeFactory
     {
         private ILifetimeScope container;
@@ -43,7 +44,7 @@ namespace BaseNodes
         public IEnumerable<Type> GetNodeTypes()
         {
             return container.ComponentRegistry.Registrations
-                .SelectMany(r => 
+                .SelectMany(r =>
                     r.Services.OfType<KeyedService>().Where(s =>
                         s.ServiceType == typeof(IFSMNode))
                 .Select(s => r.Activator.LimitType))

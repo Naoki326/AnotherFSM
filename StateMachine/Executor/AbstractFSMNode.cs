@@ -1,7 +1,6 @@
-﻿using StateMachine.Interface;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Text;
+using StateMachine.Interface;
 
 namespace StateMachine
 {
@@ -120,31 +119,32 @@ namespace StateMachine
             BranchDict[index] = @event;
         }
 
-        //状态机的上下文
-        //[Obsolete("建议使用LastContext和NextContext")]
-
         [DebuggerNonUserCode]
         public FSMNodeContext Context { get; set; } = default!;
 
-        protected object LastData => Context.Data;
-        protected object NextData { set => Context.Data = value; }
-
-        private Action raisePause;
+        private Action? raisePause;
         event Action IFSMNode.RaisePause
         {
             add { raisePause += value; }
             remove { raisePause = (Action)Delegate.Remove(raisePause, value)!; }
         }
 
-
+        /// <summary>
+        /// 状态名称
+        /// </summary>
         [FSMProperty("Name", false, true, -1)]
         public string Name { get; set; } = "";
 
+        /// <summary>
+        /// 状态名称的前缀，类似命名空间的机制
+        /// </summary>
         [FSMProperty("NamePrev", false, true, -1)]
-        public string NamePrev { get; set; } = "";
+        public string NamePrefix { get; set; } = "";
 
         IExcecuterContext IFSMNode.ExecuterContext { get; set; } = default!;
-        //当前线程的上下文，隐藏set方法
+        /// <summary>
+        /// 当前FSMExecute对象的上下文
+        /// </summary>
         public IExcecuterContext ExecuterContext => (this as IFSMNode).ExecuterContext;
 
         [DebuggerStepThrough]
@@ -282,7 +282,7 @@ namespace StateMachine
 
     public abstract class AbstractFSMNode<T> : AbstractFSMNode, IFSMNode<T> where T : class
     {
-        public new FSMNodeContext<T> Context
+        public new FSMNodeContext<T>? Context
         {
             get { return base.Context as FSMNodeContext<T>; }
             set { base.Context = value; }
@@ -291,8 +291,8 @@ namespace StateMachine
 
     public abstract class AbstractFSMNode<T, U> : AbstractFSMNode, IFSMNode where T : class where U : class
     {
-        protected new T LastData => Context.Data as T;
-        protected new U NextData { set => Context.Data = value; }
+        protected T? LastData => Context.Data as T;
+        protected U NextData { set => Context.Data = value; }
     }
 
 }

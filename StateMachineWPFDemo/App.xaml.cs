@@ -1,11 +1,8 @@
-﻿using Autofac;
-using BaseNodes;
+﻿using System.Reflection;
+using Autofac;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using StateMachine;
-using StateMachineDemoShared;
-using System.Reflection;
 using Application = System.Windows.Application;
 
 namespace StateMachineWPFDemo
@@ -40,7 +37,7 @@ namespace StateMachineWPFDemo
                     //注册Module
                     Assembly assembly1 = Assembly.Load("StateMachineDemoShared");
                     Assembly assembly2 = Assembly.Load("StateMachine.FlowComponent");
-                    Assembly assembly3 = Assembly.Load("BaseNodes");
+                    Assembly assembly3 = Assembly.Load("DemoNodes");
                     containerBuilder.RegisterAssemblyModules([assembly1, assembly2, assembly3]);
                 })
                 .ConfigureAppConfiguration((context, configBuilder) =>

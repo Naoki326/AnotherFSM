@@ -25,7 +25,7 @@ namespace StateMachine
         public Dictionary<string, IFSMNode> NodeDict;
 
         private string nameprev = "";
-        public override object VisitNamespace([NotNull] StateMachineScriptParser.NamespaceContext context)
+        public override object? VisitNamespace([NotNull] StateMachineScriptParser.NamespaceContext context)
         {
             nameprev = context.STRING().ToString() + ".";
             foreach (var c in context.expression())
@@ -145,7 +145,7 @@ namespace StateMachine
             return base.VisitDefEvent(context);
         }
 
-        public override object VisitDefState([NotNull] StateMachineScriptParser.DefStateContext context)
+        public override object? VisitDefState([NotNull] StateMachineScriptParser.DefStateContext context)
         {
             var state_name = nameprev + context.STRING()[0].GetText();
             var state_type = context.STRING()[1].GetText();
@@ -157,7 +157,7 @@ namespace StateMachine
 
             node = CreateNode(state_type);
             node.Name = state_name;
-            node.NamePrev = nameprev;
+            node.NamePrefix = nameprev;
             node.ClassType = state_type;
 
             NodeDict.Add(state_name, node);
@@ -169,7 +169,7 @@ namespace StateMachine
             return null;
         }
 
-        public override object VisitDefState2([NotNull] StateMachineScriptParser.DefState2Context context)
+        public override object? VisitDefState2([NotNull] StateMachineScriptParser.DefState2Context context)
         {
             var state_name = nameprev + context.STRING()[0].GetText();
             string state_type = context.STRING()[0].GetText();
@@ -182,7 +182,7 @@ namespace StateMachine
             }
             node = CreateNode(state_type);
             node.Name = state_name;
-            node.NamePrev = nameprev;
+            node.NamePrefix = nameprev;
             node.ClassType = state_type;
 
             NodeDict.Add(state_name, node);
@@ -194,7 +194,7 @@ namespace StateMachine
             return null;// base.VisitDefState(context);
         }
 
-        public override object VisitDefGroupState([NotNull] StateMachineScriptParser.DefGroupStateContext context)
+        public override object? VisitDefGroupState([NotNull] StateMachineScriptParser.DefGroupStateContext context)
         {
             var state_name = nameprev + context.STRING()[0].GetText();
             string state_type = "Group";
@@ -207,7 +207,7 @@ namespace StateMachine
             }
             node = new GroupNode(stState, edEvent);
             node.Name = state_name;
-            node.NamePrev = nameprev;
+            node.NamePrefix = nameprev;
             node.ClassType = state_type;
 
             NodeDict.Add(state_name, node);

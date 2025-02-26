@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -132,9 +131,13 @@ namespace StateMachine
                 //Track Start Enter
                 observable.OnNext(new StateTrackInfo()
                 {
-                    IsEnter = true, TrackType = TrackType.Start,
-                    PrevStateName = "", CurrentNode = Start, StateName = Start.Name,
-                    FSMEvent = default!, EventName = "",
+                    IsEnter = true,
+                    TrackType = TrackType.Start,
+                    PrevStateName = "",
+                    CurrentNode = Start,
+                    StateName = Start.Name,
+                    FSMEvent = default!,
+                    EventName = "",
                     ThreadId = threadId,
                 });
 
@@ -143,9 +146,13 @@ namespace StateMachine
                 //Track Start Exit
                 observable.OnNext(new StateTrackInfo()
                 {
-                    IsEnter = false, TrackType = isCancel ? TrackType.Cancel : TrackType.Normal,
-                    PrevStateName = "", CurrentNode = Start, StateName = Start.Name,
-                    FSMEvent = default!, EventName = "",
+                    IsEnter = false,
+                    TrackType = isCancel ? TrackType.Cancel : TrackType.Normal,
+                    PrevStateName = "",
+                    CurrentNode = Start,
+                    StateName = Start.Name,
+                    FSMEvent = default!,
+                    EventName = "",
                     ThreadId = threadId,
                 });
                 while (await EventConsumer.Reader.WaitToReadAsync())
@@ -158,9 +165,13 @@ namespace StateMachine
                             //Track Continue Enter
                             observable.OnNext(new StateTrackInfo()
                             {
-                                IsEnter = true, TrackType = TrackType.Continue,
-                                PrevStateName = CurrentNode.Name, CurrentNode = CurrentNode, StateName = CurrentNode.Name,
-                                EventName = ContinueEvent.EventName, FSMEvent = ContinueEvent,
+                                IsEnter = true,
+                                TrackType = TrackType.Continue,
+                                PrevStateName = CurrentNode.Name,
+                                CurrentNode = CurrentNode,
+                                StateName = CurrentNode.Name,
+                                EventName = ContinueEvent.EventName,
+                                FSMEvent = ContinueEvent,
                                 ThreadId = threadId,
                             });
 
@@ -169,9 +180,13 @@ namespace StateMachine
                             //Track Continue Exit
                             observable.OnNext(new StateTrackInfo()
                             {
-                                IsEnter = false, TrackType = isCancel ? TrackType.Cancel : TrackType.Normal,
-                                PrevStateName = "", CurrentNode = CurrentNode, StateName = CurrentNode.Name,
-                                FSMEvent = default!, EventName = "",
+                                IsEnter = false,
+                                TrackType = isCancel ? TrackType.Cancel : TrackType.Normal,
+                                PrevStateName = "",
+                                CurrentNode = CurrentNode,
+                                StateName = CurrentNode.Name,
+                                FSMEvent = default!,
+                                EventName = "",
                                 ThreadId = threadId,
                             });
                         }
@@ -186,9 +201,13 @@ namespace StateMachine
                             //Track Enter
                             observable.OnNext(new StateTrackInfo()
                             {
-                                IsEnter = true, TrackType = TrackType.Normal,
-                                PrevStateName = CurrentNode.Name, StateName = nextNode.Name, CurrentNode = nextNode,
-                                FSMEvent = @event, EventName = @event.EventName,
+                                IsEnter = true,
+                                TrackType = TrackType.Normal,
+                                PrevStateName = CurrentNode.Name,
+                                StateName = nextNode.Name,
+                                CurrentNode = nextNode,
+                                FSMEvent = @event,
+                                EventName = @event.EventName,
                                 ThreadId = threadId,
                             });
 
@@ -199,9 +218,13 @@ namespace StateMachine
                             //Track Exit
                             observable.OnNext(new StateTrackInfo()
                             {
-                                IsEnter = false, TrackType = isCancel ? TrackType.Cancel : TrackType.Normal,
-                                PrevStateName = CurrentNode.Name, StateName = CurrentNode.Name, CurrentNode = CurrentNode,
-                                FSMEvent = default!, EventName = "",
+                                IsEnter = false,
+                                TrackType = isCancel ? TrackType.Cancel : TrackType.Normal,
+                                PrevStateName = CurrentNode.Name,
+                                StateName = CurrentNode.Name,
+                                CurrentNode = CurrentNode,
+                                FSMEvent = default!,
+                                EventName = "",
                                 ThreadId = threadId,
                             });
                         }
@@ -211,8 +234,11 @@ namespace StateMachine
                             observable.OnNext(new StateTrackInfo()
                             {
                                 TrackType = TrackType.DiscardEvent,
-                                PrevStateName = "", CurrentNode = CurrentNode, StateName = CurrentNode.Name,
-                                FSMEvent = @event, EventName = @event.EventName,
+                                PrevStateName = "",
+                                CurrentNode = CurrentNode,
+                                StateName = CurrentNode.Name,
+                                FSMEvent = @event,
+                                EventName = @event.EventName,
                                 ThreadId = threadId,
                             });
                         }
@@ -224,9 +250,13 @@ namespace StateMachine
                 //Track Exit
                 observable.OnNext(new StateTrackInfo()
                 {
-                    IsEnter = false, TrackType = TrackType.StateError,
-                    PrevStateName = CurrentNode.Name, StateName = CurrentNode.Name, CurrentNode = CurrentNode,
-                    FSMEvent = default!, EventName = "",
+                    IsEnter = false,
+                    TrackType = TrackType.StateError,
+                    PrevStateName = CurrentNode.Name,
+                    StateName = CurrentNode.Name,
+                    CurrentNode = CurrentNode,
+                    FSMEvent = default!,
+                    EventName = "",
                     ThreadId = threadId,
                 });
                 observable.OnError(ex);

@@ -1,14 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Text;
+﻿using System.Reflection;
 using Autofac;
 using StateMachine;
 using Module = Autofac.Module;
 
-namespace BaseNodes
+namespace DemoNodes
 {
-    internal class BaseNodesModule : Module
+
+    /// <summary>
+    /// 演示，使用Autofac注入设计的Demo节点
+    /// 注入时按照FSMNodeAttribute特性标记的Key作为容器的Key
+    /// 需要额外注意在注入时将StateMachine中的GroupNode和ParalleNode也注入到容器中
+    /// </summary>
+    internal class DemoNodesModule : Module
     {
         protected override void Load(ContainerBuilder builder)
         {
@@ -22,8 +25,10 @@ namespace BaseNodes
                     throw new InvalidOperationException("DeviceImplInject key has not set!");
                 })
                 .InstancePerDependency();
+
             RegisterKeyedNode<GroupNode>(builder);
             RegisterKeyedNode<ParallelNode>(builder);
+
             builder.RegisterType<AutofacNodeFactory>().As<IFSMNodeFactory>().SingleInstance();
             base.Load(builder);
         }

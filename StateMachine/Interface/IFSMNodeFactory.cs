@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Text;
-using Antlr4.Runtime.Atn;
+﻿using System.Reflection;
 
 namespace StateMachine
 {
 
+    /// <summary>
+    /// 该接口将作为StateMachine的FSMEngine类型的节点构造工厂
+    /// </summary>
     public interface IFSMNodeFactory
     {
         // 创建节点
@@ -19,7 +18,12 @@ namespace StateMachine
         IEnumerable<Type> GetNodeTypes();
     }
 
-    internal class AssembleNodeFactory : IFSMNodeFactory
+    /// <summary>
+    /// 提供一个默认的节点工厂
+    /// 但该工厂仅支持从给定的assembly中通过反射构造节点对象
+    /// 建议使用IoC容器来实现节点工厂，因为容器可为节点提供属性注入能力
+    /// </summary>
+    public class AssembleNodeFactory : IFSMNodeFactory
     {
 
         private List<Assembly> assemblies = [];
@@ -89,7 +93,7 @@ namespace StateMachine
 
         public IEnumerable<Type> GetNodeTypes()
         {
-            return [..assemblies.SelectMany(ass => ass.GetTypes())];
+            return [.. assemblies.SelectMany(ass => ass.GetTypes())];
         }
     }
 }

@@ -1,11 +1,9 @@
+using System.Reflection;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using StateMachine;
-using StateMachineDemoShared;
 using StateMachineWebAssemblyDemo;
-using System.Reflection;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.ConfigureContainer(new AutofacServiceProviderFactory((containerBuilder) =>
@@ -13,7 +11,7 @@ builder.ConfigureContainer(new AutofacServiceProviderFactory((containerBuilder) 
     //×¢²áModule
     Assembly assembly1 = Assembly.Load("StateMachineDemoShared");
     Assembly assembly2 = Assembly.Load("StateMachine.FlowComponent");
-    Assembly assembly3 = Assembly.Load("BaseNodes");
+    Assembly assembly3 = Assembly.Load("DemoNodes");
     containerBuilder.RegisterAssemblyModules([assembly1, assembly2, assembly3]);
 
     containerBuilder.RegisterBuildCallback(c =>

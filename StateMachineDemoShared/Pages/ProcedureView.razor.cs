@@ -8,7 +8,7 @@ public partial class ProcedureView : IDisposable
 {
     private StateMachineBoard smBoard = default!;
     private List<string> nodeTypes = default!;
-    public FSMEngine Engine { get; set; }
+    public required FSMEngine Engine { get; set; }
 
     [Inject]
     public IFSMNodeFactory NodeFactory { get; set; } = default!;

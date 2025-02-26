@@ -106,7 +106,7 @@ namespace StateMachine
             return value;
         }
 
-        public T GetNode<T>(string name)where T : IFSMNode
+        public T GetNode<T>(string name) where T : IFSMNode
         {
             if (!nodeDict.TryGetValue(name, out IFSMNode value))
             { throw new KeyNotFoundException($"Node {name} doesn't exist"); }

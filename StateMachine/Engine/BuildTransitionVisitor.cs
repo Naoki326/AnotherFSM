@@ -14,7 +14,7 @@ namespace StateMachine
         public Dictionary<string, IFSMNode> NodeDict;
 
         private string nameprev = "";
-        public override object VisitNamespace([NotNull] StateMachineScriptParser.NamespaceContext context)
+        public override object? VisitNamespace([NotNull] StateMachineScriptParser.NamespaceContext context)
         {
             nameprev = context.STRING().ToString() + ".";
             foreach (var c in context.expression())

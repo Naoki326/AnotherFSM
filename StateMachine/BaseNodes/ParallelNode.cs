@@ -71,7 +71,7 @@ namespace StateMachine
                         await Task.WhenAny(Task.WhenAll(executors.Select(p => p.CurrentNodeTask)), Task.Delay(-1, Context.Token));
                     }
                 }
-                catch (OperationCanceledException ex)
+                catch (OperationCanceledException)
                 {
                     executors.ForEach(p => p.FSMStateChanged -= Executor_FSMStateChanged);
                 }

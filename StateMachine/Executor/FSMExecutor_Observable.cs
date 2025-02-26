@@ -1,6 +1,4 @@
-﻿using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Runtime.CompilerServices;
+﻿using System.Reactive.Subjects;
 
 namespace StateMachine
 {

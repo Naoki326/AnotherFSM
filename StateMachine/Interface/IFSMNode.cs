@@ -73,7 +73,7 @@
         IExcecuterContext ExecuterContext { get; set; }
 
         //脚本中的命名空间
-        string NamePrev { get; set; }
+        string NamePrefix { get; set; }
 
         //流程执行前，所有节点的初始化
         void InitBeforeStart();
