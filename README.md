@@ -58,8 +58,61 @@ AnotherFSM 是一个**基于有限状态机、快速构建流程的工具库**�
 
 ##### 基于Autofac的IoC配置
 
-首先，在您的所有自定义节点所在的项目中增加一个AutofacModule，如下所示：
+首先，实现接口IFSMNodeFactory，它将用于创建FSMEngine实例
 
+```C#
+    /// <summary>
+    /// 当使用Autofac作为容器时，实现该接口
+    /// 该接口将作为StateMachine的FSMEngine类型的节点构造工厂
+    /// </summary>
+    public class AutofacNodeFactory : IFSMNodeFactory
+    {
+        private ILifetimeScope container;
+
+        public AutofacNodeFactory(ILifetimeScope container)
+        {
+            this.container = container;
+        }
+
+        public IFSMNode CreateNode(string name)
+        {
+            return container.ResolveKeyed<IFSMNode>(name);
+        }
+
+        //返回autofac的IContainer中找出keyedservice的key等于name，类型为IFSMNode的实例的Type
+        public Type GetNodeType(string name)
+        {
+            // 查找以 Keyed 的形式注册，键匹配 `name`，服务类型是 IFSMNode
+            var registration = container.ComponentRegistry.Registrations
+                .FirstOrDefault(r =>
+                    r.Services.OfType<KeyedService>().Any(s =>
+                        s.ServiceKey.Equals(name) && s.ServiceType == typeof(IFSMNode)));
+
+            // 如果找到对应的注册，则获取其实现类型，并返回
+            if (registration != null)
+            {
+                return registration.Activator.LimitType;
+            }
+
+            // 如果没有找到匹配的服务，可以抛出异常或返回null
+            throw new InvalidOperationException($"No IFSMNode service with key '{name}' found.");
+        }
+
+        public IEnumerable<Type> GetNodeTypes()
+        {
+            return container.ComponentRegistry.Registrations
+                .SelectMany(r =>
+                    r.Services.OfType<KeyedService>().Where(s =>
+                        s.ServiceType == typeof(IFSMNode))
+                .Select(s => r.Activator.LimitType))
+                .Distinct();
+        }
+    }
+```
+
+其次，在您的所有自定义节点所在的项目中增加一个AutofacModule，如下所示：
+
+```C#
     /// <summary>
     /// 演示，使用Autofac注入设计的Demo节点
     /// 注入时按照FSMNodeAttribute特性标记的Key作为容器的Key
@@ -96,10 +149,11 @@ AnotherFSM 是一个**基于有限状态机、快速构建流程的工具库**�
             }
         }
     }
+```
 
 需要额外注意在注入时将StateMachine中的GroupNode和ParalleNode也注入到容器中，但只需要注入一次。也就是说，如果您有多个自定义节点的项目，每个项目都有这样的Module，但只需要在其中一个Module中注册GroupNode和ParallelNode。
 
-然后，在启动项目中注入Module
+最后，在启动项目中注入Module
 
 - 若使用IHostBuilder，可以参考Demo，如下所示配置IoC：
 
@@ -150,7 +204,7 @@ containerBuilder.Build();
 
   - ***FSMEngine***
 
-- 该类型负责保存一个整体状态图结构，一个FSMEngine对象内部包括若干节点、事件及节点与节点之间通过事件相连接的关系。
+该类型负责保存一个整体状态图结构，一个FSMEngine对象内部包括若干节点、事件及节点与节点之间通过事件相连接的关系。
 
 | 常用函数 | 描述 |
 | --- | --- |
@@ -173,13 +227,29 @@ containerBuilder.Build();
 | TransformByFile | 通过脚本文件对当前状态图进行重组 |
 | ToString | 将当前对应的状态图输出为脚本 |
 
+  - ***FSMEngineBuilder***
+   
+增加了一个FluentAPI的构建方式，可以下面的方式来创建FSMEngine实例：
+``` C#
+var engine = FSMEngineBuilder.Create()
+    .ConfigureNodeFactory(new AutofacNodeFactory())
+    .ConfigureFSMDefine(build =>
+    {
+        build.AddNode<SleepNode>("Sleep")
+            .AddConnection("NextEvent", "Start", "Sleep")
+            .AddNode("Sleep2", "SleepNodeKey")
+            ;
+    })
+    .Build();
+```
+
 #### 3. 流程执行类
 
   - ***FSMExecutor***
 
-  - 每个FSMExecutor实例管理一个执行状态机的对象，该对象可以控制、监控状态机的执行。
+每个FSMExecutor实例管理一个执行状态机的对象，该对象可以控制、监控状态机的执行。
   
-  - 强调：状态流将在Task中执行，若流程出现异常，Task自动退出，对于流程出现的任何异常，可检查IObservable接口的OnError或者NodeExceptionEvent事件
+强调：状态流将在Task中执行，若流程出现异常，Task自动退出，对于流程出现的任何异常，可检查IObservable接口的OnError或者NodeExceptionEvent事件
 
 | 函数 | 描述 |
 | --- | --- |
