@@ -134,26 +134,10 @@ Next, add an AutofacModule to your project containing all custom nodes as follow
                 })
                 .InstancePerDependency();
 
-            // If there are multiple modules, just call the following two lines of code in one of the modules
-            RegisterKeyedNode<GroupNode>(builder);
-            RegisterKeyedNode<ParallelNode>(builder);
-
-            builder.RegisterType<AutofacNodeFactory>().As<IFSMNodeFactory>().SingleInstance();
             base.Load(builder);
-        }
-
-        private void RegisterKeyedNode<T>(ContainerBuilder builder) where T : IFSMNode
-        {
-            if (typeof(T).GetCustomAttribute(typeof(FSMNodeAttribute)) is FSMNodeAttribute attr)
-            {
-                builder.RegisterType<T>().Keyed<IFSMNode>(attr.Key);
-            }
         }
     }
 ```
-
-It is particularly important to note that when injecting, inject GroupNode and ParallelNode from StateMachine into the container, but only once. In other words, if you have multiple projects with custom nodes, each project has such a module, but you only need to register GroupNode and ParallelNode in one of the modules.
-
 Finally, inject the Module in the startup project.
 
 - If using IHostBuilder, refer to the Demo, and configure IoC as shown below:
@@ -171,11 +155,18 @@ Host.CreateDefaultBuilder(args)
         // Register all modules
         containerBuilder.RegisterAssemblyModules(assemblies);
        
-        containerBuilder.RegisterBuildCallback(c =>
+		// Register an AutofacNodeFactory as a singleton, and optionally use this object as a parameter when constructing an FSMEngine
+		containerBuilder.RegisterType<AutofacNodeFactory>().As<IFSMNodeFactory>().SingleInstance();
+		
+		// Register GroupNode and ParallelNode
+		if (typeof(GroupNode).GetCustomAttribute(typeof(FSMNodeAttribute)) is FSMNodeAttribute attr)
+		{
+			containerBuilder.RegisterType<GroupNode>().Keyed<IFSMNode>(attr.Key);
+		}
+        if (typeof(ParallelNode).GetCustomAttribute(typeof(FSMNodeAttribute)) is FSMNodeAttribute attr2)
         {
-            // Configure the default global IoC instance
-            IoC.ContainerWrapper = new ContainerWrapper(c);
-        });
+            containerBuilder.RegisterType<ParallelNode>().Keyed<IFSMNode>(attr2.Key);
+        }
     })
 ```
 
@@ -190,12 +181,20 @@ Assembly assembly3 = Assembly.Load("StateMachineDemoShared");
 Assembly[] assemblies = [Assembly.GetEntryAssembly(), assembly, assembly2, assembly3];
 // Register all modules
 containerBuilder.RegisterAssemblyModules(assemblies);
+       
+// Register an AutofacNodeFactory as a singleton, and optionally use this object as a parameter when constructing an FSMEngine
+containerBuilder.RegisterType<AutofacNodeFactory>().As<IFSMNodeFactory>().SingleInstance();
 
-containerBuilder.RegisterBuildCallback(c =>
+// Register GroupNode and ParallelNode
+if (typeof(GroupNode).GetCustomAttribute(typeof(FSMNodeAttribute)) is FSMNodeAttribute attr)
 {
-    // Configure the default global IoC instance
-    IoC.ContainerWrapper = new ContainerWrapper(c);
-});
+	containerBuilder.RegisterType<GroupNode>().Keyed<IFSMNode>(attr.Key);
+}
+if (typeof(ParallelNode).GetCustomAttribute(typeof(FSMNodeAttribute)) is FSMNodeAttribute attr2)
+{
+	containerBuilder.RegisterType<ParallelNode>().Keyed<IFSMNode>(attr2.Key);
+}
+
 containerBuilder.Build();
 ```
 

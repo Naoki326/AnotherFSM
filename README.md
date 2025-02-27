@@ -132,26 +132,11 @@ AnotherFSM 是一个**基于有限状态机、快速构建流程的工具库**�
                     throw new InvalidOperationException("DeviceImplInject key has not set!");
                 })
                 .InstancePerDependency();
-
-            // 若有多个Module，则只要在其中一个Module中调用下面两行代码
-            RegisterKeyedNode<GroupNode>(builder);
-            RegisterKeyedNode<ParallelNode>(builder);
-
-            builder.RegisterType<AutofacNodeFactory>().As<IFSMNodeFactory>().SingleInstance();
+				
             base.Load(builder);
-        }
-
-        private void RegisterKeyedNode<T>(ContainerBuilder builder) where T : IFSMNode
-        {
-            if (typeof(T).GetCustomAttribute(typeof(FSMNodeAttribute)) is FSMNodeAttribute attr)
-            {
-                builder.RegisterType<T>().Keyed<IFSMNode>(attr.Key);
-            }
         }
     }
 ```
-
-需要额外注意在注入时将StateMachine中的GroupNode和ParalleNode也注入到容器中，但只需要注入一次。也就是说，如果您有多个自定义节点的项目，每个项目都有这样的Module，但只需要在其中一个Module中注册GroupNode和ParallelNode。
 
 最后，在启动项目中注入Module
 
@@ -165,16 +150,23 @@ Host.CreateDefaultBuilder(args)
         Assembly assembly = Assembly.Load("StateMachine");
         Assembly assembly2 = Assembly.Load("StateMachine.FlowComponent");
         Assembly assembly3 = Assembly.Load("StateMachineDemoShared");
-        //这里的assemblies需要覆盖所有包含实现了节点的程序集，以实现脚本自动构建节点
+        // 这里的assemblies需要覆盖所有包含实现了节点的程序集，以实现脚本自动构建节点
         Assembly[] assemblies = [Assembly.GetEntryAssembly(), assembly, assembly2, assembly3];
-        //注册所有的Module
+        // 注册所有的Module
         containerBuilder.RegisterAssemblyModules(assemblies);
-       
-        containerBuilder.RegisterBuildCallback(c =>
+
+		// 注册一个AutofacNodeFactory为单例，构造FSMEngine时可选该对象为参数
+		containerBuilder.RegisterType<AutofacNodeFactory>().As<IFSMNodeFactory>().SingleInstance();
+		
+		// 手动注入GroupNode和ParallelNode
+		if (typeof(GroupNode).GetCustomAttribute(typeof(FSMNodeAttribute)) is FSMNodeAttribute attr)
+		{
+			containerBuilder.RegisterType<GroupNode>().Keyed<IFSMNode>(attr.Key);
+		}
+        if (typeof(ParallelNode).GetCustomAttribute(typeof(FSMNodeAttribute)) is FSMNodeAttribute attr2)
         {
-            //配置默认的全局IoC实例
-            IoC.ContainerWrapper = new ContainerWrapper(c);
-        });
+            containerBuilder.RegisterType<ParallelNode>().Keyed<IFSMNode>(attr2.Key);
+        }
     })
 ```
 
@@ -185,16 +177,24 @@ var containerBuilder = new ContainerBuilder();
 Assembly assembly = Assembly.Load("StateMachine");
 Assembly assembly2 = Assembly.Load("StateMachine.FlowComponent");
 Assembly assembly3 = Assembly.Load("StateMachineDemoShared");
-//这里的assemblies需要覆盖所有包含实现了节点的程序集，以实现脚本自动构建节点
+// 这里的assemblies需要覆盖所有包含实现了节点的程序集，以实现脚本自动构建节点
 Assembly[] assemblies = [Assembly.GetEntryAssembly(), assembly, assembly2, assembly3];
-//注册所有的Module
+// 注册所有的Module
 containerBuilder.RegisterAssemblyModules(assemblies);
 
-containerBuilder.RegisterBuildCallback(c =>
+// 注册一个AutofacNodeFactory为单例，构造FSMEngine时可选该对象为参数
+containerBuilder.RegisterType<AutofacNodeFactory>().As<IFSMNodeFactory>().SingleInstance();
+
+// 手动注入GroupNode和ParallelNode
+if (typeof(GroupNode).GetCustomAttribute(typeof(FSMNodeAttribute)) is FSMNodeAttribute attr)
 {
-    //配置默认的全局IoC实例
-    IoC.ContainerWrapper = new ContainerWrapper(c);
-});
+	containerBuilder.RegisterType<GroupNode>().Keyed<IFSMNode>(attr.Key);
+}
+if (typeof(ParallelNode).GetCustomAttribute(typeof(FSMNodeAttribute)) is FSMNodeAttribute attr2)
+{
+	containerBuilder.RegisterType<ParallelNode>().Keyed<IFSMNode>(attr2.Key);
+}
+
 containerBuilder.Build();
 ```
 
