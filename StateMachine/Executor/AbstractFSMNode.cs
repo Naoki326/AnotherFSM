@@ -123,6 +123,7 @@ namespace StateMachine
         public FSMNodeContext Context { get; set; } = default!;
 
         private Action? raisePause;
+        // 暂停针对一个具体的FSMExecute，所以需要用raisePause绑定到对应的FSMExecute
         event Action IFSMNode.RaisePause
         {
             add { raisePause += value; }
@@ -177,6 +178,7 @@ namespace StateMachine
             }
         }
 
+        // pause针对一个具体的FSMExecute，所以需要用raisePause绑定到对应的FSMExecute
         protected void Pause()
         {
             raisePause?.Invoke();

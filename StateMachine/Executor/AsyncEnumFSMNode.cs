@@ -32,6 +32,42 @@ namespace StateMachine
             return current.Result;
         }
 
+        /// <summary>
+        /// 重试一个操作
+        /// </summary>
+        /// <param name="action">被重试的操作</param>
+        /// <param name="count">重试的次数，若小于0则表示不停重试</param>
+        /// <returns>若重试，返回重试的index</returns>
+        /// <exception cref="IndexOutOfRangeException">超过重试次数</exception>
+        [DebuggerStepThrough]
+        protected async IAsyncEnumerable<int> RetryAsync(Task action, int count = -1)
+        {
+            int times = 0;
+            while (true)
+            {
+                if(count > 0 && times >= count)
+                {
+                    throw new IndexOutOfRangeException("重试次数超出限制");
+                }
+                yield return times;
+
+                times++;
+
+                try
+                {
+                    await action;
+
+                    // 如果成功完成操作，则退出循环
+                    break;
+                }
+                catch (OperationCanceledException)
+                {
+                    // 如果被取消（暂停），则继续循环
+                    continue;
+                }
+            }
+        }
+
         [DebuggerStepThrough]
         protected override async Task ExecuteMethodAsync()
         {
@@ -52,14 +88,15 @@ namespace StateMachine
                     }
                     switch (await CheckYield((IYieldAction?)executor.Current))
                     {
-                        case YieldEnum.PauseRetry:
-                            Pause();
-                            await RestartAsync();
-                            break;
                         case YieldEnum.Pause:
                             Pause();
                             break;
                         case YieldEnum.Retry:
+                            await RestartAsync();
+                            break;
+                        case YieldEnum.PauseRetry:
+                            Pause();
+                            await RestartAsync();
                             break;
                         case YieldEnum.None:
                         default:
@@ -89,11 +126,11 @@ namespace StateMachine
 
         private IAsyncEnumerator<object>? executor;
 
-        protected override void Dispose(bool Disposing)
+        protected override void Dispose(bool disposing)
         {
             if (executor != null)
                 executor.DisposeAsync();
-            base.Dispose(Disposing);
+            base.Dispose(disposing);
         }
     }
 
@@ -125,6 +162,43 @@ namespace StateMachine
             current.Context = Context;
             await current.InvokeAsync();
             return current.Result;
+        }
+
+
+        /// <summary>
+        /// 重试一个操作
+        /// </summary>
+        /// <param name="action">被重试的操作</param>
+        /// <param name="count">重试的次数，若小于0则表示不停重试</param>
+        /// <returns>若重试，返回重试的index</returns>
+        /// <exception cref="IndexOutOfRangeException">超过重试次数</exception>
+        [DebuggerStepThrough]
+        protected async IAsyncEnumerable<int> RetryAsync(Task action, int count = -1)
+        {
+            int times = 0;
+            while (true)
+            {
+                if (count > 0 && times >= count)
+                {
+                    throw new IndexOutOfRangeException("重试次数超出限制");
+                }
+                yield return times;
+
+                times++;
+
+                try
+                {
+                    await action;
+
+                    // 如果成功完成操作，则退出循环
+                    break;
+                }
+                catch (OperationCanceledException)
+                {
+                    // 如果被取消（暂停），则继续循环
+                    continue;
+                }
+            }
         }
 
         [DebuggerStepThrough]
@@ -176,11 +250,11 @@ namespace StateMachine
 
         private IAsyncEnumerator<object>? executor;
 
-        protected override void Dispose(bool Disposing)
+        protected override void Dispose(bool disposing)
         {
             if (executor != null)
                 executor.DisposeAsync();
-            base.Dispose(Disposing);
+            base.Dispose(disposing);
         }
     }
 
@@ -212,6 +286,43 @@ namespace StateMachine
             current.Context = Context;
             await current.InvokeAsync();
             return current.Result;
+        }
+
+
+        /// <summary>
+        /// 重试一个操作
+        /// </summary>
+        /// <param name="action">被重试的操作</param>
+        /// <param name="count">重试的次数，若小于0则表示不停重试</param>
+        /// <returns>若重试，返回重试的index</returns>
+        /// <exception cref="IndexOutOfRangeException">超过重试次数</exception>
+        [DebuggerStepThrough]
+        protected async IAsyncEnumerable<int> RetryAsync(Task action, int count = -1)
+        {
+            int times = 0;
+            while (true)
+            {
+                if (count > 0 && times >= count)
+                {
+                    throw new IndexOutOfRangeException("重试次数超出限制");
+                }
+                yield return times;
+
+                times++;
+
+                try
+                {
+                    await action;
+
+                    // 如果成功完成操作，则退出循环
+                    break;
+                }
+                catch (OperationCanceledException)
+                {
+                    // 如果被取消（暂停），则继续循环
+                    continue;
+                }
+            }
         }
 
         [DebuggerStepThrough]
@@ -263,11 +374,11 @@ namespace StateMachine
 
         private IAsyncEnumerator<object>? executor;
 
-        protected override void Dispose(bool Disposing)
+        protected override void Dispose(bool disposing)
         {
             if (executor != null)
                 executor.DisposeAsync();
-            base.Dispose(Disposing);
+            base.Dispose(disposing);
         }
     }
 }
