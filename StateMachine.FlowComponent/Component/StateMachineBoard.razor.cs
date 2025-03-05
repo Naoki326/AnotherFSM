@@ -27,14 +27,14 @@ namespace StateMachine
                 foreach (var nodeType in NodeTypeNames)
                 {
                     colors.MoveNext();
-                    NodeTypes.Add(nodeType, colors.Current);
+                    nodeTypes.Add(nodeType, colors.Current);
                 }
             }
         }
 
         [Parameter] public EventCallback DataInitializer { get; set; }
 
-        private Dictionary<string, string> NodeTypes = [];
+        private Dictionary<string, string> nodeTypes = [];
         private static IEnumerable<string> s_colors
         {
             get
@@ -333,11 +333,11 @@ namespace StateMachine
                 clientY: args.ClientY,
                 offsetX: args.DataTransfer.Data.OffsetX,
                 offsetY: args.DataTransfer.Data.OffsetY,
-                className: NodeTypes[nodeType],
+                className: nodeTypes[nodeType],
                 data: new NodeData
                 {
                     Type = nodeType,
-                    Color = NodeTypes[nodeType],
+                    Color = nodeTypes[nodeType],
                     Name = nodeType + nodeNameSuffix,
                     Message = $"message from {nodeType}!",
                 },

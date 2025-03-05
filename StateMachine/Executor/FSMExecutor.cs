@@ -11,10 +11,10 @@ namespace StateMachine
 
         public FSMExecutor(IFSMNode start, FSMEvent endEvent)
         {
-            Start = start ?? throw new FSMException("Start 节点不能为空！");
-            EndEvent = endEvent ?? throw new FSMException("结束事件不能为空！");
+            this.start = start ?? throw new FSMException("Start 节点不能为空！");
+            this.endEvent = endEvent ?? throw new FSMException("结束事件不能为空！");
 
-            EventConsumer = Channel.CreateUnbounded<FSMEvent>();
+            eventConsumer = Channel.CreateUnbounded<FSMEvent>();
             State = FSMState.Initialized;
 
             InitObserver();
@@ -24,12 +24,12 @@ namespace StateMachine
 
         private IEventAggregator eventAggregator;
 
-        protected Channel<FSMEvent> EventConsumer;
+        protected Channel<FSMEvent> eventConsumer;
 
-        protected IFSMNode CurrentNode = default!;
+        protected IFSMNode currentNode = default!;
 
-        protected IFSMNode Start;
-        protected FSMEvent EndEvent;
+        protected IFSMNode start;
+        protected FSMEvent endEvent;
 
         protected FSMEvent pauseEvent = new("PauseEvent");
         protected FSMEvent PauseEvent => pauseEvent;
@@ -38,7 +38,7 @@ namespace StateMachine
         protected FSMEvent ContinueEvent => continueEvent;
 
         public Task ExecutorTask { get; private set; } = default!;
-        public Task CurrentNodeTask => CurrentNode.WaitCurrentTask;
+        public Task CurrentNodeTask => currentNode.WaitCurrentTask;
 
 
         private FSMState state = FSMState.Uninitialized;
@@ -86,24 +86,24 @@ namespace StateMachine
         private async Task<bool> RunCurrentNodeAsync(bool isCreateNew)
         {
             bool isCancel = false;
-            if (CurrentNode is null)
+            if (currentNode is null)
                 throw new FSMException("CurrentNode is null");
-            NodeStateChangedInvoke(CurrentNode.Name);
-            CurrentNode.RaisePause += CurrentNode_RaisePause;
-            CurrentNode.ExecuterContext = SolverContext;
+            NodeStateChangedInvoke(currentNode.Name);
+            currentNode.RaisePause += CurrentNode_RaisePause;
+            currentNode.ExecuterContext = SolverContext;
             try
             {
                 State = FSMState.Running;
                 if (isCreateNew)
-                { await CurrentNode.CreateNewAsync(); }
-                CurrentNode.Context.ManualLevel = ManualLevel;
-                bool isExit = await CurrentNode.GoAsync();
+                { await currentNode.CreateNewAsync(); }
+                currentNode.Context.ManualLevel = ManualLevel;
+                bool isExit = await currentNode.RunAsync();
                 if (isExit)
-                { NodeExitChangedInvoke(CurrentNode.Name); }
-                if (CurrentNode.Context.IsPaused)
+                { NodeExitChangedInvoke(currentNode.Name); }
+                if (currentNode.Context.IsPaused)
                 {
-                    while (EventConsumer.Reader.Count > 0)
-                    { midEventList.Enqueue(await EventConsumer.Reader.ReadAsync()); }
+                    while (eventConsumer.Reader.Count > 0)
+                    { midEventList.Enqueue(await eventConsumer.Reader.ReadAsync()); }
                     pausing = false;
                 }
             }
@@ -111,7 +111,7 @@ namespace StateMachine
             catch (Exception ex) when (ex.InnerException is OperationCanceledException) { isCancel = true; }
             finally
             {
-                CurrentNode.RaisePause -= CurrentNode_RaisePause;
+                currentNode.RaisePause -= CurrentNode_RaisePause;
             }
 
             return isCancel;
@@ -134,8 +134,8 @@ namespace StateMachine
                     IsEnter = true,
                     TrackType = TrackType.Start,
                     PrevStateName = "",
-                    CurrentNode = Start,
-                    StateName = Start.Name,
+                    CurrentNode = start,
+                    StateName = start.Name,
                     FSMEvent = default!,
                     EventName = "",
                     ThreadId = threadId,
@@ -149,15 +149,15 @@ namespace StateMachine
                     IsEnter = false,
                     TrackType = isCancel ? TrackType.Cancel : TrackType.Normal,
                     PrevStateName = "",
-                    CurrentNode = Start,
-                    StateName = Start.Name,
+                    CurrentNode = start,
+                    StateName = start.Name,
                     FSMEvent = default!,
                     EventName = "",
                     ThreadId = threadId,
                 });
-                while (await EventConsumer.Reader.WaitToReadAsync())
+                while (await eventConsumer.Reader.WaitToReadAsync())
                 {
-                    while (EventConsumer.Reader.TryRead(out FSMEvent? @event))
+                    while (eventConsumer.Reader.TryRead(out FSMEvent? @event))
                     {
                         if (@event.EventID == ContinueEvent.EventID)
                         {
@@ -167,9 +167,9 @@ namespace StateMachine
                             {
                                 IsEnter = true,
                                 TrackType = TrackType.Continue,
-                                PrevStateName = CurrentNode.Name,
-                                CurrentNode = CurrentNode,
-                                StateName = CurrentNode.Name,
+                                PrevStateName = currentNode.Name,
+                                CurrentNode = currentNode,
+                                StateName = currentNode.Name,
                                 EventName = ContinueEvent.EventName,
                                 FSMEvent = ContinueEvent,
                                 ThreadId = threadId,
@@ -183,27 +183,28 @@ namespace StateMachine
                                 IsEnter = false,
                                 TrackType = isCancel ? TrackType.Cancel : TrackType.Normal,
                                 PrevStateName = "",
-                                CurrentNode = CurrentNode,
-                                StateName = CurrentNode.Name,
+                                CurrentNode = currentNode,
+                                StateName = currentNode.Name,
                                 FSMEvent = default!,
                                 EventName = "",
                                 ThreadId = threadId,
                             });
                         }
-                        else if (CurrentNode.HasTransition(@event))
+                        else if (currentNode.HasTransition(@event))
                         {
                             //这里是正常执行节点的分支
-                            CurrentNode.Context.TriggerEvent = @event;
-                            SolverContext.LastNodeName = CurrentNode.Name;
-                            var nextNode = CurrentNode.TargetState(@event);
-                            nextNode.Context = CurrentNode.Context;
+                            currentNode.Context.TriggerEvent = @event;
+                            var nextNode = currentNode.TargetState(@event);
+                            nextNode.Context = currentNode.Context;
+                            SolverContext.LastNodeName = currentNode.Name;
+                            SolverContext.CurrentNodeName = nextNode.Name;
 
                             //Track Enter
                             observable.OnNext(new StateTrackInfo()
                             {
                                 IsEnter = true,
                                 TrackType = TrackType.Normal,
-                                PrevStateName = CurrentNode.Name,
+                                PrevStateName = currentNode.Name,
                                 StateName = nextNode.Name,
                                 CurrentNode = nextNode,
                                 FSMEvent = @event,
@@ -211,7 +212,7 @@ namespace StateMachine
                                 ThreadId = threadId,
                             });
 
-                            CurrentNode = nextNode;
+                            currentNode = nextNode;
 
                             isCancel = await RunCurrentNodeAsync(true);
 
@@ -220,9 +221,9 @@ namespace StateMachine
                             {
                                 IsEnter = false,
                                 TrackType = isCancel ? TrackType.Cancel : TrackType.Normal,
-                                PrevStateName = CurrentNode.Name,
-                                StateName = CurrentNode.Name,
-                                CurrentNode = CurrentNode,
+                                PrevStateName = currentNode.Name,
+                                StateName = currentNode.Name,
+                                CurrentNode = currentNode,
                                 FSMEvent = default!,
                                 EventName = "",
                                 ThreadId = threadId,
@@ -235,8 +236,8 @@ namespace StateMachine
                             {
                                 TrackType = TrackType.DiscardEvent,
                                 PrevStateName = "",
-                                CurrentNode = CurrentNode,
-                                StateName = CurrentNode.Name,
+                                CurrentNode = currentNode,
+                                StateName = currentNode.Name,
                                 FSMEvent = @event,
                                 EventName = @event.EventName,
                                 ThreadId = threadId,
@@ -252,9 +253,9 @@ namespace StateMachine
                 {
                     IsEnter = false,
                     TrackType = TrackType.StateError,
-                    PrevStateName = CurrentNode.Name,
-                    StateName = CurrentNode.Name,
-                    CurrentNode = CurrentNode,
+                    PrevStateName = currentNode.Name,
+                    StateName = currentNode.Name,
+                    CurrentNode = currentNode,
                     FSMEvent = default!,
                     EventName = "",
                     ThreadId = threadId,
@@ -292,8 +293,8 @@ namespace StateMachine
 
         public IEnumerator<IFSMNode> GetEnumerator()
         {
-            yield return Start;
-            foreach (var t in Traversal(Start, new ConcurrentBag<IFSMNode>()))
+            yield return start;
+            foreach (var t in Traversal(start, new ConcurrentBag<IFSMNode>()))
                 yield return t;
         }
 
@@ -311,26 +312,26 @@ namespace StateMachine
         {
             TrackCallname();
             State = FSMState.Stopping;
-            while (EventConsumer.Reader.Count > 0)
-            { EventConsumer.Reader.TryRead(out _); }
+            while (eventConsumer.Reader.Count > 0)
+            { eventConsumer.Reader.TryRead(out _); }
             Exception e = default!;
             Task.Run(async () =>
             {
-                if (CurrentNode != null && !CurrentNode.Context.IsPaused)
+                if (currentNode != null && !currentNode.Context.IsPaused)
                 {
-                    CurrentNode.Context.Pause();
+                    currentNode.Context.Pause();
                     try
                     {
-                        await CurrentNode.WaitCurrentTask;
+                        await currentNode.WaitCurrentTask;
                     }
                     catch (Exception ex)
                     {
                         e = ex;
                     }
                 }
-                while (EventConsumer.Reader.Count > 0)
-                { EventConsumer.Reader.TryRead(out _); }
-                EventConsumer.Writer.TryComplete();
+                while (eventConsumer.Reader.Count > 0)
+                { eventConsumer.Reader.TryRead(out _); }
+                eventConsumer.Writer.TryComplete();
                 if (ExecutorTask != null)
                 {
                     try
@@ -355,24 +356,24 @@ namespace StateMachine
         {
             TrackCallname();
             State = FSMState.Stopping;
-            while (EventConsumer.Reader.Count > 0)
-            { EventConsumer.Reader.TryRead(out _); }
+            while (eventConsumer.Reader.Count > 0)
+            { eventConsumer.Reader.TryRead(out _); }
             Exception e = default!;
-            if (CurrentNode != null && !CurrentNode.Context.IsPaused)
+            if (currentNode != null && !currentNode.Context.IsPaused)
             {
-                CurrentNode.Context.Pause();
+                currentNode.Context.Pause();
                 try
                 {
-                    await CurrentNode.WaitCurrentTask;
+                    await currentNode.WaitCurrentTask;
                 }
                 catch (Exception ex)
                 {
                     e = ex;
                 }
             }
-            while (EventConsumer.Reader.Count > 0)
-            { EventConsumer.Reader.TryRead(out _); }
-            EventConsumer.Writer.TryComplete();
+            while (eventConsumer.Reader.Count > 0)
+            { eventConsumer.Reader.TryRead(out _); }
+            eventConsumer.Writer.TryComplete();
             if (ExecutorTask != null)
             {
                 try
@@ -394,8 +395,8 @@ namespace StateMachine
 
         private void InitNodes()
         {
-            Start.InitBeforeStart();
-            foreach (var child in Start)
+            start.InitBeforeStart();
+            foreach (var child in start)
             {
                 child.InitBeforeStart();
             }
@@ -406,16 +407,16 @@ namespace StateMachine
             TrackCallname();
             if (!await StopAsync())
             { return false; }
-            if (EventConsumer != null && !EventConsumer.Reader.Completion.IsCompleted)
+            if (eventConsumer != null && !eventConsumer.Reader.Completion.IsCompleted)
             { return false; }
 
-            CurrentNode = Start;
+            currentNode = start;
 
             pausing = false;
-            if (Start.Context == null)
-            { Start.Context = new FSMNodeContext(); }
+            if (start.Context == null)
+            { start.Context = new FSMNodeContext(); }
             while (midEventList.TryDequeue(out _)) { }
-            EventConsumer = Channel.CreateUnbounded<FSMEvent>();
+            eventConsumer = Channel.CreateUnbounded<FSMEvent>();
 
             InitNodes();
             //建议尽量使用Task.Run，不使用Task.Factory.StartNew，在WebAssembly框架下Task.Factory.StartNew可能不适用
@@ -429,7 +430,7 @@ namespace StateMachine
         {
             if (!await StopAsync())
             { return false; }
-            Start.Context = context;
+            start.Context = context;
             return await RestartAsync();
         }
 
@@ -438,16 +439,16 @@ namespace StateMachine
             TrackCallname();
             if (!await StopAsync())
             { return false; }
-            if (EventConsumer != null && !EventConsumer.Reader.Completion.IsCompleted)
+            if (eventConsumer != null && !eventConsumer.Reader.Completion.IsCompleted)
             { return false; }
 
-            CurrentNode = node ?? throw new FSMException("开始节点不能为空！");
+            currentNode = node ?? throw new FSMException("开始节点不能为空！");
 
             pausing = false;
             if (node.Context == null)
             { node.Context = new FSMNodeContext(); }
             while (midEventList.TryDequeue(out _)) { }
-            EventConsumer = Channel.CreateUnbounded<FSMEvent>();
+            eventConsumer = Channel.CreateUnbounded<FSMEvent>();
 
             InitNodes();
             //建议尽量使用Task.Run，不使用Task.Factory.StartNew，在WebAssembly框架下Task.Factory.StartNew可能不适用
@@ -472,30 +473,30 @@ namespace StateMachine
         public void Pause()
         {
             TrackCallname();
-            if (CurrentNode.Context.IsPaused || pausing)
+            if (currentNode.Context.IsPaused || pausing)
             { return; }
 
             State = FSMState.Pausing;
             pausing = true;
-            while (EventConsumer.Reader.Count > 0)
+            while (eventConsumer.Reader.Count > 0)
             {
-                if (EventConsumer.Reader.TryRead(out FSMEvent? fSMEvent))
+                if (eventConsumer.Reader.TryRead(out FSMEvent? fSMEvent))
                 {
                     midEventList.Enqueue(fSMEvent);
                 }
             }
-            CurrentNode.Context.Pause();
+            currentNode.Context.Pause();
             Task.Run(async () =>
             {
                 try
                 {
-                    await CurrentNode.WaitCurrentTask;
+                    await currentNode.WaitCurrentTask;
                 }
                 finally
                 {
-                    while (EventConsumer.Reader.Count > 0)
+                    while (eventConsumer.Reader.Count > 0)
                     {
-                        if (EventConsumer.Reader.TryRead(out FSMEvent? fSMEvent))
+                        if (eventConsumer.Reader.TryRead(out FSMEvent? fSMEvent))
                         {
                             midEventList.Enqueue(fSMEvent);
                         }
@@ -510,28 +511,28 @@ namespace StateMachine
         public async Task<bool> PauseAsync()
         {
             TrackCallname();
-            if (CurrentNode.Context.IsPaused || pausing)
+            if (currentNode.Context.IsPaused || pausing)
             { return false; }
 
             State = FSMState.Pausing;
             pausing = true;
-            while (EventConsumer.Reader.Count > 0)
+            while (eventConsumer.Reader.Count > 0)
             {
-                if (EventConsumer.Reader.TryRead(out FSMEvent? fSMEvent))
+                if (eventConsumer.Reader.TryRead(out FSMEvent? fSMEvent))
                 {
                     midEventList.Enqueue(fSMEvent);
                 }
             }
-            CurrentNode.Context.Pause();
+            currentNode.Context.Pause();
             try
             {
-                await CurrentNode.WaitCurrentTask;
+                await currentNode.WaitCurrentTask;
             }
             finally
             {
-                while (EventConsumer.Reader.Count > 0)
+                while (eventConsumer.Reader.Count > 0)
                 {
-                    if (EventConsumer.Reader.TryRead(out FSMEvent? fSMEvent))
+                    if (eventConsumer.Reader.TryRead(out FSMEvent? fSMEvent))
                     {
                         midEventList.Enqueue(fSMEvent);
                     }
@@ -546,12 +547,12 @@ namespace StateMachine
         public bool Continue()
         {
             TrackCallname();
-            if (CurrentNode.Context.IsPaused || pausing)
+            if (currentNode.Context.IsPaused || pausing)
             {
                 State = FSMState.Proceeding;
-                EventConsumer.Writer.TryWrite(ContinueEvent);
+                eventConsumer.Writer.TryWrite(ContinueEvent);
                 while (midEventList.TryDequeue(out FSMEvent? e))
-                { EventConsumer.Writer.TryWrite(e); }
+                { eventConsumer.Writer.TryWrite(e); }
                 State = FSMState.Running;
                 return true;
             }
@@ -562,22 +563,22 @@ namespace StateMachine
         [DebuggerStepThrough]
         public void Handle(FSMEvent @event)
         {
-            if (@event.EventID == EndEvent.EventID)
+            if (@event.EventID == endEvent.EventID)
             {
-                EventConsumer.Writer.TryComplete();
+                eventConsumer.Writer.TryComplete();
                 State = FSMState.Finished;
             }
             else if (@event.EventID == PauseEvent.EventID)
             {
                 Pause();
             }
-            else if (CurrentNode.Context.IsPaused)
+            else if (currentNode.Context.IsPaused)
             {
                 midEventList.Enqueue(@event);
             }
-            else if (!EventConsumer.Reader.Completion.IsCompleted)
+            else if (!eventConsumer.Reader.Completion.IsCompleted)
             {
-                EventConsumer.Writer.TryWrite(@event);
+                eventConsumer.Writer.TryWrite(@event);
             }
         }
     }
@@ -595,10 +596,10 @@ namespace StateMachine
                     // TODO: 释放托管状态(托管对象)
                 }
                 // TODO: 释放未托管的资源(未托管的对象)并替代终结器
-                if (EventConsumer != null)
+                if (eventConsumer != null)
                 {
                     eventAggregator.Unsubscribe(this);
-                    EventConsumer.Writer.TryComplete();
+                    eventConsumer.Writer.TryComplete();
                 }
                 if (ExecutorTask != null)
                 {
@@ -613,7 +614,7 @@ namespace StateMachine
                 }
 
                 // TODO: 将大型字段设置为 null
-                EventConsumer = default!;
+                eventConsumer = default!;
                 ExecutorTask = default!;
 
                 disposedValue = true;

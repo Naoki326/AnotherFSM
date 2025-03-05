@@ -66,41 +66,37 @@
 
     public interface IFSMNode : ITransitionContainer, IVisualNode, IDisposable
     {
+
+        //脚本中的命名空间
+        string NamePrefix { get; set; }
+
+        //当前节点对象在脚本内的名称
+        string Name { get; set; }
+
         //执行的时候从上一状态传入的上下文
         FSMNodeContext Context { get; set; }
 
         //当前流程的数据结构
         IExcecuterContext ExecuterContext { get; set; }
 
-        //脚本中的命名空间
-        string NamePrefix { get; set; }
-
         //流程执行前，所有节点的初始化
         void InitBeforeStart();
-
-        //执行
-        Task<bool> GoAsync();
 
         //设置返回结果发起的对应事件
         void SetBranchEvent(int index, FSMEvent @event);
 
-        //当前节点对象在脚本内的名称
-        string Name { get; set; }
-
-        //当前节点对应的异步Task
-        Task WaitCurrentTask { get; }
-
-        event Action RaisePause;
-
         Task CreateNewAsync();
         Task ExitStateAsync();
-    }
 
-    //初始化上下文与执行上下文使用相同类型
-    public interface IFSMNode<T> : IFSMNode where T : class
-    {
-        //执行的时候从上一状态传入的上下文
-        new FSMNodeContext<T> Context { get; set; }
+        //执行
+        Task<bool> RunAsync();
+
+        // 当前节点对应的异步Task
+        Task WaitCurrentTask { get; }
+
+        // 该事件用于在Node中发起执行端暂停
+        // 暂停针对一个具体的FSMExecute，所以需要用raisePause绑定到对应的FSMExecute
+        event Action RaisePause;
     }
 
 }

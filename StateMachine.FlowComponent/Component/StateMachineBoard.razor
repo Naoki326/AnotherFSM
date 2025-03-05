@@ -7,10 +7,10 @@
 <div class="sm-board">
 
     <div class="sm-nodes" style="flex: 0;">
-        @if(NodeTypes is not null && NodeTypes.Count > 0)
+        @if(nodeTypes is not null && nodeTypes.Count > 0)
         {
             <MList>
-                @foreach (var nodeType in NodeTypes)
+                @foreach (var nodeType in nodeTypes)
                 {
                     <MListItem>
                         <MDrag DataValue="@(nodeType.Key)"

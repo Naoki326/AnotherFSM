@@ -113,10 +113,10 @@ namespace StateMachine
 
     public abstract partial class AbstractFSMNode : IFSMNode
     {
-        private Dictionary<int, FSMEvent> BranchDict = [];
+        private Dictionary<int, FSMEvent> branchDict = [];
         void IFSMNode.SetBranchEvent(int index, FSMEvent @event)
         {
-            BranchDict[index] = @event;
+            branchDict[index] = @event;
         }
 
         [DebuggerNonUserCode]
@@ -149,7 +149,7 @@ namespace StateMachine
         public IExcecuterContext ExecuterContext => (this as IFSMNode).ExecuterContext;
 
         [DebuggerStepThrough]
-        async Task<bool> IFSMNode.GoAsync()
+        async Task<bool> IFSMNode.RunAsync()
         {
             TaskCompletionSource<bool> tcs = new();
             waitCurrentTask = tcs.Task;
@@ -159,12 +159,12 @@ namespace StateMachine
                 Context.SetPause(false);
                 await ExecuteMethodAsync();
                 await FinishAsync();
+                tcs.TrySetResult(true);
                 return true;
             }
             catch (OperationCanceledException)
             {
-                if (!tcs.Task.IsCompleted)
-                { tcs.TrySetResult(false); }
+                tcs.TrySetCanceled();
                 await Interupt();
                 if (Context != null)
                 { Context.SetPause(true); }
@@ -173,8 +173,7 @@ namespace StateMachine
             finally
             {
                 await ExitAsync();
-                if (!tcs.Task.IsCompleted)
-                { tcs.TrySetResult(true); }
+                tcs.TrySetResult(false);
             }
         }
 
@@ -208,18 +207,23 @@ namespace StateMachine
 
         protected void PublishEvent(int index)
         {
-            if (BranchDict.TryGetValue(index, out FSMEvent value))
+            if (branchDict.TryGetValue(index, out FSMEvent value))
             { FSMEventAggregator.EventAggregator?.Publish(value); }
         }
 
         protected void PublishEvent<T>(int index, T eventContext)
         {
-            if (BranchDict.TryGetValue(index, out FSMEvent value)
+            if (branchDict.TryGetValue(index, out FSMEvent value)
                 && value.Clone() is FSMEvent eventValue)
             {
                 eventValue.EventContext = eventContext!;
                 FSMEventAggregator.EventAggregator?.Publish(eventValue);
             }
+        }
+
+        protected void PublishEvent(int index, object eventContext)
+        {
+            PublishEvent<object>(index, eventContext);
         }
 
         protected void PublishEvent(FSMEnum pEnum)
@@ -234,14 +238,10 @@ namespace StateMachine
             PublishEvent(index, eventContext);
         }
 
-        protected void PublishEvent(int index, object eventContext)
-        {
-            PublishEvent<object>(index, eventContext);
-        }
-
         protected void PublishEvent(FSMEnum pEnum, object eventContext)
         {
-            PublishEvent<object>(pEnum, eventContext);
+            int index = pEnum.GetHashCode();
+            PublishEvent<object>(index, eventContext);
         }
 
         //启动时触发
@@ -269,7 +269,7 @@ namespace StateMachine
             Dispose(true);
         }
 
-        protected virtual void Dispose(bool Disposing)
+        protected virtual void Dispose(bool disposing)
         {
         }
 
@@ -282,19 +282,15 @@ namespace StateMachine
     }
 
 
-    public abstract class AbstractFSMNode<T> : AbstractFSMNode, IFSMNode<T> where T : class
+
+    public abstract class AbstractFSMNode<T> : AbstractFSMNode where T : class
     {
+        // 限制上下文的类型
         public new FSMNodeContext<T>? Context
         {
             get { return base.Context as FSMNodeContext<T>; }
             set { base.Context = value; }
         }
-    }
-
-    public abstract class AbstractFSMNode<T, U> : AbstractFSMNode, IFSMNode where T : class where U : class
-    {
-        protected T? LastData => Context.Data as T;
-        protected U NextData { set => Context.Data = value; }
     }
 
 }
