@@ -2,10 +2,13 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Channels;
 
 namespace StateMachine
 {
+
+    [DebuggerNonUserCode]
     public partial class FSMExecutor : IHandle<FSMEvent>, IEnumerable<IFSMNode>
     {
 
@@ -55,20 +58,17 @@ namespace StateMachine
         }
 
         public event EventHandler<string>? NodeStateChanged;
-        [DebuggerStepThrough]
         private void NodeStateChangedInvoke(string nodeName)
         {
             NodeStateChanged?.Invoke(this, nodeName);
         }
         public event EventHandler<string>? NodeExitChanged;
-        [DebuggerStepThrough]
         private void NodeExitChangedInvoke(string nodeName)
         {
             NodeExitChanged?.Invoke(this, nodeName);
         }
         //事件的参数：solver实例，新状态，前一状态
         public event Action<FSMExecutor, FSMState, FSMState>? FSMStateChanged;
-        [DebuggerStepThrough]
         private void FSMStateChangedInvoke(FSMState current, FSMState previousState)
         {
             FSMStateChanged?.Invoke(this, current, previousState);
@@ -82,7 +82,6 @@ namespace StateMachine
             set { ManualLevel = Convert.ToInt64(value); }
         }
 
-        [DebuggerStepThrough]
         private async Task<bool> RunCurrentNodeAsync(bool isCreateNew)
         {
             bool isCancel = false;
@@ -117,11 +116,16 @@ namespace StateMachine
             return isCancel;
         }
 
-        [DebuggerStepThrough]
-        private async Task ConsumerTask()
+        private FSMSyncContext executorContext = new FSMSyncContext();
+
+        private async Task ConsumerTask(bool isLongRunning)
         {
+            if (isLongRunning)
+            {
+                SynchronizationContext.SetSynchronizationContext(executorContext);
+                await Task.Yield();
+            }
             long threadId = Thread.CurrentThread.ManagedThreadId;
-            Thread.CurrentThread.Name = $"State Machine Task({threadId})";
             eventAggregator.Subscribe(this);
             try
             {
@@ -267,7 +271,9 @@ namespace StateMachine
                 return;
             }
             finally
-            { eventAggregator.Unsubscribe(this); }
+            {
+                eventAggregator.Unsubscribe(this);
+            }
         }
 
         private void CurrentNode_RaisePause()
@@ -402,7 +408,8 @@ namespace StateMachine
             }
         }
 
-        public async Task<bool> RestartAsync()
+
+        public async Task<bool> RestartAsync(bool isLongRunning = false)
         {
             TrackCallname();
             if (!await StopAsync())
@@ -419,22 +426,20 @@ namespace StateMachine
             eventConsumer = Channel.CreateUnbounded<FSMEvent>();
 
             InitNodes();
-            //建议尽量使用Task.Run，不使用Task.Factory.StartNew，在WebAssembly框架下Task.Factory.StartNew可能不适用
-            //ExecutorTask = Task.Factory.StartNew(async () => await ConsumerTask(), TaskCreationOptions.LongRunning);
-            ExecutorTask = Task.Run(ConsumerTask);
+            ExecutorTask = await Task.Factory.StartNew(() => ConsumerTask(isLongRunning));
 
             return true;
         }
 
-        public async Task<bool> RestartAsync(FSMNodeContext context)
+        public async Task<bool> RestartAsync(FSMNodeContext context, bool isLongRunning = false)
         {
             if (!await StopAsync())
             { return false; }
             start.Context = context;
-            return await RestartAsync();
+            return await RestartAsync(isLongRunning);
         }
 
-        public async Task<bool> RestartAsync(IFSMNode node)
+        public async Task<bool> RestartAsync(IFSMNode node, bool isLongRunning = false)
         {
             TrackCallname();
             if (!await StopAsync())
@@ -451,19 +456,17 @@ namespace StateMachine
             eventConsumer = Channel.CreateUnbounded<FSMEvent>();
 
             InitNodes();
-            //建议尽量使用Task.Run，不使用Task.Factory.StartNew，在WebAssembly框架下Task.Factory.StartNew可能不适用
-            //ExecutorTask = Task.Factory.StartNew(async () => await ConsumerTask(), TaskCreationOptions.LongRunning);
-            ExecutorTask = Task.Run(ConsumerTask);
+            ExecutorTask = await Task.Factory.StartNew(() => ConsumerTask(isLongRunning));
 
             return true;
         }
 
-        public async Task<bool> RestartAsync(IFSMNode node, FSMNodeContext context)
+        public async Task<bool> RestartAsync(IFSMNode node, FSMNodeContext context, bool isLongRunning = false)
         {
             if (!await StopAsync())
             { return false; }
             node.Context = context;
-            return await RestartAsync(node);
+            return await RestartAsync(node, isLongRunning);
         }
 
         private ConcurrentQueue<FSMEvent> midEventList = new ConcurrentQueue<FSMEvent>();
@@ -560,7 +563,7 @@ namespace StateMachine
             return false;
         }
 
-        [DebuggerStepThrough]
+        [DebuggerHidden]
         public void Handle(FSMEvent @event)
         {
             if (@event.EventID == endEvent.EventID)
@@ -611,11 +614,13 @@ namespace StateMachine
                     {
                     }
                     ExecutorTask.Dispose();
+                    executorContext.Dispose();
                 }
 
                 // TODO: 将大型字段设置为 null
                 eventConsumer = default!;
                 ExecutorTask = default!;
+                executorContext = default!;
 
                 disposedValue = true;
             }

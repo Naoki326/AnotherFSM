@@ -6,6 +6,7 @@ namespace StateMachine
 {
 
     //执行块的抽象类
+    [DebuggerNonUserCode]
     public abstract partial class AbstractFSMNode : ITransitionContainer
     {
         //双键字典
@@ -119,7 +120,6 @@ namespace StateMachine
             branchDict[index] = @event;
         }
 
-        [DebuggerNonUserCode]
         public FSMNodeContext Context { get; set; } = default!;
 
         private Action? raisePause;
@@ -148,7 +148,6 @@ namespace StateMachine
         /// </summary>
         public IExcecuterContext ExecuterContext => (this as IFSMNode).ExecuterContext;
 
-        [DebuggerStepThrough]
         async Task<bool> IFSMNode.RunAsync()
         {
             TaskCompletionSource<bool> tcs = new();
@@ -158,7 +157,6 @@ namespace StateMachine
                 Context.SetTokenSource(new CancellationTokenSource());
                 Context.SetPause(false);
                 await ExecuteMethodAsync();
-                await FinishAsync();
                 tcs.TrySetResult(true);
                 return true;
             }
@@ -253,9 +251,6 @@ namespace StateMachine
         //执行方法
         protected abstract Task ExecuteMethodAsync();
 
-        //完成时调用
-        protected abstract Task FinishAsync();
-
         //暂停时的保存现场操作
         protected abstract Task Interupt();
 
@@ -283,6 +278,7 @@ namespace StateMachine
 
 
 
+    [DebuggerNonUserCode]
     public abstract class AbstractFSMNode<T> : AbstractFSMNode where T : class
     {
         // 限制上下文的类型

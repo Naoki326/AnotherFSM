@@ -1,5 +1,8 @@
-﻿namespace StateMachine
+﻿using System.Diagnostics;
+
+namespace StateMachine
 {
+    [DebuggerNonUserCode]
     public abstract class SimpleFSMNode : AbstractFSMNode, IFSMNode
     {
 
@@ -15,12 +18,6 @@
             return Task.CompletedTask;
         }
 
-        //完成时调用
-        protected override Task FinishAsync()
-        {
-            return Task.CompletedTask;
-        }
-
         //暂停时的保存现场操作
         protected override Task Interupt()
         {
@@ -28,6 +25,7 @@
         }
     }
 
+    [DebuggerNonUserCode]
     public abstract class SimpleFSMNode<T> : AbstractFSMNode<T>, IFSMNode where T : class
     {
 
@@ -39,12 +37,6 @@
 
         //退出当前节点时触发
         protected override Task ExitAsync()
-        {
-            return Task.CompletedTask;
-        }
-
-        //完成时调用
-        protected override Task FinishAsync()
         {
             return Task.CompletedTask;
         }

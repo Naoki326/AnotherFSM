@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Diagnostics;
 
 namespace StateMachine
 {
@@ -35,6 +36,7 @@ namespace StateMachine
     }
 
     //通过脚本创建流程结构
+    [DebuggerNonUserCode]
     public partial class FSMEngine : IEnumerable<IFSMNode>
     {
 

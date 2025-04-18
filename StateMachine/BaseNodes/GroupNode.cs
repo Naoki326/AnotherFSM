@@ -55,7 +55,7 @@ namespace StateMachine
             }
             else
             {
-                await executor.RestartAsync();
+                await executor.RestartAsync(false);
             }
             yield return Yield.None;
             executor.FSMStateChanged += Executor_FSMStateChanged;

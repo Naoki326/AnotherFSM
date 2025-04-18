@@ -3,6 +3,7 @@ using System.Diagnostics;
 
 namespace StateMachine
 {
+    [DebuggerNonUserCode]
     public abstract class EnumFSMNode : SimpleFSMNode
     {
         protected abstract IEnumerable ExecuteEnumerable();
@@ -39,7 +40,6 @@ namespace StateMachine
         /// <param name="count">重试的次数，若小于0则表示不停重试</param>
         /// <returns>若重试，返回重试的index</returns>
         /// <exception cref="IndexOutOfRangeException">超过重试次数</exception>
-        [DebuggerStepThrough]
         protected IEnumerable<int> Retry(Action action, int count = -1)
         {
             int times = 0;
@@ -132,6 +132,7 @@ namespace StateMachine
         }
     }
 
+    [DebuggerNonUserCode]
     public abstract class EnumFSMNode<T> : SimpleFSMNode<T> where T : class
     {
         protected abstract IEnumerable ExecuteEnumerable();
@@ -167,7 +168,6 @@ namespace StateMachine
         /// <param name="count">重试的次数，若小于0则表示不停重试</param>
         /// <returns>若重试，返回重试的index</returns>
         /// <exception cref="IndexOutOfRangeException">超过重试次数</exception>
-        [DebuggerStepThrough]
         protected IEnumerable<int> Retry(Action action, int count = -1)
         {
             int times = 0;

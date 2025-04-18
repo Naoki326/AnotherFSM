@@ -1,5 +1,8 @@
-﻿namespace StateMachine
+﻿using System.Diagnostics;
+
+namespace StateMachine
 {
+    [DebuggerNonUserCode]
     public class YieldPriority : IYieldAction
     {
         private YieldEnum result = YieldEnum.None;

@@ -2,11 +2,11 @@
 
 namespace StateMachine
 {
+    [DebuggerNonUserCode]
     public abstract class AsyncEnumFSMNode : SimpleFSMNode
     {
         protected abstract IAsyncEnumerable<object> ExecuteEnumerable();
 
-        [DebuggerStepThrough]
         protected sealed override async Task RestartAsync()
         {
             if (executor != null)
@@ -20,7 +20,6 @@ namespace StateMachine
             return false;
         }
 
-        [DebuggerStepThrough]
         private async Task<YieldEnum> CheckYield(IYieldAction? current)
         {
             if (current is null)
@@ -39,7 +38,6 @@ namespace StateMachine
         /// <param name="count">重试的次数，若小于0则表示不停重试</param>
         /// <returns>若重试，返回重试的index</returns>
         /// <exception cref="IndexOutOfRangeException">超过重试次数</exception>
-        [DebuggerStepThrough]
         protected async IAsyncEnumerable<int> RetryAsync(Task action, int count = -1)
         {
             int times = 0;
@@ -68,7 +66,6 @@ namespace StateMachine
             }
         }
 
-        [DebuggerStepThrough]
         protected override async Task ExecuteMethodAsync()
         {
             if (executor is null)
@@ -134,11 +131,11 @@ namespace StateMachine
         }
     }
 
+    [DebuggerNonUserCode]
     public abstract class AsyncEnumFSMNode<T> : SimpleFSMNode<T> where T : class
     {
         protected abstract IAsyncEnumerable<object> ExecuteEnumerable();
 
-        [DebuggerStepThrough]
         protected sealed override async Task RestartAsync()
         {
             if (executor != null)
@@ -152,7 +149,6 @@ namespace StateMachine
             return false;
         }
 
-        [DebuggerStepThrough]
         private async Task<YieldEnum> CheckYield(IYieldAction? current)
         {
             if (current is null)
@@ -172,7 +168,6 @@ namespace StateMachine
         /// <param name="count">重试的次数，若小于0则表示不停重试</param>
         /// <returns>若重试，返回重试的index</returns>
         /// <exception cref="IndexOutOfRangeException">超过重试次数</exception>
-        [DebuggerStepThrough]
         protected async IAsyncEnumerable<int> RetryAsync(Task action, int count = -1)
         {
             int times = 0;
@@ -201,7 +196,6 @@ namespace StateMachine
             }
         }
 
-        [DebuggerStepThrough]
         protected override async Task ExecuteMethodAsync()
         {
             if (executor == null)

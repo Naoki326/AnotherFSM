@@ -1,6 +1,9 @@
-﻿namespace StateMachine
+﻿using System.Diagnostics;
+
+namespace StateMachine
 {
     //事件类
+    [DebuggerNonUserCode]
     public class FSMEvent : ICloneable
     {
         public FSMEvent(string eventName)
@@ -30,6 +33,7 @@
         }
     }
     //事件类
+    [DebuggerNonUserCode]
     public class FSMEvent<T> : FSMEvent
     {
 

@@ -1,5 +1,8 @@
-﻿namespace StateMachine
+﻿using System.Diagnostics;
+
+namespace StateMachine
 {
+    [DebuggerNonUserCode]
     internal class YieldRetry : IYieldAction
     {
         public YieldEnum Result => YieldEnum.Retry;

@@ -1,5 +1,8 @@
-﻿namespace StateMachine
+﻿using System.Diagnostics;
+
+namespace StateMachine
 {
+    [DebuggerNonUserCode]
     public class YieldResult : IYieldAction
     {
         private YieldEnum result;

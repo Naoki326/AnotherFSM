@@ -45,23 +45,31 @@ namespace StateMachine
             yield return Yield.None;
             if (executors.Any(p => p.State == FSMState.Paused))
             {
-                executors.ForEach(p =>
+                foreach (var executor in executors)
                 {
-                    if (!p.ExecutorTask.IsCompleted)
-                    { p.Continue(); }
-                });
+                    if (!executor.ExecutorTask.IsCompleted)
+                        executor.Continue();
+                }
             }
             else
             {
-                executors.ForEach(async p => await p.RestartAsync());
+                foreach (var executor in executors)
+                {
+                    await executor.RestartAsync(false);
+                }
             }
             yield return Yield.None;
             executors.ForEach(p => p.FSMStateChanged += Executor_FSMStateChanged);
-            using (Context.TokenSource.Token.Register(() => executors.ForEach(p =>
-            {
-                if (!p.ExecutorTask.IsCompleted)
-                { p.Pause(); }
-            })))
+            using (Context.TokenSource.Token
+                    .Register(() =>
+                        {
+                            foreach (var executor in executors)
+                            {
+                                if (!executor.ExecutorTask.IsCompleted)
+                                    executor.Pause();
+                            }
+                        })
+                    )
             {
                 try
                 {
@@ -72,11 +80,12 @@ namespace StateMachine
                     }
                 }
                 catch (OperationCanceledException)
+                { }
+                finally
                 {
                     executors.ForEach(p => p.FSMStateChanged -= Executor_FSMStateChanged);
                 }
             }
-            executors.ForEach(p => p.FSMStateChanged -= Executor_FSMStateChanged);
             if (Context.IsPaused)
             {
                 yield return Yield.Retry;
