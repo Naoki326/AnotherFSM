@@ -20,84 +20,41 @@ namespace StateMachine
             return false;
         }
 
-        private async Task<YieldEnum> CheckYield(IYieldAction? current)
-        {
-            if (current is null)
-            {
-                return YieldEnum.None;
-            }
-            current.Context = Context;
-            await current.InvokeAsync();
-            return current.Result;
-        }
-
-        /// <summary>
-        /// 重试一个操作
-        /// </summary>
-        /// <param name="action">被重试的操作</param>
-        /// <param name="count">重试的次数，若小于0则表示不停重试</param>
-        /// <returns>若重试，返回重试的index</returns>
-        /// <exception cref="IndexOutOfRangeException">超过重试次数</exception>
-        protected async IAsyncEnumerable<int> RetryAsync(Task action, int count = -1)
-        {
-            int times = 0;
-            while (true)
-            {
-                if(count > 0 && times >= count)
-                {
-                    throw new IndexOutOfRangeException("重试次数超出限制");
-                }
-                yield return times;
-
-                times++;
-
-                try
-                {
-                    await action;
-
-                    // 如果成功完成操作，则退出循环
-                    break;
-                }
-                catch (OperationCanceledException)
-                {
-                    // 如果被取消（暂停），则继续循环
-                    continue;
-                }
-            }
-        }
-
         protected override async Task ExecuteMethodAsync()
         {
-            if (executor is null)
-            {
-                executor = ExecuteEnumerable().GetAsyncEnumerator();
-            }
             while (true)
             {
                 Context.CheckPause();
                 try
                 {
+                    if (executor.Current is IYieldAction yieldBefore)
+                    {
+                        await yieldBefore.RestoreAsync();
+                    }
                     if (!await executor.MoveNextAsync())
                     {
-                        await executor.DisposeAsync();
-                        executor = default!;
                         break;
                     }
-                    switch (await CheckYield((IYieldAction?)executor.Current))
+                    if (executor.Current is IYieldAction yieldAfter)
                     {
-                        case YieldEnum.Pause:
-                            Pause();
-                            break;
-                        case YieldEnum.Retry:
-                            await RestartAsync();
-                            break;
-                        case YieldEnum.PauseRetry:
-                            Pause();
-                            await RestartAsync();
-                            break;
-                        case YieldEnum.None:
-                        default:
-                            break;
+                        yieldAfter.Context = Context;
+                        await yieldAfter.InvokeAsync();
+                        switch (yieldAfter.Result)
+                        {
+                            case YieldEnum.Pause:
+                                Pause();
+                                break;
+                            case YieldEnum.Retry:
+                                await RestartAsync();
+                                break;
+                            case YieldEnum.PauseRetry:
+                                Pause();
+                                await RestartAsync();
+                                break;
+                            case YieldEnum.None:
+                            default:
+                                break;
+                        }
                     }
                 }
                 catch (Exception e)
@@ -126,7 +83,7 @@ namespace StateMachine
         protected override void Dispose(bool disposing)
         {
             if (executor != null)
-                executor.DisposeAsync();
+                executor.DisposeAsync().ConfigureAwait(false);
             base.Dispose(disposing);
         }
     }
@@ -149,83 +106,40 @@ namespace StateMachine
             return false;
         }
 
-        private async Task<YieldEnum> CheckYield(IYieldAction? current)
-        {
-            if (current is null)
-            {
-                return YieldEnum.None;
-            }
-            current.Context = Context;
-            await current.InvokeAsync();
-            return current.Result;
-        }
-
-
-        /// <summary>
-        /// 重试一个操作
-        /// </summary>
-        /// <param name="action">被重试的操作</param>
-        /// <param name="count">重试的次数，若小于0则表示不停重试</param>
-        /// <returns>若重试，返回重试的index</returns>
-        /// <exception cref="IndexOutOfRangeException">超过重试次数</exception>
-        protected async IAsyncEnumerable<int> RetryAsync(Task action, int count = -1)
-        {
-            int times = 0;
-            while (true)
-            {
-                if (count > 0 && times >= count)
-                {
-                    throw new IndexOutOfRangeException("重试次数超出限制");
-                }
-                yield return times;
-
-                times++;
-
-                try
-                {
-                    await action;
-
-                    // 如果成功完成操作，则退出循环
-                    break;
-                }
-                catch (OperationCanceledException)
-                {
-                    // 如果被取消（暂停），则继续循环
-                    continue;
-                }
-            }
-        }
-
         protected override async Task ExecuteMethodAsync()
         {
-            if (executor == null)
-            {
-                executor = ExecuteEnumerable().GetAsyncEnumerator();
-            }
             while (true)
             {
                 try
                 {
+                    if (executor.Current is IYieldAction yieldBefore)
+                    {
+                        await yieldBefore.RestoreAsync();
+                    }
                     if (!await executor.MoveNextAsync())
                     {
-                        executor = ExecuteEnumerable().GetAsyncEnumerator();
                         break;
                     }
-                    switch (await CheckYield((IYieldAction?)executor.Current))
+                    if (executor.Current is IYieldAction yieldAfter)
                     {
-                        case YieldEnum.PauseRetry:
-                            Pause();
-                            await RestartAsync();
-                            break;
-                        case YieldEnum.Pause:
-                            Pause();
-                            break;
-                        case YieldEnum.Retry:
-                            await RestartAsync();
-                            break;
-                        case YieldEnum.None:
-                        default:
-                            break;
+                        yieldAfter.Context = Context;
+                        await yieldAfter.InvokeAsync();
+                        switch (yieldAfter.Result)
+                        {
+                            case YieldEnum.Pause:
+                                Pause();
+                                break;
+                            case YieldEnum.Retry:
+                                await RestartAsync();
+                                break;
+                            case YieldEnum.PauseRetry:
+                                Pause();
+                                await RestartAsync();
+                                break;
+                            case YieldEnum.None:
+                            default:
+                                break;
+                        }
                     }
                 }
                 catch (Exception e)
@@ -247,7 +161,7 @@ namespace StateMachine
         protected override void Dispose(bool disposing)
         {
             if (executor != null)
-                executor.DisposeAsync();
+                executor.DisposeAsync().ConfigureAwait(false);
             base.Dispose(disposing);
         }
     }

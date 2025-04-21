@@ -4,6 +4,11 @@
     {
         public static IYieldAction PauseRetry { get; } = new YieldPauseRetry();
 
+        public static IYieldAction PauseRestore(Func<Task> restore)
+        {
+            return new YieldPauseRestore(restore);
+        }
+
         public static IYieldAction Retry { get; } = new YieldRetry();
 
         public static IYieldAction Pause { get; } = new YieldPause();

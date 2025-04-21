@@ -24,6 +24,11 @@ namespace StateMachine
             return Task.CompletedTask;
         }
 
+        public Task RestoreAsync()
+        {
+            return Task.CompletedTask;
+        }
+
         private long priority;
         public YieldPriority(long p)
         {

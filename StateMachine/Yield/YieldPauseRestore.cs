@@ -3,18 +3,25 @@
 namespace StateMachine
 {
     [DebuggerNonUserCode]
-    internal class YieldPause : IYieldAction
+    internal class YieldPauseRestore : IYieldAction
     {
+        private readonly Func<Task> restore;
+
         public YieldEnum Result => YieldEnum.Pause;
 
         public FSMNodeContext Context { set { } }
 
-        public Task InvokeAsync()
+        public YieldPauseRestore(Func<Task> restore)
         {
-            return Task.CompletedTask;
+            this.restore = restore;
         }
 
         public Task RestoreAsync()
+        {
+            return restore();
+        }
+
+        public Task InvokeAsync()
         {
             return Task.CompletedTask;
         }

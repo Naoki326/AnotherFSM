@@ -15,6 +15,11 @@ namespace StateMachine
             return Task.CompletedTask;
         }
 
+        public Task RestoreAsync()
+        {
+            return Task.CompletedTask;
+        }
+
         public YieldResult(YieldEnum result)
         {
             this.result = result;

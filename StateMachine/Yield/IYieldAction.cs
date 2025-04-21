@@ -15,5 +15,7 @@
         FSMNodeContext Context { set; }
 
         Task InvokeAsync();
+
+        Task RestoreAsync();
     }
 }

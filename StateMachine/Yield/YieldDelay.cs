@@ -15,6 +15,11 @@ namespace StateMachine
             await Task.Delay(delayTime, token);
         }
 
+        public Task RestoreAsync()
+        {
+            return Task.CompletedTask;
+        }
+
         private int delayTime = -1;
         public YieldDelay(int dt)
         {

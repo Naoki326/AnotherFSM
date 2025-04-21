@@ -13,5 +13,10 @@ namespace StateMachine
         {
             return Task.CompletedTask;
         }
+
+        public Task RestoreAsync()
+        {
+            return Task.CompletedTask;
+        }
     }
 }

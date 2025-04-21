@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace StateMachine
 {
@@ -12,6 +13,7 @@ namespace StateMachine
         DiscardEvent,
     }
 
+    [DebuggerNonUserCode]
     public class StateTrackInfo
     {
         public bool IsEnter { get; set; }
@@ -32,9 +34,9 @@ namespace StateMachine
     public interface IFSMNodeTracker : IObserver<StateTrackInfo>, IObserver<string>
     {
         void EnterState(TrackType trackType, string stateName, string prevStateName, string eventName,
-            IFSMNode currentNode, FSMEvent FSMEvent, long ThreadId);
+            IFSMNode currentNode, FSMEvent fsmEvent, long threadId);
 
-        void ExitState(TrackType trackType, string stateName, IFSMNode currentNode, long ThreadId);
+        void ExitState(TrackType trackType, string stateName, IFSMNode currentNode, long threadId);
 
         void RecordCallingMethod([CallerMemberName] string methodName = default!);
     }

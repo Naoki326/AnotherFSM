@@ -168,6 +168,14 @@ namespace StateMachine
                 { Context.SetPause(true); }
                 return false;
             }
+            catch (Exception ex) when (ex.InnerException is OperationCanceledException)
+            {
+                tcs.TrySetCanceled();
+                await Interupt();
+                if (Context != null)
+                { Context.SetPause(true); }
+                return false;
+            }
             finally
             {
                 await ExitAsync();

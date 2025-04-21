@@ -7,38 +7,41 @@ namespace StateMachine
     internal class FSMSyncContext : SynchronizationContext, IDisposable
     {
 
-        private Lazy<BlockingCollection<(SendOrPostCallback d, object state)>> workItems => new(() =>
-        {
-            var items = new BlockingCollection<(SendOrPostCallback d, object state)>();
-            Task.Factory.StartNew(() =>
-            {
-                SetSynchronizationContext(this);
-                try
-                {
-                    foreach (var (d, state) in items.GetConsumingEnumerable(cts.Token))
-                    {
-                        d(state);
-                    }
-                } catch (Exception) { }
-            }, TaskCreationOptions.LongRunning);
-            return items;
-        });
+        private Lazy<BlockingCollection<(SendOrPostCallback d, object state)>> workItems;
 
-        private CancellationTokenSource cts = new CancellationTokenSource();
+        private CancellationTokenSource cts;
         private bool disposedValue;
 
         public FSMSyncContext()
         {
+            cts = new CancellationTokenSource();
+            workItems = new(() =>
+            {
+                var items = new BlockingCollection<(SendOrPostCallback d, object state)>();
+                Task.Factory.StartNew(() =>
+                {
+                    SetSynchronizationContext(this);
+                    try
+                    {
+                        foreach (var (d, state) in items.GetConsumingEnumerable(cts.Token))
+                        {
+                            d(state);
+                        }
+                    }
+                    catch (Exception) { }
+                }, TaskCreationOptions.LongRunning);
+                return items;
+            });
         }
 
         /// <inheritdoc />
         public override void Post(SendOrPostCallback d, object state)
         {
-            if (!workItems.Value.IsCompleted)
+            try
             {
                 workItems.Value.TryAdd((d, state));
             }
-            else
+            catch (Exception)
             {
                 d(state);
             }
