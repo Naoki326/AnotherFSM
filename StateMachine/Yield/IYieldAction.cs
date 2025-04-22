@@ -4,18 +4,22 @@
     {
         None,
         Pause,
-        Retry,
-        PauseRetry,
+        ToNodeStart,
+        PauseToNodeStart,
     }
 
     public interface IYieldAction
     {
         YieldEnum Result { get; }
 
+        bool IsMoveNext { get; }
+
         FSMNodeContext Context { set; }
 
-        Task InvokeAsync();
+        // 当前Yield之后调用
+        Task AfterYieldAsync();
 
-        Task RestoreAsync();
+        // 下次MoveNext之前调用
+        Task BeforeNextAsync();
     }
 }

@@ -23,6 +23,7 @@ namespace StateMachine
 
         protected override async Task ExecuteMethodAsync()
         {
+            bool isMoveNext = true;
             while (true)
             {
                 Context.CheckPause();
@@ -30,25 +31,29 @@ namespace StateMachine
                 {
                     if (executor.Current is IYieldAction yieldBefore)
                     {
-                        await yieldBefore.RestoreAsync();
+                        await yieldBefore.BeforeNextAsync();
+                        isMoveNext = yieldBefore.IsMoveNext;
                     }
-                    if (!executor.MoveNext())
+                    if (isMoveNext)
                     {
-                        break;
+                        if (!executor.MoveNext())
+                        {
+                            break;
+                        }
                     }
                     if (executor.Current is IYieldAction yieldAfter)
                     {
                         yieldAfter.Context = Context;
-                        await yieldAfter.InvokeAsync();
+                        await yieldAfter.AfterYieldAsync();
                         switch (yieldAfter.Result)
                         {
                             case YieldEnum.Pause:
                                 Pause();
                                 break;
-                            case YieldEnum.Retry:
+                            case YieldEnum.ToNodeStart:
                                 await RestartAsync();
                                 break;
-                            case YieldEnum.PauseRetry:
+                            case YieldEnum.PauseToNodeStart:
                                 Pause();
                                 await RestartAsync();
                                 break;
@@ -107,31 +112,36 @@ namespace StateMachine
         }
         protected override async Task ExecuteMethodAsync()
         {
+            bool isMoveNext = true;
             while (true)
             {
                 try
                 {
                     if (executor.Current is IYieldAction yieldBefore)
                     {
-                        await yieldBefore.RestoreAsync();
+                        await yieldBefore.BeforeNextAsync();
+                        isMoveNext = yieldBefore.IsMoveNext;
                     }
-                    if (!executor.MoveNext())
+                    if (isMoveNext)
                     {
-                        break;
+                        if (!executor.MoveNext())
+                        {
+                            break;
+                        }
                     }
                     if (executor.Current is IYieldAction yieldAfter)
                     {
                         yieldAfter.Context = Context;
-                        await yieldAfter.InvokeAsync();
+                        await yieldAfter.AfterYieldAsync();
                         switch (yieldAfter.Result)
                         {
                             case YieldEnum.Pause:
                                 Pause();
                                 break;
-                            case YieldEnum.Retry:
+                            case YieldEnum.ToNodeStart:
                                 await RestartAsync();
                                 break;
-                            case YieldEnum.PauseRetry:
+                            case YieldEnum.PauseToNodeStart:
                                 Pause();
                                 await RestartAsync();
                                 break;

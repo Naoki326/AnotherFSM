@@ -10,12 +10,14 @@ namespace StateMachine
         private CancellationToken token = default;
         public FSMNodeContext Context { set => token = value.Token; }
 
-        public async Task InvokeAsync()
+        public bool IsMoveNext => true;
+
+        public async Task AfterYieldAsync()
         {
             await Task.Delay(delayTime, token);
         }
 
-        public Task RestoreAsync()
+        public Task BeforeNextAsync()
         {
             return Task.CompletedTask;
         }

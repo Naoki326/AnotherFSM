@@ -138,7 +138,7 @@ namespace StateMachineDemoShared.Pages
             }
             NextEvent->Group to Check;
 
-            def Sleep(Sleep)
+            def Sleep(Idle)
             {
             	1->Next3Event;
             	Pos:(1070, 258.75);

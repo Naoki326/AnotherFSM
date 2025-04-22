@@ -7,15 +7,20 @@
         {
         }
 
+
         protected override async IAsyncEnumerable<object> ExecuteEnumerable()
         {
             yield return Yield.None;
             try
             {
-                await Task.Delay(500, Context.Token);
+                await Task.Delay(5000, Context.Token);
             }
             catch (OperationCanceledException)
             { }
+            yield return Yield.RestoreIfPause(async () =>
+            {
+                await Task.Delay(10000);
+            });
             yield return Yield.None;
             PublishEvent(FSMEnum.Next);
             yield break;

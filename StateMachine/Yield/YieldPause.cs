@@ -7,14 +7,16 @@ namespace StateMachine
     {
         public YieldEnum Result => YieldEnum.Pause;
 
+        public bool IsMoveNext => true;
+
         public FSMNodeContext Context { set { } }
 
-        public Task InvokeAsync()
+        public Task AfterYieldAsync()
         {
             return Task.CompletedTask;
         }
 
-        public Task RestoreAsync()
+        public Task BeforeNextAsync()
         {
             return Task.CompletedTask;
         }

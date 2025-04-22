@@ -3,13 +3,17 @@
 namespace StateMachine
 {
     [DebuggerNonUserCode]
-    internal class YieldNone : IYieldAction
+    internal class YieldToNodeStart : IYieldAction
     {
-        public YieldEnum Result => YieldEnum.None;
+        public YieldEnum Result => YieldEnum.ToNodeStart;
 
-        public bool IsMoveNext => true;
+        public bool IsMoveNext { get; set; } = true;
 
         public FSMNodeContext Context { set { } }
+
+        public YieldToNodeStart()
+        {
+        }
 
         public Task AfterYieldAsync()
         {

@@ -22,14 +22,16 @@ namespace StateMachine
 
         public YieldEnum Result => YieldEnum.None;
 
+        public bool IsMoveNext => true;
+
         public FSMNodeContext Context { set => throw new NotImplementedException(); }
 
-        public Task InvokeAsync()
+        public Task AfterYieldAsync()
         {
-            throw new NotImplementedException();
+            return Task.CompletedTask;
         }
 
-        public Task RestoreAsync()
+        public Task BeforeNextAsync()
         {
             return Task.CompletedTask;
         }

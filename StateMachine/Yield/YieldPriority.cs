@@ -8,10 +8,12 @@ namespace StateMachine
         private YieldEnum result = YieldEnum.None;
         public YieldEnum Result => result;
 
+        public bool IsMoveNext => true;
+
         private long contextPriority;
         public FSMNodeContext Context { set { contextPriority = value.ManualLevel; } }
 
-        public Task InvokeAsync()
+        public Task AfterYieldAsync()
         {
             if (contextPriority > priority)
             {
@@ -24,7 +26,7 @@ namespace StateMachine
             return Task.CompletedTask;
         }
 
-        public Task RestoreAsync()
+        public Task BeforeNextAsync()
         {
             return Task.CompletedTask;
         }

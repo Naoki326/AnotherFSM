@@ -22,32 +22,38 @@ namespace StateMachine
 
         protected override async Task ExecuteMethodAsync()
         {
+            bool isMoveNext = true;
             while (true)
             {
                 Context.CheckPause();
                 try
                 {
+                    isMoveNext = true;
                     if (executor.Current is IYieldAction yieldBefore)
                     {
-                        await yieldBefore.RestoreAsync();
+                        await yieldBefore.BeforeNextAsync();
+                        isMoveNext = yieldBefore.IsMoveNext;
                     }
-                    if (!await executor.MoveNextAsync())
+                    if (isMoveNext)
                     {
-                        break;
+                        if (!await executor.MoveNextAsync())
+                        {
+                            break;
+                        }
                     }
                     if (executor.Current is IYieldAction yieldAfter)
                     {
                         yieldAfter.Context = Context;
-                        await yieldAfter.InvokeAsync();
+                        await yieldAfter.AfterYieldAsync();
                         switch (yieldAfter.Result)
                         {
                             case YieldEnum.Pause:
                                 Pause();
                                 break;
-                            case YieldEnum.Retry:
+                            case YieldEnum.ToNodeStart:
                                 await RestartAsync();
                                 break;
-                            case YieldEnum.PauseRetry:
+                            case YieldEnum.PauseToNodeStart:
                                 Pause();
                                 await RestartAsync();
                                 break;
@@ -108,31 +114,38 @@ namespace StateMachine
 
         protected override async Task ExecuteMethodAsync()
         {
+            bool isMoveNext = true;
             while (true)
             {
+                Context.CheckPause();
                 try
                 {
                     if (executor.Current is IYieldAction yieldBefore)
                     {
-                        await yieldBefore.RestoreAsync();
+                        await yieldBefore.BeforeNextAsync();
+                        isMoveNext = yieldBefore.IsMoveNext;
                     }
-                    if (!await executor.MoveNextAsync())
+                    if (isMoveNext)
                     {
-                        break;
+                        if (!await executor.MoveNextAsync())
+                        {
+                            break;
+                        }
                     }
+
                     if (executor.Current is IYieldAction yieldAfter)
                     {
                         yieldAfter.Context = Context;
-                        await yieldAfter.InvokeAsync();
+                        await yieldAfter.AfterYieldAsync();
                         switch (yieldAfter.Result)
                         {
                             case YieldEnum.Pause:
                                 Pause();
                                 break;
-                            case YieldEnum.Retry:
+                            case YieldEnum.ToNodeStart:
                                 await RestartAsync();
                                 break;
-                            case YieldEnum.PauseRetry:
+                            case YieldEnum.PauseToNodeStart:
                                 Pause();
                                 await RestartAsync();
                                 break;
@@ -144,16 +157,23 @@ namespace StateMachine
                 }
                 catch (Exception e)
                 {
-                    if (!HandleException(e))
+                    try
                     {
-                        throw new Exception($"Node {(this as IFSMNode).Name} 存在异常未处理", e);
+                        if (!HandleException(e))
+                        {
+                            throw new Exception($"Node {(this as IFSMNode).Name} 存在异常未处理", e);
+                        }
+                        await executor.DisposeAsync();
+                        executor = default;
+                        break;
                     }
-                    await executor.DisposeAsync();
-                    executor = default;
-                    break;
+                    catch (Exception e2)
+                    {
+                        throw new Exception($"Node {(this as IFSMNode).Name} 处理函数抛出异常！", e2);
+                    }
                 }
-                Context?.CheckPause();
             }
+            Context.CheckPause();
         }
 
         private IAsyncEnumerator<object>? executor;

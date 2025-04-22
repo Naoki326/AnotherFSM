@@ -88,7 +88,7 @@ namespace StateMachine
             }
             if (Context.IsPaused)
             {
-                yield return Yield.Retry;
+                yield return Yield.ToNodeStart;
             }
             yield return Yield.None;
             if (executors.Any(p => p.State == FSMState.Stoped))

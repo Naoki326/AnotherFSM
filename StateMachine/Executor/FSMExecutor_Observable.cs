@@ -42,14 +42,6 @@ namespace StateMachine
             });
         }
 
-        ////流程节点进出事件
-        //public event Action<StateTrackInfo>? TrackStateEvent;
-
-        ////Restart\Pause\Continue\Stop等方法调用事件
-        //public event Action<string>? TrackCallEvent;
-
-        //public event Action<Exception>? NodeExceptionEvent;
-
         IDisposable IObservable<StateTrackInfo>.Subscribe(IObserver<StateTrackInfo> observer)
         {
             return observable.ObserveOn(ThreadPoolScheduler.Instance).Subscribe(observer);
@@ -61,15 +53,7 @@ namespace StateMachine
         }
 
         public event EventHandler<string>? NodeStateChanged;
-        private void NodeStateChangedInvoke(string nodeName)
-        {
-            NodeStateChanged?.Invoke(this, nodeName);
-        }
         public event EventHandler<string>? NodeExitChanged;
-        private void NodeExitChangedInvoke(string nodeName)
-        {
-            NodeExitChanged?.Invoke(this, nodeName);
-        }
         //事件的参数：solver实例，新状态，前一状态
         public event Action<FSMExecutor, FSMState, FSMState>? FSMStateChanged;
         private void FSMStateChangedInvoke(FSMState current, FSMState previousState)

@@ -79,7 +79,7 @@ namespace StateMachine
             }
             if (Context.IsPaused)
             {
-                yield return Yield.Retry;
+                yield return Yield.ToNodeStart;
             }
             yield return Yield.None;
             if (executor.State == FSMState.Finished)
