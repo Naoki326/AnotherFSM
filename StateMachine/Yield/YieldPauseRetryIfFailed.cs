@@ -29,12 +29,12 @@ namespace StateMachine
             {
                 await retryTask();
                 IsMoveNext = true;
-                Result = YieldEnum.Pause;
+                Result = YieldEnum.None;
             }
             catch (Exception)
             {
                 IsMoveNext = false;
-                Result = YieldEnum.None;
+                Result = YieldEnum.Pause;
             }
         }
     }
