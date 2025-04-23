@@ -15,9 +15,8 @@ namespace StateMachine
         }
 
         //针对yield不方便使用try-catch模块而设计
-        protected virtual bool HandleException(Exception e)
+        protected virtual void HandleException(Exception e)
         {
-            return false;
         }
 
         protected override async Task ExecuteMethodAsync()
@@ -65,20 +64,8 @@ namespace StateMachine
                 }
                 catch (Exception e)
                 {
-                    try
-                    {
-                        if (!HandleException(e))
-                        {
-                            throw new Exception($"Node {(this as IFSMNode).Name} 存在异常未处理", e);
-                        }
-                        await executor.DisposeAsync();
-                        executor = default;
-                        break;
-                    }
-                    catch (Exception e2)
-                    {
-                        throw new Exception($"Node {(this as IFSMNode).Name} 处理函数抛出异常！", e2);
-                    }
+                    HandleException(e);
+                    throw e;
                 }
             }
             Context.CheckPause();
@@ -107,9 +94,8 @@ namespace StateMachine
         }
 
         //针对yield不方便使用try-catch模块而设计
-        protected virtual bool HandleException(Exception e)
+        protected virtual void HandleException(Exception e)
         {
-            return false;
         }
 
         protected override async Task ExecuteMethodAsync()
@@ -157,20 +143,8 @@ namespace StateMachine
                 }
                 catch (Exception e)
                 {
-                    try
-                    {
-                        if (!HandleException(e))
-                        {
-                            throw new Exception($"Node {(this as IFSMNode).Name} 存在异常未处理", e);
-                        }
-                        await executor.DisposeAsync();
-                        executor = default;
-                        break;
-                    }
-                    catch (Exception e2)
-                    {
-                        throw new Exception($"Node {(this as IFSMNode).Name} 处理函数抛出异常！", e2);
-                    }
+                    HandleException(e);
+                    throw e;
                 }
             }
             Context.CheckPause();

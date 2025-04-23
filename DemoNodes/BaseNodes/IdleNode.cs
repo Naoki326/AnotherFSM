@@ -19,7 +19,7 @@
             { }
             yield return Yield.RestoreIfPause(async () =>
             {
-                await Task.Delay(10000);
+                await Task.Delay(10000, Context.Token);
             });
             yield return Yield.None;
             PublishEvent(FSMEnum.Next);

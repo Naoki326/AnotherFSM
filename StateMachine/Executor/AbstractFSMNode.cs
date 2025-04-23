@@ -176,6 +176,12 @@ namespace StateMachine
                 { Context.SetPause(true); }
                 return false;
             }
+            catch(Exception ex)
+            {
+                Pause();
+                await RestartAsync();
+                return false;
+            }
             finally
             {
                 await ExitAsync();

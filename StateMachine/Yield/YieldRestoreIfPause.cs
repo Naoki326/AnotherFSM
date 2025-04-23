@@ -9,7 +9,7 @@ namespace StateMachine
 
         public YieldEnum Result => YieldEnum.None;
 
-        public bool IsMoveNext => true;
+        public bool IsMoveNext { get; set; } = true;
 
         bool isRestore = false;
 
@@ -32,14 +32,15 @@ namespace StateMachine
         private void ChangeRestore()
         {
             isRestore = true;
+            IsMoveNext = false;
         }
 
-        public Task BeforeNextAsync()
+        public async Task BeforeNextAsync()
         {
             restoreRegistration?.Dispose();
             if (isRestore)
-                return restore();
-            return Task.CompletedTask;
+                await restore();
+            IsMoveNext = true;
         }
 
         protected virtual void Dispose(bool disposing)
