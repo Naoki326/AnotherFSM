@@ -12,7 +12,7 @@ namespace StateMachine
     public partial class FSMExecutor : IHandle<FSMEvent>, IEnumerable<IFSMNode>
     {
 
-        public FSMExecutor(IFSMNode start, FSMEvent endEvent)
+        public FSMExecutor(IFSMNode start, FSMEvent endEvent, bool isAsyncObserver)
         {
             this.start = start ?? throw new FSMException("Start 节点不能为空！");
             this.endEvent = endEvent ?? throw new FSMException("结束事件不能为空！");
@@ -20,9 +20,13 @@ namespace StateMachine
             eventConsumer = Channel.CreateUnbounded<FSMEvent>();
             State = FSMState.Initialized;
 
-            InitObserver();
+            InitObserver(isAsyncObserver);
 
             eventAggregator = FSMEventAggregator.EventAggregator;
+        }
+
+        public FSMExecutor(IFSMNode start, FSMEvent endEvent) : this(start, endEvent, false)
+        {
         }
 
         private IEventAggregator eventAggregator;

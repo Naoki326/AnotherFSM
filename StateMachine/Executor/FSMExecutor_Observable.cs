@@ -13,10 +13,15 @@ namespace StateMachine
         private readonly Subject<StateTrackInfo> observable = new Subject<StateTrackInfo>();
 
 
-        //将TrackStateEvent、TrackCallEvent事件关联到当前类的IObservable接口上
-        private void InitObserver()
+        /// <summary>
+        /// 将TrackStateEvent、TrackCallEvent事件关联到当前类的IObservable接口上
+        /// </summary>
+        /// <param name="isAsyncObserver">是否使用线程池来发出通知</param>
+        private void InitObserver(bool isAsyncObserver)
         {
-            observable.ObserveOn(ThreadPoolScheduler.Instance).Subscribe((info) =>
+            var observerWrapper = isAsyncObserver ? observable.ObserveOn(ThreadPoolScheduler.Instance) : observable;
+            
+            observerWrapper.Subscribe((info) =>
             {
                 if (!info.IsCallEvent)
                 {
