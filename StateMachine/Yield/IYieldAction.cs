@@ -12,6 +12,7 @@
     {
         YieldEnum Result { get; }
 
+        // 为重试机制设置
         bool IsMoveNext { get; }
 
         FSMNodeContext Context { set; }

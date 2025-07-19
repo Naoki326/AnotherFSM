@@ -12,6 +12,11 @@
             return new YieldRetryIfFailed(retryFunc);
         }
 
+        public static IYieldAction RestartIfFailed(Func<Task> doFunc)
+        {
+            return new YieldRestartIfFailed(doFunc);
+        }
+
         public static IYieldAction PauseIfFailed(Func<Task> retryFunc)
         {
             return new YieldPauseRetryIfFailed(retryFunc);

@@ -8,6 +8,19 @@ using System.Threading.Channels;
 namespace StateMachine
 {
 
+    public interface IFSMEventInterceptor
+    {
+        FSMEvent EventEntry(FSMEvent @event);
+    }
+
+    internal class FSMEventInterceptor : IFSMEventInterceptor
+    {
+        public FSMEvent EventEntry(FSMEvent @event)
+        {
+            return @event;
+        }
+    }
+
     [DebuggerNonUserCode]
     public partial class FSMExecutor : IHandle<FSMEvent>, IEnumerable<IFSMNode>
     {
@@ -69,27 +82,25 @@ namespace StateMachine
             set { ManualLevel = Convert.ToInt64(value); }
         }
 
+        // 该接口可以改变传入的事件，可以在界面上暂停
+        public IFSMEventInterceptor EventInterceptor { get; set; } = new FSMEventInterceptor();
+
         private async Task<bool> RunCurrentNodeAsync(bool isCreateNew)
         {
             bool isExit = false;
             if (currentNode is null)
                 throw new FSMException("CurrentNode is null");
-            //NodeStateChangedInvoke(currentNode.Name);
-            currentNode.RaisePause += CurrentNode_RaisePause;
-            currentNode.ExecuterContext = SolverContext;
             try
             {
+                currentNode.RaisePause += CurrentNode_RaisePause;
+                currentNode.ExecuterContext = SolverContext;
                 State = FSMState.Running;
                 if (isCreateNew)
                 { await currentNode.CreateNewAsync(); }
                 currentNode.Context.ManualLevel = ManualLevel;
                 isExit = await currentNode.RunAsync();
-                //if (isExit)
-                //{ NodeExitChangedInvoke(currentNode.Name); }
                 if (currentNode.Context.IsPaused)
                 {
-                    while (eventConsumer.Reader.Count > 0)
-                    { midEventList.Enqueue(await eventConsumer.Reader.ReadAsync()); }
                     pausing = false;
                 }
             }
@@ -103,6 +114,7 @@ namespace StateMachine
 
         private async Task ConsumerTask(bool isLongRunning)
         {
+            // 设定同步上下文
             FSMSyncContext executorContext = null!;
             if (isLongRunning)
             {
@@ -110,6 +122,7 @@ namespace StateMachine
                 SynchronizationContext.SetSynchronizationContext(executorContext);
                 await Task.Yield();
             }
+
             long threadId = Thread.CurrentThread.ManagedThreadId;
             eventAggregator.Subscribe(this);
             try
@@ -117,7 +130,7 @@ namespace StateMachine
                 bool isExit = false;
 
                 //这里是第一个启动节点
-
+                SolverContext.CurrentNodeName = start.Name;
                 TrackStart(threadId);
                 isExit = await RunCurrentNodeAsync(true);
                 TrackStartEnd(isExit, threadId);
@@ -133,24 +146,40 @@ namespace StateMachine
                             isExit = await RunCurrentNodeAsync(false);
                             TrackContinueEnd(isExit, threadId);
                         }
-                        else if (currentNode.HasTransition(@event))
-                        {
-                            //这里是正常执行节点的分支
-                            currentNode.Context.TriggerEvent = @event;
-                            var nextNode = currentNode.TargetState(@event);
-                            nextNode.Context = currentNode.Context;
-                            SolverContext.LastNodeName = currentNode.Name;
-                            SolverContext.CurrentNodeName = nextNode.Name;
-
-                            TrackStateEnter(threadId, @event, nextNode);
-                            currentNode = nextNode;
-                            isExit = await RunCurrentNodeAsync(true);
-                            TrackStateExit(threadId, isExit);
-                        }
                         else
                         {
-                            //无用的Event
-                            TrackNoUseEvent(threadId, @event);
+                            if (currentNode.HasTransition(@event))
+                            {
+                                // 如果可能触发当前状态机变换状态
+
+                                // 其他应用或界面可通过EventInterceptor接口获取事件并改变事件
+                                @event = EventInterceptor.EventEntry(@event);
+                                // 再次检查新的event能否触发状态变换
+                                if (currentNode.HasTransition(@event))
+                                {
+                                    //这里是正常执行节点的分支
+                                    currentNode.Context.TriggerEvent = @event;
+                                    var nextNode = currentNode.TargetState(@event);
+                                    nextNode.Context = currentNode.Context;
+                                    SolverContext.LastNodeName = currentNode.Name;
+                                    SolverContext.CurrentNodeName = nextNode.Name;
+
+                                    TrackStateEnter(threadId, @event, nextNode);
+                                    currentNode = nextNode;
+                                    isExit = await RunCurrentNodeAsync(true);
+                                    TrackStateExit(threadId, isExit);
+                                }
+                                else
+                                {
+                                    // 对当前的状态机无用的Event
+                                    TrackNoUseEvent(threadId, @event);
+                                }
+                            }
+                            else
+                            {
+                                // 对当前的状态机无用的Event
+                                TrackNoUseEvent(threadId, @event);
+                            }
                         }
                     }
                 }
@@ -255,8 +284,11 @@ namespace StateMachine
         {
             TrackCallname();
             State = FSMState.Stopping;
-            while (eventConsumer.Reader.Count > 0)
-            { eventConsumer.Reader.TryRead(out _); }
+            if (eventConsumer is not null)
+            {
+                while (eventConsumer.Reader.Count > 0)
+                { eventConsumer.Reader.TryRead(out _); }
+            }
             Exception e = default!;
             if (currentNode != null && !currentNode.Context.IsPaused)
             {
@@ -315,7 +347,6 @@ namespace StateMachine
             pausing = false;
             if (start.Context == null)
             { start.Context = new FSMNodeContext(); }
-            while (midEventList.TryDequeue(out _)) { }
             eventConsumer = Channel.CreateUnbounded<FSMEvent>();
 
             InitNodes();
@@ -345,7 +376,6 @@ namespace StateMachine
             pausing = false;
             if (node.Context == null)
             { node.Context = new FSMNodeContext(); }
-            while (midEventList.TryDequeue(out _)) { }
             eventConsumer = Channel.CreateUnbounded<FSMEvent>();
 
             InitNodes();
@@ -362,7 +392,6 @@ namespace StateMachine
             return await RestartAsync(node, isLongRunning);
         }
 
-        private ConcurrentQueue<FSMEvent> midEventList = new ConcurrentQueue<FSMEvent>();
         private bool pausing = false;
 
         //暂停
@@ -374,13 +403,6 @@ namespace StateMachine
 
             State = FSMState.Pausing;
             pausing = true;
-            while (eventConsumer.Reader.Count > 0)
-            {
-                if (eventConsumer.Reader.TryRead(out FSMEvent? fSMEvent))
-                {
-                    midEventList.Enqueue(fSMEvent);
-                }
-            }
             currentNode.Context.Pause();
             Task.Run(async () =>
             {
@@ -390,13 +412,6 @@ namespace StateMachine
                 }
                 finally
                 {
-                    while (eventConsumer.Reader.Count > 0)
-                    {
-                        if (eventConsumer.Reader.TryRead(out FSMEvent? fSMEvent))
-                        {
-                            midEventList.Enqueue(fSMEvent);
-                        }
-                    }
                     pausing = false;
                     State = FSMState.Paused;
                 }
@@ -412,13 +427,6 @@ namespace StateMachine
 
             State = FSMState.Pausing;
             pausing = true;
-            while (eventConsumer.Reader.Count > 0)
-            {
-                if (eventConsumer.Reader.TryRead(out FSMEvent? fSMEvent))
-                {
-                    midEventList.Enqueue(fSMEvent);
-                }
-            }
             currentNode.Context.Pause();
             try
             {
@@ -426,13 +434,6 @@ namespace StateMachine
             }
             finally
             {
-                while (eventConsumer.Reader.Count > 0)
-                {
-                    if (eventConsumer.Reader.TryRead(out FSMEvent? fSMEvent))
-                    {
-                        midEventList.Enqueue(fSMEvent);
-                    }
-                }
                 pausing = false;
                 State = FSMState.Paused;
             }
@@ -447,8 +448,6 @@ namespace StateMachine
             {
                 State = FSMState.Proceeding;
                 eventConsumer.Writer.TryWrite(ContinueEvent);
-                while (midEventList.TryDequeue(out FSMEvent? e))
-                { eventConsumer.Writer.TryWrite(e); }
                 State = FSMState.Running;
                 return true;
             }
@@ -468,12 +467,9 @@ namespace StateMachine
             {
                 Pause();
             }
-            else if (currentNode.Context.IsPaused)
-            {
-                midEventList.Enqueue(@event);
-            }
             else if (!eventConsumer.Reader.Completion.IsCompleted)
             {
+                // 通过接口改变传入的事件
                 eventConsumer.Writer.TryWrite(@event);
             }
         }

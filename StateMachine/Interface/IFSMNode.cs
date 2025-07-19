@@ -86,9 +86,8 @@
         void SetBranchEvent(int index, FSMEvent @event);
 
         Task CreateNewAsync();
-        Task ExitStateAsync();
 
-        //执行
+        //执行，返回值代表是否执行完毕
         Task<bool> RunAsync();
 
         // 当前节点对应的异步Task

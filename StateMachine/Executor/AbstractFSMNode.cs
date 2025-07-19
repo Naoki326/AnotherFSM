@@ -93,12 +93,12 @@ namespace StateMachine
         public override string ToString()
         {
             IFSMNode node = this;
-
+            IVisualNode vNode = this;
             string outString =
             $$"""
             def {{node.Name}}({{node.ClassType}})
             {
-            {{EventDescriptions?.Aggregate("", (p, q) => p + "\t" + q.Index + "->" + q.Description + ";\r\n") + "\t"}}Pos:({{node.PosX}}, {{node.PosY}});
+            {{vNode.EventDescriptions?.Aggregate("", (p, q) => p + "\t" + q.Index + "->" + q.Description + ";\r\n") + "\t"}}Pos:({{node.PosX}}, {{node.PosY}});
                 Color: "{{node.Color}}";
                 Type: {{node.ClassType}};
                 FlowID: {{node.FlowID}};
@@ -163,7 +163,6 @@ namespace StateMachine
             catch (OperationCanceledException)
             {
                 tcs.TrySetCanceled();
-                await Interupt();
                 if (Context != null)
                 { Context.SetPause(true); }
                 return false;
@@ -171,20 +170,12 @@ namespace StateMachine
             catch (Exception ex) when (ex.InnerException is OperationCanceledException)
             {
                 tcs.TrySetCanceled();
-                await Interupt();
                 if (Context != null)
                 { Context.SetPause(true); }
                 return false;
             }
-            catch(Exception ex)
-            {
-                Pause();
-                await RestartAsync();
-                return false;
-            }
             finally
             {
-                await ExitAsync();
                 tcs.TrySetResult(false);
             }
         }
@@ -198,24 +189,20 @@ namespace StateMachine
         Task waitCurrentTask = Task.FromResult(true);
         Task IFSMNode.WaitCurrentTask => waitCurrentTask;
 
-        public double PosX { get; set; } = 0;
-        public double PosY { get; set; } = 0;
-        public double OffsetX { get; set; } = 0;
-        public double OffsetY { get; set; } = 0;
-        public string FlowID { get; set; } = Guid.NewGuid().ToString();
-        public string ClassType { get; set; } = "";
-        public string Color { get; set; } = "white";
+        double IVisualNode.PosX { get; set; } = 0;
+        double IVisualNode.PosY { get; set; } = 0;
+        string IVisualNode.FlowID { get; set; } = Guid.NewGuid().ToString();
+        string IVisualNode.ClassType { get; set; } = "";
+        string IVisualNode.Color { get; set; } = "white";
 
         [FSMProperty("Discription", false, true, -1)]
-        public string Discription { get; set; } = "";
+        string IVisualNode.Discription { get; set; } = "";
 
 
         [FSMProperty("EventDescriptions", false, true, -1)]
-        public List<NodeEventDescription> EventDescriptions { get; set; } = [];
+        List<NodeEventDescription> IVisualNode.EventDescriptions { get; set; } = [];
 
         async Task IFSMNode.CreateNewAsync() { await RestartAsync(); }
-
-        async Task IFSMNode.ExitStateAsync() { await ExitAsync(); }
 
         protected void PublishEvent(int index)
         {
@@ -259,14 +246,8 @@ namespace StateMachine
         //启动时触发
         protected abstract Task RestartAsync();
 
-        //退出当前节点时触发
-        protected abstract Task ExitAsync();
-
         //执行方法
         protected abstract Task ExecuteMethodAsync();
-
-        //暂停时的保存现场操作
-        protected abstract Task Interupt();
 
         ~AbstractFSMNode()
         {

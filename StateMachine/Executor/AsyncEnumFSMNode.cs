@@ -19,7 +19,7 @@ namespace StateMachine
         {
         }
 
-        protected override async Task ExecuteMethodAsync()
+        protected sealed override async Task ExecuteMethodAsync()
         {
             bool isMoveNext = true;
             while (true)
@@ -98,7 +98,7 @@ namespace StateMachine
         {
         }
 
-        protected override async Task ExecuteMethodAsync()
+        protected sealed override async Task ExecuteMethodAsync()
         {
             bool isMoveNext = true;
             while (true)
