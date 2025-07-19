@@ -4,13 +4,25 @@
     {
 
         IFSMDefineBuilder AddNode(string nodeName, string nodeType);
+        IFSMDefineBuilder AddNode(string nodeName, string nodeType, Action<IFSMNodeDefineBuilder> definer);
         IFSMDefineBuilder AddNode(Enum nodeName, string nodeType);
+        IFSMDefineBuilder AddNode(Enum nodeName, string nodeType, Action<IFSMNodeDefineBuilder> definer);
 
         IFSMDefineBuilder AddNode<T>(string nodeName) where T : IFSMNode;
+        IFSMDefineBuilder AddNode<T>(string nodeName, Action<IFSMNodeDefineBuilder> definer) where T : IFSMNode;
         IFSMDefineBuilder AddNode<T>(Enum nodeName) where T : IFSMNode;
+        IFSMDefineBuilder AddNode<T>(Enum nodeName, Action<IFSMNodeDefineBuilder> definer) where T : IFSMNode;
 
         IFSMDefineBuilder AddConnection(string connectionName, string fromNode, string toNode);
         IFSMDefineBuilder AddConnection(Enum connectionName, Enum fromNode, Enum toNode);
+    }
+
+    public interface IFSMNodeDefineBuilder
+    {
+        IFSMNodeDefineBuilder SetEventBinding(FSMEnum eventEnum, Enum eventName);
+        IFSMNodeDefineBuilder SetEventBinding(FSMEnum eventEnum, string eventName);
+        IFSMNodeDefineBuilder SetEventBinding(int eventIndex, Enum eventName);
+        IFSMNodeDefineBuilder SetEventBinding(int eventIndex, string eventName);
     }
 
     internal class FSMDefineBuilder : IFSMDefineBuilder
@@ -50,6 +62,82 @@
         public IFSMDefineBuilder AddNode<T>(Enum nodeName) where T : IFSMNode
         {
             engine.CreateNode<T>(nodeName.ToString());
+            return this;
+        }
+
+        public IFSMDefineBuilder AddNode(string nodeName, string nodeType, Action<IFSMNodeDefineBuilder> definer)
+        {
+            AddNode(nodeName, nodeType);
+            definer?.Invoke(new FSMNodeDefineBuilder(engine, engine[(ScriptNode)nodeName]));
+            return this;
+        }
+
+        public IFSMDefineBuilder AddNode(Enum nodeName, string nodeType, Action<IFSMNodeDefineBuilder> definer)
+        {
+            AddNode(nodeName, nodeType);
+            definer?.Invoke(new FSMNodeDefineBuilder(engine, engine[(ScriptNode)nodeName]));
+            return this;
+        }
+
+        public IFSMDefineBuilder AddNode<T>(string nodeName, Action<IFSMNodeDefineBuilder> definer) where T : IFSMNode
+        {
+            AddNode<T>(nodeName);
+            definer?.Invoke(new FSMNodeDefineBuilder(engine, engine[(ScriptNode)nodeName]));
+            return this;
+        }
+
+        public IFSMDefineBuilder AddNode<T>(Enum nodeName, Action<IFSMNodeDefineBuilder> definer) where T : IFSMNode
+        {
+            AddNode<T>(nodeName);
+            definer?.Invoke(new FSMNodeDefineBuilder(engine, engine[(ScriptNode)nodeName]));
+            return this;
+        }
+    }
+
+    public class FSMNodeDefineBuilder(FSMEngine engine, IFSMNode node) : IFSMNodeDefineBuilder
+    {
+
+        public IFSMNodeDefineBuilder SetEventBinding(FSMEnum eventEnum, Enum eventName)
+        {
+            string name = Enum.GetName(eventName.GetType(), eventName);
+            if (!engine.TryGetEvent(name, out _))
+            {
+                engine.AddEvent(new FSMEvent(name));
+            }
+            node.SetBranchEvent((int)eventEnum, engine[(ScriptEvent)eventName]);
+            return this;
+        }
+
+        public IFSMNodeDefineBuilder SetEventBinding(FSMEnum eventEnum, string eventName)
+        {
+            string name = Enum.GetName(eventName.GetType(), eventName);
+            if (!engine.TryGetEvent(name, out _))
+            {
+                engine.AddEvent(new FSMEvent(name));
+            }
+            node.SetBranchEvent((int)eventEnum, engine[(ScriptEvent)eventName]);
+            return this;
+        }
+
+        public IFSMNodeDefineBuilder SetEventBinding(int eventIndex, Enum eventName)
+        {
+            string name = Enum.GetName(eventName.GetType(), eventName);
+            if (!engine.TryGetEvent(name, out _))
+            {
+                engine.AddEvent(new FSMEvent(name));
+            }
+            node.SetBranchEvent(eventIndex, engine[(ScriptEvent)eventName]);
+            return this;
+        }
+
+        public IFSMNodeDefineBuilder SetEventBinding(int eventIndex, string eventName)
+        {
+            string name = Enum.GetName(eventName.GetType(), eventName);
+            if (!engine.TryGetEvent(name, out _))
+            {
+                engine.AddEvent(new FSMEvent(name));
+            }
+            node.SetBranchEvent(eventIndex, engine[(ScriptEvent)eventName]);
             return this;
         }
     }

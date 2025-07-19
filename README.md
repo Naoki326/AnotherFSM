@@ -39,6 +39,8 @@ AnotherFSM 是一个**基于有限状态机、快速构建流程的工具库**�
 
 ### 简单使用教程(仅StateMachine项目)
 
+这里有一个简单的例子：[上手项目](https://github.com/Naoki326/AnoterFSM.Demo)
+
 本工程设计的状态机，其运行基于两个重要类：FSMEngine、 FSMExecute
   - ***FSMEngine***
   

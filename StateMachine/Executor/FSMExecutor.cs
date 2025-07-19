@@ -410,6 +410,7 @@ namespace StateMachine
                 {
                     await currentNode.WaitCurrentTask;
                 }
+                catch { }
                 finally
                 {
                     pausing = false;
@@ -432,6 +433,7 @@ namespace StateMachine
             {
                 await currentNode.WaitCurrentTask;
             }
+            catch { }
             finally
             {
                 pausing = false;
