@@ -13,6 +13,7 @@ namespace StateMachine
 
         public static implicit operator string(ScriptNode d) => d.Name;
         public static explicit operator ScriptNode(string b) => new ScriptNode(b);
+        public static explicit operator ScriptNode(Enum b) => new ScriptNode(Enum.GetName(b.GetType(), b));
         public override string ToString()
         {
             return Name;
@@ -29,6 +30,7 @@ namespace StateMachine
 
         public static implicit operator string(ScriptEvent d) => d.Name;
         public static explicit operator ScriptEvent(string b) => new ScriptEvent(b);
+        public static explicit operator ScriptEvent(Enum b) => new ScriptEvent(Enum.GetName(b.GetType(), b));
         public override string ToString()
         {
             return Name;
