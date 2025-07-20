@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-// Generated from C:/Work/StateMachine/Engine/StateMachineScript.g4 by ANTLR 4.13.1
+// Generated from C:/Users/zhiyuan/source/repos/AnotherFSM/StateMachine/Engine/StateMachineScript.g4 by ANTLR 4.13.1
 
 // Unreachable code detected
 #pragma warning disable 0162
@@ -64,13 +64,6 @@ public interface IStateMachineScriptVisitor<Result> : IParseTreeVisitor<Result> 
 	/// <return>The visitor result.</return>
 	Result VisitDefState2([NotNull] StateMachineScriptParser.DefState2Context context);
 	/// <summary>
-	/// Visit a parse tree produced by the <c>DefGroupState</c>
-	/// labeled alternative in <see cref="StateMachineScriptParser.state_statement"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitDefGroupState([NotNull] StateMachineScriptParser.DefGroupStateContext context);
-	/// <summary>
 	/// Visit a parse tree produced by the <c>DefBranch</c>
 	/// labeled alternative in <see cref="StateMachineScriptParser.state_branch"/>.
 	/// </summary>
@@ -112,6 +105,13 @@ public interface IStateMachineScriptVisitor<Result> : IParseTreeVisitor<Result> 
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitFlowIDDef([NotNull] StateMachineScriptParser.FlowIDDefContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>GroupDef</c>
+	/// labeled alternative in <see cref="StateMachineScriptParser.state_group"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitGroupDef([NotNull] StateMachineScriptParser.GroupDefContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="StateMachineScriptParser.position"/>.
 	/// </summary>

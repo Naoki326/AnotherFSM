@@ -3,11 +3,11 @@
 namespace StateMachine
 {
     [DebuggerNonUserCode]
-    public abstract class AsyncEnumFSMNode : SimpleFSMNode
+    public abstract class AsyncEnumFSMNode : AbstractFSMNode
     {
         protected abstract IAsyncEnumerable<object> ExecuteEnumerable();
 
-        protected sealed override async Task RestartAsync()
+        private protected sealed override async Task RestartAsync()
         {
             if (executor != null)
                 await executor.DisposeAsync();
@@ -19,7 +19,7 @@ namespace StateMachine
         {
         }
 
-        protected sealed override async Task ExecuteMethodAsync()
+        private protected sealed override async Task ExecuteMethodAsync()
         {
             bool isMoveNext = true;
             while (true)
@@ -82,11 +82,11 @@ namespace StateMachine
     }
 
     [DebuggerNonUserCode]
-    public abstract class AsyncEnumFSMNode<T> : SimpleFSMNode<T> where T : class
+    public abstract class AsyncEnumFSMNode<T> : AbstractFSMNode<T> where T : class
     {
         protected abstract IAsyncEnumerable<object> ExecuteEnumerable();
 
-        protected sealed override async Task RestartAsync()
+        private protected sealed override async Task RestartAsync()
         {
             if (executor != null)
                 await executor.DisposeAsync();
@@ -98,7 +98,7 @@ namespace StateMachine
         {
         }
 
-        protected sealed override async Task ExecuteMethodAsync()
+        private protected sealed override async Task ExecuteMethodAsync()
         {
             bool isMoveNext = true;
             while (true)

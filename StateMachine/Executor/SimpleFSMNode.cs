@@ -7,7 +7,7 @@ namespace StateMachine
     {
 
         //启动时触发
-        protected override Task RestartAsync()
+        private protected override Task RestartAsync()
         {
             return Task.CompletedTask;
         }
@@ -18,7 +18,7 @@ namespace StateMachine
     {
 
         //启动时触发
-        protected override Task RestartAsync()
+        private protected override Task RestartAsync()
         {
             return Task.CompletedTask;
         }

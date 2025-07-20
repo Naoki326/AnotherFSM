@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-// Generated from C:/Work/StateMachine/Engine/StateMachineScript.g4 by ANTLR 4.13.1
+// Generated from C:/Users/zhiyuan/source/repos/AnotherFSM/StateMachine/Engine/StateMachineScript.g4 by ANTLR 4.13.1
 
 // Unreachable code detected
 #pragma warning disable 0162
@@ -100,20 +100,6 @@ public partial class StateMachineScriptBaseListener : IStateMachineScriptListene
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitDefState2([NotNull] StateMachineScriptParser.DefState2Context context) { }
 	/// <summary>
-	/// Enter a parse tree produced by the <c>DefGroupState</c>
-	/// labeled alternative in <see cref="StateMachineScriptParser.state_statement"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterDefGroupState([NotNull] StateMachineScriptParser.DefGroupStateContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by the <c>DefGroupState</c>
-	/// labeled alternative in <see cref="StateMachineScriptParser.state_statement"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitDefGroupState([NotNull] StateMachineScriptParser.DefGroupStateContext context) { }
-	/// <summary>
 	/// Enter a parse tree produced by the <c>DefBranch</c>
 	/// labeled alternative in <see cref="StateMachineScriptParser.state_branch"/>.
 	/// <para>The default implementation does nothing.</para>
@@ -197,6 +183,20 @@ public partial class StateMachineScriptBaseListener : IStateMachineScriptListene
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitFlowIDDef([NotNull] StateMachineScriptParser.FlowIDDefContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by the <c>GroupDef</c>
+	/// labeled alternative in <see cref="StateMachineScriptParser.state_group"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterGroupDef([NotNull] StateMachineScriptParser.GroupDefContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by the <c>GroupDef</c>
+	/// labeled alternative in <see cref="StateMachineScriptParser.state_group"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitGroupDef([NotNull] StateMachineScriptParser.GroupDefContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="StateMachineScriptParser.position"/>.
 	/// <para>The default implementation does nothing.</para>

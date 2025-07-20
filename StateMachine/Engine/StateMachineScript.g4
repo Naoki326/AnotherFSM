@@ -25,7 +25,7 @@ expression
 ;
 
 state_statement
-	: 'def' STRING 'as' STRING 'state'
+	: 'def' STRING 'as' STRING? 'state'
 	'{'
 		state_branch*
 	'}'																		#DefState
@@ -33,10 +33,6 @@ state_statement
 	'{'
 		state_branch*
 	'}'																		#DefState2
-	| 'def' STRING
-	'{'
-		STRING 'to' STRING
-	'}'																		#DefGroupState
 ;
 
 state_branch
@@ -48,6 +44,10 @@ state_branch
     | 'Color' COLON CODESTRING	 SEMICOLON									#ColorDef
     | 'Type' COLON STRING	 SEMICOLON										#TypeDef
     | 'FlowID' COLON (STRING|INT)	 SEMICOLON								#FlowIDDef
+;
+
+state_group
+	: STRING 'to' STRING SEMICOLON											#GroupDef
 ;
 
 position

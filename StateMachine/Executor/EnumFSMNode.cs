@@ -4,11 +4,11 @@ using System.Diagnostics;
 namespace StateMachine
 {
     [DebuggerNonUserCode]
-    public abstract class EnumFSMNode : SimpleFSMNode
+    public abstract class EnumFSMNode : AbstractFSMNode
     {
         protected abstract IEnumerable ExecuteEnumerable();
 
-        protected sealed override Task RestartAsync()
+        private protected sealed override Task RestartAsync()
         {
             (executor as IEnumerator<object>)?.Dispose();
             executor = ExecuteEnumerable().GetEnumerator();
@@ -20,7 +20,7 @@ namespace StateMachine
         {
         }
 
-        protected sealed override async Task ExecuteMethodAsync()
+        private protected sealed override async Task ExecuteMethodAsync()
         {
             bool isMoveNext = true;
             while (true)
@@ -89,11 +89,11 @@ namespace StateMachine
     }
 
     [DebuggerNonUserCode]
-    public abstract class EnumFSMNode<T> : SimpleFSMNode<T> where T : class
+    public abstract class EnumFSMNode<T> : AbstractFSMNode<T> where T : class
     {
         protected abstract IEnumerable ExecuteEnumerable();
 
-        protected sealed override Task RestartAsync()
+        private protected sealed override Task RestartAsync()
         {
             (executor as IEnumerator<object>)?.Dispose();
             executor = ExecuteEnumerable().GetEnumerator();
@@ -104,7 +104,7 @@ namespace StateMachine
         protected virtual void HandleException(Exception e)
         {
         }
-        protected sealed override async Task ExecuteMethodAsync()
+        private protected sealed override async Task ExecuteMethodAsync()
         {
             bool isMoveNext = true;
             while (true)

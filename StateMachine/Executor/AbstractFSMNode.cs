@@ -80,12 +80,12 @@ namespace StateMachine
                 yield return t;
         }
 
-        public IEnumerable<FSMTransition> GetFSMTransitions()
+        IEnumerable<FSMTransition> ITransitionContainer.GetFSMTransitions()
         {
             return transitions.Values;
         }
 
-        public FSMTransition GetFSMTransition(string target)
+        FSMTransition ITransitionContainer.GetFSMTransition(string target)
         {
             return transitions.First(p => p.Value.Target.Name == target).Value;
         }
@@ -251,10 +251,10 @@ namespace StateMachine
         }
 
         //启动时触发
-        protected abstract Task RestartAsync();
+        private protected abstract Task RestartAsync();
 
         //执行方法
-        protected abstract Task ExecuteMethodAsync();
+        private protected abstract Task ExecuteMethodAsync();
 
         ~AbstractFSMNode()
         {

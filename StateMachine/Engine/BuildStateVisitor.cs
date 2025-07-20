@@ -148,7 +148,9 @@ namespace StateMachine
         public override object? VisitDefState([NotNull] StateMachineScriptParser.DefStateContext context)
         {
             var state_name = nameprev + context.STRING()[0].GetText();
-            var state_type = context.STRING()[1].GetText();
+            string state_type = context.STRING()[0].GetText();
+            if (context.STRING().Length == 2)
+                state_type = context.STRING()[1].GetText();
 
             if (NodeDict.ContainsKey(state_name))
             {
@@ -190,27 +192,6 @@ namespace StateMachine
             {
                 Visit(branch);
             }
-            node = default!;
-            return null;// base.VisitDefState(context);
-        }
-
-        public override object? VisitDefGroupState([NotNull] StateMachineScriptParser.DefGroupStateContext context)
-        {
-            var state_name = nameprev + context.STRING()[0].GetText();
-            string state_type = "Group";
-            var stState = nameprev + context.STRING()[1].GetText();
-            var edEvent = nameprev + context.STRING()[2].GetText();
-
-            if (NodeDict.ContainsKey(state_name))
-            {
-                throw new ScriptException("State " + state_name + " 定义出错, " + "已存在相同名字的State！");
-            }
-            node = new GroupNode(stState, edEvent);
-            node.Name = state_name;
-            node.NamePrefix = nameprev;
-            node.ClassType = state_type;
-
-            NodeDict.Add(state_name, node);
             node = default!;
             return null;// base.VisitDefState(context);
         }
