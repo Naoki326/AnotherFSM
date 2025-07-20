@@ -29,6 +29,8 @@
         //该Node发出的事件的index及事件名
         List<NodeEventDescription> EventDescriptions { get; set; }
 
+        void UpdateEventDescriptions();
+
     }
 
     //设置状态转移的接口

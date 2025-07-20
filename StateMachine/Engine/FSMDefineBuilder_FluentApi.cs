@@ -15,6 +15,8 @@
 
         IFSMDefineBuilder AddConnection(string connectionName, string fromNode, string toNode);
         IFSMDefineBuilder AddConnection(Enum connectionName, Enum fromNode, Enum toNode);
+
+        void Build();
     }
 
     public interface IFSMNodeDefineBuilder
@@ -30,16 +32,6 @@
         private FSMEngine engine;
         private FSMDefineBuilder(FSMEngine engine) { this.engine = engine; }
         public static IFSMDefineBuilder Create(FSMEngine engine) => new FSMDefineBuilder(engine);
-        public IFSMDefineBuilder AddConnection(string connectionName, string fromNode, string toNode)
-        {
-            engine.ConnectNode(connectionName, fromNode, toNode);
-            return this;
-        }
-        public IFSMDefineBuilder AddConnection(Enum connectionName, Enum fromNode, Enum toNode)
-        {
-            engine.ConnectNode(connectionName.ToString(), fromNode.ToString(), toNode.ToString());
-            return this;
-        }
 
         public IFSMDefineBuilder AddNode(string nodeName, string nodeType)
         {
@@ -91,6 +83,32 @@
             AddNode<T>(nodeName);
             definer?.Invoke(new FSMNodeDefineBuilder(engine, engine[(ScriptNode)nodeName]));
             return this;
+        }
+
+        private List<(string connectionName, string fromNode, string toNode)> connections = [];
+
+        public IFSMDefineBuilder AddConnection(string connectionName, string fromNode, string toNode)
+        {
+            connections.Add((connectionName, fromNode, toNode));
+            return this;
+        }
+
+        public IFSMDefineBuilder AddConnection(Enum connectionName, Enum fromNode, Enum toNode)
+        {
+            connections.Add(
+                (Enum.GetName(connectionName.GetType(), connectionName),
+                    Enum.GetName(fromNode.GetType(), fromNode),
+                    Enum.GetName(toNode.GetType(), toNode))
+                );
+            return this;
+        }
+
+        public void Build()
+        {
+            foreach (var (connectionName, fromNode, toNode) in connections)
+            {
+                engine.ConnectNode(connectionName, fromNode, toNode);
+            }
         }
     }
 

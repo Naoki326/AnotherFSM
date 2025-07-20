@@ -157,6 +157,7 @@ namespace StateMachine
             foreach (string stateName in engine.GetNodeNames())
             {
                 var state = engine[stateName];
+                state.UpdateEventDescriptions();
                 foreach (var transition in state.GetFSMTransitions())
                 {
                     if (await _drawflow.GetNodesFromNameAsync(transition.Target.Name) is List<int> nodeInputs

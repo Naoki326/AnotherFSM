@@ -92,12 +92,21 @@ public partial class ProcedureView : IDisposable
         if (State?.GetType().GetCustomAttributes(typeof(FSMNodeAttribute), true).FirstOrDefault() as FSMNodeAttribute is FSMNodeAttribute fsmNodeInfo
             && fsmNodeInfo.Indexes.Length == fsmNodeInfo.EventDescriptions.Length)
         {
-            State.EventDescriptions = Enumerable.Range(0, fsmNodeInfo.Indexes.Length)
-                .Select(p => new NodeEventDescription() { Index = fsmNodeInfo.Indexes[p], Description = fsmNodeInfo.EventDescriptions[p] }).ToList();
+            State.EventDescriptions = Enumerable
+                .Range(0, fsmNodeInfo.Indexes.Length)
+                .Select(p => new NodeEventDescription()
+                {
+                    Index = fsmNodeInfo.Indexes[p],
+                    Description = fsmNodeInfo.EventDescriptions[p]
+                })
+                .ToList();
             foreach (var ed in State.EventDescriptions)
             {
                 if (!Engine.TryGetEvent(ed.Description, out FSMEvent e))
-                { e = new FSMEvent(ed.Description); Engine.AddEvent(e); }
+                {
+                    e = new FSMEvent(ed.Description);
+                    Engine.AddEvent(e);
+                }
                 State.SetBranchEvent(ed.Index, e);
             }
         }

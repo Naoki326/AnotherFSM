@@ -202,6 +202,13 @@ namespace StateMachine
         [FSMProperty("EventDescriptions", false, true, -1)]
         List<NodeEventDescription> IVisualNode.EventDescriptions { get; set; } = [];
 
+        void IVisualNode.UpdateEventDescriptions()
+        {
+            (this as IVisualNode).EventDescriptions = branchDict
+                .Select(kv => new NodeEventDescription() { Index = kv.Key, Description = kv.Value.EventName })
+                .ToList();
+        }
+
         async Task IFSMNode.CreateNewAsync() { await RestartAsync(); }
 
         protected void PublishEvent(int index)
