@@ -2,6 +2,31 @@
 {
     public static class Yield
     {
+        public static IYieldAction Priority(Enum p)
+        {
+            return new YieldPriority(p);
+        }
+
+        public static IYieldAction Priority(long p)
+        {
+            return new YieldPriority(p);
+        }
+
+        public static IYieldAction Event(int eventIndex)
+        {
+            return new YieldEvent(eventIndex);
+        }
+
+        public static IYieldAction Event(FSMEnum eventIndex)
+        {
+            return new YieldEvent(eventIndex);
+        }
+
+        public static IYieldAction Result(YieldEnum ye)
+        {
+            return new YieldResult(ye);
+        }
+
         public static IYieldAction RestoreIfPause(Func<Task> restore)
         {
             return new YieldRestoreIfPause(restore);
