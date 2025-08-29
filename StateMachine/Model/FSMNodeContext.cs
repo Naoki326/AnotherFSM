@@ -7,7 +7,8 @@ namespace StateMachine
     [DebuggerNonUserCode]
     public partial class FSMNodeContext
     {
-        public long ManualLevel { get; set; } = 0;
+        // 若遇到集合中的数字，流程自动暂停
+        public HashSet<long> ManualSets { get; set; }
 
         public FSMNodeContext()
         {
@@ -86,14 +87,14 @@ namespace StateMachine
         {
             return new FSMNodeContext<U>(this);
         }
-        public new T? Data
+        public new T Data
         {
             get
             {
                 if (base.Data is T data)
                     return data;
                 else
-                    return null;
+                    return default!;
             }
             set
             {

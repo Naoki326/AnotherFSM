@@ -103,7 +103,7 @@ namespace StateMachine
             bool isMoveNext = true;
             while (true)
             {
-                Context.CheckPause();
+                base.Context.CheckPause();
                 try
                 {
                     if (executor.Current is IYieldAction yieldBefore)
@@ -121,7 +121,7 @@ namespace StateMachine
 
                     if (executor.Current is IYieldAction yieldAfter)
                     {
-                        yieldAfter.Context = Context;
+                        yieldAfter.Context = base.Context;
                         await yieldAfter.AfterYieldAsync();
                         switch (yieldAfter.Result)
                         {
@@ -147,7 +147,7 @@ namespace StateMachine
                     throw e;
                 }
             }
-            Context.CheckPause();
+            base.Context.CheckPause();
         }
 
         private IAsyncEnumerator<object>? executor;

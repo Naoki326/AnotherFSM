@@ -76,10 +76,17 @@ namespace StateMachine
 
         private ExcecuterContext SolverContext { get; set; } = new ExcecuterContext();
 
-        public long ManualLevel { get; set; } = 0;
-        public Enum ManualELevel
+        //public long ManualLevel { get; set; } = 0;
+        //public Enum ManualELevel
+        //{
+        //    set { ManualLevel = Convert.ToInt64(value); }
+        //}
+
+        public HashSet<long> ManualSet { get; set; } = [];
+
+        public HashSet<Enum> ManualESet
         {
-            set { ManualLevel = Convert.ToInt64(value); }
+            set { ManualSet = [.. value.Select(Convert.ToInt64)]; }
         }
 
         // 该接口可以改变传入的事件，可以在界面上暂停
@@ -97,7 +104,7 @@ namespace StateMachine
                 State = FSMState.Running;
                 if (isCreateNew)
                 { await currentNode.CreateNewAsync(); }
-                currentNode.Context.ManualLevel = ManualLevel;
+                currentNode.Context.ManualSets = ManualSet;
                 isExit = await currentNode.RunAsync();
                 if (currentNode.Context.IsPaused)
                 {

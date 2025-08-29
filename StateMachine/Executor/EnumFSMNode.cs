@@ -30,11 +30,7 @@ namespace StateMachine
                 {
                     if (executor.Current is IYieldAction yieldBefore)
                     {
-                        try
-                        {
-                            await yieldBefore.BeforeNextAsync();
-                        }
-                        catch (OperationCanceledException) { }
+                        await yieldBefore.BeforeNextAsync();
                         isMoveNext = yieldBefore.IsMoveNext;
                     }
                     if (isMoveNext)
@@ -47,11 +43,7 @@ namespace StateMachine
                     if (executor.Current is IYieldAction yieldAfter)
                     {
                         yieldAfter.Context = Context;
-                        try
-                        {
-                            await yieldAfter.AfterYieldAsync();
-                        }
-                        catch (OperationCanceledException) { }
+                        await yieldAfter.AfterYieldAsync();
                         switch (yieldAfter.Result)
                         {
                             case YieldEnum.Pause:
@@ -109,6 +101,7 @@ namespace StateMachine
             bool isMoveNext = true;
             while (true)
             {
+                base.Context?.CheckPause();
                 try
                 {
                     if (executor.Current is IYieldAction yieldBefore)
@@ -125,7 +118,7 @@ namespace StateMachine
                     }
                     if (executor.Current is IYieldAction yieldAfter)
                     {
-                        yieldAfter.Context = Context;
+                        yieldAfter.Context = base.Context;
                         await yieldAfter.AfterYieldAsync();
                         switch (yieldAfter.Result)
                         {
@@ -150,7 +143,7 @@ namespace StateMachine
                     HandleException(e);
                     throw e;
                 }
-                Context?.CheckPause();
+                base.Context?.CheckPause();
             }
         }
 

@@ -284,9 +284,9 @@ namespace StateMachine
     public abstract class AbstractFSMNode<T> : AbstractFSMNode where T : class
     {
         // 限制上下文的类型
-        public new FSMNodeContext<T>? Context
+        public new FSMNodeContext<T> Context
         {
-            get { return base.Context as FSMNodeContext<T>; }
+            get { return (FSMNodeContext<T>)base.Context; }
             set { base.Context = value; }
         }
     }
