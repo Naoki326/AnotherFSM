@@ -29,12 +29,17 @@
 
         public static IYieldAction RestoreIfPause(Func<Task> restore)
         {
-            return new YieldRestoreIfPause(restore);
+            return new YieldRestoreIfPaused(restore);
         }
 
         public static IYieldAction RetryIfFailed(Func<Task> retryFunc)
         {
             return new YieldRetryIfFailed(retryFunc);
+        }
+
+        public static IYieldAction RetryIfPaused(Func<Task> retryFunc)
+        {
+            return new YieldRetryIfPaused(retryFunc);
         }
 
         public static IYieldAction RestartIfFailed(Func<Task> doFunc)
