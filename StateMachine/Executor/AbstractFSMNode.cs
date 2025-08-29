@@ -120,7 +120,12 @@ namespace StateMachine
             branchDict[index] = @event;
         }
 
-        public FSMNodeContext Context { get; set; } = default!;
+        protected FSMNodeContext context = default!;
+        public FSMNodeContext Context
+        {
+            get => context;
+            set { context = value; }
+        }
 
         private Action? raisePause;
         // 暂停针对一个具体的FSMExecute，所以需要用raisePause绑定到对应的FSMExecute

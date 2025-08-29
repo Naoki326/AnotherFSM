@@ -24,7 +24,7 @@ namespace StateMachine
             bool isMoveNext = true;
             while (true)
             {
-                Context.CheckPause();
+                context.CheckPause();
                 try
                 {
                     isMoveNext = true;
@@ -42,7 +42,7 @@ namespace StateMachine
                     }
                     if (executor.Current is IYieldAction yieldAfter)
                     {
-                        yieldAfter.Context = Context;
+                        yieldAfter.Context = context;
                         await yieldAfter.AfterYieldAsync();
                         switch (yieldAfter.Result)
                         {
@@ -68,7 +68,7 @@ namespace StateMachine
                     throw e;
                 }
             }
-            Context.CheckPause();
+            context.CheckPause();
         }
 
         private IAsyncEnumerator<object>? executor;
@@ -103,7 +103,7 @@ namespace StateMachine
             bool isMoveNext = true;
             while (true)
             {
-                base.Context.CheckPause();
+                context.CheckPause();
                 try
                 {
                     if (executor.Current is IYieldAction yieldBefore)
@@ -121,7 +121,7 @@ namespace StateMachine
 
                     if (executor.Current is IYieldAction yieldAfter)
                     {
-                        yieldAfter.Context = base.Context;
+                        yieldAfter.Context = context;
                         await yieldAfter.AfterYieldAsync();
                         switch (yieldAfter.Result)
                         {
@@ -147,7 +147,7 @@ namespace StateMachine
                     throw e;
                 }
             }
-            base.Context.CheckPause();
+            context.CheckPause();
         }
 
         private IAsyncEnumerator<object>? executor;
