@@ -76,17 +76,36 @@ namespace StateMachine
 
         private ExcecuterContext SolverContext { get; set; } = new ExcecuterContext();
 
-        //public long ManualLevel { get; set; } = 0;
-        //public Enum ManualELevel
-        //{
-        //    set { ManualLevel = Convert.ToInt64(value); }
-        //}
+        public HashSet<long> PauseAnchors { get; set; } = [];
 
-        public HashSet<long> ManualSet { get; set; } = [];
-
-        public HashSet<Enum> ManualESet
+        public HashSet<Enum> PauseEAnchors
         {
-            set { ManualSet = [.. value.Select(Convert.ToInt64)]; }
+            set { PauseAnchors = [.. value.Select(Convert.ToInt64)]; }
+        }
+
+        public void PauseByAnchor(Enum eAnchor)
+        {
+            PauseAnchors.Add(Convert.ToInt64(eAnchor));
+        }
+
+        public void PauseByAnchor(long lAnchor)
+        {
+            PauseAnchors.Add(lAnchor);
+        }
+
+        public void RemoveAnchor(Enum eAnchor)
+        {
+            PauseAnchors.Remove(Convert.ToInt64(eAnchor));
+        }
+
+        public void RemoveAnchor(long lAnchor)
+        {
+            PauseAnchors.Remove(lAnchor);
+        }
+
+        public void ResetAnchors()
+        {
+            PauseAnchors.Clear();
         }
 
         // 该接口可以改变传入的事件，可以在界面上暂停
@@ -104,7 +123,7 @@ namespace StateMachine
                 State = FSMState.Running;
                 if (isCreateNew)
                 { await currentNode.CreateNewAsync(); }
-                currentNode.Context.ManualSets = ManualSet;
+                currentNode.Context.PauseAnchors = PauseAnchors;
                 isExit = await currentNode.RunAsync();
                 if (currentNode.Context.IsPaused)
                 {

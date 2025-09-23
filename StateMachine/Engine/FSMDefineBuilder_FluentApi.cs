@@ -10,8 +10,10 @@
 
         IFSMDefineBuilder AddNode<T>(string nodeName) where T : IFSMNode;
         IFSMDefineBuilder AddNode<T>(string nodeName, Action<IFSMNodeDefineBuilder> definer) where T : IFSMNode;
+        IFSMDefineBuilder AddNode<T>(string nodeName, Action<IFSMNodeDefineBuilder> definer, Action<T> afterRun) where T : IFSMNode;
         IFSMDefineBuilder AddNode<T>(Enum nodeName) where T : IFSMNode;
         IFSMDefineBuilder AddNode<T>(Enum nodeName, Action<IFSMNodeDefineBuilder> definer) where T : IFSMNode;
+        IFSMDefineBuilder AddNode<T>(Enum nodeName, Action<IFSMNodeDefineBuilder> definer, Action<T> afterRun) where T : IFSMNode;
 
         IFSMDefineBuilder AddConnection(string connectionName, string fromNode, string toNode);
         IFSMDefineBuilder AddConnection(Enum connectionName, Enum fromNode, Enum toNode);
@@ -78,10 +80,34 @@
             return this;
         }
 
+        public IFSMDefineBuilder AddNode<T>(string nodeName, Action<IFSMNodeDefineBuilder> definer, Action<T> continueWith) where T : IFSMNode
+        {
+            AddNode<T>(nodeName);
+            definer?.Invoke(new FSMNodeDefineBuilder(engine, engine[(ScriptNode)nodeName]));
+            T node = (T)engine[(ScriptNode)nodeName];
+            node.ContinueWith += n => { continueWith((T)n); };
+            return this;
+        }
+
         public IFSMDefineBuilder AddNode<T>(Enum nodeName, Action<IFSMNodeDefineBuilder> definer) where T : IFSMNode
         {
             AddNode<T>(nodeName);
             definer?.Invoke(new FSMNodeDefineBuilder(engine, engine[(ScriptNode)nodeName]));
+            return this;
+        }
+
+        public void A<T>(Action<T> afterRun) where T : IFSMNode
+        {
+            Action<IFSMNode> x = (node) => { };
+            afterRun = (T node) => { x(node); };
+        }
+
+        public IFSMDefineBuilder AddNode<T>(Enum nodeName, Action<IFSMNodeDefineBuilder> definer, Action<T> continueWith) where T : IFSMNode
+        {
+            AddNode<T>(nodeName);
+            definer?.Invoke(new FSMNodeDefineBuilder(engine, engine[(ScriptNode)nodeName]));
+            T node = (T)engine[(ScriptNode)nodeName];
+            node.ContinueWith += n => { continueWith((T)n); };
             return this;
         }
 

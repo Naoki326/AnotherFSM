@@ -89,6 +89,11 @@
 
         Task CreateNewAsync();
 
+        /// <summary>
+        /// 执行完当前节点
+        /// </summary>
+        public event Action<IFSMNode> ContinueWith;
+
         //执行，返回值代表是否执行完毕
         Task<bool> RunAsync();
 

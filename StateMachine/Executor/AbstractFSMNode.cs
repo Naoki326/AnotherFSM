@@ -153,6 +153,20 @@ namespace StateMachine
         /// </summary>
         public IExcecuterContext ExecuterContext => (this as IFSMNode).ExecuterContext;
 
+        private Action<IFSMNode> continueWith;
+        /// <summary>
+        /// 执行完当前节点
+        /// </summary>
+        event Action<IFSMNode> IFSMNode.ContinueWith
+        {
+            add { continueWith += value; }
+            remove
+            {
+                if (continueWith is not null && value != null)
+                { continueWith -= value; }
+            }
+        }
+
         async Task<bool> IFSMNode.RunAsync()
         {
             TaskCompletionSource<bool> tcs = new();
@@ -163,6 +177,7 @@ namespace StateMachine
                 Context.SetPause(false);
                 await ExecuteMethodAsync();
                 tcs.TrySetResult(true);
+                continueWith?.Invoke(this);
                 return true;
             }
             catch (OperationCanceledException)

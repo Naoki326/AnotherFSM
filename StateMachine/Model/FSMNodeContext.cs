@@ -8,7 +8,7 @@ namespace StateMachine
     public partial class FSMNodeContext
     {
         // 若遇到集合中的数字，流程自动暂停
-        public HashSet<long> ManualSets { get; set; }
+        public HashSet<long> PauseAnchors { get; set; }
 
         public FSMNodeContext()
         {

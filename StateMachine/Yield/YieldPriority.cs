@@ -10,12 +10,12 @@ namespace StateMachine
 
         public bool IsMoveNext => true;
 
-        private HashSet<long> contextManualSets;
-        public FSMNodeContext Context { set { contextManualSets = value.ManualSets; } }
+        private HashSet<long> contextPauseAnchors;
+        public FSMNodeContext Context { set { contextPauseAnchors = value.PauseAnchors; } }
 
         public Task AfterYieldAsync()
         {
-            if (contextManualSets.Contains(priority))
+            if (contextPauseAnchors.Contains(priority))
             {
                 result = YieldEnum.Pause;
             }
