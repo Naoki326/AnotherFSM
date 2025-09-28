@@ -32,6 +32,10 @@ namespace StateMachine
                     {
                         await yieldBefore.BeforeNextAsync();
                         isMoveNext = yieldBefore.IsMoveNext;
+                        if(yieldBefore is YieldEvent yEvent)
+                        {
+                            PublishEvent(yEvent.EventIndex);
+                        }
                     }
                     if (isMoveNext)
                     {
@@ -110,6 +114,10 @@ namespace StateMachine
                     {
                         await yieldBefore.BeforeNextAsync();
                         isMoveNext = yieldBefore.IsMoveNext;
+                        if (yieldBefore is YieldEvent yEvent)
+                        {
+                            PublishEvent(yEvent.EventIndex);
+                        }
                     }
                     if (isMoveNext)
                     {

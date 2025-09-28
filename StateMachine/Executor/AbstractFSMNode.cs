@@ -194,6 +194,13 @@ namespace StateMachine
                 { Context.SetPause(true); }
                 return false;
             }
+            catch (Exception ex)
+            {
+                // 内层发出Error事件（需要绑定Error）
+                PublishEvent(FSMEnum.Error, ex);
+                // 外层触发事件后设为当前节点结束
+                throw;
+            }
             finally
             {
                 tcs.TrySetResult(false);

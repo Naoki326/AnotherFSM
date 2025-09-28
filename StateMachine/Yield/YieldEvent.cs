@@ -9,6 +9,7 @@ namespace StateMachine
     public class YieldEvent : IYieldAction
     {
         private readonly int eventIndex;
+        public int EventIndex => eventIndex;
 
         public YieldEvent(int eventIndex)
         {
@@ -20,11 +21,16 @@ namespace StateMachine
             this.eventIndex = eventEnum.GetHashCode();
         }
 
+        public YieldEvent(Enum eventEnum)
+        {
+            this.eventIndex = eventEnum.GetHashCode();
+        }
+
         public YieldEnum Result => YieldEnum.None;
 
         public bool IsMoveNext => true;
 
-        public FSMNodeContext Context { set => throw new NotImplementedException(); }
+        public FSMNodeContext Context { set { } }
 
         public Task AfterYieldAsync()
         {

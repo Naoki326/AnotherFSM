@@ -30,12 +30,14 @@ namespace StateMachine
             yield return Yield.None;
             if (Count < 0)
             {
-                PublishEvent(FSMEnum.Next);
+                yield return Yield.Next;
+                //PublishEvent(FSMEnum.Next);
             }
             else if (i < Count)
             {
                 i++;
-                PublishEvent(FSMEnum.Next);
+                yield return Yield.Next;
+                //PublishEvent(FSMEnum.Next);
             }
             else
             {

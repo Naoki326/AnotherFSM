@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Reactive.Disposables;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
@@ -111,28 +112,40 @@ namespace StateMachine
         // 该接口可以改变传入的事件，可以在界面上暂停
         public IFSMEventInterceptor EventInterceptor { get; set; } = new FSMEventInterceptor();
 
-        private async Task<bool> RunCurrentNodeAsync(bool isCreateNew)
+        private async Task<bool> RunCurrentNodeAsync(bool isCreateNew, long threadId)
         {
             bool isExit = false;
             if (currentNode is null)
                 throw new FSMException("CurrentNode is null");
-            try
+            using(Disposable.Create(() =>
+            {
+                // 代替try...finally
+                currentNode.RaisePause -= CurrentNode_RaisePause;
+            }))
             {
                 currentNode.RaisePause += CurrentNode_RaisePause;
                 currentNode.ExecuterContext = SolverContext;
                 State = FSMState.Running;
-                if (isCreateNew)
-                { await currentNode.CreateNewAsync(); }
-                currentNode.Context.PauseAnchors = PauseAnchors;
-                isExit = await currentNode.RunAsync();
+
+                try
+                {
+                    if (isCreateNew)
+                    { await currentNode.CreateNewAsync(); }
+                    currentNode.Context.PauseAnchors = PauseAnchors;
+                    isExit = await currentNode.RunAsync();
+                }
+                catch (Exception ex)
+                {
+                    //Track Exit
+                    TrackFSMExit(threadId);
+                    observable.OnError(ex);
+                    isExit = true;
+                }
+
                 if (currentNode.Context.IsPaused)
                 {
                     pausing = false;
                 }
-            }
-            finally
-            {
-                currentNode.RaisePause -= CurrentNode_RaisePause;
             }
 
             return isExit;
@@ -158,7 +171,7 @@ namespace StateMachine
                 //这里是第一个启动节点
                 SolverContext.CurrentNodeName = start.Name;
                 TrackStart(threadId);
-                isExit = await RunCurrentNodeAsync(true);
+                isExit = await RunCurrentNodeAsync(true, threadId);
                 TrackStartEnd(isExit, threadId);
 
                 while (await eventConsumer.Reader.WaitToReadAsync())
@@ -169,7 +182,7 @@ namespace StateMachine
                         {
                             //这里是暂停之后继续的分支
                             TrackContinue(threadId);
-                            isExit = await RunCurrentNodeAsync(false);
+                            isExit = await RunCurrentNodeAsync(false, threadId);
                             TrackContinueEnd(isExit, threadId);
                         }
                         else
@@ -192,7 +205,7 @@ namespace StateMachine
 
                                     TrackStateEnter(threadId, @event, nextNode);
                                     currentNode = nextNode;
-                                    isExit = await RunCurrentNodeAsync(true);
+                                    isExit = await RunCurrentNodeAsync(true, threadId);
                                     TrackStateExit(threadId, isExit);
                                 }
                                 else

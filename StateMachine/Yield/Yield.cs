@@ -21,6 +21,12 @@
         {
             return new YieldEvent(eventIndex);
         }
+        
+        private static IYieldAction next = new YieldEvent(FSMEnum.Next);
+        public static IYieldAction Next => next;
+
+        private static IYieldAction error = new YieldEvent(FSMEnum.Error);
+        public static IYieldAction Error => error;
 
         public static IYieldAction Result(YieldEnum ye)
         {
