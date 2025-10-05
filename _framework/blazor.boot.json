@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "StateMachineWebAssemblyDemo",
   "resources": {
-    "hash": "sha256-dXmJs/G7ggfASsPpKliol13IIQfoogFRhslWV7boWoI=",
+    "hash": "sha256-In/1ySDKSltSKBPkrCR/vESAW9A/vcvmY049gNrOPYI=",
     "jsModuleNative": {
       "dotnet.native.js": "sha256-D0bzod5lwwSzPR43JC8TTCcZKw+3jIHOk8CZFCRj5is="
     },
@@ -83,11 +83,11 @@
       "System.wasm": "sha256-9DLmgOsnmEbjuZrRVFruRmVRvh/skjCDv6hQMjVZ3K8=",
       "netstandard.wasm": "sha256-0QMCBeOKPUxLPY7Uz6AnBzf4E1AuvJdRICIPeQeXwyM=",
       "System.Private.CoreLib.wasm": "sha256-tyCbKP0iXJh7VDb51BUIM6Llw3uA9f+zyCKqwTFeSIU=",
-      "DemoNodes.wasm": "sha256-SuFqV8t7tRPyfKmcQYOJK27HySvDC+BZJFMqpvreQAo=",
-      "StateMachine.wasm": "sha256-Wb9VqQUR6w40knzd380b1i7AXtg4cH8XXWtfvPBR47s=",
-      "StateMachine.FlowComponent.wasm": "sha256-ALIZbAQ7+dSi6CuLkt2op/kcDj5xO1wZSYbuUTxZFxA=",
-      "StateMachineDemoShared.wasm": "sha256-f0uqLRd4wF/wLB+RgeQGcH2onA9qU5nHblQPPLQ0nfE=",
-      "StateMachineWebAssemblyDemo.wasm": "sha256-QIgjLs8YkSYDpKYsKpT6PVrECsohN+FuhTKbJkIKcgU="
+      "DemoNodes.wasm": "sha256-KikmXzbWH8WyqDER0fyszPx3JMT6pvT0l4cJgqW/u7s=",
+      "StateMachine.wasm": "sha256-qpMcYhiGX1Xg0SLcwYFGr4I0PGjhKypTwoi7xpsXq/0=",
+      "StateMachine.FlowComponent.wasm": "sha256-rrd7cdM1IDxVUgisvgPSasBEQEgUQ2Bu5VZaUsGVo8g=",
+      "StateMachineDemoShared.wasm": "sha256-fzqjG8xFTs2KbgKItTdITqlqJNFyxL6d9KMQE49XA64=",
+      "StateMachineWebAssemblyDemo.wasm": "sha256-FNfTV1VPAqFyiZmS0FOROxB3aIoRuYbrF34Ht+EQmTE="
     }
   },
   "cacheBootResources": true,
