@@ -47,6 +47,7 @@ namespace StateMachine
                     if (executor.Current is IYieldAction yieldAfter)
                     {
                         yieldAfter.Context = context;
+                        yieldAfter.SolveContext = ExecuterContext;
                         await yieldAfter.AfterYieldAsync();
                         switch (yieldAfter.Result)
                         {
@@ -127,6 +128,7 @@ namespace StateMachine
                     if (executor.Current is IYieldAction yieldAfter)
                     {
                         yieldAfter.Context = context;
+                        yieldAfter.SolveContext = ExecuterContext;
                         await yieldAfter.AfterYieldAsync();
                         switch (yieldAfter.Result)
                         {
