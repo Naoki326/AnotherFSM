@@ -11,6 +11,8 @@ namespace StateMachine
 
         public FSMNodeContext Context { set { } }
 
+        public IExcecuterContext SolveContext { set { } }
+
         public Task AfterYieldAsync()
         {
             return Task.CompletedTask;

@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Reactive.Linq;
 
 namespace StateMachine
 {
@@ -7,9 +8,6 @@ namespace StateMachine
     [DebuggerNonUserCode]
     public partial class FSMNodeContext
     {
-        // 若遇到集合中的数字，流程自动暂停
-        public HashSet<long> PauseAnchors { get; set; }
-
         public FSMNodeContext()
         {
             TokenSource = new CancellationTokenSource();
@@ -23,6 +21,12 @@ namespace StateMachine
             this.IsPaused = p.IsPaused;
             this.EnumResult = p.EnumResult;
             this.Data = p.Data;
+        }
+
+
+        ~FSMNodeContext()
+        {
+            TokenSource?.Dispose();
         }
 
         internal void SetTokenSource(CancellationTokenSource tokenSource)

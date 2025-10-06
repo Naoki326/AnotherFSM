@@ -1,4 +1,7 @@
 ﻿using StateMachine.Interface;
+using System.Linq;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
 
 namespace StateMachine
 {
@@ -7,6 +10,8 @@ namespace StateMachine
         public string StartNode { get; set; } = "";
 
         public string EndEvent { get; set; } = "";
+
+        public FSMNodeContext GroupContext { get; set; }
     }
 
     [FSMNode("Parallel", "并行流程包装节点", [1, 3, 5], ["NextEvent", "ErrorEvent", "CancelEvent"], Id = 4)]
@@ -17,8 +22,6 @@ namespace StateMachine
 
         [FSMProperty("Parrllel FSM", true, 3)]
         public List<FSMDescribe> FSMs { get; set; } = [];
-
-        public FSMNodeContext GroupContext { get; set; }
 
         public override void InitBeforeStart()
         {
@@ -55,21 +58,24 @@ namespace StateMachine
             }
             else
             {
-                foreach (var executor in executors)
+                bool isLongRunning = false;
+                if (SynchronizationContext.Current is FSMSyncContext)
                 {
-                    if (GroupContext is not null)
+                    isLongRunning = true;
+                }
+                foreach (var (executor, i) in executors.Select((p, i)=>(p, i)))
+                {
+                    if (FSMs[i].GroupContext is not null)
                     {
-                        await executor.RestartAsync(GroupContext, false);
+                        await executor.RestartAsync(FSMs[i].GroupContext, isLongRunning);
                     }
                     else
                     {
-                        await executor.RestartAsync(Context, false);
+                        await executor.RestartAsync(Context, isLongRunning);
                     }
-                    await executor.RestartAsync(false);
                 }
             }
             yield return Yield.None;
-            executors.ForEach(p => p.FSMStateChanged += Executor_FSMStateChanged);
             using (Context.TokenSource.Token
                     .Register(() =>
                     {
@@ -83,6 +89,7 @@ namespace StateMachine
             {
                 try
                 {
+                    executors.ForEach(p => p.FSMStateChanged += Executor_FSMStateChanged);
                     await Task.WhenAny(Task.WhenAll(executors.Select(p => p.ExecutorTask)), Task.Delay(-1, Context.Token));
                     if (Context.IsPaused)
                     {
@@ -135,8 +142,6 @@ namespace StateMachine
         [FSMProperty("Parrllel FSM", true, 3)]
         public List<FSMDescribe> FSMs { get; set; } = [];
 
-        public FSMNodeContext GroupContext { get; set; }
-
         public override void InitBeforeStart()
         {
             executors.ForEach(p => p.Dispose());
@@ -172,20 +177,24 @@ namespace StateMachine
             }
             else
             {
-                foreach (var executor in executors)
+                bool isLongRunning = false;
+                if (SynchronizationContext.Current is FSMSyncContext)
                 {
-                    if (GroupContext is not null)
+                    isLongRunning = true;
+                }
+                foreach (var (executor, i) in executors.Select((p, i) => (p, i)))
+                {
+                    if (FSMs[i].GroupContext is not null)
                     {
-                        await executor.RestartAsync(GroupContext, false);
+                        await executor.RestartAsync(FSMs[i].GroupContext, isLongRunning);
                     }
                     else
                     {
-                        await executor.RestartAsync(Context, false);
+                        await executor.RestartAsync(Context, isLongRunning);
                     }
                 }
             }
             yield return Yield.None;
-            executors.ForEach(p => p.FSMStateChanged += Executor_FSMStateChanged);
             using (Context.TokenSource.Token
                     .Register(() =>
                     {
@@ -194,11 +203,11 @@ namespace StateMachine
                             if (!executor.ExecutorTask.IsCompleted)
                                 executor.Pause();
                         }
-                    })
-                    )
+                    }))
             {
                 try
                 {
+                    executors.ForEach(p => p.FSMStateChanged += Executor_FSMStateChanged);
                     await Task.WhenAny(Task.WhenAll(executors.Select(p => p.ExecutorTask)), Task.Delay(-1, Context.Token));
                     if (Context.IsPaused)
                     {

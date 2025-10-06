@@ -11,6 +11,8 @@ namespace StateMachine
 
         public FSMNodeContext Context { set { } }
 
+        public IExcecuterContext SolveContext { set { } }
+
         private Func<Task> retryTask;
 
         public YieldRetryIfFailed(Func<Task> retryTask)

@@ -57,13 +57,18 @@ namespace StateMachine
             }
             else
             {
-                if(GroupContext is not null)
+                bool isLongRunning = false;
+                if (SynchronizationContext.Current is FSMSyncContext)
                 {
-                    await executor.RestartAsync(GroupContext, false);
+                    isLongRunning = true;
+                }
+                if (GroupContext is not null)
+                {
+                    await executor.RestartAsync(GroupContext, isLongRunning);
                 }
                 else
                 {
-                    await executor.RestartAsync(Context, false);
+                    await executor.RestartAsync(Context, isLongRunning);
                 }
             }
             yield return Yield.None;
@@ -171,13 +176,18 @@ namespace StateMachine
             }
             else
             {
+                bool isLongRunning = false;
+                if(SynchronizationContext.Current is FSMSyncContext)
+                {
+                    isLongRunning = true;
+                }
                 if (GroupContext is not null)
                 {
-                    await executor.RestartAsync(GroupContext, false);
+                    await executor.RestartAsync(GroupContext, isLongRunning);
                 }
                 else
                 {
-                    await executor.RestartAsync(Context, false);
+                    await executor.RestartAsync(Context, isLongRunning);
                 }
             }
             yield return Yield.None;

@@ -213,13 +213,13 @@
 
         public IFSMBuilderStepConstruct ConfigureScript(string script)
         {
-            engine.CreateStateMachine(script);
+            engine.Transform(script);
             return this;
         }
 
         public IFSMBuilderStepConstruct ConfigureScriptFile(string fileName)
         {
-            engine.CreateStateMachineByFile(fileName);
+            engine.TransformByFile(fileName);
             return this;
         }
 

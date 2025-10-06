@@ -10,5 +10,6 @@
 
         string CurrentNodeName { get; }
 
+        HashSet<long> PauseAnchors { get; }
     }
 }

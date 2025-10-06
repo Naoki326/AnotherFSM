@@ -49,7 +49,7 @@ namespace StateMachineDemoShared.Pages
             def Check(Accumulate)
             {
             	1->NextEvent;
-            	4->BreakEvent;
+            	3->BreakEvent;
             	Pos:(168.75, 12);
                 Color: "light-blue";
                 Type: Accumulate;
@@ -278,7 +278,7 @@ namespace StateMachineDemoShared.Pages
             CreateExecutor();
             if (executor is not null)
             {
-                await executor.RestartAsync();
+                await executor.RestartAsync(true);
             }
         }
 

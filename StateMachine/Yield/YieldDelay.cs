@@ -10,6 +10,8 @@ namespace StateMachine
         private CancellationToken token = default;
         public FSMNodeContext Context { set => token = value.Token; }
 
+        public IExcecuterContext SolveContext { set { } }
+
         public bool IsMoveNext => true;
 
         public async Task AfterYieldAsync()

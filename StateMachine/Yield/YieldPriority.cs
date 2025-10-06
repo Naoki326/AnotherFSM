@@ -11,7 +11,9 @@ namespace StateMachine
         public bool IsMoveNext => true;
 
         private HashSet<long> contextPauseAnchors;
-        public FSMNodeContext Context { set { contextPauseAnchors = value.PauseAnchors; } }
+        public FSMNodeContext Context { set {  } }
+
+        public IExcecuterContext SolveContext { set { contextPauseAnchors = value.PauseAnchors; } }
 
         public Task AfterYieldAsync()
         {

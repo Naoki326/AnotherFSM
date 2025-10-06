@@ -2,7 +2,7 @@
 
 namespace StateMachine
 {
-    [FSMNode("Accumulate", "累积计数节点", [1, 4], ["NextEvent", "BreakEvent"], Id = 5)]
+    [FSMNode("Accumulate", "累积计数节点", [1, 3], ["NextEvent", "BreakEvent"], Id = 5)]
     public class AccumulateNode : AsyncEnumFSMNode
     {
         public AccumulateNode()

@@ -19,9 +19,13 @@ namespace StateMachine
 
         public string Key { get; set; }
 
-        public FSMNodeAttribute(string key, int[] indexes, string[] events)
+        public FSMNodeAttribute(string key)
         {
             Key = key;
+        }
+
+        public FSMNodeAttribute(string key, int[] indexes, string[] events) : this(key)
+        {
             Indexes = indexes;
             EventDescriptions = events;
         }

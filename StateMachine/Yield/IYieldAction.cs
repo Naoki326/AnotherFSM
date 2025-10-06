@@ -17,6 +17,8 @@
 
         FSMNodeContext Context { set; }
 
+        IExcecuterContext SolveContext { set; }
+
         // 当前Yield之后调用
         Task AfterYieldAsync();
 
