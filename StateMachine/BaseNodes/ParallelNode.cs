@@ -11,7 +11,16 @@ namespace StateMachine
 
         public string EndEvent { get; set; } = "";
 
-        public FSMNodeContext GroupContext { get; set; }
+        public object ContextData { get; set; }
+    }
+
+    public class FSMDescribe<T>
+    {
+        public string StartNode { get; set; } = "";
+
+        public string EndEvent { get; set; } = "";
+
+        public T ContextData { get; set; }
     }
 
     [FSMNode("Parallel", "并行流程包装节点", [1, 3, 5], ["NextEvent", "ErrorEvent", "CancelEvent"], Id = 4)]
@@ -66,9 +75,9 @@ namespace StateMachine
                 foreach (var (executor, i) in executors.Select((p, i)=>(p, i)))
                 {
                     executor.SolverContext = this.ExecuterContext;
-                    if (FSMs[i].GroupContext is not null)
+                    if (FSMs[i].ContextData is not null)
                     {
-                        await executor.RestartAsync(FSMs[i].GroupContext, isLongRunning);
+                        await executor.RestartAsync(FSMs[i].ContextData, isLongRunning);
                     }
                     else
                     {
@@ -134,14 +143,14 @@ namespace StateMachine
         }
     }
 
-    [FSMNode("Parallel", "并行流程包装节点", [1, 3, 5], ["NextEvent", "ErrorEvent", "CancelEvent"], Id = 4)]
+    [FSMNode("ParallelT", "并行流程包装节点", [1, 3, 5], ["NextEvent", "ErrorEvent", "CancelEvent"], Id = 4)]
     public class ParallelNode<T> : BaseGroupNode<T> where T : class
     {
 
         private List<FSMExecutor> executors = [];
 
         [FSMProperty("Parrllel FSM", true, 3)]
-        public List<FSMDescribe> FSMs { get; set; } = [];
+        public List<FSMDescribe<T>> FSMs { get; set; } = [];
 
         public override void InitBeforeStart()
         {
@@ -160,7 +169,7 @@ namespace StateMachine
         {
         }
 
-        public ParallelNode(List<FSMDescribe> fsms)
+        public ParallelNode(List<FSMDescribe<T>> fsms)
         {
             this.FSMs = fsms;
         }
@@ -186,9 +195,128 @@ namespace StateMachine
                 foreach (var (executor, i) in executors.Select((p, i) => (p, i)))
                 {
                     executor.SolverContext = this.ExecuterContext;
-                    if (FSMs[i].GroupContext is not null)
+                    if (FSMs[i].ContextData is not null)
                     {
-                        await executor.RestartAsync(FSMs[i].GroupContext, isLongRunning);
+                        await executor.RestartAsync(FSMs[i].ContextData, isLongRunning);
+                    }
+                    else
+                    {
+                        await executor.RestartAsync(Context, isLongRunning);
+                    }
+                }
+            }
+            yield return Yield.None;
+            using (Context.TokenSource.Token
+                    .Register(() =>
+                    {
+                        foreach (var executor in executors)
+                        {
+                            if (!executor.ExecutorTask.IsCompleted)
+                                executor.Pause();
+                        }
+                    }))
+            {
+                try
+                {
+                    executors.ForEach(p => p.FSMStateChanged += Executor_FSMStateChanged);
+                    await Task.WhenAny(Task.WhenAll(executors.Select(p => p.ExecutorTask)), Task.Delay(-1, Context.Token));
+                    if (Context.IsPaused)
+                    {
+                        await Task.WhenAny(Task.WhenAll(executors.Select(p => p.CurrentNodeTask)), Task.Delay(-1, Context.Token));
+                    }
+                }
+                catch (OperationCanceledException)
+                { }
+                finally
+                {
+                    executors.ForEach(p => p.FSMStateChanged -= Executor_FSMStateChanged);
+                }
+            }
+            if (Context.IsPaused)
+            {
+                yield return Yield.ToNodeStart;
+            }
+            yield return Yield.None;
+            if (executors.Any(p => p.State == FSMState.Stoped))
+            {
+                PublishEvent(FSMEnum.Cancel);
+            }
+            else
+            {
+                PublishEvent(FSMEnum.Next);
+            }
+        }
+
+        private void Executor_FSMStateChanged(FSMExecutor executor, FSMState state1, FSMState state2)
+        {
+            if (state1 == FSMState.Paused)
+            {
+                this.Pause();
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            executors.ForEach(p => p.Dispose());
+            base.Dispose(disposing);
+        }
+    }
+
+    [FSMNode("ParallelTU", "并行流程包装节点", [1, 3, 5], ["NextEvent", "ErrorEvent", "CancelEvent"], Id = 4)]
+    public class ParallelNode<T, U> : BaseGroupNode<T> where T : class where U : class
+    {
+
+        private List<FSMExecutor> executors = [];
+
+        [FSMProperty("Parrllel FSM", true, 3)]
+        public List<FSMDescribe<U>> FSMs { get; set; } = [];
+
+        public override void InitBeforeStart()
+        {
+            executors.ForEach(p => p.Dispose());
+            executors.Clear();
+            foreach (var fsm in FSMs)
+            {
+                var executor = new FSMExecutor(Engine[fsm.StartNode], Engine.GetEvent(fsm.EndEvent));
+                executors.Add(executor);
+                executor.NodeStateChanged += OnNodeStateChanged;
+                executor.NodeExitChanged += OnNodeExitChanged;
+            }
+        }
+
+        public ParallelNode()
+        {
+        }
+
+        public ParallelNode(List<FSMDescribe<U>> fsms)
+        {
+            this.FSMs = fsms;
+        }
+
+        protected override async IAsyncEnumerable<object> ExecuteEnumerable()
+        {
+            yield return Yield.None;
+            if (executors.Any(p => p.State == FSMState.Paused))
+            {
+                foreach (var executor in executors)
+                {
+                    if (!executor.ExecutorTask.IsCompleted)
+                        executor.Continue();
+                }
+            }
+            else
+            {
+                bool isLongRunning = false;
+                if (SynchronizationContext.Current is FSMSyncContext)
+                {
+                    isLongRunning = true;
+                }
+                foreach (var (executor, i) in executors.Select((p, i) => (p, i)))
+                {
+                    executor.SolverContext = this.ExecuterContext;
+                    if (FSMs[i].ContextData is not null)
+                    {
+                        await executor.RestartAsync(FSMs[i].ContextData, isLongRunning);
                     }
                     else
                     {

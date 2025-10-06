@@ -78,8 +78,7 @@ namespace StateMachine
             //预定义的Node
             try
             {
-                proc = Activator.CreateInstance<T>();
-                //proc = IoC.Get<IFSMNode>(typeof(T).Name);
+                proc = nodeFactory.CreateNode(typeof(T).Name);
             }
             catch (Exception e)
             { throw new ScriptException("Node " + typeof(T) + " 定义出错, " + "该Node未注入IoC中！", e); }
@@ -97,8 +96,7 @@ namespace StateMachine
             //预定义的Node
             try
             {
-                //proc = IoC.Get<IFSMNode>(typeof(T).Name);
-                proc = Activator.CreateInstance<T>();
+                proc = nodeFactory.CreateNode(typeof(T).Name);
             }
             catch (Exception)
             { return false; }

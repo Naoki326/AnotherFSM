@@ -313,7 +313,7 @@ namespace StateMachine
         // 限制上下文的类型
         public new FSMNodeContext<T> Context
         {
-            get { return (FSMNodeContext<T>)base.Context; }
+            get { return base.Context.As<T>(); }
             set { base.Context = value; }
         }
     }

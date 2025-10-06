@@ -23,7 +23,6 @@ namespace StateMachine
             this.Data = p.Data;
         }
 
-
         ~FSMNodeContext()
         {
             TokenSource?.Dispose();
@@ -60,24 +59,19 @@ namespace StateMachine
         {
             return TokenSource.Token.IsCancellationRequested;
         }
+
         public bool IsPaused { get; private set; } = false;
-
-
-
 
         public FSMEvent TriggerEvent { get; set; } = default!;
 
-
-
-
         public object Data { get; set; } = default!;
-
-
-
-
         public int EnumResult { get; set; }
 
 
+        public FSMNodeContext<U> As<U>() where U : class
+        {
+            return new FSMNodeContext<U>(this);
+        }
     }
 
     [DebuggerNonUserCode]
@@ -87,10 +81,7 @@ namespace StateMachine
 
         public FSMNodeContext(FSMNodeContext p) : base(p) { }
 
-        public FSMNodeContext<U> To<U>() where U : class
-        {
-            return new FSMNodeContext<U>(this);
-        }
+
         public new T Data
         {
             get

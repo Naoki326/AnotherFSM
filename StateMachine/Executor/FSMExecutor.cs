@@ -446,11 +446,11 @@ namespace StateMachine
             return true;
         }
 
-        public async Task<bool> RestartAsync(FSMNodeContext context, bool isLongRunning = false)
+        public async Task<bool> RestartAsync<T>(T data, bool isLongRunning = false) where T : class
         {
             if (!await WaitStopAsync())
             { return false; }
-            start.Context = context;
+            start.Context = new FSMNodeContext<T>() { Data = data };
             return await RestartAsync(isLongRunning);
         }
 
@@ -475,11 +475,11 @@ namespace StateMachine
             return true;
         }
 
-        public async Task<bool> RestartAsync(IFSMNode node, FSMNodeContext context, bool isLongRunning = false)
+        public async Task<bool> RestartAsync<T>(IFSMNode node, T data, bool isLongRunning = false) where T : class
         {
             if (!await WaitStopAsync())
             { return false; }
-            node.Context = context;
+            node.Context = new FSMNodeContext<T>() { Data = data};
             return await RestartAsync(node, isLongRunning);
         }
 
