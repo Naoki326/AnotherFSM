@@ -65,6 +65,7 @@ namespace StateMachine
                 }
                 foreach (var (executor, i) in executors.Select((p, i)=>(p, i)))
                 {
+                    executor.SolverContext = this.ExecuterContext;
                     if (FSMs[i].GroupContext is not null)
                     {
                         await executor.RestartAsync(FSMs[i].GroupContext, isLongRunning);
@@ -184,6 +185,7 @@ namespace StateMachine
                 }
                 foreach (var (executor, i) in executors.Select((p, i) => (p, i)))
                 {
+                    executor.SolverContext = this.ExecuterContext;
                     if (FSMs[i].GroupContext is not null)
                     {
                         await executor.RestartAsync(FSMs[i].GroupContext, isLongRunning);

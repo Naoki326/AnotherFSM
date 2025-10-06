@@ -12,7 +12,7 @@ namespace StateMachine
 
         public FSMNodeContext Context { set { } }
 
-        public IExcecuterContext SolveContext { set { } }
+        public IExecuterContext SolveContext { set { } }
 
         public Task AfterYieldAsync()
         {

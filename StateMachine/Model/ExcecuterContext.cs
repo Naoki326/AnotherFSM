@@ -2,7 +2,7 @@
 
 namespace StateMachine
 {
-    public class ExcecuterContext : IExcecuterContext
+    public class ExecuterContext : IExecuterContext
     {
         public int Index { get; set; } = 0;
 
@@ -12,8 +12,8 @@ namespace StateMachine
 
         public string CurrentNodeName { get; set; } = "";
 
-        string IExcecuterContext.LastNodeName => LastNodeName;
-        string IExcecuterContext.CurrentNodeName => CurrentNodeName;
+        string IExecuterContext.LastNodeName => LastNodeName;
+        string IExecuterContext.CurrentNodeName => CurrentNodeName;
 
         private HashSet<long> pauseAnchors = [];
         public HashSet<long> PauseAnchors

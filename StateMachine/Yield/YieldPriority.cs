@@ -13,7 +13,7 @@ namespace StateMachine
         private HashSet<long> contextPauseAnchors;
         public FSMNodeContext Context { set {  } }
 
-        public IExcecuterContext SolveContext { set { contextPauseAnchors = value.PauseAnchors; } }
+        public IExecuterContext SolveContext { set { contextPauseAnchors = value.PauseAnchors; } }
 
         public Task AfterYieldAsync()
         {

@@ -76,64 +76,66 @@ namespace StateMachine
             }
         }
 
-        private ExcecuterContext SolverContext { get; set; } = new ExcecuterContext();
+
+        private ExecuterContext solverContext = new ExecuterContext();
+        internal IExecuterContext SolverContext { get => solverContext; set { solverContext = value; } }
 
         public void PauseByAnchor(Enum eAnchor)
         {
-            SolverContext.PauseAnchors.Add(Convert.ToInt64(eAnchor));
-            SolverContext.RaisePauseAnchorsChnaged(SolverContext.PauseAnchors);
+            solverContext.PauseAnchors.Add(Convert.ToInt64(eAnchor));
+            solverContext.RaisePauseAnchorsChnaged(solverContext.PauseAnchors);
         }
 
         public void PauseByAnchor(long lAnchor)
         {
-            SolverContext.PauseAnchors.Add(lAnchor);
-            SolverContext.RaisePauseAnchorsChnaged(SolverContext.PauseAnchors);
+            solverContext.PauseAnchors.Add(lAnchor);
+            solverContext.RaisePauseAnchorsChnaged(solverContext.PauseAnchors);
         }
 
         public void PauseByAnchors(IEnumerable<Enum> eAnchors)
         {
             foreach (var eAnchor in eAnchors)
-            { SolverContext.PauseAnchors.Add(Convert.ToInt64(eAnchor)); }
-            SolverContext.RaisePauseAnchorsChnaged(SolverContext.PauseAnchors);
+            { solverContext.PauseAnchors.Add(Convert.ToInt64(eAnchor)); }
+            solverContext.RaisePauseAnchorsChnaged(solverContext.PauseAnchors);
         }
 
         public void PauseByAnchors(IEnumerable<long> lAnchors)
         {
             foreach (var lAnchor in lAnchors)
-            { SolverContext.PauseAnchors.Add(lAnchor); }
-            SolverContext.RaisePauseAnchorsChnaged(SolverContext.PauseAnchors);
+            { solverContext.PauseAnchors.Add(lAnchor); }
+            solverContext.RaisePauseAnchorsChnaged(solverContext.PauseAnchors);
         }
 
         public void RemoveAncho(Enum eAnchor)
         {
-            SolverContext.PauseAnchors.Remove(Convert.ToInt64(eAnchor));
-            SolverContext.RaisePauseAnchorsChnaged(SolverContext.PauseAnchors);
+            solverContext.PauseAnchors.Remove(Convert.ToInt64(eAnchor));
+            solverContext.RaisePauseAnchorsChnaged(solverContext.PauseAnchors);
         }
 
         public void RemoveAnchor(long lAnchor)
         {
-            SolverContext.PauseAnchors.Remove(lAnchor);
-            SolverContext.RaisePauseAnchorsChnaged(SolverContext.PauseAnchors);
+            solverContext.PauseAnchors.Remove(lAnchor);
+            solverContext.RaisePauseAnchorsChnaged(solverContext.PauseAnchors);
         }
 
         public void RemoveAnchors(IEnumerable<Enum> eAnchors)
         {
             foreach (var eAnchor in eAnchors)
-            { SolverContext.PauseAnchors.Remove(Convert.ToInt64(eAnchor)); }
-            SolverContext.RaisePauseAnchorsChnaged(SolverContext.PauseAnchors);
+            { solverContext.PauseAnchors.Remove(Convert.ToInt64(eAnchor)); }
+            solverContext.RaisePauseAnchorsChnaged(solverContext.PauseAnchors);
         }
 
         public void RemoveAnchors(IEnumerable<long> lAnchors)
         {
             foreach (var lAnchor in lAnchors)
-            { SolverContext.PauseAnchors.Remove(lAnchor); }
-            SolverContext.RaisePauseAnchorsChnaged(SolverContext.PauseAnchors);
+            { solverContext.PauseAnchors.Remove(lAnchor); }
+            solverContext.RaisePauseAnchorsChnaged(solverContext.PauseAnchors);
         }
 
         public void ResetAnchors()
         {
-            SolverContext.PauseAnchors.Clear();
-            SolverContext.RaisePauseAnchorsChnaged(SolverContext.PauseAnchors);
+            solverContext.PauseAnchors.Clear();
+            solverContext.RaisePauseAnchorsChnaged(solverContext.PauseAnchors);
         }
 
         // 该接口可以改变传入的事件，可以在界面上暂停
@@ -148,7 +150,7 @@ namespace StateMachine
                 .FromEvent((v) => currentNode.RaisePause += v, (v) => currentNode.RaisePause -= v)
                 .Subscribe(_ => Pause()))
             {
-                currentNode.ExecuterContext = SolverContext;
+                currentNode.ExecuterContext = solverContext;
                 State = FSMState.Running;
 
                 try
@@ -192,7 +194,7 @@ namespace StateMachine
                 bool isExit = false;
 
                 //这里是第一个启动节点
-                SolverContext.CurrentNodeName = start.Name;
+                solverContext.CurrentNodeName = start.Name;
                 TrackStart(threadId);
                 isExit = await RunCurrentNodeAsync(true, threadId);
                 TrackStartEnd(isExit, threadId);
@@ -223,8 +225,8 @@ namespace StateMachine
                                     currentNode.Context.TriggerEvent = @event;
                                     var nextNode = currentNode.TargetState(@event);
                                     nextNode.Context = currentNode.Context;
-                                    SolverContext.LastNodeName = currentNode.Name;
-                                    SolverContext.CurrentNodeName = nextNode.Name;
+                                    solverContext.LastNodeName = currentNode.Name;
+                                    solverContext.CurrentNodeName = nextNode.Name;
 
                                     TrackStateEnter(threadId, @event, nextNode);
                                     currentNode = nextNode;

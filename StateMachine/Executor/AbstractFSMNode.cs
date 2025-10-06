@@ -147,11 +147,11 @@ namespace StateMachine
         [FSMProperty("NamePrev", false, true, -1)]
         public string NamePrefix { get; set; } = "";
 
-        IExcecuterContext IFSMNode.ExecuterContext { get; set; } = default!;
+        IExecuterContext IFSMNode.ExecuterContext { get; set; } = default!;
         /// <summary>
         /// 当前FSMExecute对象的上下文
         /// </summary>
-        public IExcecuterContext ExecuterContext => (this as IFSMNode).ExecuterContext;
+        public IExecuterContext ExecuterContext => (this as IFSMNode).ExecuterContext;
 
         private Action<IFSMNode> continueWith;
         /// <summary>

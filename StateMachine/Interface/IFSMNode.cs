@@ -79,7 +79,7 @@
         FSMNodeContext Context { get; set; }
 
         //当前流程的数据结构
-        IExcecuterContext ExecuterContext { get; set; }
+        IExecuterContext ExecuterContext { get; set; }
 
         //流程执行前，所有节点的初始化
         void InitBeforeStart();

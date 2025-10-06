@@ -11,7 +11,7 @@ namespace StateMachine
 
         public FSMNodeContext Context { set { } }
 
-        public IExcecuterContext SolveContext { set { } }
+        public IExecuterContext SolveContext { set { } }
 
         private Func<Task> doTask;
 

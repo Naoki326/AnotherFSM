@@ -11,7 +11,7 @@ namespace StateMachine
         private readonly int eventIndex;
         public int EventIndex => eventIndex;
 
-        public IExcecuterContext SolveContext { set { } }
+        public IExecuterContext SolveContext { set { } }
 
         public YieldEvent(int eventIndex)
         {

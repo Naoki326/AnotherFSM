@@ -15,7 +15,7 @@ namespace StateMachine
 
         public FSMNodeContext Context { set; get; }
 
-        public IExcecuterContext SolveContext { set { } }
+        public IExecuterContext SolveContext { set { } }
 
         public YieldRestoreIfPaused(Func<Task> restore)
         {

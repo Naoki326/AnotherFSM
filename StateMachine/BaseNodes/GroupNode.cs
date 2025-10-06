@@ -62,6 +62,7 @@ namespace StateMachine
                 {
                     isLongRunning = true;
                 }
+                executor.SolverContext = this.ExecuterContext;
                 if (GroupContext is not null)
                 {
                     await executor.RestartAsync(GroupContext, isLongRunning);
@@ -181,6 +182,7 @@ namespace StateMachine
                 {
                     isLongRunning = true;
                 }
+                executor.SolverContext = this.ExecuterContext;
                 if (GroupContext is not null)
                 {
                     await executor.RestartAsync(GroupContext, isLongRunning);

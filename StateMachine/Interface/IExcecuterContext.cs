@@ -1,6 +1,6 @@
 ﻿namespace StateMachine
 {
-    public interface IExcecuterContext
+    public interface IExecuterContext
     {
         int Index { get; set; }
 
