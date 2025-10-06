@@ -13,6 +13,7 @@
             }
             catch (OperationCanceledException)
             { }
+            yield return Yield.Priority(1);
             yield return Yield.None;
             PublishEvent(FSMEnum.Next);
         }

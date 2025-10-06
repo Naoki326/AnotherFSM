@@ -77,65 +77,56 @@ namespace StateMachine
         }
 
 
-        private ExecuterContext solverContext = new ExecuterContext();
+        private IExecuterContext solverContext = new ExecuterContext();
         internal IExecuterContext SolverContext { get => solverContext; set { solverContext = value; } }
 
         public void PauseByAnchor(Enum eAnchor)
         {
             solverContext.PauseAnchors.Add(Convert.ToInt64(eAnchor));
-            solverContext.RaisePauseAnchorsChnaged(solverContext.PauseAnchors);
         }
 
         public void PauseByAnchor(long lAnchor)
         {
             solverContext.PauseAnchors.Add(lAnchor);
-            solverContext.RaisePauseAnchorsChnaged(solverContext.PauseAnchors);
         }
 
         public void PauseByAnchors(IEnumerable<Enum> eAnchors)
         {
             foreach (var eAnchor in eAnchors)
             { solverContext.PauseAnchors.Add(Convert.ToInt64(eAnchor)); }
-            solverContext.RaisePauseAnchorsChnaged(solverContext.PauseAnchors);
         }
 
         public void PauseByAnchors(IEnumerable<long> lAnchors)
         {
             foreach (var lAnchor in lAnchors)
             { solverContext.PauseAnchors.Add(lAnchor); }
-            solverContext.RaisePauseAnchorsChnaged(solverContext.PauseAnchors);
         }
 
         public void RemoveAncho(Enum eAnchor)
         {
             solverContext.PauseAnchors.Remove(Convert.ToInt64(eAnchor));
-            solverContext.RaisePauseAnchorsChnaged(solverContext.PauseAnchors);
         }
 
         public void RemoveAnchor(long lAnchor)
         {
             solverContext.PauseAnchors.Remove(lAnchor);
-            solverContext.RaisePauseAnchorsChnaged(solverContext.PauseAnchors);
         }
 
         public void RemoveAnchors(IEnumerable<Enum> eAnchors)
         {
             foreach (var eAnchor in eAnchors)
             { solverContext.PauseAnchors.Remove(Convert.ToInt64(eAnchor)); }
-            solverContext.RaisePauseAnchorsChnaged(solverContext.PauseAnchors);
         }
 
         public void RemoveAnchors(IEnumerable<long> lAnchors)
         {
             foreach (var lAnchor in lAnchors)
             { solverContext.PauseAnchors.Remove(lAnchor); }
-            solverContext.RaisePauseAnchorsChnaged(solverContext.PauseAnchors);
         }
 
         public void ResetAnchors()
         {
             solverContext.PauseAnchors.Clear();
-            solverContext.RaisePauseAnchorsChnaged(solverContext.PauseAnchors);
         }
 
         // 该接口可以改变传入的事件，可以在界面上暂停

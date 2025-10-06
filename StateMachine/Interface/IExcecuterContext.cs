@@ -6,9 +6,9 @@
 
         bool Condition { get; set; }
 
-        string LastNodeName { get; }
+        string LastNodeName { get; internal set; }
 
-        string CurrentNodeName { get; }
+        string CurrentNodeName { get; internal set; }
 
         HashSet<long> PauseAnchors { get; }
     }
