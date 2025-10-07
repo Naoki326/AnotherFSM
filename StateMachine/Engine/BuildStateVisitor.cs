@@ -160,7 +160,6 @@ namespace StateMachine
             node = CreateNode(state_type);
             node.Name = state_name;
             node.NamePrefix = nameprev;
-            node.ClassType = state_type;
 
             NodeDict.Add(state_name, node);
             foreach (var branch in context.state_branch())
@@ -185,7 +184,6 @@ namespace StateMachine
             node = CreateNode(state_type);
             node.Name = state_name;
             node.NamePrefix = nameprev;
-            node.ClassType = state_type;
 
             NodeDict.Add(state_name, node);
             foreach (var branch in context.state_branch())
@@ -206,6 +204,7 @@ namespace StateMachine
                     try
                     {
                         proc = nodeFactory.CreateNode(state_type);
+                        proc.ClassType = state_type;
                     }
                     catch (Exception)
                     { throw new ScriptException("State " + state_type + " 定义出错, " + "该State未注入IoC中！"); }

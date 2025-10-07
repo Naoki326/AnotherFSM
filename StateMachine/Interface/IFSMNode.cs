@@ -68,6 +68,7 @@
 
     public interface IFSMNode : ITransitionContainer, IVisualNode, IDisposable
     {
+        internal void SetEngine(FSMEngine e);
 
         //脚本中的命名空间
         string NamePrefix { get; set; }

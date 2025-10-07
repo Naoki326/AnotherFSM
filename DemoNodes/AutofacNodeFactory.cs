@@ -41,6 +41,13 @@ namespace DemoNodes
             throw new InvalidOperationException($"No IFSMNode service with key '{name}' found.");
         }
 
+        public string GetNodeName(Type t)
+        {
+            var registration = container.ComponentRegistry.Registrations.FirstOrDefault(r =>
+                r.Services.OfType<KeyedService>().Any(s => s.ServiceType == t));
+            return (string)registration.Services.OfType<KeyedService>().First().ServiceKey;
+        }
+
         public IEnumerable<Type> GetNodeTypes()
         {
             return container.ComponentRegistry.Registrations

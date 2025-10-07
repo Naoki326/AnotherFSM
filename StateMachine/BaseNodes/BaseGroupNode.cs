@@ -6,14 +6,6 @@ namespace StateMachine
     public abstract class BaseGroupNode : AsyncEnumFSMNode
     {
 
-        internal void SetEngine(FSMEngine e)
-        {
-            Engine = e;
-        }
-
-        internal FSMEngine? Engine { get; private set; }
-
-
         internal event EventHandler<string>? NodeStateChanged;
         protected void OnNodeStateChanged(object sender, string name)
         {
@@ -31,14 +23,6 @@ namespace StateMachine
     [DebuggerNonUserCode]
     public abstract class BaseGroupNode<T> : AsyncEnumFSMNode<T> where T : class
     {
-
-        internal void SetEngine(FSMEngine e)
-        {
-            Engine = e;
-        }
-
-        internal FSMEngine? Engine { get; private set; }
-
 
         internal event EventHandler<string>? NodeStateChanged;
         protected void OnNodeStateChanged(object sender, string name)

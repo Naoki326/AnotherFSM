@@ -135,6 +135,7 @@
             {
                 engine.ConnectNode(connectionName, fromNode, toNode);
             }
+            engine.HandleGroupNode();
         }
     }
 
@@ -207,7 +208,11 @@
 
         public static IFSMBuilder Create() => new FSMEngineBuilder();
 
-        public static IFSMBuilderStepConstruct Create(FSMEngine e) => new FSMEngineBuilder() { engine = e };
+        public static IFSMBuilderStepConstruct Create(FSMEngine e)
+        {
+            e.UnhandleGroupNode();
+            return new FSMEngineBuilder() { engine = e };
+        }
 
         public static IFSMBuilderStepConstruct Create(IFSMNodeFactory f) => new FSMEngineBuilder().ConfigureNodeFactory(f);
 

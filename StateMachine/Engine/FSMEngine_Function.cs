@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using Antlr4.Runtime.Atn;
+using System.Reflection;
 
 namespace StateMachine
 {
@@ -32,6 +33,7 @@ namespace StateMachine
                     try
                     {
                         proc = nodeFactory.CreateNode(node_type);
+                        proc.ClassType = node_type;
                     }
                     catch (Exception)
                     { throw new ScriptException("Node " + node_type + " 定义出错, " + "该Node未注入IoC中！"); }
@@ -59,6 +61,7 @@ namespace StateMachine
                     try
                     {
                         proc = nodeFactory.CreateNode(node_type);
+                        proc.ClassType = node_type;
                     }
                     catch (Exception)
                     { return false; }
@@ -78,7 +81,9 @@ namespace StateMachine
             //预定义的Node
             try
             {
-                proc = nodeFactory.CreateNode(typeof(T).Name);
+                string node_type = nodeFactory.GetNodeName(typeof(T));
+                proc = nodeFactory.CreateNode(node_type);
+                proc.ClassType = node_type;
             }
             catch (Exception e)
             { throw new ScriptException("Node " + typeof(T) + " 定义出错, " + "该Node未注入IoC中！", e); }
@@ -96,7 +101,9 @@ namespace StateMachine
             //预定义的Node
             try
             {
-                proc = nodeFactory.CreateNode(typeof(T).Name);
+                string node_type = nodeFactory.GetNodeName(typeof(T));
+                proc = nodeFactory.CreateNode(node_type);
+                proc.ClassType = node_type;
             }
             catch (Exception)
             { return false; }

@@ -114,6 +114,14 @@ namespace StateMachine
 
     public abstract partial class AbstractFSMNode : IFSMNode
     {
+
+        void IFSMNode.SetEngine(FSMEngine e)
+        {
+            Engine = e;
+        }
+
+        internal FSMEngine? Engine { get; private set; }
+
         private Dictionary<int, FSMEvent> branchDict = [];
         void IFSMNode.SetBranchEvent(int index, FSMEvent @event)
         {

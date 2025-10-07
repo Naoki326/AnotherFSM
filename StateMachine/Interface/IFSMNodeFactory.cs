@@ -14,6 +14,8 @@ namespace StateMachine
         // 获取该key对应的节点类型
         Type GetNodeType(string name);
 
+        string GetNodeName(Type type);
+
         // 获取所有可用的节点类型
         IEnumerable<Type> GetNodeTypes();
     }
