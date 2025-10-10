@@ -25,7 +25,6 @@ namespace StateMachine
 
         ~FSMNodeContext()
         {
-            TokenSource?.Dispose();
         }
 
         internal void SetTokenSource(CancellationTokenSource tokenSource)
