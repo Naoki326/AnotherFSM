@@ -2,6 +2,16 @@
 {
     public static class Yield
     {
+        public static IYieldAction Delay(int sleepTime)
+        {
+            return new YieldDelay(sleepTime);
+        }
+
+        public static IYieldAction Delay(TimeSpan sleepTime)
+        {
+            return new YieldDelay(sleepTime);
+        }
+
         public static IYieldAction Priority(Enum p)
         {
             return new YieldPriority(p);
@@ -27,6 +37,12 @@
 
         private static IYieldAction error = new YieldEvent(FSMEnum.Error);
         public static IYieldAction Error => error;
+
+        private static IYieldAction failed = new YieldEvent(FSMEnum.Failed);
+        public static IYieldAction Failed => failed;
+
+        private static IYieldAction _break = new YieldEvent(FSMEnum.Break);
+        public static IYieldAction Break => _break;
 
         public static IYieldAction Result(YieldEnum ye)
         {

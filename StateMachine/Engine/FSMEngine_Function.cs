@@ -115,12 +115,6 @@ namespace StateMachine
             return true;
         }
 
-        public void ChangeTransitionName(string lastNode, string nextNode, string originEventName, string newEventName)
-        {
-            DeleteTransition(originEventName, lastNode);
-            ConnectNode(newEventName, lastNode, nextNode);
-        }
-
         public void ChangeNodeName(string originName, string newName)
         {
             if (!TryGetNode(originName, out IFSMNode node))
@@ -170,6 +164,56 @@ namespace StateMachine
             }
             catch (Exception)
             { return false; }
+            return true;
+        }
+
+
+        public void ForceConnectNode(string eventName, string lastNode, string nextNode)
+        {
+            if (!eventDict.TryGetValue(eventName, out FSMEvent fseEvent))
+            {
+                fseEvent = new FSMEvent(eventName);
+                eventDict[eventName] = fseEvent;
+            }
+            if (!nodeDict.TryGetValue(lastNode, out IFSMNode last))
+            {
+                throw new ScriptException("Node " + lastNode + " 连线出错, " + "该Node未注入IoC中！");
+            }
+            if (!nodeDict.TryGetValue(nextNode, out IFSMNode next))
+            {
+                throw new ScriptException("Node " + nextNode + " 连线出错, " + "该Node未注入IoC中！");
+            }
+            if (last.HasTransition(fseEvent))
+            {
+                last.DeleteTransition(fseEvent);
+            }
+
+            last.AddTransition(fseEvent, next);
+            return;
+        }
+
+
+        public bool TryForceConnectNode(string eventName, string lastNode, string nextNode)
+        {
+            if (!eventDict.TryGetValue(eventName, out FSMEvent fseEvent))
+            {
+                fseEvent = new FSMEvent(eventName);
+                eventDict[eventName] = fseEvent;
+            }
+            if (!nodeDict.TryGetValue(lastNode, out IFSMNode last))
+            {
+                return false;
+            }
+            if (!nodeDict.TryGetValue(nextNode, out IFSMNode next))
+            {
+                return false;
+            }
+            if (last.HasTransition(fseEvent))
+            {
+                last.DeleteTransition(fseEvent);
+            }
+
+            last.AddTransition(fseEvent, next);
             return true;
         }
 

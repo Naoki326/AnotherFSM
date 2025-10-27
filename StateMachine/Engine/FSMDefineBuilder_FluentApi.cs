@@ -1,5 +1,48 @@
 ﻿namespace StateMachine
 {
+
+    public interface IFSMTransformBuilder
+    {
+        IFSMTransformBuilder AddTransform(string connectionName, string fromNode, string toNode);
+        IFSMTransformBuilder AddTransform(Enum connectionName, Enum fromNode, Enum toNode);
+
+        void Build();
+    }
+
+    internal class FSMTransformBuilder : IFSMTransformBuilder
+    {
+        private FSMEngine engine;
+        private FSMTransformBuilder(FSMEngine engine) { this.engine = engine; }
+        public static IFSMTransformBuilder Create(FSMEngine engine) => new FSMTransformBuilder(engine);
+
+        private List<(string connectionName, string fromNode, string toNode)> connections = [];
+        public IFSMTransformBuilder AddTransform(string connectionName, string fromNode, string toNode)
+        {
+            connections.Add((connectionName, fromNode, toNode));
+            return this;
+        }
+
+        public IFSMTransformBuilder AddTransform(Enum connectionName, Enum fromNode, Enum toNode)
+        {
+            connections.Add(
+                (Enum.GetName(connectionName.GetType(), connectionName),
+                    Enum.GetName(fromNode.GetType(), fromNode),
+                    Enum.GetName(toNode.GetType(), toNode))
+                );
+            return this;
+        }
+
+        public void Build()
+        {
+            foreach (var connection in connections)
+            {
+                engine.TryForceConnectNode(connection.connectionName, connection.fromNode, connection.toNode);
+            }
+            engine.HandleGroupNode();
+        }
+    }
+
+
     public interface IFSMDefineBuilder
     {
 
@@ -197,6 +240,7 @@
         IFSMBuilderStepConstruct ConfigureScript(string script);
         IFSMBuilderStepConstruct ConfigureScriptFile(string fileName);
         IFSMBuilderStepConstruct ConfigureFSMDefine(Action<IFSMDefineBuilder> definer);
+        IFSMBuilderStepConstruct TransformFSMDefine(Action<IFSMTransformBuilder> definer);
 
         //不使用Fluent api来构建状态机，而是使用其他api来构建
         FSMEngine Build();
@@ -242,6 +286,13 @@
         public IFSMBuilderStepConstruct ConfigureFSMDefine(Action<IFSMDefineBuilder> definer)
         {
             var builder = FSMDefineBuilder.Create(engine);
+            definer(builder);
+            return this;
+        }
+
+        public IFSMBuilderStepConstruct TransformFSMDefine(Action<IFSMTransformBuilder> definer)
+        {
+            var builder = FSMTransformBuilder.Create(engine);
             definer(builder);
             return this;
         }
