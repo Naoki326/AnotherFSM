@@ -98,7 +98,7 @@ namespace StateMachine
             $$"""
             def {{node.Name}}({{node.ClassType}})
             {
-            {{vNode.EventDescriptions?.Aggregate("", (p, q) => p + "\t" + q.Index + "->" + q.Description + ";\r\n") + "\t"}}Pos:({{node.PosX}}, {{node.PosY}});
+            {{branchDict.Aggregate("", (p, q) => p + "\t" + q.Key + "->" + q.Value.EventName + ";\r\n") + "\t"}}Pos:({{node.PosX}}, {{node.PosY}});
                 Color: "{{node.Color}}";
                 Type: {{node.ClassType}};
                 FlowID: {{node.FlowID}};

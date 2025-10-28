@@ -31,7 +31,12 @@
         {
             return new YieldEvent(eventIndex);
         }
-        
+
+        public static IYieldAction Event(Enum eventIndex)
+        {
+            return new YieldEvent(eventIndex);
+        }
+
         private static IYieldAction next = new YieldEvent(FSMEnum.Next);
         public static IYieldAction Next => next;
 
