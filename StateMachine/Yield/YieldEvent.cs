@@ -11,21 +11,26 @@ namespace StateMachine
         private readonly int eventIndex;
         public int EventIndex => eventIndex;
 
+        public object? EventContext { get; private set; }
+
         public IExecuterContext SolveContext { set { } }
 
-        public YieldEvent(int eventIndex)
+        public YieldEvent(int eventIndex, object? eventContext = null)
         {
             this.eventIndex = eventIndex;
+            EventContext = eventContext;
         }
 
-        public YieldEvent(FSMEnum eventEnum)
+        public YieldEvent(FSMEnum eventEnum, object? eventContext = null)
         {
             this.eventIndex = eventEnum.GetHashCode();
+            EventContext = eventContext;
         }
 
-        public YieldEvent(Enum eventEnum)
+        public YieldEvent(Enum eventEnum, object? eventContext = null)
         {
             this.eventIndex = eventEnum.GetHashCode();
+            EventContext = eventContext;
         }
 
         public YieldEnum Result => YieldEnum.None;

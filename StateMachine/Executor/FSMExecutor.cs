@@ -72,7 +72,7 @@ namespace StateMachine
                     return;
                 var prev_state = state;
                 state = value;
-                FSMStateChangedInvoke(value, prev_state);
+                TrackFSMStateChanged(value, prev_state);
             }
         }
 
@@ -154,7 +154,7 @@ namespace StateMachine
                 {
                     //Track Exit
                     TrackFSMExit(threadId);
-                    observable.OnError(ex);
+                    stateTrackObservable.OnError(ex);
                     isExit = true;
                 }
 
@@ -243,7 +243,7 @@ namespace StateMachine
             {
                 //Track Exit
                 TrackFSMExit(threadId);
-                observable.OnError(ex);
+                stateTrackObservable.OnError(ex);
 
                 //这里位于Task中，若流程出现异常，Task自动退出
                 //注意遇到任何异常，都需要检查IObservable的OnError或者NodeExceptionEvent事件
@@ -288,11 +288,15 @@ namespace StateMachine
         {
             TrackCallname();
             State = FSMState.Stopping;
-            while (eventConsumer.Reader.Count > 0)
-            { eventConsumer.Reader.TryRead(out _); }
-            Exception e = default!;
             Task.Run(async () =>
             {
+                using var state2Stop = Disposable.Create(() =>
+                {
+                    State = FSMState.Stoped;
+                });
+                while (eventConsumer.Reader.Count > 0)
+                { eventConsumer.Reader.TryRead(out _); }
+                Exception e = default!;
                 if (currentNode != null && !currentNode.Context.IsPaused)
                 {
                     currentNode.Context.Pause();
@@ -323,7 +327,6 @@ namespace StateMachine
                         throw new FSMException($"NodeTask 等待异常. {ex.Message}");
                     }
                 }
-                State = FSMState.Stoped;
             });
             return;
         }
@@ -332,6 +335,10 @@ namespace StateMachine
         {
             TrackCallname();
             State = FSMState.Stopping;
+            using var state2Stop = Disposable.Create(() =>
+            {
+                State = FSMState.Stoped;
+            });
             if (eventConsumer is not null)
             {
                 while (eventConsumer.Reader.Count > 0)
@@ -368,7 +375,6 @@ namespace StateMachine
                     throw new FSMException($"NodeTask 等待异常. {ex.Message}");
                 }
             }
-            State = FSMState.Stoped;
             return true;
         }
 
@@ -585,6 +591,8 @@ namespace StateMachine
                 {
                     eventAggregator.Unsubscribe(this);
                     eventConsumer.Writer.TryComplete();
+                    stateTrackObservable.OnCompleted();
+                    eventLoopScheduler.Dispose();
                 }
                 if (ExecutorTask != null)
                 {

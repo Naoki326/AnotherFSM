@@ -22,19 +22,19 @@
             return new YieldPriority(p);
         }
 
-        public static IYieldAction Event(int eventIndex)
+        public static IYieldAction Event(int eventIndex, object? eventContext = null)
         {
-            return new YieldEvent(eventIndex);
+            return new YieldEvent(eventIndex, eventContext);
         }
 
-        public static IYieldAction Event(FSMEnum eventIndex)
+        public static IYieldAction Event(FSMEnum eventIndex, object? eventContext = null)
         {
-            return new YieldEvent(eventIndex);
+            return new YieldEvent(eventIndex, eventContext);
         }
 
-        public static IYieldAction Event(Enum eventIndex)
+        public static IYieldAction Event(Enum eventIndex, object? eventContext = null)
         {
-            return new YieldEvent(eventIndex);
+            return new YieldEvent(eventIndex, eventContext);
         }
 
         private static IYieldAction next = new YieldEvent(FSMEnum.Next);

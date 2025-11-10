@@ -31,6 +31,16 @@ namespace StateMachine
 
     }
 
+    [DebuggerNonUserCode]
+    public class ExecuteTrackInfo
+    {
+        public FSMState LastState { get; set; }
+
+
+        public FSMState CurrentState { get; set; }
+
+    }
+
     public interface IFSMNodeTracker : IObserver<StateTrackInfo>, IObserver<string>
     {
         void EnterState(TrackType trackType, string stateName, string prevStateName, string eventName,

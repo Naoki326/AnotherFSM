@@ -34,7 +34,10 @@ namespace StateMachine
                         isMoveNext = yieldBefore.IsMoveNext;
                         if (yieldBefore is YieldEvent yEvent)
                         {
-                            PublishEvent(yEvent.EventIndex);
+                            if (yEvent.EventContext is null)
+                            { PublishEvent(yEvent.EventIndex); }
+                            else
+                            { PublishEvent(yEvent.EventIndex, yEvent.EventContext); }
                         }
                     }
                     if (isMoveNext)
@@ -115,7 +118,10 @@ namespace StateMachine
                         isMoveNext = yieldBefore.IsMoveNext;
                         if (yieldBefore is YieldEvent yEvent)
                         {
-                            PublishEvent(yEvent.EventIndex);
+                            if (yEvent.EventContext is null)
+                            { PublishEvent(yEvent.EventIndex); }
+                            else
+                            { PublishEvent(yEvent.EventIndex, yEvent.EventContext); }
                         }
                     }
                     if (isMoveNext)
