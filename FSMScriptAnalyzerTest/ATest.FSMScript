@@ -1,0 +1,139 @@
+def Start(Start)
+{
+    1->NextEvent;
+    Pos:(-107.75, 174);
+    Color: "red";
+    Type: Start;
+    FlowID: 1;
+}
+NextEvent->Start to Check;
+
+def End(End)
+{
+    1->EndEvent;
+    Pos:(483, 211.5);
+    Color: "indigo";
+    Type: End;
+    FlowID: 2;
+}
+
+def Start3(Start)
+{
+    1->Next3Event;
+    Pos:(780, 263);
+    Color: "red";
+    Type: Start;
+    FlowID: 24;
+}
+Next3Event->Start3 to Sleep;
+
+def Check(Accumulate)
+{
+    1->NextEvent;
+    3->BreakEvent;
+    Pos:(168.75, 12);
+    Color: "light-blue";
+    Type: Accumulate;
+    FlowID: 6;
+}
+NextEvent->Check to Parallel;
+BreakEvent->Check to End;
+
+def Start1(Start)
+{
+    1->Next1Event;
+    Pos:(762, -10.25);
+    Color: "red";
+    Type: Start;
+    FlowID: 11;
+}
+Next1Event->Start1 to Sleep1;
+
+def End1(End)
+{
+    1->End1Event;
+    Pos:(1347.25, -22.75);
+    Color: "cyan";
+    Type: End;
+    FlowID: 12;
+}
+
+def Sleep1(Sleep)
+{
+    1->Next1Event;
+    Pos:(1065, -42.25);
+    Color: "light-blue";
+    Type: Sleep;
+    FlowID: 13;
+}
+Next1Event->Sleep1 to End1;
+
+def Start2(Start)
+{
+    1->Next2Event;
+    Pos:(779, 128);
+    Color: "red";
+    Type: Start;
+    FlowID: 14;
+}
+Next2Event->Start2 to Sleep2;
+
+def End2(End)
+{
+    1->End2Event;
+    Pos:(1384, 161);
+    Color: "cyan";
+    Type: End;
+    FlowID: 15;
+}
+
+def Sleep2(Sleep)
+{
+    1->Next2Event;
+    Pos:(1067, 111.75);
+    Color: "light-blue";
+    Type: Sleep;
+    FlowID: 16;
+}
+Next2Event->Sleep2 to End2;
+
+def Parallel(Parallel)
+{
+    1->NextEvent;
+    5->CancelEvent;
+    Pos:(478, -2.25);
+    Color: "indigo";
+    Type: Parallel;
+    FlowID: 17;
+}
+NextEvent->Parallel to Group;
+
+def Group(Group)
+{
+    1->NextEvent;
+    5->CancelEvent;
+    Pos:(207, 209);
+    Color: "light-blue";
+    Type: Group;
+    FlowID: 23;
+}
+NextEvent->Group to Check;
+
+def Sleep(Idle)
+{
+    1->Next3Event;
+    Pos:(1070, 258.75);
+    Color: "light-blue";
+    Type: Sleep;
+    FlowID: 25;
+}
+Next3Event->Sleep to End3;
+
+def End3(End)
+{
+    1->End3Event;
+    Pos:(1375.75, 286);
+    Color: "cyan";
+    Type: End;
+    FlowID: 26;
+}
