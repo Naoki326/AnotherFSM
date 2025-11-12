@@ -1,7 +1,7 @@
-﻿namespace StateMachine
+namespace StateMachine
 {
     [FSMNode("Start", "启动节点", [1], ["NextEvent"], Id = 0)]
-    public class StartNode : AsyncEnumFSMNode
+    public partial class StartNode : AsyncEnumFSMNode
     {
 
         protected override async IAsyncEnumerable<object> ExecuteEnumerable()

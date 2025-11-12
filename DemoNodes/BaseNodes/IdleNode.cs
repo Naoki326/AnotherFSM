@@ -1,9 +1,9 @@
-﻿using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 
 namespace StateMachine
 {
     [FSMNode("Idle", "空转节点", [1], ["NextEvent"], Id = 2)]
-    public class IdleNode : AsyncEnumFSMNode
+    public partial class IdleNode : AsyncEnumFSMNode
     {
         public IdleNode()
         {

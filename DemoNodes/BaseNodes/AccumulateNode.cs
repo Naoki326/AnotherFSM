@@ -1,9 +1,9 @@
-﻿using StateMachine.Interface;
+using StateMachine.Interface;
 
 namespace StateMachine
 {
     [FSMNode("Accumulate", "累积计数节点", [1, 3], ["NextEvent", "BreakEvent"], Id = 5)]
-    public class AccumulateNode : AsyncEnumFSMNode
+    public partial class AccumulateNode : AsyncEnumFSMNode
     {
         public AccumulateNode()
         {
@@ -36,7 +36,7 @@ namespace StateMachine
             else if (i < Count)
             {
                 i++;
-                yield return Yield.Next;
+                yield return Yield.Event(1);
                 //PublishEvent(FSMEnum.Next);
             }
             else

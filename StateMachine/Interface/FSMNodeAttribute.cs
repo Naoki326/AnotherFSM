@@ -1,4 +1,4 @@
-﻿
+
 namespace StateMachine
 {
     [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
@@ -35,5 +35,18 @@ namespace StateMachine
             NodeDescription = nodeDiscription;
         }
 
+    }
+
+    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+    public sealed class FSMNodeSourceAttribute : Attribute
+    {
+        public string SourceCSPath { get; }
+        public int[] Events { get; }
+
+        public FSMNodeSourceAttribute(string sourceCSPath, int[] events)
+        {
+            SourceCSPath = sourceCSPath;
+            Events = events ?? System.Array.Empty<int>();
+        }
     }
 }

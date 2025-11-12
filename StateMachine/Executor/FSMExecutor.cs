@@ -382,6 +382,10 @@ namespace StateMachine
         {
             TrackCallname();
             State = FSMState.Stopping;
+            using var state2Stop = Disposable.Create(() =>
+            {
+                State = FSMState.Stoped;
+            });
             if (eventConsumer is not null)
             {
                 while (eventConsumer.Reader.Count > 0)
@@ -417,7 +421,6 @@ namespace StateMachine
                     throw new FSMException($"NodeTask 等待异常. {ex.Message}");
                 }
             }
-            State = FSMState.Stoped;
             return true;
         }
 
@@ -497,21 +500,22 @@ namespace StateMachine
             TrackCallname();
             if (currentNode.Context.IsPaused || pausing || (State != FSMState.Running && State != FSMState.Proceeding))
             { return; }
-
-            State = FSMState.Pausing;
-            pausing = true;
-            currentNode.Context.Pause();
             Task.Run(async () =>
             {
+                State = FSMState.Pausing;
+                pausing = true;
+                using var state2Pause = Disposable.Create(() =>
+                {
+                    pausing = false;
+                    State = FSMState.Paused;
+                });
+                currentNode.Context.Pause();
                 try
                 {
                     await currentNode.WaitCurrentTask;
                 }
-                catch { }
-                finally
+                catch (Exception)
                 {
-                    pausing = false;
-                    State = FSMState.Paused;
                 }
             });
             return;
@@ -525,17 +529,17 @@ namespace StateMachine
 
             State = FSMState.Pausing;
             pausing = true;
+            using var state2Pause = Disposable.Create(() =>
+            {
+                pausing = false;
+                State = FSMState.Paused;
+            });
             currentNode.Context.Pause();
             try
             {
                 await currentNode.WaitCurrentTask;
             }
             catch { }
-            finally
-            {
-                pausing = false;
-                State = FSMState.Paused;
-            }
             return true;
         }
 
@@ -568,7 +572,7 @@ namespace StateMachine
             }
             else if (!eventConsumer.Reader.Completion.IsCompleted)
             {
-                // 通过接口改变传入的事件
+                // 通过接口改变传入的事件 
                 eventConsumer.Writer.TryWrite(@event);
             }
         }
@@ -592,6 +596,7 @@ namespace StateMachine
                     eventAggregator.Unsubscribe(this);
                     eventConsumer.Writer.TryComplete();
                     stateTrackObservable.OnCompleted();
+                    executeTrackObservable.OnCompleted();
                     eventLoopScheduler.Dispose();
                 }
                 if (ExecutorTask != null)

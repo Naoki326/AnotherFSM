@@ -1,6 +1,9 @@
 using Masa.Blazor;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
+using System.Diagnostics;
+using System.Linq;
 
 namespace StateMachine
 {
@@ -19,17 +22,21 @@ namespace StateMachine
 
         public event Action<string>? ScriptChanged;
 
+        [Inject]
+        public IJSRuntime JSRuntime { get; set; } = default!;
+
         protected override void OnInitialized()
         {
+            var colors = s_colors.GetEnumerator();
             if (NodeTypeNames is not null && NodeTypeNames.Count > 0)
             {
-                var colors = s_colors.GetEnumerator();
                 foreach (var nodeType in NodeTypeNames)
                 {
                     colors.MoveNext();
                     nodeTypes.Add(nodeType, colors.Current);
                 }
             }
+            // 若未提供 NodeTypeNames，则不再从运行时注册表回退，避免依赖全局扫描
         }
 
         [Parameter] public EventCallback DataInitializer { get; set; }
@@ -67,16 +74,20 @@ namespace StateMachine
         private MStateMachineFlow _drawflow = default!;
 
         async Task InnerNodeSelected(string id)
+    {
+        var node = await _drawflow.GetNodeFromIdAsync<NodeData>(id);
+        if (node != null)
         {
-            var node = await _drawflow.GetNodeFromIdAsync<NodeData>(id);
-            if (node != null)
-                await OnNodeSelected.InvokeAsync(node.Data);
+            selectedNodeName = node.Data.Name;
+            await OnNodeSelected.InvokeAsync(node.Data);
         }
+    }
 
         async Task InnerNodeUnselected(string id)
-        {
-            await OnNodeUnselected.InvokeAsync();
-        }
+    {
+        selectedNodeName = "";
+        await OnNodeUnselected.InvokeAsync();
+    }
 
         [Parameter] public EventCallback<NodeData> OnNodeSelected { get; set; }
 
@@ -89,6 +100,10 @@ namespace StateMachine
         [Parameter] public FSMEngine StateMachineEngine { get; set; } = default!;
 
         private FSMEngine engine = default!;
+
+        private string selectedNodeName = "";
+        private string selectedNodeFilePath = "";
+        private bool nodeInfoDialog = false;
         protected override async Task OnParametersSetAsync()
         {
             if (StateMachineEngine != engine)
@@ -175,6 +190,205 @@ namespace StateMachine
         public StateMachineFlowEditorMode Mode { get; set; } = StateMachineFlowEditorMode.Edit;
 
         private bool isImport;
+        
+        private async Task ShowNodeInfo()
+        {
+            if (!string.IsNullOrEmpty(selectedNodeName) && engine != null)
+            {
+                if (!engine.TryGetNode(selectedNodeName, out IFSMNode? node))
+                {
+                    await PopupService.EnqueueSnackbarAsync($"Node '{selectedNodeName}' not found", AlertTypes.Error);
+                    return;
+                }
+                if (node is IFSMNodeSourceInfo nodeWithPath)
+                {
+                    var mappedPath = nodeWithPath.SourceCSPath;
+                    selectedNodeFilePath = mappedPath!;
+                }
+                else
+                {
+                    var nodeType = node.GetType();
+                    var className = nodeType.Name;
+                    var baseTypeName = className.Contains('`') ? className.Split('`')[0] : className;
+                    // 尝试在解决方案目录内搜索源文件
+                    var solutionRoot = GetSolutionRootPath();
+                    var searchResult = SearchForSourceFile(solutionRoot, baseTypeName, nodeType.Namespace ?? "");
+                    if (string.IsNullOrEmpty(searchResult))
+                    {
+                        await PopupService.EnqueueSnackbarAsync($"Node '{selectedNodeName}' not found", AlertTypes.Error);
+                        return;
+                    }
+                    selectedNodeFilePath = searchResult;
+                }
+
+                nodeInfoDialog = true;
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        
+        private string GetSolutionRootPath()
+        {
+            try
+            {
+                // 从当前执行目录开始向上查找解决方案文件
+                var currentDir = Directory.GetCurrentDirectory();
+                var dir = new DirectoryInfo(currentDir);
+                
+                while (dir != null)
+                {
+                    if (Directory.GetFiles(dir.FullName, "*.sln").Length > 0)
+                    {
+                        return dir.FullName;
+                    }
+                    dir = dir.Parent;
+                }
+                
+                // 如果没找到.sln文件，尝试查找.git目录作为项目根目录
+                dir = new DirectoryInfo(currentDir);
+                while (dir != null)
+                {
+                    if (Directory.Exists(Path.Combine(dir.FullName, ".git")))
+                    {
+                        return dir.FullName;
+                    }
+                    dir = dir.Parent;
+                }
+                
+                return currentDir; // 回退到当前目录
+            }
+            catch
+            {
+                return Directory.GetCurrentDirectory();
+            }
+        }
+        
+        private string SearchForSourceFile(string rootPath, string typeName, string namespaceName)
+        {
+            try
+            {
+                // 在解决方案中搜索匹配的.cs文件
+                var searchPatterns = new[]
+                {
+                    $"{typeName}.cs",
+                    $"*{typeName}*.cs"
+                };
+                
+                var allFiles = new List<string>();
+                
+                foreach (var pattern in searchPatterns)
+                {
+                    try
+                    {
+                        var files = Directory.GetFiles(rootPath, pattern, SearchOption.AllDirectories)
+                            .Where(f => !f.Contains("\\bin\\") && !f.Contains("\\obj\\") && !f.Contains("\\.git\\"))
+                            .ToList();
+                        allFiles.AddRange(files);
+                    }
+                    catch
+                    {
+                        // 忽略搜索过程中的错误
+                    }
+                }
+                
+                if (allFiles.Count > 0)
+                {
+                    // 优先返回完全匹配的文件
+                    var exactMatches = allFiles.Where(f => Path.GetFileName(f).Equals($"{typeName}.cs", StringComparison.OrdinalIgnoreCase)).ToList();
+                    if (exactMatches.Count > 0)
+                    {
+                        // 如果提供了命名空间，进一步验证文件内容
+                        foreach (var file in exactMatches)
+                        {
+                            try
+                            {
+                                var content = File.ReadAllText(file);
+                                bool nsOk = string.IsNullOrWhiteSpace(namespaceName) || content.Contains($"namespace {namespaceName}");
+                                bool classOk = content.Contains($"class {typeName}") || content.Contains($"partial class {typeName}");
+                                if (nsOk && classOk)
+                                    return file;
+                            }
+                            catch { }
+                        }
+                        // 如果验证失败，返回第一个完全匹配
+                        return exactMatches[0];
+                    }
+
+                    // 如果没有完全匹配，尝试按命名空间和类名内容验证第一个匹配
+                    foreach (var file in allFiles)
+                    {
+                        try
+                        {
+                            var content = File.ReadAllText(file);
+                            bool nsOk = string.IsNullOrWhiteSpace(namespaceName) || content.Contains($"namespace {namespaceName}");
+                            bool classOk = content.Contains($"class {typeName}") || content.Contains($"partial class {typeName}");
+                            if (nsOk && classOk)
+                                return file;
+                        }
+                        catch { }
+                    }
+
+                    // 最后回退到第一个匹配的文件
+                    return allFiles[0];
+                }
+                
+                return string.Empty;
+            }
+            catch
+            {
+                return string.Empty;
+            }
+        }
+        
+        private void CloseNodeInfoDialog()
+        {
+            nodeInfoDialog = false;
+        }
+        
+        private async Task CopyFilePath()
+        {
+            if (!string.IsNullOrEmpty(selectedNodeFilePath))
+            {
+                try
+                {
+                    await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", selectedNodeFilePath);
+                    await PopupService.EnqueueSnackbarAsync("File path copied to clipboard", AlertTypes.Success);
+                }
+                catch
+                {
+                    await PopupService.EnqueueSnackbarAsync("Failed to copy file path", AlertTypes.Error);
+                }
+            }
+        }
+
+        private async Task OpenInVSCode()
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(selectedNodeFilePath))
+                {
+                    await PopupService.EnqueueSnackbarAsync("No file path available", AlertTypes.Warning);
+                    return;
+                }
+
+                // Normalize Windows path to vscode://file URI (use forward slashes)
+                var normalized = selectedNodeFilePath.Replace('\\', '/');
+                var uri = $"vscode://file/{normalized}";
+
+                // Attempt to open via custom protocol in the current window
+                await JSRuntime.InvokeVoidAsync("open", uri, "_self");
+            }
+            catch
+            {
+                // Fallback: copy path to clipboard so user can manually open
+                try
+                {
+                    await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", selectedNodeFilePath);
+                }
+                catch { }
+                await PopupService.EnqueueSnackbarAsync("Failed to open VS Code. Path copied.", AlertTypes.Error);
+            }
+        }
+
         public async Task ImportAsync(string _importData)
         {
             if (isImport)

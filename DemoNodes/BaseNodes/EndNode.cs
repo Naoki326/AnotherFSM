@@ -1,7 +1,7 @@
-﻿namespace StateMachine
+namespace StateMachine
 {
     [FSMNode("End", "结束节点", [1], ["EndEvent"], Id = 1)]
-    public class EndNode : AsyncEnumFSMNode
+    public partial class EndNode : AsyncEnumFSMNode
     {
         public EndNode()
         {

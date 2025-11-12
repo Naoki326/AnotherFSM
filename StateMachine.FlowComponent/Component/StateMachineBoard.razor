@@ -1,4 +1,4 @@
-﻿@using StateMachine
+@using StateMachine
 @inject I18n I18n
 @inject IPopupService PopupService
 
@@ -24,7 +24,7 @@
         }
     </div>
 
-    <div style="flex: 1;">
+    <div style="flex: 1; position: relative;">
         <MStateMachineFlow Class="@Class" Style="@Style"
                    OnNodeSelected="@InnerNodeSelected"
                    OnNodeUnselected="@InnerNodeUnselected"
@@ -44,6 +44,16 @@
                    DataInitializer="@DataInitializer"
                    @ref="_drawflow">
         </MStateMachineFlow>
+        
+        @if (!string.IsNullOrEmpty(selectedNodeName))
+        {
+            <div style="position: absolute; top: 10px; right: 10px; z-index: 100;">
+                <MButton Color="primary" OnClick="@ShowNodeInfo">
+                    <MIcon Left>mdi-information</MIcon>
+                    @I18n.T("Node Info")
+                </MButton>
+            </div>
+        }
     </div>
 
 </div>
@@ -112,6 +122,36 @@
     </MCard>
 </MDialog>
 
+<MDialog @bind-Value="nodeInfoDialog" Persistent MaxWidth="600">
+    <MCard>
+        <MCardTitle>
+            <span>@I18n.T("Node Information")</span>
+        </MCardTitle>
+        <MCardText>
+            <div class="node-info-content">
+                <div class="info-row">
+                    <strong>@I18n.T("Node Name"):</strong> @selectedNodeName
+                </div>
+                <div class="info-row">
+                    <strong>@I18n.T("File Path"):</strong> 
+                    <div class="file-path">@selectedNodeFilePath</div>
+                </div>
+            </div>
+        </MCardText>
+        <MCardActions>
+            <MButton Color="primary" Outlined Text OnClick="@CloseNodeInfoDialog">
+                @I18n.T("Close")
+            </MButton>
+            <MButton Color="secondary" Outlined Text OnClick="@CopyFilePath">
+                @I18n.T("Copy Path")
+            </MButton>
+            <MButton Color="secondary" Outlined Text OnClick="@OpenInVSCode">
+                @I18n.T("Open in VS Code")
+            </MButton>
+        </MCardActions>
+    </MCard>
+</MDialog>
+
 <style>
     .sm-board {
         display: flex;
@@ -130,6 +170,31 @@
         border-radius: 4px;
         padding: 15px;
         margin-right: 8px;
+    }
+    
+    .node-info-content {
+        padding: 16px 0;
+    }
+    
+    .info-row {
+        margin-bottom: 16px;
+    }
+    
+    .info-row strong {
+        display: inline-block;
+        margin-bottom: 4px;
+        color: #1976d2;
+    }
+    
+    .file-path {
+        background-color: #f5f5f5;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 0.9em;
+        word-break: break-all;
+        border: 1px solid #e0e0e0;
+        margin-top: 4px;
     }
 </style>
 

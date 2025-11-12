@@ -25,6 +25,7 @@
     <ProjectReference Include="..\DemoNodes\DemoNodes.csproj" />
     <ProjectReference Include="..\StateMachine.FlowComponent\StateMachine.FlowComponent.csproj" />
     <ProjectReference Include="..\StateMachine\StateMachine.csproj" />
+	<ProjectReference Include="..\FSMNodeAnalyzer\FSMNodeAnalyzer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
 </Project>

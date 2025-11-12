@@ -13,7 +13,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\FSMNodeAnalyzer\FSMNodeAnalyzer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\StateMachine\StateMachine.csproj" />
   </ItemGroup>
+
+  <!-- 引用源生成器 -->
 
 </Project>

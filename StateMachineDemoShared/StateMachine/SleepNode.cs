@@ -1,10 +1,10 @@
-﻿using StateMachine;
+using StateMachine;
 using StateMachine.Interface;
 
 namespace DemoShared.StateMachine
 {
     [FSMNode("Sleep", "休眠节点", [1], ["NextEvent"], Id = 10)]
-    public class SleepNode : AsyncEnumFSMNode
+    public partial class SleepNode : AsyncEnumFSMNode
     {
         public SleepNode()
         {
