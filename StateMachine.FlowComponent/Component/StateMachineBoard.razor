@@ -1,6 +1,4 @@
 @using StateMachine
-@inject I18n I18n
-@inject IPopupService PopupService
 
 @namespace StateMachine
 
@@ -9,18 +7,19 @@
     <div class="sm-nodes" style="flex: 0;">
         @if(nodeTypes is not null && nodeTypes.Count > 0)
         {
-            <MList>
+            <ul class="sm-node-list" style="list-style:none;padding:0;margin:0;">
                 @foreach (var nodeType in nodeTypes)
                 {
-                    <MListItem>
-                        <MDrag DataValue="@(nodeType.Key)"
-                                Style="width:stretch;text-overflow:ellipsis;white-space:nowrap;overflow:hidden;"
-                                Class="@($"example-drawflow-node {nodeType.Value}")">
+                    <li>
+                        <div draggable="true"
+                             class="@($"example-drawflow-node {nodeType.Value}")"
+                             style="width:stretch;text-overflow:ellipsis;white-space:nowrap;overflow:hidden;"
+                             @ondragstart="e => OnNodeDragStart(e, nodeType.Key)">
                             @nodeType.Key
-                        </MDrag>
-                    </MListItem>
+                        </div>
+                    </li>
                 }
-            </MList>
+            </ul>
         }
     </div>
 
@@ -40,117 +39,76 @@
                    OnNodeDblClick="@NodeDblClick"
                    OnNodeMoved="@NodeMoved"
                    Mode="Mode"
-                   Zoom="Zoom"
                    DataInitializer="@DataInitializer"
                    @ref="_drawflow">
         </MStateMachineFlow>
         
         @if (!string.IsNullOrEmpty(selectedNodeName))
         {
-            <div style="position: absolute; top: 10px; right: 10px; z-index: 100;">
-                <MButton Color="primary" OnClick="@ShowNodeInfo">
-                    <MIcon Left>mdi-information</MIcon>
-                    @I18n.T("Node Info")
-                </MButton>
+            <div style="position: absolute; top: 10px; right: 10px; z-index: 10000;">
+                <button @onclick="@ShowNodeInfo" style="padding:6px 12px;border:1px solid #1976d2;background:#1976d2;color:#fff;border-radius:4px;">Node Info</button>
             </div>
         }
     </div>
 
 </div>
 
-<MDialog @bind-Value="changeConnectionNameDialog" Persistent
-         MaxWidth="500">
-    <MCard>
-        <MCardTitle>
-            <span>@I18n.T("SetConnectionName")</span>
-        </MCardTitle>
-        <MCardText>
-            <MTextField @bind-value="inputName"
-                        TValue="string"
-                        Solo
-                        PrependIcon="mdi-text-box"
-                        OnKeyUp=OnCDKeyUp
-                        Clearable>
-            </MTextField>
-        </MCardText>
-        <MCardActions>
-            <MButton Color="primary"
-                     Outlined
-                     Text
-                     OnClick=ChangeConnectionName>
-                @I18n.T("Confirm")
-            </MButton>
-            <MButton Color="primary"
-                     Outlined
-                     Text
-                     OnClick=CancelChangeConnectionName>
-                @I18n.T("Cancel")
-            </MButton>
-        </MCardActions>
-    </MCard>
-</MDialog>
+@if (changeConnectionNameDialog)
+{
+    <div class="sm-dialog-backdrop" style="position:fixed;inset:0;background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;">
+        <div class="sm-dialog" style="background:#fff;border-radius:8px;min-width:320px;max-width:500px;padding:16px;box-shadow:0 6px 24px rgba(0,0,0,0.2);">
+            <div class="sm-dialog-title" style="font-weight:bold;margin-bottom:8px;">Set Connection Name</div>
+            <div class="sm-dialog-body" style="margin-bottom:12px;">
+                <input @bind="inputName" @onkeyup="OnCDKeyUp" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px;" />
+            </div>
+            <div class="sm-dialog-actions" style="display:flex;gap:8px;justify-content:flex-end;">
+                <button @onclick="ChangeConnectionName" style="padding:6px 12px;border:1px solid #1976d2;background:#1976d2;color:#fff;border-radius:4px;">Confirm</button>
+                <button @onclick="CancelChangeConnectionName" style="padding:6px 12px;border:1px solid #ccc;background:#fff;border-radius:4px;">Cancel</button>
+            </div>
+        </div>
+    </div>
+}
 
-<MDialog @bind-Value="changeNodeNameDialog" Persistent
-         MaxWidth="500">
-    <MCard>
-        <MCardTitle>
-            <span>@I18n.T("SetNodeName")</span>
-        </MCardTitle>
-        <MCardText>
-            <MTextField @bind-value="inputName"
-                        TValue="string"
-                        Solo
-                        PrependIcon="mdi-text-box"
-                        OnKeyUp=OnNodeNameKeyUp
-                        Clearable>
-            </MTextField>
-        </MCardText>
-        <MCardActions>
-            <MButton Color="primary"
-                     Outlined
-                     Text
-                     OnClick=ChangeNodeName>
-                @I18n.T("Confirm")
-            </MButton>
-            <MButton Color="primary"
-                     Outlined
-                     Text
-                     OnClick=CancelChangeNodeName>
-                @I18n.T("Cancel")
-            </MButton>
-        </MCardActions>
-    </MCard>
-</MDialog>
+@if (changeNodeNameDialog)
+{
+    <div class="sm-dialog-backdrop" style="position:fixed;inset:0;background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;">
+        <div class="sm-dialog" style="background:#fff;border-radius:8px;min-width:320px;max-width:500px;padding:16px;box-shadow:0 6px 24px rgba(0,0,0,0.2);">
+            <div class="sm-dialog-title" style="font-weight:bold;margin-bottom:8px;">Set Node Name</div>
+            <div class="sm-dialog-body" style="margin-bottom:12px;">
+                <input @bind="inputName" @onkeyup="OnNodeNameKeyUp" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px;" />
+            </div>
+            <div class="sm-dialog-actions" style="display:flex;gap:8px;justify-content:flex-end;">
+                <button @onclick="ChangeNodeName" style="padding:6px 12px;border:1px solid #1976d2;background:#1976d2;color:#fff;border-radius:4px;">Confirm</button>
+                <button @onclick="CancelChangeNodeName" style="padding:6px 12px;border:1px solid #ccc;background:#fff;border-radius:4px;">Cancel</button>
+            </div>
+        </div>
+    </div>
+}
 
-<MDialog @bind-Value="nodeInfoDialog" Persistent MaxWidth="600">
-    <MCard>
-        <MCardTitle>
-            <span>@I18n.T("Node Information")</span>
-        </MCardTitle>
-        <MCardText>
-            <div class="node-info-content">
-                <div class="info-row">
-                    <strong>@I18n.T("Node Name"):</strong> @selectedNodeName
-                </div>
-                <div class="info-row">
-                    <strong>@I18n.T("File Path"):</strong> 
-                    <div class="file-path">@selectedNodeFilePath</div>
+@if (nodeInfoDialog)
+{
+    <div class="sm-dialog-backdrop" style="position:fixed;inset:0;background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;">
+        <div class="sm-dialog" style="background:#fff;border-radius:8px;min-width:360px;max-width:600px;padding:16px;box-shadow:0 6px 24px rgba(0,0,0,0.2);">
+            <div class="sm-dialog-title" style="font-weight:bold;margin-bottom:8px;">Node Information</div>
+            <div class="sm-dialog-body" style="margin-bottom:12px;">
+                <div class="node-info-content">
+                    <div class="info-row">
+                        <strong>Node Name:</strong> @selectedNodeName
+                    </div>
+                    <div class="info-row">
+                        <strong>File Path:</strong>
+                        <div class="file-path">@selectedNodeFilePath</div>
+                    </div>
                 </div>
             </div>
-        </MCardText>
-        <MCardActions>
-            <MButton Color="primary" Outlined Text OnClick="@CloseNodeInfoDialog">
-                @I18n.T("Close")
-            </MButton>
-            <MButton Color="secondary" Outlined Text OnClick="@CopyFilePath">
-                @I18n.T("Copy Path")
-            </MButton>
-            <MButton Color="secondary" Outlined Text OnClick="@OpenInVSCode">
-                @I18n.T("Open in VS Code")
-            </MButton>
-        </MCardActions>
-    </MCard>
-</MDialog>
+            <div class="sm-dialog-actions" style="display:flex;gap:8px;justify-content:flex-end;">
+                <button @onclick="CloseNodeInfoDialog" style="padding:6px 12px;border:1px solid #1976d2;background:#1976d2;color:#fff;border-radius:4px;">Close</button>
+                <button @onclick="CopyFilePath" style="padding:6px 12px;border:1px solid #ccc;background:#fff;border-radius:4px;">Copy Path</button>
+                <button @onclick="OpenInVSCode" style="padding:6px 12px;border:1px solid #ccc;background:#fff;border-radius:4px;">Open in VS Code</button>
+            </div>
+        </div>
+    </div>
+}
 
 <style>
     .sm-board {
@@ -195,6 +153,10 @@
         word-break: break-all;
         border: 1px solid #e0e0e0;
         margin-top: 4px;
+    }
+
+    .sm-dialog-backdrop {
+        z-index: 10000;
     }
 </style>
 

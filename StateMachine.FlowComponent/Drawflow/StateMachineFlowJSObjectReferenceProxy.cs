@@ -1,17 +1,19 @@
-﻿using Masa.Blazor.JSInterop;
 using Microsoft.JSInterop;
 
 namespace StateMachine;
 
-public class StateMachineFlowJSObjectReferenceProxy : JSObjectReferenceProxy, IStateMachineFlowJSObjectReferenceProxy
+public class StateMachineFlowJSObjectReferenceProxy : IStateMachineFlowJSObjectReferenceProxy
 {
-    public StateMachineFlowJSObjectReferenceProxy(IJSObjectReference jsObjectReference) : base(jsObjectReference)
+    private readonly IJSObjectReference _js;
+
+    public StateMachineFlowJSObjectReferenceProxy(IJSObjectReference jsObjectReference)
     {
+        _js = jsObjectReference;
     }
 
     public async Task SetMode(StateMachineFlowEditorMode mode)
     {
-        await InvokeVoidAsync("setMode", mode.ToString().ToLower());
+        await _js.InvokeVoidAsync("setMode", mode.ToString().ToLower());
     }
 
     public async Task<string> AddNodeAsync
@@ -27,7 +29,7 @@ public class StateMachineFlowJSObjectReferenceProxy : JSObjectReferenceProxy, IS
         object? data,
         string html)
     {
-        return await InvokeAsync<string>("addNode",
+        return await _js.InvokeAsync<string>("addNode",
             name,
             inputs,
             outputs,
@@ -55,7 +57,7 @@ public class StateMachineFlowJSObjectReferenceProxy : JSObjectReferenceProxy, IS
         object? data,
         string html)
     {
-        return await InvokeAsync<string>("addNodeById",
+        return await _js.InvokeAsync<string>("addNodeById",
             id,
             name,
             inputs,
@@ -82,7 +84,7 @@ public class StateMachineFlowJSObjectReferenceProxy : JSObjectReferenceProxy, IS
         object? data,
         string html)
     {
-        return await InvokeAsync<string>("dragNode",
+        return await _js.InvokeAsync<string>("dragNode",
             name,
             inputs,
             outputs,
@@ -97,101 +99,114 @@ public class StateMachineFlowJSObjectReferenceProxy : JSObjectReferenceProxy, IS
 
     public async Task ZoomAsync(double zoom)
     {
-        await InvokeVoidAsync("zoom", zoom);
+        await _js.InvokeVoidAsync("zoom", zoom);
     }
 
-    //addConnection(id_output, id_input, output_class, input_class)
     public async Task AddConnectionAsync(string id_output, string id_input, string output_class, string input_class, string eventName)
     {
-        await InvokeVoidAsync("addConnection", id_output, id_input, output_class, input_class, eventName);
+        await _js.InvokeVoidAsync("addConnection", id_output, id_input, output_class, input_class, eventName);
     }
 
-    //removeSingleConnection
     public async Task RemoveSingleConnectionAsync(string id_output, string id_input, string output_class, string input_class)
     {
-        await InvokeVoidAsync("removeSingleConnection", id_output, id_input, output_class, input_class);
+        await _js.InvokeVoidAsync("removeSingleConnection", id_output, id_input, output_class, input_class);
     }
     public async Task SetConnectionNameAsync(string id_output, string id_input, string output_class, string input_class, string eventName)
     {
-        await InvokeVoidAsync("setConnectionName", id_output, id_input, output_class, input_class, eventName);
+        await _js.InvokeVoidAsync("setConnectionName", id_output, id_input, output_class, input_class, eventName);
     }
     public async Task<StateMachineFlowNode<TData>?> GetNodeFromIdAsync<TData>(string nodeId)
     {
-        return await InvokeAsync<StateMachineFlowNode<TData>>("getNodeFromId", nodeId);
+        return await _js.InvokeAsync<StateMachineFlowNode<TData>>("getNodeFromId", nodeId);
     }
     public async Task<List<int>?> GetNodesFromNameAsync(string nodeName)
     {
-        return await InvokeAsync<List<int>>("getNodesFromName", nodeName);
+        return await _js.InvokeAsync<List<int>>("getNodesFromName", nodeName);
     }
 
     public async Task RemoveNodeAsync(string nodeId)
     {
-        await InvokeVoidAsync("removeNodeId", $"node-{nodeId}");
+        await _js.InvokeVoidAsync("removeNodeId", $"node-{nodeId}");
     }
 
     public async Task UpdateNodeDataAsync(string nodeId, object data, string name)
     {
-        await InvokeVoidAsync("updateNodeDataFromId", nodeId, data, name);
+        await _js.InvokeVoidAsync("updateNodeDataFromId", nodeId, data, name);
     }
 
     public async Task ClearAsync()
     {
-        await InvokeVoidAsync("clear");
+        await _js.InvokeVoidAsync("clear");
     }
 
     public async Task<string?> ExportAsync(bool indented = false)
     {
-        return await InvokeAsync<string?>("export", indented);
+        return await _js.InvokeAsync<string?>("export", indented);
     }
 
     public async Task ImportAsync(string json)
     {
-        await InvokeVoidAsync("import", json);
+        await _js.InvokeVoidAsync("import", json);
     }
 
     public async Task AddInputAsync(string nodeId)
     {
-        await InvokeVoidAsync("addNodeInput", nodeId);
+        await _js.InvokeVoidAsync("addNodeInput", nodeId);
     }
 
     public async Task AddOutputAsync(string nodeId)
     {
-        await InvokeVoidAsync("addNodeOutput", nodeId);
+        await _js.InvokeVoidAsync("addNodeOutput", nodeId);
     }
 
     public async Task RemoveInputAsync(string nodeId, string inputClass)
     {
-        await InvokeVoidAsync("removeNodeInput", nodeId, inputClass);
+        await _js.InvokeVoidAsync("removeNodeInput", nodeId, inputClass);
     }
 
     public async Task RemoveOutputAsync(string nodeId, string outputClass)
     {
-        await InvokeVoidAsync("removeNodeOutput", nodeId, outputClass);
+        await _js.InvokeVoidAsync("removeNodeOutput", nodeId, outputClass);
     }
 
     public async Task UpdateNodeHTMLAsync(string nodeId, string html)
     {
-        await InvokeVoidAsync("updateNodeHtml", nodeId, html);
+        await _js.InvokeVoidAsync("updateNodeHtml", nodeId, html);
     }
 
     public async Task FocusNodeAsync(string nodeId)
     {
-        await InvokeVoidAsync("focusNode", nodeId);
+        await _js.InvokeVoidAsync("focusNode", nodeId);
     }
 
     public async Task CenterNodeAsync(string nodeId, bool animate)
     {
-        await InvokeVoidAsync("centerNode", nodeId, animate);
+        await _js.InvokeVoidAsync("centerNode", nodeId, animate);
     }
 
     public async Task UpdateConnectionNodesAsync(string nodeId)
     {
-        await InvokeVoidAsync("updateConnectionNodes", nodeId);
+        await _js.InvokeVoidAsync("updateConnectionNodes", nodeId);
     }
 
     public async Task RemoveConnectionNodeIdAsync(string nodeId)
     {
-        await InvokeVoidAsync("removeConnectionNodeId", nodeId);
+        await _js.InvokeVoidAsync("removeConnectionNodeId", nodeId);
+    }
+
+    public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)
+    {
+        return _js.InvokeAsync<TValue>(identifier, args);
+    }
+
+    public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken, object?[]? args)
+    {
+        return _js.InvokeAsync<TValue>(identifier, cancellationToken, args);
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        return _js.DisposeAsync();
     }
 }
 

@@ -1,19 +1,25 @@
-﻿using BemIt;
-using Masa.Blazor;
-using Masa.Blazor.Attributes;
-using Masa.Blazor.Extensions;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Rendering;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
+using StateMachine.FlowComponent;
 
 namespace StateMachine;
 
-public class MStateMachineFlow : MDrop, IAsyncDisposable
+public class MStateMachineFlow : ComponentBase, IAsyncDisposable
 {
-    [Inject] private StateMachineFlowJSModule DrawflowJSModule { get; set; } = null!;
+    [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
+    private StateMachineFlowJSModule? DrawflowJSModule;
 
     [Parameter] public StateMachineFlowEditorMode Mode { get; set; }
 
     [Parameter] public EventCallback DataInitializer { get; set; }
+
+    [Parameter] public string? Class { get; set; }
+
+    [Parameter] public string? Style { get; set; }
+
+    [Parameter] public EventCallback<DragEventArgs> OnDrop { get; set; }
 
 
     [Parameter] public EventCallback<string> OnNodeCreated { get; set; }
@@ -42,18 +48,12 @@ public class MStateMachineFlow : MDrop, IAsyncDisposable
     private StateMachineFlowEditorMode? _prevMode;
     private IStateMachineFlowJSObjectReferenceProxy? _drawflowProxy;
     private DotNetObjectReference<object>? _interopHandleReference;
+    private string _elementId = $"smflow-{Guid.NewGuid():N}";
+    private string Selector => $"#{_elementId}";
 
-
-    private readonly ModifierBuilder _modifierBuilder = new Block("parent-drawflow").CreateModifierBuilder();
-    protected override string ClassString => _modifierBuilder.Add(Mode, "mode").AddClass(base.ClassString).Build();
-
-
-    //protected override string ClassString => new Block("m-drawflow").Modifier(Mode, "mode").AddClass(base.ClassString).Build();
 
     protected override async Task OnParametersSetAsync()
     {
-        await base.OnParametersSetAsync();
-
         if (_prevMode.HasValue && _prevMode != Mode)
         {
             _prevMode = Mode;
@@ -63,18 +63,34 @@ public class MStateMachineFlow : MDrop, IAsyncDisposable
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await base.OnAfterRenderAsync(firstRender);
-
         if (firstRender)
         {
+            DrawflowJSModule ??= new StateMachineFlowJSModule(JSRuntime);
             _interopHandleReference = DotNetObjectReference.Create<object>(new StateMachineFlowInteropHandle(this));
-            _drawflowProxy = await DrawflowJSModule.Init(ElementReference.GetSelector()!, _interopHandleReference, Mode);
+            _drawflowProxy = await DrawflowJSModule!.Init(Selector, _interopHandleReference, Mode);
 
             await DataInitializer.InvokeAsync();
         }
     }
 
-    [MasaApiPublicMethod]
+    protected override void BuildRenderTree(RenderTreeBuilder builder)
+    {
+        var seq = 0;
+        builder.OpenElement(seq++, "div");
+        builder.AddAttribute(seq++, "id", _elementId);
+        var modeClass = $"mode-{Mode.ToString().ToLower()}";
+        var classes = $"parent-drawflow {modeClass}";
+        if (!string.IsNullOrWhiteSpace(Class)) classes = $"{classes} {Class}";
+        builder.AddAttribute(seq++, "class", classes);
+        if (!string.IsNullOrWhiteSpace(Style)) builder.AddAttribute(seq++, "style", Style);
+        builder.AddAttribute(seq++, "ondragover", "event.preventDefault()");
+        if (OnDrop.HasDelegate)
+        {
+            builder.AddAttribute(seq++, "ondrop", EventCallback.Factory.Create<DragEventArgs>(this, (DragEventArgs e) => OnDrop.InvokeAsync(e)));
+        }
+        builder.CloseElement();
+    }
+
     public async Task<string?> AddNodeAsync(
         string name,
         int inputs,
@@ -93,7 +109,6 @@ public class MStateMachineFlow : MDrop, IAsyncDisposable
                                    .ConfigureAwait(false);
     }
 
-    [MasaApiPublicMethod]
     public async Task<string?> AddNodeAsync(
         int id,
         string name,
@@ -113,7 +128,6 @@ public class MStateMachineFlow : MDrop, IAsyncDisposable
                                    .ConfigureAwait(false);
     }
 
-    [MasaApiPublicMethod]
     public async Task<string?> DragNodeAsync(
         string name,
         int inputs,
@@ -132,7 +146,6 @@ public class MStateMachineFlow : MDrop, IAsyncDisposable
                                    .ConfigureAwait(false);
     }
 
-    [MasaApiPublicMethod]
     public async Task ZoomAsync(double zoom)
     {
         if (_drawflowProxy == null) return;
@@ -140,7 +153,6 @@ public class MStateMachineFlow : MDrop, IAsyncDisposable
                                    .ConfigureAwait(false);
     }
 
-    [MasaApiPublicMethod]
     public async Task RemoveNodeAsync(string nodeId)
     {
         if (_drawflowProxy == null) return;
@@ -148,7 +160,6 @@ public class MStateMachineFlow : MDrop, IAsyncDisposable
         await _drawflowProxy.RemoveNodeAsync(nodeId).ConfigureAwait(false);
     }
 
-    [MasaApiPublicMethod]
     public async Task AddConnectionAsync(string id_output, string id_input, string output_class, string input_class, string eventName)
     {
         if (_drawflowProxy == null) return;
@@ -157,7 +168,6 @@ public class MStateMachineFlow : MDrop, IAsyncDisposable
     }
 
 
-    [MasaApiPublicMethod]
     public async Task RemoveSingleConnectionAsync(string id_output, string id_input, string output_class, string input_class)
     {
         if (_drawflowProxy == null) return;
@@ -165,7 +175,6 @@ public class MStateMachineFlow : MDrop, IAsyncDisposable
         await _drawflowProxy.RemoveSingleConnectionAsync(id_output, id_input, output_class, input_class).ConfigureAwait(false);
     }
 
-    [MasaApiPublicMethod]
     public async Task SetConnectionNameAsync(string id_output, string id_input, string output_class, string input_class, string eventName)
     {
         if (_drawflowProxy == null) return;
@@ -173,7 +182,6 @@ public class MStateMachineFlow : MDrop, IAsyncDisposable
         await _drawflowProxy.SetConnectionNameAsync(id_output, id_input, output_class, input_class, eventName).ConfigureAwait(false);
     }
 
-    [MasaApiPublicMethod]
     public async Task<StateMachineFlowNode<TData>?> GetNodeFromIdAsync<TData>(string nodeId)
     {
         if (_drawflowProxy == null) return null;
@@ -181,7 +189,6 @@ public class MStateMachineFlow : MDrop, IAsyncDisposable
         return await _drawflowProxy.GetNodeFromIdAsync<TData>(nodeId).ConfigureAwait(false);
     }
 
-    [MasaApiPublicMethod]
     public async Task<List<int>?> GetNodesFromNameAsync(string nodeName)
     {
         if (_drawflowProxy == null) return null;
@@ -189,7 +196,6 @@ public class MStateMachineFlow : MDrop, IAsyncDisposable
         return await _drawflowProxy.GetNodesFromNameAsync(nodeName).ConfigureAwait(false);
     }
 
-    [MasaApiPublicMethod]
     public async Task UpdateNodeDataAsync(string nodeId, object data, string name)
     {
         if (_drawflowProxy == null) return;
@@ -197,7 +203,6 @@ public class MStateMachineFlow : MDrop, IAsyncDisposable
         await _drawflowProxy.UpdateNodeDataAsync(nodeId, data, name).ConfigureAwait(false);
     }
 
-    [MasaApiPublicMethod]
     public async Task UpdateNodeHTMLAsync(string nodeId, string html)
     {
         if (_drawflowProxy == null) return;
@@ -205,7 +210,6 @@ public class MStateMachineFlow : MDrop, IAsyncDisposable
         await _drawflowProxy.UpdateNodeHTMLAsync(nodeId, html).ConfigureAwait(false);
     }
 
-    [MasaApiPublicMethod]
     public async Task ClearAsync()
     {
         if (_drawflowProxy == null) return;
@@ -213,7 +217,6 @@ public class MStateMachineFlow : MDrop, IAsyncDisposable
         await _drawflowProxy.ClearAsync().ConfigureAwait(false);
     }
 
-    [MasaApiPublicMethod]
     public async Task ImportAsync(string json)
     {
         if (_drawflowProxy == null) return;
@@ -221,7 +224,6 @@ public class MStateMachineFlow : MDrop, IAsyncDisposable
         await _drawflowProxy.ImportAsync(json).ConfigureAwait(false);
     }
 
-    [MasaApiPublicMethod]
     public async Task<string?> ExportAsync(bool indented = false)
     {
         if (_drawflowProxy == null) return null;
@@ -229,7 +231,6 @@ public class MStateMachineFlow : MDrop, IAsyncDisposable
         return await _drawflowProxy.ExportAsync(indented).ConfigureAwait(false);
     }
 
-    [MasaApiPublicMethod]
     public async Task AddInputAsync(string nodeId)
     {
         if (_drawflowProxy == null) return;
@@ -237,7 +238,6 @@ public class MStateMachineFlow : MDrop, IAsyncDisposable
         await _drawflowProxy.AddInputAsync(nodeId).ConfigureAwait(false);
     }
 
-    [MasaApiPublicMethod]
     public async Task AddOutputAsync(string nodeId)
     {
         if (_drawflowProxy == null) return;
@@ -245,7 +245,6 @@ public class MStateMachineFlow : MDrop, IAsyncDisposable
         await _drawflowProxy.AddOutputAsync(nodeId).ConfigureAwait(false);
     }
 
-    [MasaApiPublicMethod]
     public async Task RemoveInputAsync(string nodeId, string inputClass)
     {
         if (_drawflowProxy == null) return;
@@ -253,7 +252,6 @@ public class MStateMachineFlow : MDrop, IAsyncDisposable
         await _drawflowProxy.RemoveInputAsync(nodeId, inputClass).ConfigureAwait(false);
     }
 
-    [MasaApiPublicMethod]
     public async Task RemoveOutputAsync(string nodeId, string outputClass)
     {
         if (_drawflowProxy == null) return;
@@ -261,7 +259,6 @@ public class MStateMachineFlow : MDrop, IAsyncDisposable
         await _drawflowProxy.RemoveOutputAsync(nodeId, outputClass).ConfigureAwait(false);
     }
 
-    [MasaApiPublicMethod]
     public async Task FocusNodeAsync(string nodeId)
     {
         if (_drawflowProxy == null) return;
@@ -269,7 +266,6 @@ public class MStateMachineFlow : MDrop, IAsyncDisposable
         await _drawflowProxy.FocusNodeAsync(nodeId).ConfigureAwait(false);
     }
 
-    [MasaApiPublicMethod]
     public async Task CenterNodeAsync(string nodeId, bool animate = true)
     {
         if (_drawflowProxy == null) return;
@@ -277,7 +273,6 @@ public class MStateMachineFlow : MDrop, IAsyncDisposable
         await _drawflowProxy.CenterNodeAsync(nodeId, animate).ConfigureAwait(false);
     }
 
-    [MasaApiPublicMethod]
     public async Task UpdateConnectionNodesAsync(string nodeId)
     {
         if (_drawflowProxy == null) return;
@@ -285,7 +280,6 @@ public class MStateMachineFlow : MDrop, IAsyncDisposable
         await _drawflowProxy.UpdateConnectionNodesAsync(nodeId).ConfigureAwait(false);
     }
 
-    [MasaApiPublicMethod]
     public async Task RemoveConnectionNodeIdAsync(string nodeId)
     {
         if (_drawflowProxy == null) return;

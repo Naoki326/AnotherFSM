@@ -1,18 +1,23 @@
-﻿using Masa.Blazor.JSInterop;
 using Microsoft.JSInterop;
+using StateMachine;
 
-namespace StateMachine;
+namespace StateMachine.FlowComponent;
 
-public class StateMachineFlowJSModule : JSModule
+public class StateMachineFlowJSModule
 {
-    public StateMachineFlowJSModule(IJSRuntime js) : base(js, "./_content/StateMachine.FlowComponent/drawflow-export.js")
+    private readonly IJSRuntime _js;
+    private IJSObjectReference? _module;
+
+    public StateMachineFlowJSModule(IJSRuntime js)
     {
+        _js = js;
     }
 
     public async ValueTask<IStateMachineFlowJSObjectReferenceProxy> Init(string selector, DotNetObjectReference<object> _dotNetObjectReference,
         StateMachineFlowEditorMode mode)
     {
-        var jsObject = await InvokeAsync<IJSObjectReference>("init", selector, _dotNetObjectReference, mode.ToString().ToLower());
+        _module ??= await _js.InvokeAsync<IJSObjectReference>("import", "./_content/StateMachine.FlowComponent/drawflow-export.js");
+        var jsObject = await _module.InvokeAsync<IJSObjectReference>("init", selector, _dotNetObjectReference, mode.ToString().ToLower());
         return new StateMachineFlowJSObjectReferenceProxy(jsObject);
     }
 }

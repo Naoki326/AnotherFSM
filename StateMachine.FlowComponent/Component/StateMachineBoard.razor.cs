@@ -1,4 +1,3 @@
-using Masa.Blazor;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
@@ -197,7 +196,7 @@ namespace StateMachine
             {
                 if (!engine.TryGetNode(selectedNodeName, out IFSMNode? node))
                 {
-                    await PopupService.EnqueueSnackbarAsync($"Node '{selectedNodeName}' not found", AlertTypes.Error);
+                    return;
                     return;
                 }
                 if (node is IFSMNodeSourceInfo nodeWithPath)
@@ -215,7 +214,7 @@ namespace StateMachine
                     var searchResult = SearchForSourceFile(solutionRoot, baseTypeName, nodeType.Namespace ?? "");
                     if (string.IsNullOrEmpty(searchResult))
                     {
-                        await PopupService.EnqueueSnackbarAsync($"Node '{selectedNodeName}' not found", AlertTypes.Error);
+                        return;
                         return;
                     }
                     selectedNodeFilePath = searchResult;
@@ -351,11 +350,10 @@ namespace StateMachine
                 try
                 {
                     await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", selectedNodeFilePath);
-                    await PopupService.EnqueueSnackbarAsync("File path copied to clipboard", AlertTypes.Success);
                 }
                 catch
                 {
-                    await PopupService.EnqueueSnackbarAsync("Failed to copy file path", AlertTypes.Error);
+                    
                 }
             }
         }
@@ -366,7 +364,7 @@ namespace StateMachine
             {
                 if (string.IsNullOrWhiteSpace(selectedNodeFilePath))
                 {
-                    await PopupService.EnqueueSnackbarAsync("No file path available", AlertTypes.Warning);
+                    return;
                     return;
                 }
 
@@ -385,7 +383,7 @@ namespace StateMachine
                     await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", selectedNodeFilePath);
                 }
                 catch { }
-                await PopupService.EnqueueSnackbarAsync("Failed to open VS Code. Path copied.", AlertTypes.Error);
+                
             }
         }
 
@@ -405,7 +403,7 @@ namespace StateMachine
             }
             catch (Exception e)
             {
-                await PopupService.EnqueueSnackbarAsync($"Import failed! Exception: {e.Message}", AlertTypes.Error);
+                
             }
             try
             {
@@ -414,7 +412,7 @@ namespace StateMachine
             }
             catch (Exception e)
             {
-                await PopupService.EnqueueSnackbarAsync($"Import failed! Exception: {e.Message}", AlertTypes.Error);
+                
             }
             finally
             {
@@ -467,12 +465,10 @@ namespace StateMachine
         {
             if (string.IsNullOrEmpty(inputName))
             {
-                await PopupService.EnqueueSnackbarAsync($"InputName is null", AlertTypes.Error);
                 return;
             }
             if (engine.GetNodeNames().Any(p => p == inputName))
             {
-                await PopupService.EnqueueSnackbarAsync($"Node {inputName} Exist", AlertTypes.Error);
                 return;
             }
             if (await _drawflow.GetNodeFromIdAsync<NodeData>(tempNodeId) is StateMachineFlowNode<NodeData> nodeInput
@@ -520,11 +516,20 @@ namespace StateMachine
             }
         }
 
-        ExDragEventArgs tempArgs = default!;
+        private string? draggingType;
+        private double dragStartOffsetX;
+        private double dragStartOffsetY;
 
-        private async Task DropAsync(ExDragEventArgs args)
+        private void OnNodeDragStart(DragEventArgs e, string nodeType)
         {
-            var nodeType = args.DataTransfer.Data.Value;
+            draggingType = nodeType;
+            dragStartOffsetX = e.OffsetX;
+            dragStartOffsetY = e.OffsetY;
+        }
+
+        private async Task DropAsync(DragEventArgs args)
+        {
+            var nodeType = draggingType;
             if (string.IsNullOrEmpty(nodeType))
             { return; }
 
@@ -546,8 +551,8 @@ namespace StateMachine
                 outputs: 1,
                 clientX: args.ClientX,
                 clientY: args.ClientY,
-                offsetX: args.DataTransfer.Data.OffsetX,
-                offsetY: args.DataTransfer.Data.OffsetY,
+                offsetX: dragStartOffsetX,
+                offsetY: dragStartOffsetY,
                 className: nodeTypes[nodeType],
                 data: new NodeData
                 {
@@ -558,8 +563,7 @@ namespace StateMachine
                 },
                 html: $"<div df-data style=\"text-align: center;cursor: pointer; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;\">{nodeType + nodeNameSuffix}<br>({nodeType})</div>");
 
-            tempArgs = args;
-
+            draggingType = null;
         }
 
         public async Task ZoomAsync(double zoom)
@@ -604,9 +608,8 @@ namespace StateMachine
                     ScriptChanged?.Invoke(engine.ToString());
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                await PopupService.EnqueueSnackbarAsync($"Node {nodeId} create failed! Exception: {ex.Message}", AlertTypes.Error);
                 await _drawflow.RemoveNodeAsync(nodeId);
             }
         }
@@ -667,7 +670,6 @@ namespace StateMachine
         {
             if (string.IsNullOrEmpty(inputName))
             {
-                await PopupService.EnqueueSnackbarAsync($"Input is empty!", AlertTypes.Error);
                 return;
             }
 
@@ -681,9 +683,8 @@ namespace StateMachine
                     await ChangeConnectionNameAsync(nodeOutput.Name, nodeInput.Name, inputName);
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                await PopupService.EnqueueSnackbarAsync(ex.Message, AlertTypes.Error);
             }
             //await _drawflow.SetConnectionNameAsync(tempConnectArgs.OutputId, tempConnectArgs.InputId, tempConnectArgs.OutputClass, tempConnectArgs.InputClass, inputName);
             //if (await _drawflow.GetNodeFromIdAsync<NodeData>(tempConnectArgs.InputId) is StateMachineFlowNode<NodeData> nodeInput
@@ -789,7 +790,6 @@ namespace StateMachine
                 else
                 {
                     await _drawflow.RemoveSingleConnectionAsync(args.OutputId, args.InputId, args.OutputClass, args.InputClass);
-                    await PopupService.EnqueueSnackbarAsync($"Connection {defaultEventName + eventNameSuffix} create failed! Exception: From {nodeOutput.Name} to {nodeInput.Name} exist.", AlertTypes.Error);
                 }
             }
         }
@@ -841,9 +841,9 @@ namespace StateMachine
             }
         }
 
-        private async Task ConnectionCancel(FlowConnectionError error)
+        private Task ConnectionCancel(FlowConnectionError error)
         {
-            await PopupService.EnqueueSnackbarAsync($"Connect failed! Exception: {error.ErrorMessage}", AlertTypes.Error);
+            return Task.CompletedTask;
         }
 
         private async Task NodeMoved(string nodeId)
