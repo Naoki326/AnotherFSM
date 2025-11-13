@@ -19,8 +19,6 @@ namespace StateMachine
         [Parameter]
         public List<string> NodeTypeNames { get; set; } = default!;
 
-        public event Action<string>? ScriptChanged;
-
         [Inject]
         public IJSRuntime JSRuntime { get; set; } = default!;
 
@@ -73,28 +71,18 @@ namespace StateMachine
         private MStateMachineFlow _drawflow = default!;
 
         async Task InnerNodeSelected(string id)
-    {
-        var node = await _drawflow.GetNodeFromIdAsync<NodeData>(id);
-        if (node != null)
         {
-            selectedNodeName = node.Data.Name;
-            await OnNodeSelected.InvokeAsync(node.Data);
+            var node = await _drawflow.GetNodeFromIdAsync<NodeData>(id);
+            if (node != null)
+            {
+                selectedNodeName = node.Data.Name;
+            }
         }
-    }
 
         async Task InnerNodeUnselected(string id)
-    {
-        selectedNodeName = "";
-        await OnNodeUnselected.InvokeAsync();
-    }
-
-        [Parameter] public EventCallback<NodeData> OnNodeSelected { get; set; }
-
-        [Parameter] public EventCallback OnNodeUnselected { get; set; }
-
-        [Parameter] public EventCallback<ConnectionData> OnConnectionSelected { get; set; }
-
-        [Parameter] public EventCallback OnConnectionUnselected { get; set; }
+        {
+            selectedNodeName = "";
+        }
 
         [Parameter] public FSMEngine StateMachineEngine { get; set; } = default!;
 
@@ -109,7 +97,6 @@ namespace StateMachine
             {
                 await ClearAsync();
                 engine = StateMachineEngine;
-                ScriptChanged?.Invoke(engine.ToString());
                 await CreateFromEngine();
             }
             await base.OnParametersSetAsync();
@@ -136,10 +123,39 @@ namespace StateMachine
             }
             if (engine == null)
                 return;
-            engine.ClearNodes();
-            ScriptChanged?.Invoke(engine.ToString());
             await _drawflow.ClearAsync();
         }
+
+        private Dictionary<string, int> flowID2Index = [];
+        private HashSet<int> usedIndex = [];
+        private int GetNextIndex()
+        {
+            Random rd = new Random();
+            var rdInt = rd.Next();
+            while (usedIndex.Contains(rdInt))
+            {
+                rdInt = rd.Next(500, 1000);
+            }
+            usedIndex.Add(rdInt);
+            return rdInt;
+        }
+        private int GetFlowIndex(string flowId)
+        {
+            if(int.TryParse(flowId, out int retInt))
+                return retInt;
+            if (!flowID2Index.ContainsKey(flowId))
+            {
+                flowID2Index[flowId] = GetNextIndex();
+            }
+            return flowID2Index[flowId];
+        }
+
+        private string GetFlowIndexStr(string flowId)
+        {
+            return GetFlowIndex(flowId).ToString();
+        }
+
+        [Parameter] public List<string> IgnoreTransNodes { get; set; }
 
         private async Task CreateFromEngine()
         {
@@ -149,7 +165,7 @@ namespace StateMachine
             {
                 var state = engine[stateName];
                 await _drawflow.AddNodeAsync(
-                    id: int.Parse(state.FlowID),
+                    id: GetFlowIndex(state.FlowID),
                     name: state.Name,
                     inputs: 1,
                     outputs: 1,
@@ -170,10 +186,17 @@ namespace StateMachine
 
             foreach (string stateName in engine.GetNodeNames())
             {
+                if(IgnoreTransNodes is not null && IgnoreTransNodes.Contains(stateName))
+                {
+                    continue;
+                }
                 var state = engine[stateName];
-                state.UpdateEventDescriptions();
                 foreach (var transition in state.GetFSMTransitions())
                 {
+                    if (IgnoreTransNodes is not null && IgnoreTransNodes.Contains(transition.Target.Name))
+                    {
+                        continue;
+                    }
                     if (await _drawflow.GetNodesFromNameAsync(transition.Target.Name) is List<int> nodeInputs
                         && await _drawflow.GetNodesFromNameAsync(transition.Source.Name) is List<int> nodeOutputs)
                     {
@@ -196,7 +219,6 @@ namespace StateMachine
             {
                 if (!engine.TryGetNode(selectedNodeName, out IFSMNode? node))
                 {
-                    return;
                     return;
                 }
                 if (node is IFSMNodeSourceInfo nodeWithPath)
@@ -365,7 +387,6 @@ namespace StateMachine
                 if (string.IsNullOrWhiteSpace(selectedNodeFilePath))
                 {
                     return;
-                    return;
                 }
 
                 // Normalize Windows path to vscode://file URI (use forward slashes)
@@ -387,45 +408,12 @@ namespace StateMachine
             }
         }
 
-        public async Task ImportAsync(string _importData)
-        {
-            if (isImport)
-                return;
-            if (string.IsNullOrWhiteSpace(_importData))
-            {
-                return;
-            }
-            isImport = true;
-            await ClearAsync();
-            try
-            {
-                engine.CreateStateMachine(_importData);
-            }
-            catch (Exception e)
-            {
-                
-            }
-            try
-            {
-                ScriptChanged?.Invoke(engine.ToString());
-                await CreateFromEngine();
-            }
-            catch (Exception e)
-            {
-                
-            }
-            finally
-            {
-                isImport = false;
-            }
-        }
-
         // $"<div df-data style=\"text-align: center;cursor: pointer;\">{nodeInput.Name}<br>({nodeInput.Data.Type})</div>";
         public async Task UpdateNodeHTMLAsync(string nodeName, string html)
         {
             if (!engine.ContainsNode(nodeName))
                 return;
-            string nodeId = engine[nodeName].FlowID;
+            string nodeId = GetFlowIndexStr(engine[nodeName].FlowID);
             if (await _drawflow.GetNodeFromIdAsync<NodeData>(nodeId) is StateMachineFlowNode<NodeData> nodeInput
                 && nodeInput.Data != null && nodeInput.Class != null && nodeInput.Name != null)
             {
@@ -443,78 +431,9 @@ namespace StateMachine
     public partial class StateMachineBoard
     {
 
-        private bool changeNodeNameDialog = false;
-
         private string inputName = "";
 
         private string tempNodeId = "";
-        private async Task NodeDblClick(string id)
-        {
-            tempNodeId = id;
-            var nodeInput = await _drawflow.GetNodeFromIdAsync<NodeData>(tempNodeId);
-            inputName = nodeInput.Name;
-            changeNodeNameDialog = true;
-        }
-
-        private async Task OnNodeNameKeyUp(KeyboardEventArgs args)
-        {
-            if (args.Key == "Enter")
-                await ChangeNodeName();
-        }
-        private async Task ChangeNodeName()
-        {
-            if (string.IsNullOrEmpty(inputName))
-            {
-                return;
-            }
-            if (engine.GetNodeNames().Any(p => p == inputName))
-            {
-                return;
-            }
-            if (await _drawflow.GetNodeFromIdAsync<NodeData>(tempNodeId) is StateMachineFlowNode<NodeData> nodeInput
-                && nodeInput.Data != null && nodeInput.Class != null && nodeInput.Name != null)
-            {
-                engine.TryChangeNodeName(nodeInput.Name, inputName);
-                ScriptChanged?.Invoke(engine.ToString());
-
-                nodeInput.Data.Name = inputName;
-                nodeInput.Name = inputName;
-                nodeInput.Html = $"<div df-data style=\"text-align: center;cursor: pointer; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;\">{inputName}<br>({nodeInput.Data.Type})</div>";
-                await _drawflow.UpdateNodeDataAsync(tempNodeId, nodeInput.Data, inputName);
-                await _drawflow.UpdateNodeHTMLAsync(tempNodeId, nodeInput.Html);
-            }
-            changeNodeNameDialog = false;
-            inputName = "";
-        }
-
-        private void CancelChangeNodeName()
-        {
-            inputName = "";
-            changeNodeNameDialog = false;
-        }
-
-        public async Task ChangeNodeNameAsync(string oldName, string newName)
-        {
-            if (string.IsNullOrEmpty(newName))
-                throw new InvalidOperationException("Node name is null");
-            if (!engine.ContainsNode(oldName))
-                throw new KeyNotFoundException($"Node {oldName} doesn't exist!");
-            if (engine.ContainsNode(newName))
-                throw new InvalidOperationException($"Node {inputName} Exist");
-
-            if (await _drawflow.GetNodeFromIdAsync<NodeData>(engine[oldName].FlowID) is StateMachineFlowNode<NodeData> nodeInput
-                && nodeInput.Id != null && nodeInput.Data != null && nodeInput.Class != null && nodeInput.Name != null)
-            {
-                engine.TryChangeNodeName(oldName, newName);
-                ScriptChanged?.Invoke(engine.ToString());
-
-                nodeInput.Data.Name = newName;
-                nodeInput.Name = newName;
-                nodeInput.Html = $"<div df-data style=\"text-align: center;cursor: pointer; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;\">{newName}<br>({nodeInput.Data.Type})</div>";
-                await _drawflow.UpdateNodeDataAsync(nodeInput.Id, nodeInput.Data, newName);
-                await _drawflow.UpdateNodeHTMLAsync(nodeInput.Id, nodeInput.Html);
-            }
-        }
 
         private string? draggingType;
         private double dragStartOffsetX;
@@ -573,279 +492,6 @@ namespace StateMachine
             await _drawflow.ZoomAsync(zoom);
         }
 
-        private async Task NodeCreated(string nodeId)
-        {
-            if (isImport)
-                return;
-            try
-            {
-                if (await _drawflow.GetNodeFromIdAsync<NodeData>(nodeId) is StateMachineFlowNode<NodeData> node
-                    && node.Data != null
-                    && node.Class != null && node.Name != null)
-                {
-                    engine.CreateNode(node.Data.Type, node.Name);
-                    var state = engine[node.Name];
-                    state.PosX = Math.Round(node.Pos_X);
-                    state.PosY = Math.Round(node.Pos_Y);
-                    state.Color = node.Data.Color;
-                    state.ClassType = node.Data.Type;
-                    state.FlowID = nodeId;
-                    //初始化节点内部发出的事件
-                    if (state.GetType().GetCustomAttributes(typeof(FSMNodeAttribute), true).FirstOrDefault() is FSMNodeAttribute info
-                        && info.Indexes.Length == info.EventDescriptions.Length)
-                    {
-                        state.EventDescriptions = Enumerable.Range(0, info.Indexes.Length)
-                            .Select(i => new NodeEventDescription() { Index = info.Indexes[i], Description = info.EventDescriptions[i] })
-                            .ToList();
-                        foreach (var ed in state.EventDescriptions)
-                        {
-                            if (!engine.TryGetEvent(ed.Description, out FSMEvent e))
-                            { e = new FSMEvent(ed.Description); engine.AddEvent(e); }
-                            state.SetBranchEvent(ed.Index, e);
-                        }
-                    }
-                    await OnNodeCreated.InvokeAsync(node.Name);
-                    ScriptChanged?.Invoke(engine.ToString());
-                }
-            }
-            catch (Exception)
-            {
-                await _drawflow.RemoveNodeAsync(nodeId);
-            }
-        }
-
-        [Parameter]
-        public EventCallback<string> OnNodeCreated { get; set; }
-
-        public async Task RemoveNodeAsync(string nodeName)
-        {
-            if (!engine.ContainsNode(nodeName))
-                throw new KeyNotFoundException($"Node {nodeName} not found!");
-            var nodeId = engine[nodeName].FlowID;
-            await _drawflow.RemoveNodeAsync(nodeId);
-        }
-
-        private void NodeRemoved(string nodeId)
-        {
-            if (engine.FirstOrDefault(p => engine[p.Name].FlowID == nodeId) is IFSMNode nd)
-            {
-                engine[nd.Name].ClearTransition();
-                engine.TryDeleteNode(nd.Name);
-                ScriptChanged?.Invoke(engine.ToString());
-            }
-        }
-
-        public void OpenChangeNodeNameDialog(string nodeName)
-        {
-            if (!engine.ContainsNode(nodeName))
-                return;
-            tempNodeId = engine[nodeName].FlowID;
-            inputName = nodeName;
-            changeNodeNameDialog = true;
-        }
-
-        public void OpenChangeConnectionNameDialog(string outputNodeName, string inputNodeName)
-        {
-            tempConnectArgs = new FlowConnectionArgs()
-            {
-                InputClass = "input_1",
-                OutputClass = "output_1",
-                InputId = engine[inputNodeName].FlowID,
-                OutputId = engine[outputNodeName].FlowID,
-            };
-            inputName = engine[outputNodeName].GetFSMTransition(inputNodeName).Trigger.EventName;
-            changeConnectionNameDialog = true;
-        }
-
-        private bool changeConnectionNameDialog = false;
-
-        private FlowConnectionArgs tempConnectArgs = default!;
-        private async Task OnCDKeyUp(KeyboardEventArgs args)
-        {
-            if (args.Key == "Enter")
-                await ChangeConnectionName();
-        }
-
-        private async Task ChangeConnectionName()
-        {
-            if (string.IsNullOrEmpty(inputName))
-            {
-                return;
-            }
-
-            try
-            {
-                if (await _drawflow.GetNodeFromIdAsync<NodeData>(tempConnectArgs.InputId) is StateMachineFlowNode<NodeData> nodeInput
-                && nodeInput.Class != null && nodeInput.Name != null
-                && await _drawflow.GetNodeFromIdAsync<NodeData>(tempConnectArgs.OutputId) is StateMachineFlowNode<NodeData> nodeOutput
-                && nodeOutput.Class != null && nodeOutput.Name != null)
-                {
-                    await ChangeConnectionNameAsync(nodeOutput.Name, nodeInput.Name, inputName);
-                }
-            }
-            catch (Exception)
-            {
-            }
-            //await _drawflow.SetConnectionNameAsync(tempConnectArgs.OutputId, tempConnectArgs.InputId, tempConnectArgs.OutputClass, tempConnectArgs.InputClass, inputName);
-            //if (await _drawflow.GetNodeFromIdAsync<NodeData>(tempConnectArgs.InputId) is StateMachineFlowNode<NodeData> nodeInput
-            //    && nodeInput.Class != null && nodeInput.Name != null
-            //    && await _drawflow.GetNodeFromIdAsync<NodeData>(tempConnectArgs.OutputId) is StateMachineFlowNode<NodeData> nodeOutput
-            //    && nodeOutput.Class != null && nodeOutput.Name != null)
-            //{
-            //    if (!engine.TryGetEvent(inputName, out FSMEvent? sEvent))
-            //    {
-            //        sEvent = new FSMEvent(inputName);
-            //    }
-            //    if (!engine[nodeOutput.Name].HasTransition(sEvent))
-            //    {
-            //        engine[nodeOutput.Name].DeleteTransition(engine[nodeInput.Name]);
-            //        engine[nodeOutput.Name].AddTransition(sEvent, engine[nodeInput.Name]);
-            //        ScriptChanged?.Invoke(engine.ToString());
-            //    }
-            //    else
-            //    {
-            //        await PopupService.EnqueueSnackbarAsync($"Connection {inputName} create failed! Exception: Current node Contains {inputName}", AlertTypes.Error);
-            //    }
-            //}
-            inputName = "";
-            changeConnectionNameDialog = false;
-        }
-
-        public async Task ChangeConnectionNameAsync(string fromNodeName, string toNodeName, string newName)
-        {
-            if (string.IsNullOrEmpty(fromNodeName) || string.IsNullOrEmpty(toNodeName))
-                throw new InvalidOperationException("Node name is null");
-            if (string.IsNullOrEmpty(newName))
-                throw new InvalidOperationException("Connection name is null");
-            if (!engine.ContainsNode(fromNodeName))
-                throw new KeyNotFoundException($"Node {fromNodeName} doesn't exist!");
-            if (!engine.ContainsNode(toNodeName))
-                throw new InvalidOperationException($"Node {toNodeName} doesn't Exist");
-
-            await _drawflow.SetConnectionNameAsync(engine[fromNodeName].FlowID, engine[toNodeName].FlowID, "output_1", "input_1", newName);
-
-            if (!engine.TryGetEvent(newName, out FSMEvent? sEvent))
-            {
-                sEvent = new FSMEvent(newName);
-                engine.AddEvent(sEvent);
-            }
-            if (!engine[fromNodeName].HasTransition(sEvent))
-            {
-                engine[fromNodeName].DeleteTransition(engine[toNodeName]);
-                engine[fromNodeName].AddTransition(sEvent, engine[toNodeName]);
-                ScriptChanged?.Invoke(engine.ToString());
-            }
-            else
-            {
-                throw new InvalidOperationException($"Connection {newName} create failed! Exception: Current node Contains {newName}");
-            }
-        }
-
-        private void CancelChangeConnectionName()
-        {
-            inputName = "";
-            changeConnectionNameDialog = false;
-        }
-
-        private async Task ConnectionCreated(FlowConnectionArgs args)
-        {
-            if (isImport)
-                return;
-            if (await _drawflow.GetNodeFromIdAsync<NodeData>(args.InputId) is StateMachineFlowNode<NodeData> nodeInput
-                && nodeInput.Class != null && nodeInput.Name != null
-                && await _drawflow.GetNodeFromIdAsync<NodeData>(args.OutputId) is StateMachineFlowNode<NodeData> nodeOutput
-                && nodeOutput.Class != null && nodeOutput.Name != null)
-            {
-                string eventNameSuffix = "";
-                int suffixI = 1;
-                string defaultEventName = "NextEvent";
-                if (engine.TryGetEvent(defaultEventName, out FSMEvent? sEvent))
-                {
-                    //流程引擎中已有该事件
-
-                    while (engine[nodeOutput.Name].HasTransition(sEvent))
-                    {
-                        //当前output节点已有该事件
-                        eventNameSuffix = suffixI.ToString();
-                        suffixI++;
-                        if (!engine.TryGetEvent(defaultEventName + eventNameSuffix, out sEvent))
-                        {
-                            sEvent = new FSMEvent(defaultEventName + eventNameSuffix);
-                            engine.AddEvent(sEvent);
-                        }
-                    }
-                }
-                else
-                {
-                    sEvent = new FSMEvent(defaultEventName);
-                    engine.AddEvent(sEvent);
-                }
-
-                if (!engine[nodeOutput.Name].HasTransition(engine[nodeInput.Name]))
-                {
-                    await _drawflow.SetConnectionNameAsync(args.OutputId, args.InputId, args.OutputClass, args.InputClass, defaultEventName + eventNameSuffix);
-                    engine[nodeOutput.Name].AddTransition(sEvent, engine[nodeInput.Name]);
-                    ScriptChanged?.Invoke(engine.ToString());
-                }
-                else
-                {
-                    await _drawflow.RemoveSingleConnectionAsync(args.OutputId, args.InputId, args.OutputClass, args.InputClass);
-                }
-            }
-        }
-
-        public async Task RemoveConnectionAsync(string fromNodeName, string toNodeName)
-        {
-            if (!engine.ContainsNode(fromNodeName)
-                || !engine.ContainsNode(toNodeName))
-            {
-                throw new KeyNotFoundException("Connection not found!");
-            }
-            await _drawflow.RemoveSingleConnectionAsync(engine[fromNodeName].FlowID, engine[toNodeName].FlowID, "output_1", "input_1");
-        }
-        private async void ConnectionSelected(FlowConnectionArgs args)
-        {
-            if (engine.FirstOrDefault(p => p.FlowID == args.OutputId) is IFSMNode fromNode
-                && engine.FirstOrDefault(p => p.FlowID == args.InputId) is IFSMNode toNode)
-            {
-                await OnConnectionSelected.InvokeAsync(new ConnectionData()
-                {
-                    FromNodeName = fromNode.Name,
-                    ToNodeName = toNode.Name,
-                });
-            }
-        }
-
-        private async Task ConnectionDblClick(FlowConnectionArgs args)
-        {
-            if (isImport)
-                return;
-            tempConnectArgs = args;
-            if (await _drawflow.GetNodeFromIdAsync<NodeData>(args.InputId) is StateMachineFlowNode<NodeData> nodeInput
-                && nodeInput.Class != null && nodeInput.Name != null
-                && await _drawflow.GetNodeFromIdAsync<NodeData>(args.OutputId) is StateMachineFlowNode<NodeData> nodeOutput
-                && nodeOutput.Class != null && nodeOutput.Name != null)
-            {
-                inputName = engine[nodeOutput.Name].GetFSMTransition(nodeInput.Name).Trigger.EventName;
-            }
-            changeConnectionNameDialog = true;
-        }
-
-        private void ConnectionRemoved(FlowConnectionArgs args)
-        {
-            if (engine.FirstOrDefault(p => p.FlowID == args.InputId) is IFSMNode Input
-                && engine.FirstOrDefault(p => p.FlowID == args.OutputId) is IFSMNode Output)
-            {
-                Output.DeleteTransition(Input);
-                ScriptChanged?.Invoke(engine.ToString());
-            }
-        }
-
-        private Task ConnectionCancel(FlowConnectionError error)
-        {
-            return Task.CompletedTask;
-        }
-
         private async Task NodeMoved(string nodeId)
         {
             if (await _drawflow.GetNodeFromIdAsync<NodeData>(nodeId) is StateMachineFlowNode<NodeData> node
@@ -853,7 +499,6 @@ namespace StateMachine
             {
                 engine[node.Name].PosX = node.Pos_X;
                 engine[node.Name].PosY = node.Pos_Y;
-                ScriptChanged?.Invoke(engine.ToString());
             }
         }
 

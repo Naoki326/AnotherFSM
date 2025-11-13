@@ -24,19 +24,10 @@
     </div>
 
     <div style="flex: 1; position: relative;">
-        <MStateMachineFlow Class="@Class" Style="@Style"
+        <MStateMachineFlow Class="@((string.IsNullOrWhiteSpace(Class) ? "sm-workspace" : $"sm-workspace {Class}"))" Style="@Style"
                    OnNodeSelected="@InnerNodeSelected"
                    OnNodeUnselected="@InnerNodeUnselected"
                    OnDrop="@DropAsync"
-                   OnNodeCreated="@NodeCreated"
-                   OnNodeRemoved="@NodeRemoved"
-                   OnConnectionCreated="@ConnectionCreated"
-                   OnConnectionRemoved="@ConnectionRemoved"
-                   OnConnectionCancel="@ConnectionCancel"
-                   OnConnectionDblClick="@ConnectionDblClick"
-                   OnConnectionSelected="@ConnectionSelected"
-                   OnConnectionUnselected="@OnConnectionUnselected"
-                   OnNodeDblClick="@NodeDblClick"
                    OnNodeMoved="@NodeMoved"
                    Mode="Mode"
                    DataInitializer="@DataInitializer"
@@ -52,38 +43,6 @@
     </div>
 
 </div>
-
-@if (changeConnectionNameDialog)
-{
-    <div class="sm-dialog-backdrop" style="position:fixed;inset:0;background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;">
-        <div class="sm-dialog" style="background:#fff;border-radius:8px;min-width:320px;max-width:500px;padding:16px;box-shadow:0 6px 24px rgba(0,0,0,0.2);">
-            <div class="sm-dialog-title" style="font-weight:bold;margin-bottom:8px;">Set Connection Name</div>
-            <div class="sm-dialog-body" style="margin-bottom:12px;">
-                <input @bind="inputName" @onkeyup="OnCDKeyUp" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px;" />
-            </div>
-            <div class="sm-dialog-actions" style="display:flex;gap:8px;justify-content:flex-end;">
-                <button @onclick="ChangeConnectionName" style="padding:6px 12px;border:1px solid #1976d2;background:#1976d2;color:#fff;border-radius:4px;">Confirm</button>
-                <button @onclick="CancelChangeConnectionName" style="padding:6px 12px;border:1px solid #ccc;background:#fff;border-radius:4px;">Cancel</button>
-            </div>
-        </div>
-    </div>
-}
-
-@if (changeNodeNameDialog)
-{
-    <div class="sm-dialog-backdrop" style="position:fixed;inset:0;background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;">
-        <div class="sm-dialog" style="background:#fff;border-radius:8px;min-width:320px;max-width:500px;padding:16px;box-shadow:0 6px 24px rgba(0,0,0,0.2);">
-            <div class="sm-dialog-title" style="font-weight:bold;margin-bottom:8px;">Set Node Name</div>
-            <div class="sm-dialog-body" style="margin-bottom:12px;">
-                <input @bind="inputName" @onkeyup="OnNodeNameKeyUp" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px;" />
-            </div>
-            <div class="sm-dialog-actions" style="display:flex;gap:8px;justify-content:flex-end;">
-                <button @onclick="ChangeNodeName" style="padding:6px 12px;border:1px solid #1976d2;background:#1976d2;color:#fff;border-radius:4px;">Confirm</button>
-                <button @onclick="CancelChangeNodeName" style="padding:6px 12px;border:1px solid #ccc;background:#fff;border-radius:4px;">Cancel</button>
-            </div>
-        </div>
-    </div>
-}
 
 @if (nodeInfoDialog)
 {
@@ -111,6 +70,7 @@
 }
 
 <style>
+    @@import url('https://cdn.masastack.com/npm/drawflow/0.0.59/drawflow.min.css');
     .sm-board {
         display: flex;
         flex-direction: row;
@@ -128,6 +88,19 @@
         border-radius: 4px;
         padding: 15px;
         margin-right: 8px;
+    }
+    .sm-workspace {
+        position: relative;
+        background: white;
+        background-size: 25px 25px;
+        background-image: linear-gradient(to right, #f1f1f1 1px, transparent 1px), linear-gradient(to bottom, #f1f1f1 1px, transparent 1px);
+        height: 80vh;
+        width: 100%;
+        overflow: hidden;
+    }
+    .parent-drawflow {
+        width: 100%;
+        height: 100%;
     }
     
     .node-info-content {
@@ -159,5 +132,4 @@
         z-index: 10000;
     }
 </style>
-
 
