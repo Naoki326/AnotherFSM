@@ -118,13 +118,9 @@ namespace StateMachine
 
         public override object VisitFlowIDDef([NotNull] StateMachineScriptParser.FlowIDDefContext context)
         {
-            if (context.STRING() != null)
+            if (context.GUID() != null)
             {
-                node.FlowID = context.STRING().GetText();
-            }
-            else if (context.INT() != null)
-            {
-                node.FlowID = context.INT().GetText();
+                node.FlowID = context.GUID().GetText();
             }
             return base.VisitFlowIDDef(context);
         }
