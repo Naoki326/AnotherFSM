@@ -8,10 +8,11 @@
     <DevelopmentDependency>true</DevelopmentDependency>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageId>FSMScriptAnalyzer</PackageId>
-    <Version>1.0.0</Version>
-    <Authors>AnotherFSM</Authors>
+    <PackageId>Naoki.AnotherFSM.FSMScriptAnalyzer</PackageId>
+    <Version>1.1.1</Version>
+    <Authors>Naoki</Authors>
     <Description>FSMScript 增量源生成器：将 .FSMScript 转换为强类型类。</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>

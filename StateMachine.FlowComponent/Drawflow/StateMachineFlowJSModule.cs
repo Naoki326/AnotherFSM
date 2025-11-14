@@ -16,7 +16,7 @@ public class StateMachineFlowJSModule
     public async ValueTask<IStateMachineFlowJSObjectReferenceProxy> Init(string selector, DotNetObjectReference<object> _dotNetObjectReference,
         StateMachineFlowEditorMode mode)
     {
-        _module ??= await _js.InvokeAsync<IJSObjectReference>("import", "./_content/StateMachine.FlowComponent/drawflow-export.js");
+        _module ??= await _js.InvokeAsync<IJSObjectReference>("import", "./_content/Naoki.AnotherFSM.FlowComponent/drawflow-export.js");
         var jsObject = await _module.InvokeAsync<IJSObjectReference>("init", selector, _dotNetObjectReference, mode.ToString().ToLower());
         return new StateMachineFlowJSObjectReferenceProxy(jsObject);
     }
