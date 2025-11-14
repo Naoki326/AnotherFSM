@@ -36,7 +36,7 @@
         
         @if (!string.IsNullOrEmpty(selectedNodeName))
         {
-            <div style="position: absolute; top: 10px; right: 10px; z-index: 10000;">
+            <div style="position: absolute; top: 10px; left: 10px; z-index: 10000;">
                 <button @onclick="@ShowNodeInfo" style="padding:6px 12px;border:1px solid #1976d2;background:#1976d2;color:#fff;border-radius:4px;">Node Info</button>
             </div>
         }
@@ -63,6 +63,7 @@
             <div class="sm-dialog-actions" style="display:flex;gap:8px;justify-content:flex-end;">
                 <button @onclick="CloseNodeInfoDialog" style="padding:6px 12px;border:1px solid #1976d2;background:#1976d2;color:#fff;border-radius:4px;">Close</button>
                 <button @onclick="CopyFilePath" style="padding:6px 12px;border:1px solid #ccc;background:#fff;border-radius:4px;">Copy Path</button>
+                <button @onclick="OpenInRider" style="padding:6px 12px;border:1px solid #ccc;background:#fff;border-radius:4px;">Open in Rider</button>
                 <button @onclick="OpenInVSCode" style="padding:6px 12px;border:1px solid #ccc;background:#fff;border-radius:4px;">Open in VS Code</button>
             </div>
         </div>
