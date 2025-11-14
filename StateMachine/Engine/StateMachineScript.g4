@@ -43,7 +43,7 @@ state_branch
 	| 'Pos' COLON position	SEMICOLON										#PosDef
     | 'Color' COLON CODESTRING	 SEMICOLON									#ColorDef
     | 'Type' COLON STRING	 SEMICOLON										#TypeDef
-    | 'FlowID' COLON GUID	 SEMICOLON										#FlowIDDef
+    | 'FlowID' COLON (GUID | INT)	 SEMICOLON								#FlowIDDef
 ;
 
 state_group
