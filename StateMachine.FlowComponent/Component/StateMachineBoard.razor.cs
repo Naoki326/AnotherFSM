@@ -387,6 +387,59 @@ namespace StateMachine
             }
         }
 
+        private Task OpenInRiderLocal(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path)) return Task.CompletedTask;
+            if (OperatingSystem.IsBrowser()) return Task.CompletedTask;
+            try
+            {
+                var psi = new ProcessStartInfo("rider64.exe", $"\"{path}\"") { UseShellExecute = true };
+                Process.Start(psi);
+            }
+            catch { }
+            return Task.CompletedTask;
+        }
+
+        private async Task OpenInRider()
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(selectedNodeFilePath))
+                {
+                    return;
+                }
+                await OpenInRiderLocal(selectedNodeFilePath);
+                return;
+
+                //var normalized = selectedNodeFilePath.Replace('\\', '/');
+                //var candidates = new string[]
+                //{
+                //    $"jetbrains://rider/open?file={normalized}",
+                //    $"jetbrains://open?ide=rider&file={normalized}",
+                //    $"rider://open?file={normalized}"
+                //};
+
+                //foreach (var uri in candidates)
+                //{
+                //    try
+                //    {
+                //        await JSRuntime.InvokeVoidAsync("open", uri, "_self");
+                //        return;
+                //    }
+                //    catch { }
+                //}
+            }
+            catch
+            {
+            }
+
+            //try
+            //{
+            //    await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", selectedNodeFilePath);
+            //}
+            //catch { }
+        }
+
         public async Task ImportAsync(string _importData)
         {
             if (isImport)
