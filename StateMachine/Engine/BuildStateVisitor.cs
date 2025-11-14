@@ -122,6 +122,10 @@ namespace StateMachine
             {
                 node.FlowID = context.GUID().GetText();
             }
+            else if (context.INT() != null)
+            {
+                node.FlowID = context.INT().GetText();
+            }
             return base.VisitFlowIDDef(context);
         }
 
