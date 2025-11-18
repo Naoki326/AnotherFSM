@@ -43,7 +43,7 @@ state_branch
 	| 'Pos' COLON position	SEMICOLON										#PosDef
     | 'Color' COLON CODESTRING	 SEMICOLON									#ColorDef
     | 'Type' COLON STRING	 SEMICOLON										#TypeDef
-    | 'FlowID' COLON (GUID | INT)	 SEMICOLON								#FlowIDDef
+    | 'FlowID' COLON (GUID | STRING | INT)	 SEMICOLON						#FlowIDDef
 ;
 
 state_group
@@ -89,10 +89,12 @@ COLON : ':' ;
 
 SEMICOLON : ';' ;
 
-STRING : [_A-Za-z\u0391-\u03A9\u03B1-\u03C9\u4e00-\u9fa5][0-9_A-Za-z\u0391-\u03A9\u03B1-\u03C9\u4e00-\u9fa5]* ; 
+CODESTRING : '"'.*?'"' ;
 
 // GUID格式: 8-4-4-4-12 的十六进制数字，用连字符分隔
 GUID : HEX8 '-' HEX4 '-' HEX4 '-' HEX4 '-' HEX12;
+
+STRING : [_A-Za-z\u0391-\u03A9\u03B1-\u03C9\u4e00-\u9fa5][0-9_A-Za-z\u0391-\u03A9\u03B1-\u03C9\u4e00-\u9fa5]* ; 
 
 // 可选的：匹配带花括号的GUID格式
 // BRACED_GUID : '{' HEX8 '-' HEX4 '-' HEX4 '-' HEX4 '-' HEX12 '}';
@@ -102,8 +104,6 @@ fragment HEX8 : HEX HEX HEX HEX HEX HEX HEX HEX;
 fragment HEX4 : HEX HEX HEX HEX;
 fragment HEX12 : HEX HEX HEX HEX HEX HEX HEX HEX HEX HEX HEX HEX;
 fragment HEX : [0-9a-fA-F];
-
-CODESTRING : '"'.*?'"' ;
 
 INT : '-'?'0'..'9'+ ;
 
