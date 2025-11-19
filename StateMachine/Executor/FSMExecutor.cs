@@ -179,10 +179,12 @@ namespace StateMachine
         private async Task ConsumerTask(bool isLongRunning)
         {
             // 设定同步上下文
+            SynchronizationContext? prevContext = null;
             FSMSyncContext executorContext = null!;
             if (isLongRunning)
             {
-                executorContext = new FSMSyncContext();
+                prevContext = SynchronizationContext.Current;
+                executorContext = new FSMSyncContext(prevContext);
                 SynchronizationContext.SetSynchronizationContext(executorContext);
                 await Task.Yield();
             }
@@ -260,6 +262,10 @@ namespace StateMachine
             }
             finally
             {
+                if (isLongRunning)
+                {
+                    SynchronizationContext.SetSynchronizationContext(prevContext);
+                }
                 eventAggregator.Unsubscribe(this);
                 executorContext?.Dispose();
             }
