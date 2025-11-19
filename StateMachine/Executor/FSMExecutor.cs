@@ -400,52 +400,6 @@ namespace StateMachine
             return true;
         }
 
-        private async Task<bool> WaitStopAsync()
-        {
-            TrackCallname();
-            State = FSMState.Stopping;
-            using IDisposable state2Stop = Disposable.Create(() =>
-            {
-                State = FSMState.Stoped;
-            });
-            if (eventConsumer is not null)
-            {
-                while (eventConsumer.Reader.Count > 0)
-                { _ = eventConsumer.Reader.TryRead(out _); }
-            }
-            Exception e = default!;
-            if (currentNode != null && !currentNode.Context.IsPaused)
-            {
-                try
-                {
-                    await currentNode.WaitCurrentTask;
-                }
-                catch (Exception ex)
-                {
-                    e = ex;
-                }
-            }
-            while (eventConsumer.Reader.Count > 0)
-            { _ = eventConsumer.Reader.TryRead(out _); }
-            _ = eventConsumer.Writer.TryComplete();
-            if (ExecutorTask != null)
-            {
-                try
-                {
-                    await ExecutorTask;
-                }
-                catch (Exception ex)
-                {
-                    if (e != null)
-                    {
-                        throw new FSMException($"WaitCurrentTask 等待异常. {e.Message}");
-                    }
-                    throw new FSMException($"NodeTask 等待异常. {ex.Message}");
-                }
-            }
-            return true;
-        }
-
         private void InitNodes()
         {
             start.InitBeforeStart();
@@ -459,7 +413,7 @@ namespace StateMachine
         public async Task<bool> RestartAsync(bool isLongRunning = false)
         {
             TrackCallname();
-            if (!await WaitStopAsync())
+            if (!await StopAsync())
             { return false; }
             if (eventConsumer != null && !eventConsumer.Reader.Completion.IsCompleted)
             { return false; }
@@ -485,7 +439,7 @@ namespace StateMachine
         public async Task<bool> RestartAsync(IFSMNode node, bool isLongRunning = false)
         {
             TrackCallname();
-            if (!await WaitStopAsync())
+            if (!await StopAsync())
             { return false; }
             if (eventConsumer != null && !eventConsumer.Reader.Completion.IsCompleted)
             { return false; }

@@ -74,15 +74,11 @@ namespace StateMachine
             }
             yield return Yield.None;
             executor.FSMStateChanged += Executor_FSMStateChanged;
-            using (Context.TokenSource.Token.Register(executor.Pause))
+            using (Context.Token.Register(executor.Pause))
             {
                 try
                 {
                     await Task.WhenAny(executor.ExecutorTask, Task.Delay(-1, Context.Token));
-                    if (Context.IsPaused)
-                    {
-                        await Task.WhenAny(executor.CurrentNodeTask, Task.Delay(-1, Context.Token));
-                    }
                 }
                 catch (OperationCanceledException)
                 {
@@ -94,6 +90,13 @@ namespace StateMachine
             }
             if (Context.IsPaused)
             {
+                try
+                {
+                    await executor.CurrentNodeTask;
+                }
+                catch (Exception)
+                {
+                }
                 yield return Yield.ToNodeStart;
             }
             yield return Yield.None;
@@ -203,15 +206,11 @@ namespace StateMachine
             }
             yield return Yield.None;
             executor.FSMStateChanged += Executor_FSMStateChanged;
-            using (Context.TokenSource.Token.Register(executor.Pause))
+            using (Context.Token.Register(executor.Pause))
             {
                 try
                 {
                     await Task.WhenAny(executor.ExecutorTask, Task.Delay(-1, Context.Token));
-                    if (Context.IsPaused)
-                    {
-                        await Task.WhenAny(executor.CurrentNodeTask, Task.Delay(-1, Context.Token));
-                    }
                 }
                 catch (OperationCanceledException)
                 {
@@ -223,6 +222,13 @@ namespace StateMachine
             }
             if (Context.IsPaused)
             {
+                try
+                {
+                    await executor.CurrentNodeTask;
+                }
+                catch (Exception)
+                {
+                }
                 yield return Yield.ToNodeStart;
             }
             yield return Yield.None;
@@ -332,15 +338,11 @@ namespace StateMachine
             }
             yield return Yield.None;
             executor.FSMStateChanged += Executor_FSMStateChanged;
-            using (Context.TokenSource.Token.Register(executor.Pause))
+            using (Context.Token.Register(executor.Pause))
             {
                 try
                 {
                     await Task.WhenAny(executor.ExecutorTask, Task.Delay(-1, Context.Token));
-                    if (Context.IsPaused)
-                    {
-                        await Task.WhenAny(executor.CurrentNodeTask, Task.Delay(-1, Context.Token));
-                    }
                 }
                 catch (OperationCanceledException)
                 {
@@ -352,6 +354,13 @@ namespace StateMachine
             }
             if (Context.IsPaused)
             {
+                try
+                {
+                    await executor.CurrentNodeTask;
+                }
+                catch (Exception)
+                {
+                }
                 yield return Yield.ToNodeStart;
             }
             yield return Yield.None;
