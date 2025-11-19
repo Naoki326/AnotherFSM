@@ -106,19 +106,6 @@ namespace StateMachine
 
         internal void UnhandleGroupNode()
         {
-            foreach (var node in nodeDict)
-            {
-                if (node.Value is BaseGroupNode gn)
-                {
-                    gn.NodeStateChanged -= Gn_NodeStateChanged;
-                    gn.NodeExitChanged -= Gn_NodeExitChanged;
-                }
-                else if (node.Value.GetType().InheritsFromBaseGroupNode())
-                {
-                    BaseGroupNodeHelper.TryUnsubscribeEvent(node.Value, "NodeStateChanged", this, "Gn_NodeStateChanged");
-                    BaseGroupNodeHelper.TryUnsubscribeEvent(node.Value, "NodeExitChanged", this, "Gn_NodeExitChanged");
-                }
-            }
         }
 
         internal void HandleGroupNode()
@@ -126,16 +113,6 @@ namespace StateMachine
             foreach (var node in nodeDict)
             {
                 node.Value.SetEngine(this);
-                if (node.Value is BaseGroupNode gn)
-                {
-                    gn.NodeStateChanged += Gn_NodeStateChanged;
-                    gn.NodeExitChanged += Gn_NodeExitChanged;
-                }
-                else if (node.Value.GetType().InheritsFromBaseGroupNode())
-                {
-                    BaseGroupNodeHelper.TrySubscribeEvent(node.Value, "NodeStateChanged", this, "Gn_NodeStateChanged");
-                    BaseGroupNodeHelper.TrySubscribeEvent(node.Value, "NodeExitChanged", this, "Gn_NodeExitChanged");
-                }
             }
         }
 

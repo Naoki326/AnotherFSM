@@ -1,4 +1,6 @@
 ﻿using StateMachine.Interface;
+using System;
+using System.Reactive.Linq;
 
 namespace StateMachine
 {
@@ -24,8 +26,6 @@ namespace StateMachine
                 try
                 {
                     executor = new FSMExecutor(Engine[StartName], Engine.GetEvent(EndEvent));
-                    executor.NodeStateChanged += OnNodeStateChanged;
-                    executor.NodeExitChanged += OnNodeExitChanged;
                 }
                 catch (Exception)
                 {
@@ -120,6 +120,16 @@ namespace StateMachine
             executor?.Dispose();
             base.Dispose(disposing);
         }
+
+        public override IDisposable Subscribe(IObserver<StateTrackInfo> observer)
+        {
+            return ((IObservable<StateTrackInfo>)executor).Subscribe(observer);
+        }
+
+        public override IDisposable Subscribe(IObserver<ExecuteTrackInfo> observer)
+        {
+            return ((IObservable<ExecuteTrackInfo>)executor).Subscribe(observer);
+        }
     }
 
 
@@ -145,8 +155,6 @@ namespace StateMachine
                 try
                 {
                     executor = new FSMExecutor(Engine[StartName], Engine.GetEvent(EndEvent));
-                    executor.NodeStateChanged += OnNodeStateChanged;
-                    executor.NodeExitChanged += OnNodeExitChanged;
                 }
                 catch (Exception)
                 {
@@ -241,6 +249,16 @@ namespace StateMachine
             executor?.Dispose();
             base.Dispose(disposing);
         }
+
+        public override IDisposable Subscribe(IObserver<StateTrackInfo> observer)
+        {
+            return ((IObservable<StateTrackInfo>)executor).Subscribe(observer);
+        }
+
+        public override IDisposable Subscribe(IObserver<ExecuteTrackInfo> observer)
+        {
+            return ((IObservable<ExecuteTrackInfo>)executor).Subscribe(observer);
+        }
     }
 
 
@@ -266,8 +284,6 @@ namespace StateMachine
                 try
                 {
                     executor = new FSMExecutor(Engine[StartName], Engine.GetEvent(EndEvent));
-                    executor.NodeStateChanged += OnNodeStateChanged;
-                    executor.NodeExitChanged += OnNodeExitChanged;
                 }
                 catch (Exception)
                 {
@@ -361,6 +377,16 @@ namespace StateMachine
         {
             executor?.Dispose();
             base.Dispose(disposing);
+        }
+
+        public override IDisposable Subscribe(IObserver<StateTrackInfo> observer)
+        {
+            return ((IObservable<StateTrackInfo>)executor).Subscribe(observer);
+        }
+
+        public override IDisposable Subscribe(IObserver<ExecuteTrackInfo> observer)
+        {
+            return ((IObservable<ExecuteTrackInfo>)executor).Subscribe(observer);
         }
     }
 }

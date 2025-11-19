@@ -43,11 +43,6 @@ namespace StateMachine
                 throw new ScriptException("Node " + node_type + " 获取失败！");
             proc.Name = name;
             proc.NamePrefix = namePrev;
-            if (proc is BaseGroupNode bNode)
-            {
-                bNode.NodeStateChanged += GroupNodeStateChanged;
-                bNode.NodeExitChanged += GroupNodeExitChanged;
-            }
             this.nodeDict.Add(namePrev + name, proc);
             return;
         }
@@ -147,11 +142,6 @@ namespace StateMachine
 
         public void DeleteNode(string name)
         {
-            if (nodeDict[name] is BaseGroupNode bNode)
-            {
-                bNode.NodeStateChanged -= GroupNodeStateChanged;
-                bNode.NodeExitChanged -= GroupNodeExitChanged;
-            }
             this.nodeDict.Remove(name);
             return;
         }

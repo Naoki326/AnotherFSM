@@ -3,38 +3,17 @@
 namespace StateMachine
 {
     [DebuggerNonUserCode]
-    public abstract class BaseGroupNode : AsyncEnumFSMNode
+    public abstract class BaseGroupNode : AsyncEnumFSMNode, IObservable<StateTrackInfo>, IObservable<ExecuteTrackInfo>
     {
-
-        internal event EventHandler<string>? NodeStateChanged;
-        protected void OnNodeStateChanged(object sender, string name)
-        {
-            NodeStateChanged?.Invoke(sender, name);
-        }
-
-        internal event EventHandler<string>? NodeExitChanged;
-        protected void OnNodeExitChanged(object sender, string name)
-        {
-            NodeExitChanged?.Invoke(sender, name);
-        }
-
+        public abstract IDisposable Subscribe(IObserver<StateTrackInfo> observer);
+        public abstract IDisposable Subscribe(IObserver<ExecuteTrackInfo> observer);
     }
 
     [DebuggerNonUserCode]
-    public abstract class BaseGroupNode<T> : AsyncEnumFSMNode<T> where T : class
+    public abstract class BaseGroupNode<T> : AsyncEnumFSMNode<T>, IObservable<StateTrackInfo>, IObservable<ExecuteTrackInfo>
+        where T : class
     {
-
-        internal event EventHandler<string>? NodeStateChanged;
-        protected void OnNodeStateChanged(object sender, string name)
-        {
-            NodeStateChanged?.Invoke(sender, name);
-        }
-
-        internal event EventHandler<string>? NodeExitChanged;
-        protected void OnNodeExitChanged(object sender, string name)
-        {
-            NodeExitChanged?.Invoke(sender, name);
-        }
-
+        public abstract IDisposable Subscribe(IObserver<StateTrackInfo> observer);
+        public abstract IDisposable Subscribe(IObserver<ExecuteTrackInfo> observer);
     }
 }
