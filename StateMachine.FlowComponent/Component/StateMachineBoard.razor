@@ -4,7 +4,7 @@
 
 <div class="sm-board">
 
-    <div class="sm-nodes" style="flex: 0;">
+    @* <div class="sm-nodes" style="flex: 0;">
         @if(nodeTypes is not null && nodeTypes.Count > 0)
         {
             <ul class="sm-node-list" style="list-style:none;padding:0;margin:0;">
@@ -21,7 +21,7 @@
                 }
             </ul>
         }
-    </div>
+    </div> *@
 
     <div style="flex: 1; position: relative;">
         <MStateMachineFlow Class="@((string.IsNullOrWhiteSpace(Class) ? "sm-workspace" : $"sm-workspace {Class}"))" Style="@Style"
@@ -30,7 +30,7 @@
                    OnDrop="@DropAsync"
                    OnNodeMoved="@NodeMoved"
                    Mode="Mode"
-                   DataInitializer="@DataInitializer"
+                   DataInitializer="DataInit"
                    @ref="_drawflow">
         </MStateMachineFlow>
         

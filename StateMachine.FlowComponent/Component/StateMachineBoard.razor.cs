@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 
 namespace StateMachine
@@ -35,8 +36,6 @@ namespace StateMachine
             }
             // 若未提供 NodeTypeNames，则不再从运行时注册表回退，避免依赖全局扫描
         }
-
-        [Parameter] public EventCallback DataInitializer { get; set; }
 
         private Dictionary<string, string> nodeTypes = [];
         private static IEnumerable<string> s_colors
@@ -95,13 +94,22 @@ namespace StateMachine
         {
             if (StateMachineEngine != engine)
             {
-                await ClearAsync();
                 engine = StateMachineEngine;
+                await ClearAsync();
                 await CreateFromEngine();
             }
             await base.OnParametersSetAsync();
         }
+        async Task DataInit()
+        {
+            await ClearAsync();
+            await CreateFromEngine();
+        }
 
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            await base.OnAfterRenderAsync(firstRender);
+        }
     }
     public partial class StateMachineBoard
     {
@@ -117,11 +125,7 @@ namespace StateMachine
 
         public async Task ClearAsync()
         {
-            if (_drawflow == null)
-            {
-                return;
-            }
-            if (engine == null)
+            if (_drawflow is null || engine is null)
                 return;
             await _drawflow.ClearAsync();
         }
@@ -134,15 +138,18 @@ namespace StateMachine
             var rdInt = rd.Next();
             while (usedIndex.Contains(rdInt))
             {
-                rdInt = rd.Next(500, 1000);
+                rdInt = rd.Next(100, 200);
             }
             usedIndex.Add(rdInt);
             return rdInt;
         }
         private int GetFlowIndex(string flowId)
         {
-            if(int.TryParse(flowId, out int retInt))
+            if (int.TryParse(flowId, out int retInt))
+            {
+                usedIndex.Add(retInt);
                 return retInt;
+            }
             if (!flowID2Index.ContainsKey(flowId))
             {
                 flowID2Index[flowId] = GetNextIndex();
@@ -159,7 +166,7 @@ namespace StateMachine
 
         private async Task CreateFromEngine()
         {
-            if (_drawflow is null)
+            if (_drawflow is null || engine is null)
                 return;
             foreach (string stateName in engine.GetNodeNames())
             {
@@ -211,8 +218,6 @@ namespace StateMachine
         [Parameter]
         public StateMachineFlowEditorMode Mode { get; set; } = StateMachineFlowEditorMode.Edit;
 
-        private bool isImport;
-        
         private async Task ShowNodeInfo()
         {
             if (!string.IsNullOrEmpty(selectedNodeName) && engine != null)
@@ -236,7 +241,6 @@ namespace StateMachine
                     var searchResult = SearchForSourceFile(solutionRoot, baseTypeName, nodeType.Namespace ?? "");
                     if (string.IsNullOrEmpty(searchResult))
                     {
-                        return;
                         return;
                     }
                     selectedNodeFilePath = searchResult;
@@ -449,16 +453,11 @@ namespace StateMachine
                 //    }
                 //    catch { }
                 //}
+                //    await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", selectedNodeFilePath);
             }
             catch
             {
             }
-
-            //try
-            //{
-            //    await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", selectedNodeFilePath);
-            //}
-            //catch { }
         }
 
 
@@ -485,20 +484,9 @@ namespace StateMachine
     public partial class StateMachineBoard
     {
 
-        private string inputName = "";
-
-        private string tempNodeId = "";
-
         private string? draggingType;
         private double dragStartOffsetX;
         private double dragStartOffsetY;
-
-        private void OnNodeDragStart(DragEventArgs e, string nodeType)
-        {
-            draggingType = nodeType;
-            dragStartOffsetX = e.OffsetX;
-            dragStartOffsetY = e.OffsetY;
-        }
 
         private async Task DropAsync(DragEventArgs args)
         {

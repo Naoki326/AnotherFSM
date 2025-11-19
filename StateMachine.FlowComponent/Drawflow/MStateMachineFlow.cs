@@ -45,6 +45,8 @@ public class MStateMachineFlow : ComponentBase, IAsyncDisposable
     [Parameter] public EventCallback<FlowConnectionArgs> OnConnectionSelected { get; set; }
     [Parameter] public EventCallback OnConnectionUnselected { get; set; }
 
+    [Parameter] public EventCallback OnRendered { get; set; }
+
     private StateMachineFlowEditorMode? _prevMode;
     private IStateMachineFlowJSObjectReferenceProxy? _drawflowProxy;
     private DotNetObjectReference<object>? _interopHandleReference;
