@@ -85,7 +85,7 @@ namespace StateMachine
                 }
             }
             yield return Yield.None;
-            using (Context.TokenSource.Token
+            using (Context.Token
                     .Register(() =>
                     {
                         foreach (var executor in executors)
@@ -100,10 +100,6 @@ namespace StateMachine
                 {
                     executors.ForEach(p => p.FSMStateChanged += Executor_FSMStateChanged);
                     await Task.WhenAny(Task.WhenAll(executors.Select(p => p.ExecutorTask)), Task.Delay(-1, Context.Token));
-                    if (Context.IsPaused)
-                    {
-                        await Task.WhenAny(Task.WhenAll(executors.Select(p => p.CurrentNodeTask)), Task.Delay(-1, Context.Token));
-                    }
                 }
                 catch (OperationCanceledException)
                 { }
@@ -114,6 +110,13 @@ namespace StateMachine
             }
             if (Context.IsPaused)
             {
+                try
+                {
+                    await Task.WhenAll(executors.Select(p => p.CurrentNodeTask));
+                }
+                catch (Exception)
+                {
+                }
                 yield return Yield.ToNodeStart;
             }
             yield return Yield.None;
@@ -224,7 +227,7 @@ namespace StateMachine
                 }
             }
             yield return Yield.None;
-            using (Context.TokenSource.Token
+            using (Context.Token
                     .Register(() =>
                     {
                         foreach (var executor in executors)
@@ -232,16 +235,13 @@ namespace StateMachine
                             if (!executor.ExecutorTask.IsCompleted)
                                 executor.Pause();
                         }
-                    }))
+                    })
+                    )
             {
                 try
                 {
                     executors.ForEach(p => p.FSMStateChanged += Executor_FSMStateChanged);
                     await Task.WhenAny(Task.WhenAll(executors.Select(p => p.ExecutorTask)), Task.Delay(-1, Context.Token));
-                    if (Context.IsPaused)
-                    {
-                        await Task.WhenAny(Task.WhenAll(executors.Select(p => p.CurrentNodeTask)), Task.Delay(-1, Context.Token));
-                    }
                 }
                 catch (OperationCanceledException)
                 { }
@@ -252,6 +252,13 @@ namespace StateMachine
             }
             if (Context.IsPaused)
             {
+                try
+                {
+                    await Task.WhenAll(executors.Select(p => p.CurrentNodeTask));
+                }
+                catch (Exception)
+                {
+                }
                 yield return Yield.ToNodeStart;
             }
             yield return Yield.None;
@@ -361,7 +368,7 @@ namespace StateMachine
                 }
             }
             yield return Yield.None;
-            using (Context.TokenSource.Token
+            using (Context.Token
                     .Register(() =>
                     {
                         foreach (var executor in executors)
@@ -369,16 +376,13 @@ namespace StateMachine
                             if (!executor.ExecutorTask.IsCompleted)
                                 executor.Pause();
                         }
-                    }))
+                    })
+                    )
             {
                 try
                 {
                     executors.ForEach(p => p.FSMStateChanged += Executor_FSMStateChanged);
                     await Task.WhenAny(Task.WhenAll(executors.Select(p => p.ExecutorTask)), Task.Delay(-1, Context.Token));
-                    if (Context.IsPaused)
-                    {
-                        await Task.WhenAny(Task.WhenAll(executors.Select(p => p.CurrentNodeTask)), Task.Delay(-1, Context.Token));
-                    }
                 }
                 catch (OperationCanceledException)
                 { }
@@ -389,6 +393,13 @@ namespace StateMachine
             }
             if (Context.IsPaused)
             {
+                try
+                {
+                    await Task.WhenAll(executors.Select(p => p.CurrentNodeTask));
+                }
+                catch (Exception)
+                {
+                }
                 yield return Yield.ToNodeStart;
             }
             yield return Yield.None;
