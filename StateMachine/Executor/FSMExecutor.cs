@@ -3,8 +3,6 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Threading.Channels;
 
 namespace StateMachine
@@ -44,7 +42,7 @@ namespace StateMachine
         {
         }
 
-        private IEventAggregator eventAggregator;
+        private readonly IEventAggregator eventAggregator;
 
         protected Channel<FSMEvent> eventConsumer;
 
@@ -69,64 +67,65 @@ namespace StateMachine
             get => state; private set
             {
                 if (state == value)
+                {
                     return;
-                var prev_state = state;
+                }
+
+                FSMState prev_state = state;
                 state = value;
                 TrackFSMStateChanged(value, prev_state);
             }
         }
 
-
-        private IExecuterContext solverContext = new ExecuterContext();
-        internal IExecuterContext SolverContext { get => solverContext; set { solverContext = value; } }
+        internal IExecuterContext SolverContext { get; set; } = new ExecuterContext();
 
         public void PauseByAnchor(Enum eAnchor)
         {
-            solverContext.PauseAnchors.Add(Convert.ToInt64(eAnchor));
+            _ = SolverContext.PauseAnchors.Add(Convert.ToInt64(eAnchor));
         }
 
         public void PauseByAnchor(long lAnchor)
         {
-            solverContext.PauseAnchors.Add(lAnchor);
+            _ = SolverContext.PauseAnchors.Add(lAnchor);
         }
 
         public void PauseByAnchors(IEnumerable<Enum> eAnchors)
         {
-            foreach (var eAnchor in eAnchors)
-            { solverContext.PauseAnchors.Add(Convert.ToInt64(eAnchor)); }
+            foreach (Enum eAnchor in eAnchors)
+            { _ = SolverContext.PauseAnchors.Add(Convert.ToInt64(eAnchor)); }
         }
 
         public void PauseByAnchors(IEnumerable<long> lAnchors)
         {
-            foreach (var lAnchor in lAnchors)
-            { solverContext.PauseAnchors.Add(lAnchor); }
+            foreach (long lAnchor in lAnchors)
+            { _ = SolverContext.PauseAnchors.Add(lAnchor); }
         }
 
         public void RemoveAncho(Enum eAnchor)
         {
-            solverContext.PauseAnchors.Remove(Convert.ToInt64(eAnchor));
+            _ = SolverContext.PauseAnchors.Remove(Convert.ToInt64(eAnchor));
         }
 
         public void RemoveAnchor(long lAnchor)
         {
-            solverContext.PauseAnchors.Remove(lAnchor);
+            _ = SolverContext.PauseAnchors.Remove(lAnchor);
         }
 
         public void RemoveAnchors(IEnumerable<Enum> eAnchors)
         {
-            foreach (var eAnchor in eAnchors)
-            { solverContext.PauseAnchors.Remove(Convert.ToInt64(eAnchor)); }
+            foreach (Enum eAnchor in eAnchors)
+            { _ = SolverContext.PauseAnchors.Remove(Convert.ToInt64(eAnchor)); }
         }
 
         public void RemoveAnchors(IEnumerable<long> lAnchors)
         {
-            foreach (var lAnchor in lAnchors)
-            { solverContext.PauseAnchors.Remove(lAnchor); }
+            foreach (long lAnchor in lAnchors)
+            { _ = SolverContext.PauseAnchors.Remove(lAnchor); }
         }
 
         public void ResetAnchors()
         {
-            solverContext.PauseAnchors.Clear();
+            SolverContext.PauseAnchors.Clear();
         }
 
         // 该接口可以改变传入的事件，可以在界面上暂停
@@ -136,14 +135,22 @@ namespace StateMachine
         {
             bool isExit = false;
             if (currentNode is null)
+            {
                 throw new FSMException("CurrentNode is null");
+            }
+
             using (Observable
                 .FromEvent((v) => currentNode.RaisePause += v, (v) => currentNode.RaisePause -= v)
                 .Subscribe(_ => Pause()))
             {
-                currentNode.ExecuterContext = solverContext;
+                currentNode.ExecuterContext = SolverContext;
                 State = FSMState.Running;
 
+                IDisposable? groupNodeHandle = default;
+                if (currentNode is IObservable<StateTrackInfo> stateObs)
+                {
+                    groupNodeHandle = stateObs.Subscribe(stateTrackObservable);
+                }
                 try
                 {
                     if (isCreateNew)
@@ -152,10 +159,12 @@ namespace StateMachine
                 }
                 catch (Exception ex)
                 {
-                    //Track Exit
-                    TrackFSMExit(threadId);
                     stateTrackObservable.OnError(ex);
                     isExit = true;
+                }
+                finally
+                {
+                    groupNodeHandle?.Dispose();
                 }
 
                 if (currentNode.Context.IsPaused)
@@ -185,7 +194,7 @@ namespace StateMachine
                 bool isExit = false;
 
                 //这里是第一个启动节点
-                solverContext.CurrentNodeName = start.Name;
+                SolverContext.CurrentNodeName = start.Name;
                 TrackStart(threadId);
                 isExit = await RunCurrentNodeAsync(true, threadId);
                 TrackStartEnd(isExit, threadId);
@@ -214,10 +223,10 @@ namespace StateMachine
                                 {
                                     //这里是正常执行节点的分支
                                     currentNode.Context.TriggerEvent = @event;
-                                    var nextNode = currentNode.TargetState(@event);
+                                    IFSMNode nextNode = currentNode.TargetState(@event);
                                     nextNode.Context = currentNode.Context;
-                                    solverContext.LastNodeName = currentNode.Name;
-                                    solverContext.CurrentNodeName = nextNode.Name;
+                                    SolverContext.LastNodeName = currentNode.Name;
+                                    SolverContext.CurrentNodeName = nextNode.Name;
 
                                     TrackStateEnter(threadId, @event, nextNode);
                                     currentNode = nextNode;
@@ -259,15 +268,20 @@ namespace StateMachine
         private IEnumerable<IFSMNode> Traversal(IFSMNode firstNode, ConcurrentBag<IFSMNode> visited)
         {
             if (firstNode is null)
+            {
                 yield break;
-            foreach (var targets in firstNode.GetAllTargets())
+            }
+
+            foreach (IFSMNode targets in firstNode.GetAllTargets())
             {
                 if (!visited.Contains(targets))
                 {
                     visited.Add(targets);
                     yield return targets;
-                    foreach (var t in Traversal(targets, visited))
+                    foreach (IFSMNode t in Traversal(targets, visited))
+                    {
                         yield return t;
+                    }
                 }
             }
         }
@@ -275,8 +289,10 @@ namespace StateMachine
         public IEnumerator<IFSMNode> GetEnumerator()
         {
             yield return start;
-            foreach (var t in Traversal(start, new ConcurrentBag<IFSMNode>()))
+            foreach (IFSMNode t in Traversal(start, []))
+            {
                 yield return t;
+            }
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -288,14 +304,14 @@ namespace StateMachine
         {
             TrackCallname();
             State = FSMState.Stopping;
-            Task.Run(async () =>
+            _ = Task.Run(async () =>
             {
-                using var state2Stop = Disposable.Create(() =>
+                using IDisposable state2Stop = Disposable.Create(() =>
                 {
                     State = FSMState.Stoped;
                 });
                 while (eventConsumer.Reader.Count > 0)
-                { eventConsumer.Reader.TryRead(out _); }
+                { _ = eventConsumer.Reader.TryRead(out _); }
                 Exception e = default!;
                 if (currentNode != null && !currentNode.Context.IsPaused)
                 {
@@ -310,8 +326,8 @@ namespace StateMachine
                     }
                 }
                 while (eventConsumer.Reader.Count > 0)
-                { eventConsumer.Reader.TryRead(out _); }
-                eventConsumer.Writer.TryComplete();
+                { _ = eventConsumer.Reader.TryRead(out _); }
+                _ = eventConsumer.Writer.TryComplete();
                 if (ExecutorTask != null)
                 {
                     try
@@ -335,14 +351,14 @@ namespace StateMachine
         {
             TrackCallname();
             State = FSMState.Stopping;
-            using var state2Stop = Disposable.Create(() =>
+            using IDisposable state2Stop = Disposable.Create(() =>
             {
                 State = FSMState.Stoped;
             });
             if (eventConsumer is not null)
             {
                 while (eventConsumer.Reader.Count > 0)
-                { eventConsumer.Reader.TryRead(out _); }
+                { _ = eventConsumer.Reader.TryRead(out _); }
             }
             Exception e = default!;
             if (currentNode != null && !currentNode.Context.IsPaused)
@@ -358,8 +374,8 @@ namespace StateMachine
                 }
             }
             while (eventConsumer.Reader.Count > 0)
-            { eventConsumer.Reader.TryRead(out _); }
-            eventConsumer.Writer.TryComplete();
+            { _ = eventConsumer.Reader.TryRead(out _); }
+            _ = eventConsumer.Writer.TryComplete();
             if (ExecutorTask != null)
             {
                 try
@@ -382,14 +398,14 @@ namespace StateMachine
         {
             TrackCallname();
             State = FSMState.Stopping;
-            using var state2Stop = Disposable.Create(() =>
+            using IDisposable state2Stop = Disposable.Create(() =>
             {
                 State = FSMState.Stoped;
             });
             if (eventConsumer is not null)
             {
                 while (eventConsumer.Reader.Count > 0)
-                { eventConsumer.Reader.TryRead(out _); }
+                { _ = eventConsumer.Reader.TryRead(out _); }
             }
             Exception e = default!;
             if (currentNode != null && !currentNode.Context.IsPaused)
@@ -404,8 +420,8 @@ namespace StateMachine
                 }
             }
             while (eventConsumer.Reader.Count > 0)
-            { eventConsumer.Reader.TryRead(out _); }
-            eventConsumer.Writer.TryComplete();
+            { _ = eventConsumer.Reader.TryRead(out _); }
+            _ = eventConsumer.Writer.TryComplete();
             if (ExecutorTask != null)
             {
                 try
@@ -427,7 +443,7 @@ namespace StateMachine
         private void InitNodes()
         {
             start.InitBeforeStart();
-            foreach (var child in start)
+            foreach (IFSMNode child in start)
             {
                 child.InitBeforeStart();
             }
@@ -445,8 +461,7 @@ namespace StateMachine
             currentNode = start;
 
             pausing = false;
-            if (start.Context == null)
-            { start.Context = new FSMNodeContext(); }
+            start.Context ??= new FSMNodeContext();
             eventConsumer = Channel.CreateUnbounded<FSMEvent>();
 
             InitNodes();
@@ -457,8 +472,6 @@ namespace StateMachine
 
         public async Task<bool> RestartAsync<T>(T data, bool isLongRunning = false) where T : class
         {
-            if (!await WaitStopAsync())
-            { return false; }
             start.Context = new FSMNodeContext<T>() { Data = data };
             return await RestartAsync(isLongRunning);
         }
@@ -474,8 +487,7 @@ namespace StateMachine
             currentNode = node ?? throw new FSMException("开始节点不能为空！");
 
             pausing = false;
-            if (node.Context == null)
-            { node.Context = new FSMNodeContext(); }
+            node.Context ??= new FSMNodeContext();
             eventConsumer = Channel.CreateUnbounded<FSMEvent>();
 
             InitNodes();
@@ -486,9 +498,7 @@ namespace StateMachine
 
         public async Task<bool> RestartAsync<T>(IFSMNode node, T data, bool isLongRunning = false) where T : class
         {
-            if (!await WaitStopAsync())
-            { return false; }
-            node.Context = new FSMNodeContext<T>() { Data = data};
+            node.Context = new FSMNodeContext<T>() { Data = data };
             return await RestartAsync(node, isLongRunning);
         }
 
@@ -500,11 +510,11 @@ namespace StateMachine
             TrackCallname();
             if (currentNode.Context.IsPaused || pausing || (State != FSMState.Running && State != FSMState.Proceeding))
             { return; }
-            Task.Run(async () =>
+            _ = Task.Run(async () =>
             {
                 State = FSMState.Pausing;
                 pausing = true;
-                using var state2Pause = Disposable.Create(() =>
+                using IDisposable state2Pause = Disposable.Create(() =>
                 {
                     pausing = false;
                     State = FSMState.Paused;
@@ -529,7 +539,7 @@ namespace StateMachine
 
             State = FSMState.Pausing;
             pausing = true;
-            using var state2Pause = Disposable.Create(() =>
+            using IDisposable state2Pause = Disposable.Create(() =>
             {
                 pausing = false;
                 State = FSMState.Paused;
@@ -550,7 +560,7 @@ namespace StateMachine
             if (currentNode.Context.IsPaused || pausing)
             {
                 State = FSMState.Proceeding;
-                eventConsumer.Writer.TryWrite(ContinueEvent);
+                _ = eventConsumer.Writer.TryWrite(ContinueEvent);
                 State = FSMState.Running;
                 return true;
             }
@@ -563,7 +573,7 @@ namespace StateMachine
         {
             if (@event.EventID == endEvent.EventID)
             {
-                eventConsumer.Writer.TryComplete();
+                _ = eventConsumer.Writer.TryComplete();
                 State = FSMState.Finished;
             }
             else if (@event.EventID == PauseEvent.EventID)
@@ -573,7 +583,7 @@ namespace StateMachine
             else if (!eventConsumer.Reader.Completion.IsCompleted)
             {
                 // 通过接口改变传入的事件 
-                eventConsumer.Writer.TryWrite(@event);
+                _ = eventConsumer.Writer.TryWrite(@event);
             }
         }
     }
@@ -594,7 +604,7 @@ namespace StateMachine
                 if (eventConsumer != null)
                 {
                     eventAggregator.Unsubscribe(this);
-                    eventConsumer.Writer.TryComplete();
+                    _ = eventConsumer.Writer.TryComplete();
                     stateTrackObservable.OnCompleted();
                     executeTrackObservable.OnCompleted();
                     eventLoopScheduler.Dispose();

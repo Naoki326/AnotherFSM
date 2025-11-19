@@ -1,4 +1,5 @@
 ﻿using StateMachine.Interface;
+using System;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -40,8 +41,6 @@ namespace StateMachine
             {
                 var executor = new FSMExecutor(Engine[fsm.StartNode], Engine.GetEvent(fsm.EndEvent));
                 executors.Add(executor);
-                executor.NodeStateChanged += OnNodeStateChanged;
-                executor.NodeExitChanged += OnNodeExitChanged;
             }
         }
 
@@ -141,6 +140,27 @@ namespace StateMachine
             executors.ForEach(p => p.Dispose());
             base.Dispose(disposing);
         }
+
+        public override IDisposable Subscribe(IObserver<ExecuteTrackInfo> observer)
+        {
+            CompositeDisposable disposables = new CompositeDisposable();
+            foreach(var executor in executors)
+            {
+                disposables.Add(((IObservable<ExecuteTrackInfo>)executor).Subscribe(observer));
+            }
+            return disposables;
+        }
+
+        public override IDisposable Subscribe(IObserver<StateTrackInfo> observer)
+        {
+            CompositeDisposable disposables = new CompositeDisposable();
+            foreach (var executor in executors)
+            {
+                disposables.Add(((IObservable<StateTrackInfo>)executor).Subscribe(observer));
+            }
+            return disposables;
+        }
+
     }
 
     [FSMNode("ParallelT", "并行流程包装节点", [1, 3, 5], ["NextEvent", "ErrorEvent", "CancelEvent"], Id = 4)]
@@ -160,8 +180,6 @@ namespace StateMachine
             {
                 var executor = new FSMExecutor(Engine[fsm.StartNode], Engine.GetEvent(fsm.EndEvent));
                 executors.Add(executor);
-                executor.NodeStateChanged += OnNodeStateChanged;
-                executor.NodeExitChanged += OnNodeExitChanged;
             }
         }
 
@@ -260,6 +278,26 @@ namespace StateMachine
             executors.ForEach(p => p.Dispose());
             base.Dispose(disposing);
         }
+
+        public override IDisposable Subscribe(IObserver<ExecuteTrackInfo> observer)
+        {
+            CompositeDisposable disposables = new CompositeDisposable();
+            foreach (var executor in executors)
+            {
+                disposables.Add(((IObservable<ExecuteTrackInfo>)executor).Subscribe(observer));
+            }
+            return disposables;
+        }
+
+        public override IDisposable Subscribe(IObserver<StateTrackInfo> observer)
+        {
+            CompositeDisposable disposables = new CompositeDisposable();
+            foreach (var executor in executors)
+            {
+                disposables.Add(((IObservable<StateTrackInfo>)executor).Subscribe(observer));
+            }
+            return disposables;
+        }
     }
 
     [FSMNode("ParallelTU", "并行流程包装节点", [1, 3, 5], ["NextEvent", "ErrorEvent", "CancelEvent"], Id = 4)]
@@ -279,8 +317,6 @@ namespace StateMachine
             {
                 var executor = new FSMExecutor(Engine[fsm.StartNode], Engine.GetEvent(fsm.EndEvent));
                 executors.Add(executor);
-                executor.NodeStateChanged += OnNodeStateChanged;
-                executor.NodeExitChanged += OnNodeExitChanged;
             }
         }
 
@@ -378,6 +414,26 @@ namespace StateMachine
         {
             executors.ForEach(p => p.Dispose());
             base.Dispose(disposing);
+        }
+
+        public override IDisposable Subscribe(IObserver<ExecuteTrackInfo> observer)
+        {
+            CompositeDisposable disposables = new CompositeDisposable();
+            foreach (var executor in executors)
+            {
+                disposables.Add(((IObservable<ExecuteTrackInfo>)executor).Subscribe(observer));
+            }
+            return disposables;
+        }
+
+        public override IDisposable Subscribe(IObserver<StateTrackInfo> observer)
+        {
+            CompositeDisposable disposables = new CompositeDisposable();
+            foreach (var executor in executors)
+            {
+                disposables.Add(((IObservable<StateTrackInfo>)executor).Subscribe(observer));
+            }
+            return disposables;
         }
     }
 }
