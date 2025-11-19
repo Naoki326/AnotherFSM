@@ -10,10 +10,12 @@ namespace StateMachine
         private Lazy<BlockingCollection<(SendOrPostCallback d, object state)>> workItems;
 
         private CancellationTokenSource cts;
-        private bool disposedValue;
+        private volatile bool disposedValue;
+        private readonly SynchronizationContext? fallback;
 
-        public FSMSyncContext()
+        public FSMSyncContext(SynchronizationContext? fallback = null)
         {
+            this.fallback = fallback;
             cts = new CancellationTokenSource();
             workItems = new(() =>
             {
@@ -37,14 +39,19 @@ namespace StateMachine
         /// <inheritdoc />
         public override void Post(SendOrPostCallback d, object state)
         {
-            try
+            if (disposedValue || cts.IsCancellationRequested || (workItems.IsValueCreated && workItems.Value.IsAddingCompleted))
             {
-                workItems.Value.TryAdd((d, state));
+                if (fallback != null)
+                {
+                    fallback.Post(d, state);
+                }
+                else
+                {
+                    ThreadPool.UnsafeQueueUserWorkItem(_ => d(state), null);
+                }
+                return;
             }
-            catch (Exception)
-            {
-                d(state);
-            }
+            workItems.Value.Add((d, state));
         }
 
         protected virtual void Dispose(bool disposing)
@@ -61,7 +68,7 @@ namespace StateMachine
                 {
                     cts.Cancel();
                 }
-                if (!workItems.Value.IsCompleted)
+                if (workItems.IsValueCreated && !workItems.Value.IsCompleted)
                 {
                     workItems.Value.CompleteAdding();
                 }
