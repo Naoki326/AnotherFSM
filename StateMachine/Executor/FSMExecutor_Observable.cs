@@ -47,15 +47,14 @@ namespace StateMachine
             }, (ex) =>
             {
 
-            });
-
+            }, () => { });
             executeObserverWrapper.Subscribe((info) =>
             {
                 FSMStateChanged?.Invoke(this, info.CurrentState, info.LastState);
             }, (ex) =>
             {
 
-            });
+            }, () => { });
         }
 
         IDisposable IObservable<StateTrackInfo>.Subscribe(IObserver<StateTrackInfo> observer)
