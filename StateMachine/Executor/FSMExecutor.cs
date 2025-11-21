@@ -159,7 +159,6 @@ namespace StateMachine
                 }
                 catch (Exception ex)
                 {
-                    stateTrackObservable.OnError(ex);
                     isExit = true;
                 }
                 finally
@@ -254,7 +253,6 @@ namespace StateMachine
             {
                 //Track Exit
                 TrackFSMExit(threadId);
-                stateTrackObservable.OnError(ex);
 
                 //这里位于Task中，若流程出现异常，Task自动退出
                 //注意遇到任何异常，都需要检查IObservable的OnError或者NodeExceptionEvent事件
