@@ -91,14 +91,12 @@ namespace FSMScriptAnalyzerTest
             return t;
         }
 
-        public string GetNodeName(Type type)
+        public string GetNodeFeatureName(Type type)
         {
             if (typeToKey.TryGetValue(type, out var key)) return key;
             var attr = type.GetCustomAttributes(typeof(FSMNodeAttribute), false).FirstOrDefault() as FSMNodeAttribute;
             if (attr != null && !string.IsNullOrWhiteSpace(attr.Key)) return attr.Key;
             throw new InvalidOperationException($"类型 {type.FullName} 未标记 FSMNodeAttribute");
         }
-
-        public IEnumerable<Type> GetNodeTypes() => keyToType.Values;
     }
 }

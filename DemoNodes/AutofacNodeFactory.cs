@@ -1,9 +1,12 @@
 ﻿using Autofac;
 using Autofac.Core;
 using StateMachine;
+using System.ComponentModel;
+using System.Reflection;
 
 namespace DemoNodes
 {
+
     /// <summary>
     /// 当使用Autofac作为容器时，实现该接口
     /// 该接口将作为StateMachine的FSMEngine类型的节点构造工厂
@@ -41,11 +44,9 @@ namespace DemoNodes
             throw new InvalidOperationException($"No IFSMNode service with key '{name}' found.");
         }
 
-        public string GetNodeName(Type t)
+        public string GetNodeFeatureName(Type t)
         {
-            var registration = container.ComponentRegistry.Registrations.FirstOrDefault(r =>
-                r.Services.OfType<KeyedService>().Any(s => s.ServiceType == t));
-            return (string)registration.Services.OfType<KeyedService>().First().ServiceKey;
+            return t.GetCustomAttribute<FSMNodeAttribute>().Key;
         }
 
         public IEnumerable<Type> GetNodeTypes()
