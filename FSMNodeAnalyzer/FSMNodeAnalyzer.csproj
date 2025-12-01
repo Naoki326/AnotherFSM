@@ -8,7 +8,7 @@
     <DevelopmentDependency>true</DevelopmentDependency>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageId>Naoki.AnotherFSM.FSMNodeAnalyzer</PackageId>
+    <PackageId>Naoki.AnotherFSM.NodeAnalyzer</PackageId>
     <Version>1.1.1</Version>
     <Authors>Naoki</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
