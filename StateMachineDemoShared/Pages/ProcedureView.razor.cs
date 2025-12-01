@@ -1,6 +1,8 @@
+using DemoNodes;
 using Masa.Blazor;
 using Microsoft.AspNetCore.Components;
 using StateMachine;
+using System.Reflection;
 
 namespace StateMachineDemoShared.Pages;
 
@@ -9,6 +11,9 @@ public partial class ProcedureView : IDisposable
     private StateMachineBoard smBoard = default!;
     private List<string> nodeTypes = default!;
     public required FSMEngine Engine { get; set; }
+
+    [Inject]
+    public NodeTypes NodeTypes { get; set; } = default!;
 
     [Inject]
     public IFSMNodeFactory NodeFactory { get; set; } = default!;
@@ -25,7 +30,12 @@ public partial class ProcedureView : IDisposable
                 }
             )
             .Build();
-        nodeTypes = [.. Engine.GetEnabledNodes().Select(p => p.Key)];
+        nodeTypes = [..NodeTypes.GetNodeTypes()
+                    .Where(p => p.GetCustomAttributes<FSMNodeAttribute>().Any())
+                    .OrderBy(p => p.GetCustomAttributes<FSMNodeAttribute>().First().Id)
+                    .Select(p => p.GetCustomAttributes<FSMNodeAttribute>().First())
+                    .Select(p => p.Key)
+            ];
         return Task.CompletedTask;
     }
 

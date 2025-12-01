@@ -9,15 +9,12 @@ namespace StateMachine
     public interface IFSMNodeFactory
     {
         // 创建节点
-        IFSMNode CreateNode(string name);
+        IFSMNode CreateNode(string featureName);
 
         // 获取该key对应的节点类型
-        Type GetNodeType(string name);
+        Type GetNodeType(string featureName);
 
-        string GetNodeName(Type type);
-
-        // 获取所有可用的节点类型
-        IEnumerable<Type> GetNodeTypes();
+        string GetNodeFeatureName(Type type);
     }
 
 }

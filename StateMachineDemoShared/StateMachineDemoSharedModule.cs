@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Autofac;
+using DemoNodes;
 using StateMachine;
 using Module = Autofac.Module;
 
@@ -9,6 +10,7 @@ namespace StateMachineDemoShared
     {
         protected override void Load(ContainerBuilder builder)
         {
+            builder.RegisterType<NodeTypes>().SingleInstance();
             builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
                 .AssignableTo<IFSMNode>()
                 .As(t =>

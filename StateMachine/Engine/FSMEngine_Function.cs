@@ -14,15 +14,6 @@ namespace StateMachine
             this.nodeFactory = nodeFactory;
         }
 
-        public IEnumerable<FSMNodeAttribute> GetEnabledNodes()
-        {
-            return [.. nodeFactory.GetNodeTypes()
-                    .Where(p => p.GetCustomAttributes<FSMNodeAttribute>().Any())
-                    .OrderBy(p => p.GetCustomAttributes<FSMNodeAttribute>().First().Id)
-                    .Select(p => p.GetCustomAttributes<FSMNodeAttribute>().First())
-            ];
-        }
-
         public void CreateNode(string node_type, string name, string namePrev = "")
         {
             IFSMNode proc;
@@ -76,7 +67,7 @@ namespace StateMachine
             //预定义的Node
             try
             {
-                string node_type = nodeFactory.GetNodeName(typeof(T));
+                string node_type = nodeFactory.GetNodeFeatureName(typeof(T));
                 proc = nodeFactory.CreateNode(node_type);
                 proc.ClassType = node_type;
             }
@@ -96,7 +87,7 @@ namespace StateMachine
             //预定义的Node
             try
             {
-                string node_type = nodeFactory.GetNodeName(typeof(T));
+                string node_type = nodeFactory.GetNodeFeatureName(typeof(T));
                 proc = nodeFactory.CreateNode(node_type);
                 proc.ClassType = node_type;
             }
