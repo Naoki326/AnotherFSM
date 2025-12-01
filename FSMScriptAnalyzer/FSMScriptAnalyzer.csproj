@@ -24,6 +24,9 @@
   <ItemGroup>
     <None Include="$(OutputPath)$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\StateMachine\StateMachine.csproj" />
+  </ItemGroup>
 
 
 </Project>
