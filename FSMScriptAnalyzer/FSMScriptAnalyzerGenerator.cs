@@ -17,12 +17,10 @@ namespace FSMScriptAnalyzer
         {
             var scripts = context.AdditionalTextsProvider
                 .Where(at => at.Path.EndsWith(".FSMScript", StringComparison.OrdinalIgnoreCase))
-                .Select((text, ct) => new ScriptInfo
-                {
-                    FileName = Path.GetFileNameWithoutExtension(text.Path),
-                    Path = text.Path,
-                    Content = text.GetText(ct)?.ToString() ?? string.Empty
-                });
+                .Select((text, ct) => new ScriptInfo(
+                    Path.GetFileNameWithoutExtension(text.Path),
+                    text.Path,
+                    text.GetText(ct)?.ToString() ?? string.Empty));
 
             var filtered = scripts.Where(s => !string.IsNullOrWhiteSpace(s.Content));
             var compilation = context.CompilationProvider;
@@ -32,22 +30,19 @@ namespace FSMScriptAnalyzer
                     return opts.GlobalOptions.TryGetValue("build_property.RootNamespace", out var ns) ? ns : null;
                 });
 
-            var combined = filtered.Collect().Combine(compilation).Combine(rootNamespace);
+            var combined = filtered.Combine(compilation).Combine(rootNamespace);
 
             context.RegisterSourceOutput(combined, (spc, triple) =>
             {
-                var list = triple.Left.Left;
+                var s = triple.Left.Left;
                 var comp = triple.Left.Right;
                 var ns = triple.Right;
                 var typeMap = BuildNodeTypeMap(comp);
-                foreach (var s in list)
-                {
-                    var nodes = ParseNodes(s.Content);
-                    var targetNs = string.IsNullOrWhiteSpace(ns) ? comp.AssemblyName ?? "FSM" : ns!;
-                    var source = GenerateScriptClassSource(s, nodes, typeMap, targetNs);
-                    var hintName = $"{targetNs}.{s.FileName}.g.cs";
-                    spc.AddSource(hintName, SourceText.From(source, Encoding.UTF8));
-                }
+                var nodes = ParseNodes(s.Content);
+                var targetNs = string.IsNullOrWhiteSpace(ns) ? comp.AssemblyName ?? "FSM" : ns!;
+                var source = GenerateScriptClassSource(s, nodes, typeMap, targetNs);
+                var hintName = $"{targetNs}.{s.FileName}.g.cs";
+                spc.AddSource(hintName, SourceText.From(source, Encoding.UTF8));
             });
         }
 
@@ -108,11 +103,39 @@ namespace FSMScriptAnalyzer
             public string NodeTypeKey { get; set; } = string.Empty;
         }
 
-        private sealed class ScriptInfo
+        private readonly struct ScriptInfo : IEquatable<ScriptInfo>
         {
-            public string FileName { get; set; } = string.Empty;
-            public string Path { get; set; } = string.Empty;
-            public string Content { get; set; } = string.Empty;
+            public string FileName { get; }
+            public string Path { get; }
+            public string Content { get; }
+
+            public ScriptInfo(string fileName, string path, string content)
+            {
+                FileName = fileName ?? string.Empty;
+                Path = path ?? string.Empty;
+                Content = content ?? string.Empty;
+            }
+
+            public bool Equals(ScriptInfo other)
+            {
+                return string.Equals(Path, other.Path, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(Content, other.Content, StringComparison.Ordinal);
+            }
+
+            public override bool Equals(object? obj)
+            {
+                return obj is ScriptInfo other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var h1 = StringComparer.OrdinalIgnoreCase.GetHashCode(Path);
+                    var h2 = StringComparer.Ordinal.GetHashCode(Content);
+                    return (h1 * 397) ^ h2;
+                }
+            }
         }
 
         private static Dictionary<string, string> BuildNodeTypeMap(Compilation compilation)

@@ -137,3 +137,12 @@ def End3(End)
     Type: End;
     FlowID: 26;
 }
+
+def Temp(Idle)
+{
+    1->NextEvent;
+    Pos:(0, 0);
+    Color: "light-blue";
+    Type: Temp;
+    FlowID: 999;
+}
