@@ -53,7 +53,7 @@ namespace StateMachine
             this.FSMs = fsms;
         }
 
-        protected override async IAsyncEnumerable<object> ExecuteEnumerable()
+        protected override async IAsyncEnumerable<IYieldAction> ExecuteEnumerable()
         {
             yield return Yield.None;
             if (executors.Any(p => p.State == FSMState.Paused))
@@ -195,7 +195,7 @@ namespace StateMachine
             this.FSMs = fsms;
         }
 
-        protected override async IAsyncEnumerable<object> ExecuteEnumerable()
+        protected override async IAsyncEnumerable<IYieldAction> ExecuteEnumerable()
         {
             yield return Yield.None;
             if (executors.Any(p => p.State == FSMState.Paused))
@@ -336,7 +336,7 @@ namespace StateMachine
             this.FSMs = fsms;
         }
 
-        protected override async IAsyncEnumerable<object> ExecuteEnumerable()
+        protected override async IAsyncEnumerable<IYieldAction> ExecuteEnumerable()
         {
             yield return Yield.None;
             if (executors.Any(p => p.State == FSMState.Paused))

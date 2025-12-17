@@ -5,7 +5,7 @@ namespace StateMachine
     [DebuggerNonUserCode]
     public abstract class AsyncEnumFSMNode : AbstractFSMNode
     {
-        protected abstract IAsyncEnumerable<object> ExecuteEnumerable();
+        protected abstract IAsyncEnumerable<IYieldAction> ExecuteEnumerable();
 
         private protected sealed override async Task RestartAsync()
         {
@@ -92,7 +92,7 @@ namespace StateMachine
     [DebuggerNonUserCode]
     public abstract class AsyncEnumFSMNode<T> : AbstractFSMNode<T> where T : class
     {
-        protected abstract IAsyncEnumerable<object> ExecuteEnumerable();
+        protected abstract IAsyncEnumerable<IYieldAction> ExecuteEnumerable();
 
         private protected sealed override async Task RestartAsync()
         {

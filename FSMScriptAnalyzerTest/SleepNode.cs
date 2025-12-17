@@ -16,7 +16,7 @@ namespace DemoShared.StateMachine
         [FSMProperty("Duration of time", true, 3)]
         public int Duration { get; set; } = 1000;
 
-        protected override async IAsyncEnumerable<object> ExecuteEnumerable()
+        protected override async IAsyncEnumerable<IYieldAction> ExecuteEnumerable()
         {
             yield return Yield.None;
             try

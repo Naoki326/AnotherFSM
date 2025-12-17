@@ -49,6 +49,21 @@
         private static IYieldAction _break = new YieldEvent(FSMEnum.Break);
         public static IYieldAction Break => _break;
 
+        public static IYieldAction TryCatch(Func<Task> doTask, Action<Exception> doWhenException)
+        {
+            return new YieldTryCatch(doTask, doWhenException);
+        }
+
+        public static IYieldAction TryCatchFinally(Func<Task> doTask, Action<Exception> doWhenException, Action doFinally)
+        {
+            return new YieldTryCatch(doTask, doWhenException, doFinally);
+        }
+
+        public static IYieldAction TryCatchFinally(Func<Task> doTask, Action<Exception> doWhenException, Func<Task> doFinally)
+        {
+            return new YieldTryCatch(doTask, doWhenException, doFinally);
+        }
+
         public static IYieldAction Result(YieldEnum ye)
         {
             return new YieldResult(ye);
