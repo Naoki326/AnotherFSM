@@ -25,7 +25,6 @@ namespace StateMachine
             bool isMoveNext = true;
             while (true)
             {
-                context.CheckPause();
                 try
                 {
                     if (executor.Current is IYieldAction yieldBefore)
@@ -109,7 +108,6 @@ namespace StateMachine
             bool isMoveNext = true;
             while (true)
             {
-                context.CheckPause();
                 try
                 {
                     if (executor.Current is IYieldAction yieldBefore)
