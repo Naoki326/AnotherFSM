@@ -43,7 +43,7 @@ namespace StateMachine
             this.EndEvent = endEvent;
         }
 
-        protected override async IAsyncEnumerable<object> ExecuteEnumerable()
+        protected override async IAsyncEnumerable<IYieldAction> ExecuteEnumerable()
         {
             yield return Yield.None;
             if (executor is null)
@@ -175,7 +175,7 @@ namespace StateMachine
             this.EndEvent = endEvent;
         }
 
-        protected override async IAsyncEnumerable<object> ExecuteEnumerable()
+        protected override async IAsyncEnumerable<IYieldAction> ExecuteEnumerable()
         {
             yield return Yield.None;
             if (executor is null)
@@ -307,7 +307,7 @@ namespace StateMachine
             this.EndEvent = endEvent;
         }
 
-        protected override async IAsyncEnumerable<object> ExecuteEnumerable()
+        protected override async IAsyncEnumerable<IYieldAction> ExecuteEnumerable()
         {
             yield return Yield.None;
             if (executor is null)
