@@ -72,7 +72,7 @@ namespace FSMNodeAnalyzerTest
     // 测试类 - 派生自AbstractFSMNode
     public partial class TestNode : AsyncEnumFSMNode
     {
-        protected override async IAsyncEnumerable<object> ExecuteEnumerable()
+        protected override async IAsyncEnumerable<IYieldAction> ExecuteEnumerable()
         {
             yield return Yield.Event(FSMEnum.Next, false);
             yield return Yield.Event(TestEnum.Previous);
@@ -85,7 +85,7 @@ namespace FSMNodeAnalyzerTest
     // 另一个测试类
     public partial class AnotherTestNode : AsyncEnumFSMNode
     {
-        protected override async IAsyncEnumerable<object> ExecuteEnumerable()
+        protected override async IAsyncEnumerable<IYieldAction> ExecuteEnumerable()
         {
             yield return Yield.Event(FSMEnum.Failed);
             yield return Yield.Error;
