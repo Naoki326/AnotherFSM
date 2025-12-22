@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <PackageId>Naoki.AnotherFSM.FlowComponent</PackageId>
-    <Version>1.1.6</Version>
+    <Version>1.1.7</Version>
     <Authors>Naoki</Authors>
     <Description></Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -15,6 +15,10 @@
   <PropertyGroup>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\StateMachine\StateMachine.csproj" />
+  </ItemGroup>
 
   <ItemGroup>
     <SupportedPlatform Include="browser" />
@@ -27,10 +31,6 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.0" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\StateMachine\StateMachine.csproj" />
   </ItemGroup>
 
 </Project>

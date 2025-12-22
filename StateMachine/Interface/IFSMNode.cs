@@ -10,13 +10,15 @@
     //用于Flow图显示
     public interface IVisualNode
     {
+        //脚本中的命名空间
+        string NamePrefix { get; set; }
+
+        //当前节点对象在脚本内的名称
+        string Name { get; set; }
+
         double PosX { get; set; }
 
         double PosY { get; set; }
-
-        //double OffsetX { get; set; }
-
-        //double OffsetY { get; set; }
 
         string FlowID { get; set; }
 
@@ -69,12 +71,6 @@
     public interface IFSMNode : ITransitionContainer, IVisualNode, IDisposable
     {
         internal void SetEngine(FSMEngine e);
-
-        //脚本中的命名空间
-        string NamePrefix { get; set; }
-
-        //当前节点对象在脚本内的名称
-        string Name { get; set; }
 
         //执行的时候从上一状态传入的上下文
         FSMNodeContext Context { get; set; }
