@@ -157,17 +157,17 @@ public interface IStateMachineScriptListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitFlowIDDef([NotNull] StateMachineScriptParser.FlowIDDefContext context);
 	/// <summary>
-	/// Enter a parse tree produced by the <c>GroupDef</c>
-	/// labeled alternative in <see cref="StateMachineScriptParser.state_group"/>.
+	/// Enter a parse tree produced by the <c>GroudFSMDef</c>
+	/// labeled alternative in <see cref="StateMachineScriptParser.state_branch"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void EnterGroupDef([NotNull] StateMachineScriptParser.GroupDefContext context);
+	void EnterGroudFSMDef([NotNull] StateMachineScriptParser.GroudFSMDefContext context);
 	/// <summary>
-	/// Exit a parse tree produced by the <c>GroupDef</c>
-	/// labeled alternative in <see cref="StateMachineScriptParser.state_group"/>.
+	/// Exit a parse tree produced by the <c>GroudFSMDef</c>
+	/// labeled alternative in <see cref="StateMachineScriptParser.state_branch"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void ExitGroupDef([NotNull] StateMachineScriptParser.GroupDefContext context);
+	void ExitGroudFSMDef([NotNull] StateMachineScriptParser.GroudFSMDefContext context);
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="StateMachineScriptParser.position"/>.
 	/// </summary>

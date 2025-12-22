@@ -6,32 +6,28 @@ using System.Reactive.Linq;
 
 namespace StateMachine
 {
+    internal interface IParallelNode
+    {
+        public List<FSMDescribe> FSMs { get; set; }
+    }
+
     public class FSMDescribe
     {
         public string StartNode { get; set; } = "";
 
         public string EndEvent { get; set; } = "";
-
-        public object ContextData { get; set; }
-    }
-
-    public class FSMDescribe<T>
-    {
-        public string StartNode { get; set; } = "";
-
-        public string EndEvent { get; set; } = "";
-
-        public T ContextData { get; set; }
     }
 
     [FSMNode("Parallel", "并行流程包装节点", [1, 3, 5], ["NextEvent", "ErrorEvent", "CancelEvent"], Id = 4)]
-    public class ParallelNode : BaseGroupNode
+    public class ParallelNode : BaseGroupNode, IParallelNode
     {
 
         private List<FSMExecutor> executors = [];
 
         [FSMProperty("Parrllel FSM", true, 3)]
         public List<FSMDescribe> FSMs { get; set; } = [];
+
+        public List<FSMNodeContext> ContextDatas { get; set; } = [];
 
         public override void InitBeforeStart()
         {
@@ -46,11 +42,6 @@ namespace StateMachine
 
         public ParallelNode()
         {
-        }
-
-        public ParallelNode(List<FSMDescribe> fsms)
-        {
-            this.FSMs = fsms;
         }
 
         protected override async IAsyncEnumerable<IYieldAction> ExecuteEnumerable()
@@ -74,13 +65,13 @@ namespace StateMachine
                 foreach (var (executor, i) in executors.Select((p, i)=>(p, i)))
                 {
                     executor.SolverContext = this.ExecuterContext;
-                    if (FSMs[i].ContextData is not null)
+                    if (ContextDatas.Count > i && ContextDatas[i] is not null)
                     {
-                        await executor.RestartAsync(FSMs[i].ContextData, isLongRunning);
+                        await executor.RestartAsync(ContextDatas[i], isLongRunning);
                     }
                     else
                     {
-                        await executor.RestartAsync(Context, isLongRunning);
+                        await executor.RestartAsync(Context.Data, isLongRunning);
                     }
                 }
             }
@@ -167,13 +158,15 @@ namespace StateMachine
     }
 
     [FSMNode("ParallelT", "并行流程包装节点", [1, 3, 5], ["NextEvent", "ErrorEvent", "CancelEvent"], Id = 4)]
-    public class ParallelNode<T> : BaseGroupNode<T> where T : class
+    public class ParallelNode<T> : BaseGroupNode<T>, IParallelNode where T : class
     {
 
         private List<FSMExecutor> executors = [];
 
         [FSMProperty("Parrllel FSM", true, 3)]
-        public List<FSMDescribe<T>> FSMs { get; set; } = [];
+        public List<FSMDescribe> FSMs { get; set; } = [];
+
+        public List<FSMNodeContext<T>> ContextDatas { get; set; } = [];
 
         public override void InitBeforeStart()
         {
@@ -188,11 +181,6 @@ namespace StateMachine
 
         public ParallelNode()
         {
-        }
-
-        public ParallelNode(List<FSMDescribe<T>> fsms)
-        {
-            this.FSMs = fsms;
         }
 
         protected override async IAsyncEnumerable<IYieldAction> ExecuteEnumerable()
@@ -216,13 +204,13 @@ namespace StateMachine
                 foreach (var (executor, i) in executors.Select((p, i) => (p, i)))
                 {
                     executor.SolverContext = this.ExecuterContext;
-                    if (FSMs[i].ContextData is not null)
+                    if (ContextDatas.Count > i && ContextDatas[i] is not null)
                     {
-                        await executor.RestartAsync(FSMs[i].ContextData, isLongRunning);
+                        await executor.RestartAsync(ContextDatas[i], isLongRunning);
                     }
                     else
                     {
-                        await executor.RestartAsync(Context, isLongRunning);
+                        await executor.RestartAsync(Context.Data, isLongRunning);
                     }
                 }
             }
@@ -308,13 +296,15 @@ namespace StateMachine
     }
 
     [FSMNode("ParallelTU", "并行流程包装节点", [1, 3, 5], ["NextEvent", "ErrorEvent", "CancelEvent"], Id = 4)]
-    public class ParallelNode<T, U> : BaseGroupNode<T> where T : class where U : class
+    public class ParallelNode<T, U> : BaseGroupNode<T>, IParallelNode where T : class where U : class
     {
 
         private List<FSMExecutor> executors = [];
 
         [FSMProperty("Parrllel FSM", true, 3)]
-        public List<FSMDescribe<U>> FSMs { get; set; } = [];
+        public List<FSMDescribe> FSMs { get; set; } = [];
+
+        public List<FSMNodeContext<U>> ContextDatas { get; set; } = [];
 
         public override void InitBeforeStart()
         {
@@ -329,11 +319,6 @@ namespace StateMachine
 
         public ParallelNode()
         {
-        }
-
-        public ParallelNode(List<FSMDescribe<U>> fsms)
-        {
-            this.FSMs = fsms;
         }
 
         protected override async IAsyncEnumerable<IYieldAction> ExecuteEnumerable()
@@ -357,13 +342,13 @@ namespace StateMachine
                 foreach (var (executor, i) in executors.Select((p, i) => (p, i)))
                 {
                     executor.SolverContext = this.ExecuterContext;
-                    if (FSMs[i].ContextData is not null)
+                    if (ContextDatas.Count > i && ContextDatas[i] is not null)
                     {
-                        await executor.RestartAsync(FSMs[i].ContextData, isLongRunning);
+                        await executor.RestartAsync(ContextDatas[i], isLongRunning);
                     }
                     else
                     {
-                        await executor.RestartAsync(Context, isLongRunning);
+                        await executor.RestartAsync(Context.Data, isLongRunning);
                     }
                 }
             }

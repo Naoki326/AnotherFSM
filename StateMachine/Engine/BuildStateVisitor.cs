@@ -86,6 +86,27 @@ namespace StateMachine
             return base.VisitDefBranch2(context);
         }
 
+        public override object VisitGroudFSMDef([NotNull] StateMachineScriptParser.GroudFSMDefContext context)
+        {
+            if (context.STRING().Length == 2)
+            {
+                if (node is IGroupNode gnode)
+                {
+                    gnode.StartNode = context.STRING()[0].ToString();
+                    gnode.EndEvent = context.STRING()[1].ToString();
+                }
+                else if (node is IParallelNode pnode)
+                {
+                    pnode.FSMs.Add(new FSMDescribe()
+                    {
+                        StartNode = context.STRING()[0].ToString(),
+                        EndEvent = context.STRING()[1].ToString(),
+                    });
+                }
+            }
+            return base.VisitGroudFSMDef(context);
+        }
+
         public override object VisitPOSX([NotNull] StateMachineScriptParser.POSXContext context)
         {
             if (context.DOUBLE() is null)
