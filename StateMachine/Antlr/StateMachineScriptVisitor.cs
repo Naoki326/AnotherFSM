@@ -106,12 +106,12 @@ public interface IStateMachineScriptVisitor<Result> : IParseTreeVisitor<Result> 
 	/// <return>The visitor result.</return>
 	Result VisitFlowIDDef([NotNull] StateMachineScriptParser.FlowIDDefContext context);
 	/// <summary>
-	/// Visit a parse tree produced by the <c>GroupDef</c>
-	/// labeled alternative in <see cref="StateMachineScriptParser.state_group"/>.
+	/// Visit a parse tree produced by the <c>GroudFSMDef</c>
+	/// labeled alternative in <see cref="StateMachineScriptParser.state_branch"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitGroupDef([NotNull] StateMachineScriptParser.GroupDefContext context);
+	Result VisitGroudFSMDef([NotNull] StateMachineScriptParser.GroudFSMDefContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="StateMachineScriptParser.position"/>.
 	/// </summary>

@@ -44,10 +44,7 @@ state_branch
     | 'Color' COLON CODESTRING	 SEMICOLON									#ColorDef
     | 'Type' COLON STRING	 SEMICOLON										#TypeDef
     | 'FlowID' COLON (GUID | STRING | INT)	 SEMICOLON						#FlowIDDef
-;
-
-state_group
-	: STRING 'to' STRING SEMICOLON											#GroupDef
+	| '[' STRING TRIGGER STRING ']' SEMICOLON								#GroudFSMDef
 ;
 
 position

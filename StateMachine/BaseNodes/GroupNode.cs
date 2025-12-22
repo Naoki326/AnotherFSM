@@ -4,14 +4,25 @@ using System.Reactive.Linq;
 
 namespace StateMachine
 {
+    internal interface IGroupNode
+    {
+        public string StartNode { get; set; }
+
+        public string EndEvent { get; set; }
+
+    }
+
     [FSMNode("Group", "流程包装节点", [1, 3, 5], ["NextEvent", "ErrorEvent", "CancelEvent"], Id = 3)]
-    public class GroupNode : BaseGroupNode
+    public class GroupNode : BaseGroupNode, IGroupNode
     {
 
         private FSMExecutor? executor;
 
+        [Obsolete("use StartNode instead of")]
+        public string StartName { get => StartNode; set { StartNode = value; } }
+
         [FSMProperty("Start node's name", true, 3)]
-        public string StartName { get; set; } = default!;
+        public string StartNode { get; set; } = default!;
 
         [FSMProperty("End event's name", true, 4)]
         public string EndEvent { get; set; } = default!;
@@ -25,7 +36,7 @@ namespace StateMachine
             {
                 try
                 {
-                    executor = new FSMExecutor(Engine[StartName], Engine.GetEvent(EndEvent));
+                    executor = new FSMExecutor(Engine[StartNode], Engine.GetEvent(EndEvent));
                 }
                 catch (Exception)
                 {
@@ -35,12 +46,6 @@ namespace StateMachine
 
         public GroupNode()
         {
-        }
-
-        public GroupNode(string startName, string endEvent)
-        {
-            this.StartName = startName;
-            this.EndEvent = endEvent;
         }
 
         protected override async IAsyncEnumerable<IYieldAction> ExecuteEnumerable()
@@ -137,13 +142,16 @@ namespace StateMachine
 
 
     [FSMNode("GroupT", "流程包装节点", [1, 3, 5], ["NextEvent", "ErrorEvent", "CancelEvent"], Id = 3)]
-    public class GroupNode<T> : BaseGroupNode<T> where T : class
+    public class GroupNode<T> : BaseGroupNode<T>, IGroupNode where T : class
     {
 
         private FSMExecutor? executor;
 
+        [Obsolete("use StartNode instead of")]
+        public string StartName { get => StartNode; set { StartNode = value; } }
+
         [FSMProperty("Start node's name", true, 3)]
-        public string StartName { get; set; } = default!;
+        public string StartNode { get; set; } = default!;
 
         [FSMProperty("End event's name", true, 4)]
         public string EndEvent { get; set; } = default!;
@@ -157,7 +165,7 @@ namespace StateMachine
             {
                 try
                 {
-                    executor = new FSMExecutor(Engine[StartName], Engine.GetEvent(EndEvent));
+                    executor = new FSMExecutor(Engine[StartNode], Engine.GetEvent(EndEvent));
                 }
                 catch (Exception)
                 {
@@ -167,12 +175,6 @@ namespace StateMachine
 
         public GroupNode()
         {
-        }
-
-        public GroupNode(string startName, string endEvent)
-        {
-            this.StartName = startName;
-            this.EndEvent = endEvent;
         }
 
         protected override async IAsyncEnumerable<IYieldAction> ExecuteEnumerable()
@@ -269,13 +271,16 @@ namespace StateMachine
 
 
     [FSMNode("GroupTU", "流程包装节点", [1, 3, 5], ["NextEvent", "ErrorEvent", "CancelEvent"], Id = 3)]
-    public class GroupNode<T, U> : BaseGroupNode<T> where T : class where U : class
+    public class GroupNode<T, U> : BaseGroupNode<T>, IGroupNode where T : class where U : class
     {
 
         private FSMExecutor? executor;
 
+        [Obsolete("use StartNode instead of")]
+        public string StartName { get => StartNode; set { StartNode = value; } }
+
         [FSMProperty("Start node's name", true, 3)]
-        public string StartName { get; set; } = default!;
+        public string StartNode { get; set; } = default!;
 
         [FSMProperty("End event's name", true, 4)]
         public string EndEvent { get; set; } = default!;
@@ -289,7 +294,7 @@ namespace StateMachine
             {
                 try
                 {
-                    executor = new FSMExecutor(Engine[StartName], Engine.GetEvent(EndEvent));
+                    executor = new FSMExecutor(Engine[StartNode], Engine.GetEvent(EndEvent));
                 }
                 catch (Exception)
                 {
@@ -299,12 +304,6 @@ namespace StateMachine
 
         public GroupNode()
         {
-        }
-
-        public GroupNode(string startName, string endEvent)
-        {
-            this.StartName = startName;
-            this.EndEvent = endEvent;
         }
 
         protected override async IAsyncEnumerable<IYieldAction> ExecuteEnumerable()

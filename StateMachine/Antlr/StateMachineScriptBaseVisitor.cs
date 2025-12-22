@@ -153,8 +153,8 @@ public partial class StateMachineScriptBaseVisitor<Result> : AbstractParseTreeVi
 	/// <return>The visitor result.</return>
 	public virtual Result VisitFlowIDDef([NotNull] StateMachineScriptParser.FlowIDDefContext context) { return VisitChildren(context); }
 	/// <summary>
-	/// Visit a parse tree produced by the <c>GroupDef</c>
-	/// labeled alternative in <see cref="StateMachineScriptParser.state_group"/>.
+	/// Visit a parse tree produced by the <c>GroudFSMDef</c>
+	/// labeled alternative in <see cref="StateMachineScriptParser.state_branch"/>.
 	/// <para>
 	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
 	/// on <paramref name="context"/>.
@@ -162,7 +162,7 @@ public partial class StateMachineScriptBaseVisitor<Result> : AbstractParseTreeVi
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	public virtual Result VisitGroupDef([NotNull] StateMachineScriptParser.GroupDefContext context) { return VisitChildren(context); }
+	public virtual Result VisitGroudFSMDef([NotNull] StateMachineScriptParser.GroudFSMDefContext context) { return VisitChildren(context); }
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="StateMachineScriptParser.position"/>.
 	/// <para>
