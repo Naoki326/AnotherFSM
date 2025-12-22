@@ -48,8 +48,17 @@ namespace StateMachine
         {
         }
 
-        protected override async IAsyncEnumerable<IYieldAction> ExecuteEnumerable()
+        protected virtual async IAsyncEnumerable<IYieldAction> BeforeExecuteEnumerable()
         {
+            yield break;
+        }
+
+        protected override sealed async IAsyncEnumerable<IYieldAction> ExecuteEnumerable()
+        {
+            await foreach (var item in BeforeExecuteEnumerable())
+            {
+                yield return item;
+            }
             yield return Yield.None;
             if (executor is null)
             {
@@ -177,8 +186,18 @@ namespace StateMachine
         {
         }
 
-        protected override async IAsyncEnumerable<IYieldAction> ExecuteEnumerable()
+
+        protected virtual async IAsyncEnumerable<IYieldAction> BeforeExecuteEnumerable()
         {
+            yield break;
+        }
+
+        protected override sealed async IAsyncEnumerable<IYieldAction> ExecuteEnumerable()
+        {
+            await foreach (var item in BeforeExecuteEnumerable())
+            {
+                yield return item;
+            }
             yield return Yield.None;
             if (executor is null)
             {
@@ -306,8 +325,18 @@ namespace StateMachine
         {
         }
 
-        protected override async IAsyncEnumerable<IYieldAction> ExecuteEnumerable()
+
+        protected virtual async IAsyncEnumerable<IYieldAction> BeforeExecuteEnumerable()
         {
+            yield break;
+        }
+
+        protected override sealed async IAsyncEnumerable<IYieldAction> ExecuteEnumerable()
+        {
+            await foreach (var item in BeforeExecuteEnumerable())
+            {
+                yield return item;
+            }
             yield return Yield.None;
             if (executor is null)
             {
