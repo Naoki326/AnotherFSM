@@ -18,8 +18,7 @@ namespace FSMScriptAnalyzerTest
                 var factory = new ReflectionNodeFactory(
                     new[]
                     {
-                        Assembly.Load("DemoNodes"),
-                        Assembly.Load("StateMachine"),
+                        typeof(StateMachine.IFSMNode).Assembly,
                         Assembly.GetExecutingAssembly(),
                     });
 

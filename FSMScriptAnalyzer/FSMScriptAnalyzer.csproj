@@ -10,7 +10,7 @@
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>Naoki.AnotherFSM.ScriptAnalyzer</PackageId>
-    <Version>1.1.1</Version>
+    <Version>1.1.7</Version>
     <Authors>Naoki</Authors>
     <Description>FSMScript 增量源生成器：将 .FSMScript 转换为强类型类。</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

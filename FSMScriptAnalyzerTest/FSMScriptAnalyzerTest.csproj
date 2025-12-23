@@ -7,17 +7,17 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\FSMScriptAnalyzer\FSMScriptAnalyzer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\StateMachine\StateMachine.csproj" />
-    <ProjectReference Include="..\DemoNodes\DemoNodes.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\FSMScriptAnalyzer\FSMScriptAnalyzer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+	</ItemGroup>
 
   <ItemGroup>
     <AdditionalFiles Include="ATest.FSMScript" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FSMScriptAnalyzer\FSMScriptAnalyzer.csproj" />
+    <ProjectReference Include="..\StateMachine\StateMachine.csproj" />
   </ItemGroup>
 
 </Project>
