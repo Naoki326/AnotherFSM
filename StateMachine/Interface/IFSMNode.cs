@@ -84,6 +84,8 @@
         //设置返回结果发起的对应事件
         void SetBranchEvent(int index, FSMEvent @event);
 
+        void DeleteBranch(int index);
+
         Task CreateNewAsync();
 
         /// <summary>

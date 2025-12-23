@@ -333,6 +333,36 @@ namespace StateMachine
             return TryAttachEvent(node, eventName, (int)branchEnum);
         }
 
+
+        public void DettachEvent(string node, FSMEnum branchEnum)
+        {
+            DettachEvent(node, (int)branchEnum);
+        }
+        public void DettachEvent(string node, int branch)
+        {
+            if (!nodeDict.TryGetValue(node, out IFSMNode value))
+            {
+                throw new ScriptException("Node " + node + " 添加事件出错, " + "该Node未注入IoC中！");
+            }
+
+            value.DeleteBranch(branch);
+        }
+
+        public bool TryDettachEvent(string node, int branch)
+        {
+            if (!nodeDict.TryGetValue(node, out IFSMNode value))
+            {
+                return false;
+            }
+
+            value.DeleteBranch(branch);
+            return true;
+        }
+        public bool TryDettachEvent(string node, FSMEnum branchEnum)
+        {
+            return TryDettachEvent(node, (int)branchEnum);
+        }
+
         public void ClearNodes()
         {
             nodeDict.Clear();

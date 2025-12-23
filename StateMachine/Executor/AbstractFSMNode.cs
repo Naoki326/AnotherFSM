@@ -128,6 +128,11 @@ namespace StateMachine
             branchDict[index] = @event;
         }
 
+        void IFSMNode.DeleteBranch(int index)
+        {
+            branchDict.Remove(index);
+        }
+
         protected FSMNodeContext context = default!;
         public FSMNodeContext Context
         {

@@ -5,6 +5,7 @@
     {
         IFSMTransformBuilder AddTransform(string connectionName, string fromNode, string toNode);
         IFSMTransformBuilder AddTransform(Enum connectionName, Enum fromNode, Enum toNode);
+        IFSMTransformBuilder AddTransform(FSMEvent connection, IFSMNode fromNode, IFSMNode toNode);
 
         void Build();
     }
@@ -29,6 +30,12 @@
                     Enum.GetName(fromNode.GetType(), fromNode),
                     Enum.GetName(toNode.GetType(), toNode))
                 );
+            return this;
+        }
+
+        public IFSMTransformBuilder AddTransform(FSMEvent connection, IFSMNode fromNode, IFSMNode toNode)
+        {
+            connections.Add((connection.EventName, fromNode.Name, toNode.Name));
             return this;
         }
 
@@ -60,6 +67,7 @@
 
         IFSMDefineBuilder AddConnection(string connectionName, string fromNode, string toNode);
         IFSMDefineBuilder AddConnection(Enum connectionName, Enum fromNode, Enum toNode);
+        IFSMDefineBuilder AddConnection(FSMEvent connection, IFSMNode fromNode, IFSMNode toNode);
 
         void Build();
     }
@@ -139,12 +147,6 @@
             return this;
         }
 
-        public void A<T>(Action<T> afterRun) where T : IFSMNode
-        {
-            Action<IFSMNode> x = (node) => { };
-            afterRun = (T node) => { x(node); };
-        }
-
         public IFSMDefineBuilder AddNode<T>(Enum nodeName, Action<IFSMNodeDefineBuilder> definer, Action<T> continueWith) where T : IFSMNode
         {
             AddNode<T>(nodeName);
@@ -169,6 +171,12 @@
                     Enum.GetName(fromNode.GetType(), fromNode),
                     Enum.GetName(toNode.GetType(), toNode))
                 );
+            return this;
+        }
+
+        public IFSMDefineBuilder AddConnection(FSMEvent connection, IFSMNode fromNode, IFSMNode toNode)
+        {
+            connections.Add((connection.EventName, fromNode.Name, toNode.Name));
             return this;
         }
 
