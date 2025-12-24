@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Text;
 using StateMachine.Interface;
 
 namespace StateMachine
@@ -90,15 +91,24 @@ namespace StateMachine
             return transitions.First(p => p.Value.Target.Name == target).Value;
         }
 
+        private protected virtual string GroupScript()
+        {
+            return "";
+        }
+
+        private string BranchScript()
+        {
+            return branchDict.Aggregate("", (p, q) => p + "\r\n" + "\t" + q.Key + "->" + q.Value.EventName + ";");
+        }
+
         public override string ToString()
         {
             IFSMNode node = this;
-            IVisualNode vNode = this;
             string outString =
             $$"""
-            def {{node.Name}}({{node.ClassType}})
-            {
-            {{branchDict.Aggregate("", (p, q) => p + "\t" + q.Key + "->" + q.Value.EventName + ";\r\n") + "\t"}}Pos:({{node.PosX}}, {{node.PosY}});
+            def {{node.Name.TrimStart(node.NamePrefix.ToCharArray())}}({{node.ClassType}})
+            {{{GroupScript()}}{{BranchScript()}}
+                Pos:({{node.PosX}}, {{node.PosY}});
                 Color: "{{node.Color}}";
                 Type: {{node.ClassType}};
                 FlowID: {{node.FlowID}};

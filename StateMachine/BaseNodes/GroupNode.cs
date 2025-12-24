@@ -147,6 +147,11 @@ namespace StateMachine
         {
             return ((IObservable<ExecuteTrackInfo>)executor).Subscribe(observer);
         }
+
+        private protected override string GroupScript()
+        {
+            return $"\r\n\t[{StartNode}->{EndEvent}];";
+        }
     }
 
 
@@ -286,6 +291,11 @@ namespace StateMachine
         {
             return ((IObservable<ExecuteTrackInfo>)executor).Subscribe(observer);
         }
+
+        private protected override string GroupScript()
+        {
+            return $"\r\n\t[{StartNode}->{EndEvent}];";
+        }
     }
 
 
@@ -424,6 +434,11 @@ namespace StateMachine
         public override IDisposable Subscribe(IObserver<ExecuteTrackInfo> observer)
         {
             return ((IObservable<ExecuteTrackInfo>)executor).Subscribe(observer);
+        }
+
+        private protected override string GroupScript()
+        {
+            return $"\r\n\t[{StartNode}->{EndEvent}];";
         }
     }
 }

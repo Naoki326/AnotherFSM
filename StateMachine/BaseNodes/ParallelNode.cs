@@ -165,6 +165,15 @@ namespace StateMachine
             return disposables;
         }
 
+        private protected override string GroupScript()
+        {
+            string r = "";
+            foreach(var fsm in FSMs)
+            {
+                r += $"\r\n\t[{fsm.StartNode}->{fsm.EndEvent}];";
+            }
+            return r;
+        }
     }
 
     [FSMNode("ParallelT", "并行流程包装节点", [1, 3, 5], ["NextEvent", "ErrorEvent", "CancelEvent"], Id = 4)]
@@ -313,6 +322,16 @@ namespace StateMachine
             }
             return disposables;
         }
+
+        private protected override string GroupScript()
+        {
+            string r = "";
+            foreach (var fsm in FSMs)
+            {
+                r += $"\r\n\t[{fsm.StartNode}->{fsm.EndEvent}];";
+            }
+            return r;
+        }
     }
 
     [FSMNode("ParallelTU", "并行流程包装节点", [1, 3, 5], ["NextEvent", "ErrorEvent", "CancelEvent"], Id = 4)]
@@ -460,6 +479,16 @@ namespace StateMachine
                 disposables.Add(((IObservable<StateTrackInfo>)executor).Subscribe(observer));
             }
             return disposables;
+        }
+
+        private protected override string GroupScript()
+        {
+            string r = "";
+            foreach (var fsm in FSMs)
+            {
+                r += $"\r\n\t[{fsm.StartNode}->{fsm.EndEvent}];";
+            }
+            return r;
         }
     }
 }

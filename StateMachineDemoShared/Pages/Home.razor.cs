@@ -118,6 +118,8 @@ namespace StateMachineDemoShared.Pages
 
             def Parallel(Parallel)
             {
+                [Start1 -> End1Event];
+                [Start2 -> End2Event];
             	1->NextEvent;
             	5->CancelEvent;
             	Pos:(478, -2.25);
@@ -129,6 +131,7 @@ namespace StateMachineDemoShared.Pages
 
             def Group(Group)
             {
+                [Start3 -> End3Event];
             	1->NextEvent;
             	5->CancelEvent;
             	Pos:(207, 209);
@@ -165,13 +168,13 @@ namespace StateMachineDemoShared.Pages
             (pv.Engine["Check"] as AccumulateNode).Count = 6;
             (pv.Engine["Sleep1"] as SleepNode).Duration = 5000;
             (pv.Engine["Sleep2"] as SleepNode).Duration = 3000;
-            (pv.Engine["Parallel"] as ParallelNode).FSMs = new List<FSMDescribe>()
-                {
-                    new FSMDescribe(){ StartNode = "Start1", EndEvent = "End1Event" },
-                    new FSMDescribe(){ StartNode = "Start2", EndEvent = "End2Event" },
-                };
-            pv.Engine.GetNode<GroupNode>("Group").StartName = "Start3";
-            pv.Engine.GetNode<GroupNode>("Group").EndEvent = "End3Event";
+            //(pv.Engine["Parallel"] as ParallelNode).FSMs = new List<FSMDescribe>()
+            //    {
+            //        new FSMDescribe(){ StartNode = "Start1", EndEvent = "End1Event" },
+            //        new FSMDescribe(){ StartNode = "Start2", EndEvent = "End2Event" },
+            //    };
+            //pv.Engine.GetNode<GroupNode>("Group").StartName = "Start3";
+            //pv.Engine.GetNode<GroupNode>("Group").EndEvent = "End3Event";
         }
 
         protected override Task OnAfterRenderAsync(bool firstRender)
