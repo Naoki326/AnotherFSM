@@ -74,8 +74,8 @@ namespace StateMachine
                     HandleException(e);
                     throw e;
                 }
+                context.CheckPause();
             }
-            context.CheckPause();
         }
 
         private IAsyncEnumerator<object>? executor;
@@ -160,8 +160,8 @@ namespace StateMachine
                     HandleException(e);
                     throw e;
                 }
+                context.CheckPause();
             }
-            context.CheckPause();
         }
 
         private IAsyncEnumerator<object>? executor;
