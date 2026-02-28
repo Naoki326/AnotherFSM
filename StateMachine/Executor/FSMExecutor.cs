@@ -462,30 +462,20 @@ namespace StateMachine
 
         private bool pausing = false;
 
-        //暂停
+        //暂停，不等待返回
         public void Pause()
         {
             TrackCallname();
             if (currentNode.Context.IsPaused || pausing || (State != FSMState.Running && State != FSMState.Proceeding))
             { return; }
-            _ = Task.Run(async () =>
+            State = FSMState.Pausing;
+            pausing = true;
+            using IDisposable state2Pause = Disposable.Create(() =>
             {
-                State = FSMState.Pausing;
-                pausing = true;
-                using IDisposable state2Pause = Disposable.Create(() =>
-                {
-                    pausing = false;
-                    State = FSMState.Paused;
-                });
-                currentNode.Context.Pause();
-                try
-                {
-                    await currentNode.WaitCurrentTask;
-                }
-                catch (Exception)
-                {
-                }
+                pausing = false;
+                State = FSMState.Paused;
             });
+            currentNode.Context.Pause();
             return;
         }
 
