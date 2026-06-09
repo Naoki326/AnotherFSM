@@ -1,4 +1,4 @@
-name: Build and Deploy Blazor App
+name: Build and Deploy WASM Demo
 
 on:
   push:
@@ -10,34 +10,31 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0
+        dotnet-version: 10.0.x
 
     - name: Restore dependencies
-      run: dotnet restore StateMachineWebAssemblyDemo/StateMachineWebAssemblyDemo.csproj
+      run: dotnet restore FSMDemo.Wasm/FSMDemo.Wasm.csproj
 
     - name: Build
-      run: dotnet publish StateMachineWebAssemblyDemo/StateMachineWebAssemblyDemo.csproj -c Release -o release --nologo
+      run: dotnet publish FSMDemo.Wasm/FSMDemo.Wasm.csproj -c Release -o release --nologo
       
-    # changes the base-tag in index.html from '/' to 'AnotherFSM/StateMachineWebDemo' to match GitHub Pages repository subdirectory
-    - name: Change base-tag in index.html from / to AnotherFSM/StateMachineWebDemo
+    - name: Change base-tag in index.html from / to AnotherFSM
       run: sed -i 's/<base href="\/" \/>/<base href="\/AnotherFSM\/" \/>/g' release/wwwroot/index.html
     
-    # copy index.html to 404.html to serve the same file when a file is not found
-    # - name: copy index.html to 404.html
-    #  run: cp release/wwwroot/index.html release/wwwroot/404.html
+    - name: Copy index.html to 404.html
+      run: cp release/wwwroot/index.html release/wwwroot/404.html
 
-    # add .nojekyll file to tell GitHub pages to not treat this as a Jekyll project. (Allow files and folders starting with an underscore)
     - name: Add .nojekyll file
       run: touch release/wwwroot/.nojekyll
       
     - name: Deploy to GitHub Pages
-      uses: JamesIves/github-pages-deploy-action@3.7.1
+      uses: JamesIves/github-pages-deploy-action@v4
       with:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        BRANCH: gh-pages
-        FOLDER: release/wwwroot
+        token: ${{ secrets.GITHUB_TOKEN }}
+        branch: gh-pages
+        folder: release/wwwroot

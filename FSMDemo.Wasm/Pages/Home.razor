@@ -1,0 +1,235 @@
+@page "/"
+@implements IDisposable
+@inject DemoRuntime Runtime
+
+<PageTitle>AnotherFSM WASM Demo</PageTitle>
+
+<div class="app-shell">
+    <header class="workspace-header">
+        <div>
+            <h1>AnotherFSM</h1>
+            <p>
+                Browser-only finite state machine demo
+                @if (!string.IsNullOrWhiteSpace(Runtime.ViewModule))
+                {
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="module-path">@Runtime.ViewModule</span>
+                }
+            </p>
+        </div>
+        <div class="status-strip">
+            <span class="status-pill">@Runtime.State</span>
+            @if (!string.IsNullOrWhiteSpace(Runtime.ActiveNode))
+            {
+                <span class="active-pill">@Runtime.ActiveNode</span>
+            }
+        </div>
+    </header>
+
+    <section class="toolbar" aria-label="Execution controls">
+        <button class="primary" @onclick="StartAsync" disabled="@IsBusy">Start</button>
+        <button @onclick="PauseAsync" disabled="@IsBusy">Pause</button>
+        <button @onclick="Continue" disabled="@IsBusy">Continue</button>
+        <button @onclick="StopAsync" disabled="@IsBusy">Stop</button>
+        <button @onclick="LoadDemo" disabled="@IsBusy">Load Demo</button>
+        <button @onclick="ImportScript" disabled="@IsBusy">Import Script</button>
+        @if (!string.IsNullOrWhiteSpace(Runtime.ViewModule))
+        {
+            <button @onclick="ExitModule" disabled="@IsBusy">Back</button>
+        }
+    </section>
+
+    @if (!string.IsNullOrWhiteSpace(Runtime.Error))
+    {
+        <div class="error-band">@Runtime.Error</div>
+    }
+
+    <div class="workspace-grid">
+        <section class="flow-surface" aria-label="Flow diagram">
+            <div class="flow-canvas" @onpointermove="OnCanvasPointerMove" @onpointerup="OnCanvasPointerUp" @onpointerleave="OnCanvasPointerUp">
+                <svg width="1120" height="560" role="img" aria-label="FSM flow diagram">
+                @foreach (var connection in Runtime.Connections)
+                {
+                    var source = Runtime.Nodes.FirstOrDefault(n => n.Name == connection.Source);
+                    var target = Runtime.Nodes.FirstOrDefault(n => n.Name == connection.Target);
+                    if (source is not null && target is not null)
+                    {
+                        <line x1="@(source.PosX + 70)" y1="@(source.PosY + 30)" x2="@(target.PosX + 10)" y2="@(target.PosY + 30)" />
+                        <foreignObject x="@((source.PosX + target.PosX) / 2 + 20)" y="@((source.PosY + target.PosY) / 2 - 24)" width="180" height="28">
+                            <div class="edge-label">@connection.EventName</div>
+                        </foreignObject>
+                    }
+                }
+                </svg>
+
+                @foreach (var node in Runtime.Nodes)
+                {
+                    var activeClass = IsActiveNode(node) ? "active" : "";
+                    var draggingClass = node.Name == draggingNodeName ? "dragging" : "";
+                    <button
+                        type="button"
+                        class="flow-node @activeClass @draggingClass"
+                        style="left: @(node.PosX)px; top: @(node.PosY)px;"
+                        title="@(node.IsModuleInstance ? "Double-click to enter module" : node.Name)"
+                        @onpointerdown="(e) => OnNodePointerDown(e, node.Name)"
+                        @ondblclick="() => OnNodeDoubleClick(node)">
+                        <strong>@node.DisplayName</strong>
+                        <span>@(node.IsModuleInstance ? $"module {node.Type}" : node.Type)</span>
+                    </button>
+                }
+            </div>
+        </section>
+
+        <aside class="side-panel">
+            <section>
+                <h2>Nodes</h2>
+                <div class="node-list">
+                    @foreach (var node in Runtime.Nodes)
+                    {
+                        <div class="node-row @(IsActiveNode(node) ? "selected" : "") @(node.IsModuleInstance ? "module-row" : "")"
+                             @ondblclick="() => OnNodeDoubleClick(node)">
+                            <strong>@node.DisplayName</strong>
+                            <span>@(node.IsModuleInstance ? $"module {node.Type}" : node.Type)</span>
+                        </div>
+                    }
+                </div>
+            </section>
+
+            <section>
+                <h2>Available Types</h2>
+                <div class="type-list">
+                    @foreach (var type in Runtime.NodeTypes)
+                    {
+                        <span>@type.Key</span>
+                    }
+                </div>
+            </section>
+        </aside>
+    </div>
+
+    <div class="bottom-grid">
+        <section>
+            <h2>Script</h2>
+            <textarea @bind="scriptText" spellcheck="false"></textarea>
+        </section>
+
+        <section>
+            <h2>Execution Log</h2>
+            <ol class="log-list">
+                @foreach (var item in Runtime.Logs.AsEnumerable().Reverse())
+                {
+                    <li>@item</li>
+                }
+            </ol>
+        </section>
+    </div>
+</div>
+
+@code {
+    private string scriptText = "";
+    private string? draggingNodeName;
+    private double lastPointerX;
+    private double lastPointerY;
+    private bool IsBusy { get; set; }
+
+    protected override void OnInitialized()
+    {
+        scriptText = Runtime.Script;
+        Runtime.Changed += OnRuntimeChanged;
+    }
+
+    private async Task Run(Func<Task> action)
+    {
+        IsBusy = true;
+        try
+        {
+            await action();
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private Task StartAsync() => Run(() => Runtime.StartAsync());
+
+    private Task PauseAsync() => Run(Runtime.PauseAsync);
+
+    private Task StopAsync() => Run(Runtime.StopAsync);
+
+    private void Continue()
+    {
+        Runtime.Continue();
+    }
+
+    private void ExitModule()
+    {
+        Runtime.ExitModule();
+    }
+
+    private void LoadDemo()
+    {
+        Runtime.LoadDemo();
+        scriptText = Runtime.Script;
+    }
+
+    private void ImportScript()
+    {
+        Runtime.ImportScript(scriptText);
+    }
+
+    private void OnNodePointerDown(PointerEventArgs e, string nodeName)
+    {
+        draggingNodeName = nodeName;
+        lastPointerX = e.ClientX;
+        lastPointerY = e.ClientY;
+    }
+
+    private void OnCanvasPointerMove(PointerEventArgs e)
+    {
+        if (draggingNodeName is null)
+        {
+            return;
+        }
+
+        var deltaX = e.ClientX - lastPointerX;
+        var deltaY = e.ClientY - lastPointerY;
+        lastPointerX = e.ClientX;
+        lastPointerY = e.ClientY;
+        Runtime.MoveNodeBy(draggingNodeName, deltaX, deltaY);
+    }
+
+    private void OnCanvasPointerUp()
+    {
+        draggingNodeName = null;
+    }
+
+    private void OnNodeDoubleClick(FsmNodeView node)
+    {
+        if (node.IsModuleInstance)
+        {
+            Runtime.EnterModule(node.Name);
+        }
+    }
+
+    private bool IsActiveNode(FsmNodeView node)
+    {
+        if (node.Name == Runtime.ActiveNode)
+        {
+            return true;
+        }
+
+        return node.IsModuleInstance
+            && Runtime.ActiveNode?.StartsWith(node.Name + ".", StringComparison.OrdinalIgnoreCase) == true;
+    }
+
+    private void OnRuntimeChanged()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        Runtime.Changed -= OnRuntimeChanged;
+    }
+}

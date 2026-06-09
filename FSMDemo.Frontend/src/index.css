@@ -1,0 +1,43 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+.react-flow__node {
+  font-size: 12px;
+}
+
+.react-flow__attribution {
+  display: none !important;
+}
+
+/* 选中连线高亮 */
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: #1976d2 !important;
+  stroke-width: 2.5 !important;
+}
+
+/* 连线 hover 效果 */
+.react-flow__edge:hover .react-flow__edge-path {
+  stroke: #1976d2 !important;
+}
+
+.react-flow__edge.fsm-active-edge .react-flow__edge-path {
+  filter: drop-shadow(0 0 4px rgba(25, 118, 210, 0.55));
+}
+
+@keyframes fsm-active-node-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.04);
+  }
+}

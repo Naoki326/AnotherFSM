@@ -1,0 +1,384 @@
+html, body {
+    background: #f5f7f8;
+    color: #172026;
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+    margin: 0;
+}
+
+h1:focus {
+    outline: none;
+}
+
+a, .btn-link {
+    color: #0071c1;
+}
+
+.app-shell {
+    min-height: 100vh;
+    padding: 24px;
+}
+
+.workspace-header {
+    align-items: center;
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+    margin: 0 auto 16px;
+    max-width: 1440px;
+}
+
+.workspace-header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.1;
+    margin: 0 0 4px;
+}
+
+.workspace-header p {
+    color: #5b6670;
+    margin: 0;
+}
+
+.breadcrumb-separator {
+    color: #8a96a3;
+    margin: 0 6px;
+}
+
+.module-path {
+    color: #172026;
+    font-weight: 650;
+}
+
+.status-strip,
+.toolbar {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.status-pill,
+.active-pill {
+    border: 1px solid #cfd7df;
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 13px;
+    font-weight: 650;
+    padding: 6px 10px;
+}
+
+.status-pill {
+    background: #ffffff;
+}
+
+.active-pill {
+    background: #dff3ec;
+    border-color: #90d5bd;
+    color: #0e6044;
+}
+
+.toolbar {
+    background: #ffffff;
+    border: 1px solid #dce3ea;
+    border-radius: 8px;
+    margin: 0 auto 16px;
+    max-width: 1440px;
+    padding: 12px;
+}
+
+button {
+    background: #ffffff;
+    border: 1px solid #b9c3cc;
+    border-radius: 6px;
+    color: #172026;
+    cursor: pointer;
+    font-weight: 650;
+    min-height: 34px;
+    padding: 7px 12px;
+}
+
+button.primary {
+    background: #1f6feb;
+    border-color: #1f6feb;
+    color: #ffffff;
+}
+
+button:disabled {
+    cursor: wait;
+    opacity: 0.65;
+}
+
+.error-band {
+    background: #fff1f0;
+    border: 1px solid #ffccc7;
+    border-radius: 8px;
+    color: #a8071a;
+    margin: 0 auto 16px;
+    max-width: 1440px;
+    padding: 10px 12px;
+}
+
+.workspace-grid,
+.bottom-grid {
+    display: grid;
+    gap: 16px;
+    margin: 0 auto 16px;
+    max-width: 1440px;
+}
+
+.workspace-grid {
+    grid-template-columns: minmax(0, 1fr) 320px;
+}
+
+.bottom-grid {
+    grid-template-columns: minmax(0, 1fr) 420px;
+}
+
+.flow-surface,
+.side-panel,
+.bottom-grid section {
+    background: #ffffff;
+    border: 1px solid #dce3ea;
+    border-radius: 8px;
+}
+
+.flow-surface {
+    min-height: 520px;
+    overflow: auto;
+}
+
+.flow-canvas {
+    height: 560px;
+    position: relative;
+    width: 1120px;
+}
+
+.flow-canvas svg {
+    inset: 0;
+    pointer-events: none;
+    position: absolute;
+}
+
+.flow-surface line {
+    stroke: #91a0ad;
+    stroke-width: 2;
+}
+
+.edge-label {
+    color: #5b6670;
+    font-size: 12px;
+    line-height: 20px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.flow-node {
+    align-items: start;
+    background: #ffffff;
+    border: 1.5px solid #9eaab5;
+    border-radius: 6px;
+    box-sizing: border-box;
+    cursor: grab;
+    display: grid;
+    gap: 4px;
+    height: 62px;
+    justify-items: start;
+    min-height: 0;
+    overflow: hidden;
+    padding: 10px 14px;
+    position: absolute;
+    text-align: left;
+    touch-action: none;
+    user-select: none;
+    width: 150px;
+}
+
+.flow-node.active {
+    background: #e8f7f0;
+    border-color: #11a36a;
+    border-width: 3px;
+}
+
+.flow-node[title*="module"] {
+    background: #f6fbff;
+    border-color: #6aa3d8;
+}
+
+.flow-node.dragging {
+    box-shadow: 0 10px 24px rgba(20, 36, 50, 0.18);
+    cursor: grabbing;
+    z-index: 2;
+}
+
+.flow-node strong,
+.flow-node span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.flow-node strong {
+    color: #172026;
+    font-size: 15px;
+}
+
+.flow-node span {
+    color: #607080;
+    font-size: 12px;
+}
+
+.side-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 16px;
+}
+
+h2 {
+    font-size: 14px;
+    margin: 0 0 10px;
+    text-transform: uppercase;
+}
+
+.node-list {
+    display: grid;
+    gap: 8px;
+}
+
+.node-row {
+    border: 1px solid #dce3ea;
+    border-radius: 6px;
+    display: grid;
+    gap: 2px;
+    padding: 8px 10px;
+}
+
+.node-row.selected {
+    background: #e8f7f0;
+    border-color: #11a36a;
+}
+
+.node-row.module-row {
+    background: #f6fbff;
+    border-color: #bdd7ee;
+    cursor: pointer;
+}
+
+.node-row span {
+    color: #61707d;
+    font-size: 12px;
+}
+
+.type-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.type-list span {
+    background: #eef2f5;
+    border-radius: 999px;
+    font-size: 12px;
+    padding: 4px 8px;
+}
+
+.bottom-grid section {
+    min-height: 320px;
+    padding: 16px;
+}
+
+textarea {
+    border: 1px solid #cfd7df;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 13px;
+    height: 270px;
+    resize: vertical;
+    width: 100%;
+}
+
+.log-list {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    max-height: 270px;
+    overflow: auto;
+    padding-left: 22px;
+}
+
+.log-list li {
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 12px;
+}
+
+#blazor-error-ui {
+    background: lightyellow;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}
+
+.loading-progress {
+    display: block;
+    height: 8rem;
+    inset: 20vh 0 auto 0;
+    margin: 0 auto;
+    position: absolute;
+    width: 8rem;
+}
+
+.loading-progress circle {
+    fill: none;
+    stroke: #e0e0e0;
+    stroke-width: 0.6rem;
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+}
+
+.loading-progress circle:last-child {
+    stroke: #1f6feb;
+    stroke-dasharray: calc(3.141 * var(--blazor-load-percentage, 0%) * 0.8), 500%;
+    transition: stroke-dasharray 0.05s ease-in-out;
+}
+
+.loading-progress-text {
+    font-weight: bold;
+    inset: calc(20vh + 3.25rem) 0 auto 0.2rem;
+    position: absolute;
+    text-align: center;
+}
+
+.loading-progress-text:after {
+    content: var(--blazor-load-percentage-text, "Loading");
+}
+
+@media (max-width: 980px) {
+    .app-shell {
+        padding: 14px;
+    }
+
+    .workspace-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .workspace-grid,
+    .bottom-grid {
+        grid-template-columns: 1fr;
+    }
+}
