@@ -16,6 +16,8 @@ namespace StateMachine
 
         public void CreateNode(string node_type, string name, string namePrev = "")
         {
+            if (name.EndsWith("."))
+                throw new ScriptException($"Node name \"{name}\" 不能以 '.' 结尾");
             IFSMNode proc;
             //预定义的Node
             switch (node_type.ToLower())

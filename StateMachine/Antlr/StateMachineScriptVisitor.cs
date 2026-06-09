@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-// Generated from C:/Users/zhiyuan/source/repos/AnotherFSM/StateMachine/Engine/StateMachineScript.g4 by ANTLR 4.13.1
+// Generated from C:/Users/Naoki/Works/AnotherFSM/StateMachine/Engine/StateMachineScript.g4 by ANTLR 4.13.1
 
 // Unreachable code detected
 #pragma warning disable 0162
@@ -19,6 +19,7 @@
 // Ambiguous reference in cref attribute
 #pragma warning disable 419
 
+namespace StateMachine {
 using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
 using IToken = Antlr4.Runtime.IToken;
@@ -43,6 +44,36 @@ public interface IStateMachineScriptVisitor<Result> : IParseTreeVisitor<Result> 
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitNamespace([NotNull] StateMachineScriptParser.NamespaceContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="StateMachineScriptParser.import_statement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitImport_statement([NotNull] StateMachineScriptParser.Import_statementContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="StateMachineScriptParser.module_statement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitModule_statement([NotNull] StateMachineScriptParser.Module_statementContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="StateMachineScriptParser.module_body"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitModule_body([NotNull] StateMachineScriptParser.Module_bodyContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="StateMachineScriptParser.input_declaration"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitInput_declaration([NotNull] StateMachineScriptParser.Input_declarationContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="StateMachineScriptParser.output_declaration"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitOutput_declaration([NotNull] StateMachineScriptParser.Output_declarationContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="StateMachineScriptParser.expression"/>.
 	/// </summary>
@@ -147,3 +178,4 @@ public interface IStateMachineScriptVisitor<Result> : IParseTreeVisitor<Result> 
 	/// <return>The visitor result.</return>
 	Result VisitDefTransition([NotNull] StateMachineScriptParser.DefTransitionContext context);
 }
+} // namespace StateMachine

@@ -1,11 +1,11 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-	<AssemblyName>AnotherFSM</AssemblyName>
+    <AssemblyName>AnotherFSM</AssemblyName>
     <TargetFramework>netstandard2.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-	<LangVersion>latest</LangVersion>
+    <LangVersion>latest</LangVersion>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Product>AnotherFSM</Product>
     <Company />
@@ -19,6 +19,8 @@
     <Description>A tool library for quickly constructing processes based on finite state machines.</Description>
     <PackageId>Naoki.AnotherFSM</PackageId>
     <Version>1.1.15</Version>
+    <AntlrJavaExec>PATH;DOWNLOAD</AntlrJavaExec>
+    <AntlrJavaExec Condition="Exists('$(JAVA_HOME)\bin\java.exe')">$(JAVA_HOME)\bin\java.exe</AntlrJavaExec>
   </PropertyGroup>
 
   <ItemGroup>
@@ -30,13 +32,30 @@
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
+    <None Remove="Antlr\**" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Antlr4.Runtime.Standard" Version="4.13.1" />
+    <PackageReference Include="Antlr4BuildTasks" Version="12.14.0" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
     <PackageReference Include="System.Reactive" Version="6.0.0" />
     <PackageReference Include="System.Threading.Channels" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Antlr\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Remove="Antlr\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Engine\StateMachineScript.g4" />
+    <Antlr4 Include="Engine\StateMachineScript.g4">
+      <JavaExec>$(AntlrJavaExec)</JavaExec>
+    </Antlr4>
   </ItemGroup>
 
 </Project>

@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-// Generated from C:/Users/zhiyuan/source/repos/AnotherFSM/StateMachine/Engine/StateMachineScript.g4 by ANTLR 4.13.1
+// Generated from C:/Users/Naoki/Works/AnotherFSM/StateMachine/Engine/StateMachineScript.g4 by ANTLR 4.13.1
 
 // Unreachable code detected
 #pragma warning disable 0162
@@ -19,6 +19,7 @@
 // Ambiguous reference in cref attribute
 #pragma warning disable 419
 
+namespace StateMachine {
 using Antlr4.Runtime.Misc;
 using IParseTreeListener = Antlr4.Runtime.Tree.IParseTreeListener;
 using IToken = Antlr4.Runtime.IToken;
@@ -50,6 +51,56 @@ public interface IStateMachineScriptListener : IParseTreeListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	void ExitNamespace([NotNull] StateMachineScriptParser.NamespaceContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="StateMachineScriptParser.import_statement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterImport_statement([NotNull] StateMachineScriptParser.Import_statementContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="StateMachineScriptParser.import_statement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitImport_statement([NotNull] StateMachineScriptParser.Import_statementContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="StateMachineScriptParser.module_statement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterModule_statement([NotNull] StateMachineScriptParser.Module_statementContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="StateMachineScriptParser.module_statement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitModule_statement([NotNull] StateMachineScriptParser.Module_statementContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="StateMachineScriptParser.module_body"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterModule_body([NotNull] StateMachineScriptParser.Module_bodyContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="StateMachineScriptParser.module_body"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitModule_body([NotNull] StateMachineScriptParser.Module_bodyContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="StateMachineScriptParser.input_declaration"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterInput_declaration([NotNull] StateMachineScriptParser.Input_declarationContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="StateMachineScriptParser.input_declaration"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitInput_declaration([NotNull] StateMachineScriptParser.Input_declarationContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="StateMachineScriptParser.output_declaration"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterOutput_declaration([NotNull] StateMachineScriptParser.Output_declarationContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="StateMachineScriptParser.output_declaration"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitOutput_declaration([NotNull] StateMachineScriptParser.Output_declarationContext context);
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="StateMachineScriptParser.expression"/>.
 	/// </summary>
@@ -227,3 +278,4 @@ public interface IStateMachineScriptListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitDefTransition([NotNull] StateMachineScriptParser.DefTransitionContext context);
 }
+} // namespace StateMachine

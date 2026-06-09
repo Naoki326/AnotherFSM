@@ -1,13 +1,11 @@
-﻿grammar StateMachineScript;
+grammar StateMachineScript;
 
 /*
  * Parser Rules
  */
  
 machine
-    : expression*
-	| namespace*
-	| EOF
+    : (import_statement | module_statement | expression | namespace)* EOF
 ;
 
 namespace
@@ -15,6 +13,30 @@ namespace
 	'{'
 		expression*
 	'}'
+;
+
+import_statement
+    : 'import' STRING ('as' STRING)? SEMICOLON
+;
+
+module_statement
+    : 'module' STRING ('as' STRING)? '{' module_body '}'
+;
+
+module_body
+    : (input_declaration | output_declaration | terminal_declaration | expression | event_statement)*
+;
+
+input_declaration
+    : 'input' STRING (',' STRING)* SEMICOLON
+;
+
+output_declaration
+    : 'output' STRING (',' STRING)* SEMICOLON
+;
+
+terminal_declaration
+    : 'terminal' STRING (',' STRING)* SEMICOLON
 ;
 
 expression
@@ -39,11 +61,12 @@ state_branch
 	: 'branch' INT TRIGGER STRING	 SEMICOLON								#DefBranch
 	| branch_type=(
 	INT | NONE | SUCCESS | FAILED | ERROR | BREAK | CANCEL
-	) TRIGGER STRING	 SEMICOLON											#DefBranch2
+			) TRIGGER STRING	 SEMICOLON											#DefBranch2
 	| 'Pos' COLON position	SEMICOLON										#PosDef
     | 'Color' COLON CODESTRING	 SEMICOLON									#ColorDef
     | 'Type' COLON STRING	 SEMICOLON										#TypeDef
     | 'FlowID' COLON (GUID | STRING | INT)	 SEMICOLON						#FlowIDDef
+    | STRING TRIGGER STRING SEMICOLON                                      #NamedOutputMapDef
 	| '[' STRING TRIGGER STRING ']' SEMICOLON								#GroudFSMDef
 ;
 
@@ -72,6 +95,11 @@ transition
  * Lexer Rules
  */
 
+MODULE : 'module';
+IMPORT : 'import';
+INPUT : 'input';
+OUTPUT : 'output';
+
 NONE : 'none';
 NEXT : 'next';
 SUCCESS : 'success';
@@ -91,7 +119,7 @@ CODESTRING : '"'.*?'"' ;
 // GUID格式: 8-4-4-4-12 的十六进制数字，用连字符分隔
 GUID : HEX8 '-' HEX4 '-' HEX4 '-' HEX4 '-' HEX12;
 
-STRING : [_A-Za-z\u0391-\u03A9\u03B1-\u03C9\u4e00-\u9fa5][0-9_A-Za-z\u0391-\u03A9\u03B1-\u03C9\u4e00-\u9fa5]* ; 
+STRING : [_A-Za-z\u0391-\u03A9\u03B1-\u03C9\u4e00-\u9fa5][0-9_A-Za-z\u0391-\u03A9\u03B1-\u03C9\u4e00-\u9fa5.]* ;
 
 // 可选的：匹配带花括号的GUID格式
 // BRACED_GUID : '{' HEX8 '-' HEX4 '-' HEX4 '-' HEX4 '-' HEX12 '}';

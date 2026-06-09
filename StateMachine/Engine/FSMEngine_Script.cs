@@ -78,21 +78,25 @@ namespace StateMachine
     //通过脚本创建流程结构
     public partial class FSMEngine
     {
-        public void CreateStateMachine(string input)
+        internal string? CurrentScriptDirectory { get; private set; }
+
+        public void CreateStateMachine(string input, string? directoryPath = null)
         {
+            CurrentScriptDirectory = directoryPath;
             UnhandleGroupNode();
 
             ClearEvents();
             ClearNodes();
+            moduleInstances.Clear();
             var stream = new AntlrInputStream(input);
             var lexer = new StateMachineScriptLexer(stream);
             var tokens = new CommonTokenStream(lexer);
             var parser = new StateMachineScriptParser(tokens);
             var tree = parser.machine();
 
-            var state = new BuildStateVisitor(eventDict, nodeDict, nodeFactory);
+            var state = new BuildStateVisitor(eventDict, nodeDict, nodeFactory, this);
             state.Visit(tree);
-            var transition = new BuildTransitionVisitor(eventDict, nodeDict);
+            var transition = new BuildTransitionVisitor(eventDict, nodeDict, moduleInstances);
             transition.Visit(tree);
 
             HandleGroupNode();
@@ -148,9 +152,10 @@ namespace StateMachine
 
         public void CreateStateMachineByFile(string path)
         {
+            var dir = Path.GetDirectoryName(path);
             using (FileStream f = new FileStream(path, FileMode.Open))
             using (StreamReader reader = new StreamReader(f))
-                CreateStateMachine(reader.ReadToEnd());
+                CreateStateMachine(reader.ReadToEnd(), dir);
         }
 
         public bool TryCreateStateMachineByFile(string path)
@@ -182,7 +187,7 @@ namespace StateMachine
                 state.ClearTransition();
             }
 
-            var transition = new BuildTransitionVisitor(eventDict, nodeDict);
+            var transition = new BuildTransitionVisitor(eventDict, nodeDict, moduleInstances);
             transition.Visit(tree);
 
             HandleGroupNode();

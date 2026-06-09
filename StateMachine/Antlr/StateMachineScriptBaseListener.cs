@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-// Generated from C:/Users/zhiyuan/source/repos/AnotherFSM/StateMachine/Engine/StateMachineScript.g4 by ANTLR 4.13.1
+// Generated from C:/Users/Naoki/Works/AnotherFSM/StateMachine/Engine/StateMachineScript.g4 by ANTLR 4.13.1
 
 // Unreachable code detected
 #pragma warning disable 0162
@@ -19,6 +19,7 @@
 // Ambiguous reference in cref attribute
 #pragma warning disable 419
 
+namespace StateMachine {
 
 using Antlr4.Runtime.Misc;
 using IErrorNode = Antlr4.Runtime.Tree.IErrorNode;
@@ -59,6 +60,66 @@ public partial class StateMachineScriptBaseListener : IStateMachineScriptListene
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitNamespace([NotNull] StateMachineScriptParser.NamespaceContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="StateMachineScriptParser.import_statement"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterImport_statement([NotNull] StateMachineScriptParser.Import_statementContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="StateMachineScriptParser.import_statement"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitImport_statement([NotNull] StateMachineScriptParser.Import_statementContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="StateMachineScriptParser.module_statement"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterModule_statement([NotNull] StateMachineScriptParser.Module_statementContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="StateMachineScriptParser.module_statement"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitModule_statement([NotNull] StateMachineScriptParser.Module_statementContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="StateMachineScriptParser.module_body"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterModule_body([NotNull] StateMachineScriptParser.Module_bodyContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="StateMachineScriptParser.module_body"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitModule_body([NotNull] StateMachineScriptParser.Module_bodyContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="StateMachineScriptParser.input_declaration"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterInput_declaration([NotNull] StateMachineScriptParser.Input_declarationContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="StateMachineScriptParser.input_declaration"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitInput_declaration([NotNull] StateMachineScriptParser.Input_declarationContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="StateMachineScriptParser.output_declaration"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterOutput_declaration([NotNull] StateMachineScriptParser.Output_declarationContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="StateMachineScriptParser.output_declaration"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitOutput_declaration([NotNull] StateMachineScriptParser.Output_declarationContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="StateMachineScriptParser.expression"/>.
 	/// <para>The default implementation does nothing.</para>
@@ -279,3 +340,4 @@ public partial class StateMachineScriptBaseListener : IStateMachineScriptListene
 	/// <remarks>The default implementation does nothing.</remarks>
 	public virtual void VisitErrorNode([NotNull] IErrorNode node) { }
 }
+} // namespace StateMachine
