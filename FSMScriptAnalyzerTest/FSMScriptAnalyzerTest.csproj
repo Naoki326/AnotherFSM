@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <AdditionalFiles Include="ATest.FSMScript" />
+    <AdditionalFiles Include="SubFlow.fsm" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,0 +1,24 @@
+module SubFlow {
+    input Check
+
+    def Check(Accumulate)
+    {
+        1->NextEvent;
+        Pos:(100, 200);
+        Color: "light-blue";
+    }
+
+    def Process(Idle)
+    {
+        1->Done;
+        3->Failed;
+        Pos:(300, 200);
+        Color: "green";
+    }
+
+    def NextEvent as event;
+    def DoneEvent as event;
+    def FailedEvent as event;
+
+    NextEvent->Check to Process;
+}
