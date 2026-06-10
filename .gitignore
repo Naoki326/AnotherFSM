@@ -365,6 +365,3 @@ FodyWeavers.xsd
 # IDE
 .idea/
 
-# Project docs/archive
-archive/
-docs/
