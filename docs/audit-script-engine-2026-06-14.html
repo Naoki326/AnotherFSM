@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>脚本引擎语义审计 · AnotherFSM · 2026-06-14</title>
+<style>
+  :root {
+    --bg: #0f1419;
+    --panel: #1a1f2e;
+    --panel-2: #232a3d;
+    --border: #2d3548;
+    --text: #e6edf3;
+    --text-dim: #9aa7b8;
+    --text-faint: #6b7689;
+    --accent: #58a6ff;
+    --critical: #ff6b6b;
+    --warning: #ffb454;
+    --info: #79c0ff;
+    --ok: #56d364;
+    --code-bg: #0d1117;
+    --code-border: #30363d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 0;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  /* ---- Header ---- */
+  header { margin-bottom: 40px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+  h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  .meta { color: var(--text-dim); font-size: 14px; }
+  .meta span { margin-right: 16px; }
+  .summary { margin-top: 20px; padding: 16px 20px; background: var(--panel); border-radius: 8px; border-left: 4px solid var(--accent); }
+  .summary p { color: var(--text-dim); font-size: 14px; }
+  .summary strong { color: var(--text); }
+
+  /* ---- Severity badges ---- */
+  .badges { display: flex; gap: 10px; margin: 20px 0; flex-wrap: wrap; }
+  .badge {
+    padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .badge-critical { background: rgba(255,107,107,0.12); color: var(--critical); border: 1px solid rgba(255,107,107,0.3); }
+  .badge-warn { background: rgba(255,180,84,0.12); color: var(--warning); border: 1px solid rgba(255,180,84,0.3); }
+  .badge-info { background: rgba(121,192,255,0.12); color: var(--info); border: 1px solid rgba(121,192,255,0.3); }
+  .badge-ok { background: rgba(86,211,100,0.12); color: var(--ok); border: 1px solid rgba(86,211,100,0.3); }
+  .badge-count { background: var(--panel-2); color: var(--text-dim); border: 1px solid var(--border); }
+
+  /* ---- Issue card ---- */
+  .issue {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+  .issue-head {
+    padding: 18px 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: background 0.15s;
+  }
+  .issue-head:hover { background: var(--panel-2); }
+  .issue-num {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 14px; flex-shrink: 0;
+  }
+  .num-critical { background: rgba(255,107,107,0.2); color: var(--critical); }
+  .num-warn { background: rgba(255,180,84,0.2); color: var(--warning); }
+  .num-info { background: rgba(121,192,255,0.2); color: var(--info); }
+  .issue-title { flex: 1; font-size: 16px; font-weight: 600; }
+  .issue-title small { display: block; font-size: 12px; font-weight: 400; color: var(--text-faint); margin-top: 2px; }
+  .chevron { color: var(--text-faint); transition: transform 0.2s; }
+  .issue.open .chevron { transform: rotate(90deg); }
+
+  .issue-body { padding: 0 24px 24px; display: none; }
+  .issue.open .issue-body { display: block; }
+
+  .section { margin-top: 18px; }
+  .section-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--text-faint); margin-bottom: 8px;
+  }
+
+  /* ---- Code ---- */
+  code, pre {
+    font-family: "JetBrains Mono", "Consolas", "Courier New", monospace;
+    font-size: 13px;
+  }
+  .code-block {
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    border-radius: 6px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    margin: 8px 0;
+  }
+  .code-block .ln { color: var(--text-faint); margin-right: 16px; user-select: none; }
+  .code-block .hl { color: var(--warning); background: rgba(255,180,84,0.1); padding: 2px 4px; border-radius: 3px; }
+  .code-block .err { color: var(--critical); }
+  .code-block .ok { color: var(--ok); }
+  .code-block .ref { color: var(--text-faint); }
+  .file-ref {
+    font-family: monospace; font-size: 12px; color: var(--accent);
+    background: rgba(88,166,255,0.08); padding: 2px 8px; border-radius: 4px;
+    margin-right: 6px;
+  }
+
+  /* ---- Demo box ---- */
+  .demo {
+    background: var(--code-bg);
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    margin: 10px 0;
+  }
+  .demo-label { font-size: 12px; color: var(--text-dim); margin-bottom: 8px; font-weight: 600; }
+  .fsm-graph { font-family: monospace; font-size: 13px; line-height: 1.8; }
+  .fsm-node { color: var(--accent); }
+  .fsm-event { color: var(--warning); }
+  .fsm-bad { color: var(--critical); text-decoration: line-through; opacity: 0.7; }
+  .fsm-added { color: var(--ok); font-weight: 700; }
+
+  /* ---- Table ---- */
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 13px; }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+  th { color: var(--text-dim); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+  td code { color: var(--accent); }
+
+  /* ---- Verdict box ---- */
+  .verdict {
+    margin-top: 16px;
+    padding: 14px 16px;
+    border-radius: 8px;
+    border-left: 4px solid;
+  }
+  .verdict-fix { background: rgba(255,107,107,0.06); border-color: var(--critical); }
+  .verdict-check { background: rgba(255,180,84,0.06); border-color: var(--warning); }
+  .verdict-doc { background: rgba(121,192,255,0.06); border-color: var(--info); }
+  .verdict-title { font-weight: 700; margin-bottom: 4px; }
+  .verdict-fix .verdict-title { color: var(--critical); }
+  .verdict-check .verdict-title { color: var(--warning); }
+  .verdict-doc .verdict-title { color: var(--info); }
+  .verdict p { font-size: 13px; color: var(--text-dim); }
+
+  /* ---- Toc ---- */
+  .toc {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 32px;
+  }
+  .toc h3 { font-size: 13px; color: var(--text-dim); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .toc a { color: var(--accent); text-decoration: none; font-size: 14px; display: block; padding: 4px 0; }
+  .toc a:hover { text-decoration: underline; }
+  .toc a .sev { font-size: 11px; padding: 2px 6px; border-radius: 3px; margin-left: 8px; }
+
+  .footnote { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--text-faint); font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>脚本引擎语义审计报告</h1>
+  <div class="meta">
+    <span>📅 2026-06-14</span>
+    <span>🌿 分支 develop_new_module</span>
+    <span>📂 <code>StateMachine/Engine/</code> + <code>StateMachine/Executor/</code></span>
+  </div>
+
+  <div class="summary">
+    <p><strong>范围：</strong>核心库（脚本路径 <code>BuildStateVisitor</code> / <code>BuildTransitionVisitor</code>、Fluent API 路径 <code>FSMDefineBuilder</code> / <code>FSMTransformBuilder</code>、执行器 <code>FSMExecutor</code>）。<strong>不</strong>包含刚才修的 rename / output map 编辑（那是 <code>FSMDemo.API</code> 编辑层）。</p>
+    <p style="margin-top:8px"><strong>一句话结论：</strong>没有"让正常脚本崩"的硬 bug，但有 2 个会让<strong>错误脚本静默通过、运行时才卡死</strong>的隐患（和 rename 那个死代码是同一家族），以及 3 处"代码允许但语义没定义清楚"的灰色地带。</p>
+  </div>
+
+  <div class="badges">
+    <span class="badge badge-critical">🔴 建议修 2 个</span>
+    <span class="badge badge-warn">🟡 该补校验 1 个</span>
+    <span class="badge badge-info">🔵 该补文档 2 个</span>
+    <span class="badge badge-count">共 5 项</span>
+  </div>
+</header>
+
+<div class="toc">
+  <h3>目录</h3>
+  <a href="#i1">① 单 terminal fallback 会静默篡改 module 内部语义 <span class="sev badge-critical">建议修</span></a>
+  <a href="#i2">② output 映射值与内部事件名碰撞 → 跨边界联动 <span class="sev badge-critical">建议修</span></a>
+  <a href="#i3">③ input ∩ terminal 节点可能产生自环 transition <span class="sev badge-warn">补校验</span></a>
+  <a href="#i4">④ 多节点发布同一 output → fan-out 行为未文档化 <span class="sev badge-info">补文档</span></a>
+  <a href="#i5">⑤ Transform 路径静默覆盖既有 transition <span class="sev badge-info">补文档</span></a>
+</div>
+
+<!-- ===================== Issue 1 ===================== -->
+<div class="issue open" id="i1">
+  <div class="issue-head" onclick="toggle(this)">
+    <div class="issue-num num-critical">1</div>
+    <div class="issue-title">
+      单 terminal fallback 会静默篡改 module 内部语义
+      <small>错误事件名不报错，反而悄悄修改 module 的 branch 绑定</small>
+    </div>
+    <div class="chevron">▶</div>
+  </div>
+  <div class="issue-body">
+
+    <div class="section">
+      <div class="section-label">在哪儿</div>
+      <span class="file-ref">BuildTransitionVisitor.cs:43-44</span>
+      <span class="file-ref">FSMDefineBuilder_FluentApi.cs:40-41, 285-286</span>
+      <span class="file-ref">FSMDemo.API/Services/EngineManager.cs:348-352</span>
+      <p style="margin-top:8px;color:var(--text-dim);font-size:13px">4 处 <code>ResolveSourceNodes</code> 都有同一段 fallback。</p>
+    </div>
+
+    <div class="section">
+      <div class="section-label">代码（核心 fallback）</div>
+      <div class="code-block">
+<span class="ref">// BuildTransitionVisitor.cs:33-47</span>
+if (instance.TerminalNodeNames.Count > 0)
+{
+    var matchingTerminals = instance.TerminalNodeNames
+        .Where(nodeName => NodeDict.TryGetValue(nodeName, out var node)
+            && <span class="hl">FSMNodeBranchEventHelper.PublishesEvent(node, eventName)</span>)
+        .ToList();
+
+    if (matchingTerminals.Count > 0)
+        return matchingTerminals;
+
+    <span class="err">// ↓↓↓ 这里就是问题：terminal 根本没发布 eventName，却照样返回它</span>
+    <span class="hl">if (instance.TerminalNodeNames.Count == 1)</span>
+        <span class="err">return instance.TerminalNodeNames;</span>   <span class="ref">// 凭空把错误事件名"认领"了</span>
+
+    throw new ScriptException(...);
+}</div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">触发场景演示</div>
+      <div class="demo">
+        <div class="demo-label">📋 场景：module CheckA 有 1 个 terminal 节点，外部连线写错了事件名</div>
+        <div class="fsm-graph">
+<span class="fsm-node">CheckA</span> (module, 1 个 terminal: <span class="fsm-node">CheckA.Exit</span>)<br>
+&nbsp;&nbsp;<span class="fsm-node">CheckA.Exit</span> 的 branch：<span class="fsm-event">OK</span>, <span class="fsm-event">NG</span> （只发这两个）<br><br>
+外部连线（用户写错了，把 <span class="fsm-event">NG</span> 写成 <span class="fsm-bad">NGG</span>）：<br>
+&nbsp;&nbsp;<span class="fsm-event">NGG</span> → <span class="fsm-node">CheckA</span> to <span class="fsm-node">CheckB.Entry</span><br><br>
+────────── 引擎实际做了什么 ──────────<br>
+1. <code>ExternalEventToInternalNodes["NGG"]</code> → 空（不是 output 映射）<br>
+2. <code>PublishesEvent(CheckA.Exit, "NGG")</code> → false（Exit 没这个 branch）<br>
+3. <span class="err">fallback：TerminalNodeNames.Count==1，返回 [CheckA.Exit]</span><br>
+4. <code>EnsurePublishesEvent</code> 发现 Exit 是单分支可绑 → <span class="fsm-added">强行把 NGG 塞进 Exit 的 branch！</span><br><br>
+<span class="err">结果：</span>用户拼错的事件名 NGG 被静默接上了，还顺手改了 module 内部的 Exit。<br>
+没有报错，没有警告，运行时表现诡异（Exit 现在发 OK/NG/NGG 三个）。
+        </div>
+      </div>
+    </div>
+
+    <div class="verdict verdict-fix">
+      <div class="verdict-title">🔧 建议：改 throw（不破坏正常用法）</div>
+      <p>正常用 output 映射或正确事件名时根本走不到这个 fallback。能走到这里的，几乎都是用户写错了。把 <code>if (Count == 1) return ...</code> 改成 <code>throw new ScriptException("module X 的 terminal 节点未发布事件 Y")</code>，让错误在构建期就暴露。改动小（4 处），回归风险低（Test 1-9 不触发此分支）。</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===================== Issue 2 ===================== -->
+<div class="issue" id="i2">
+  <div class="issue-head" onclick="toggle(this)">
+    <div class="issue-num num-critical">2</div>
+    <div class="issue-title">
+      output 映射值与内部事件名碰撞 → 跨边界联动
+      <small>两个本该独立的事件被合并成一个，内外互相触发</small>
+    </div>
+    <div class="chevron">▶</div>
+  </div>
+  <div class="issue-body">
+
+    <div class="section">
+      <div class="section-label">在哪儿</div>
+      <span class="file-ref">BuildStateVisitor.cs:678-693</span>（Phase 3 事件展开）
+      <span class="file-ref">FSMDefineBuilder_FluentApi.cs:469-484</span>
+      <p style="margin-top:8px;color:var(--text-dim);font-size:13px">所有事件（内部 + 外部映射）共用同一个 <code>EventDict</code>，按字符串 key 合并。</p>
+    </div>
+
+    <div class="section">
+      <div class="section-label">根因</div>
+      <div class="code-block">
+<span class="ref">// BuildStateVisitor.cs:680-693</span>
+foreach (var kvp in template.TemplateEvents)
+{
+    var eventName = kvp.Key;
+    if (template.Outputs.Contains(eventName) && currentOutputMap.TryGetValue(eventName, out var mappedEvent))
+    {
+        <span class="err">// mappedEvent 是用户写的外部事件名</span>
+        if (!EventDict.ContainsKey(<span class="hl">mappedEvent</span>))
+            EventDict.Add(<span class="hl">mappedEvent</span>, new FSMEvent(mappedEvent));
+    }
+    else
+    {
+        var newEventName = <span class="hl">currentModulePrefix + eventName</span>;  <span class="ref">// e.g. "Sub1.Next"</span>
+        if (!EventDict.ContainsKey(newEventName))
+            EventDict.Add(newEventName, new FSMEvent(newEventName));
+    }
+}
+<span class="err">// 如果 mappedEvent == "Sub1.Next"（正好等于某个内部事件全名）</span>
+<span class="err">// 两者会合并成同一个 FSMEvent 实例 → 内外共享触发</span></div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">触发场景演示</div>
+      <div class="demo">
+        <div class="demo-label">📋 场景：用户在 output map 里写了一个恰好等于内部事件全名的值</div>
+        <div class="fsm-graph">
+module Sub1：<br>
+&nbsp;&nbsp;内部节点 <span class="fsm-node">Sub1.Work</span> 发布内部事件 <span class="fsm-event">Next</span><br>
+&nbsp;&nbsp;（展开后全名 = <span class="fsm-event">Sub1.Next</span>）<br><br>
+实例 body：<br>
+&nbsp;&nbsp;output Out → <span class="fsm-bad">"Sub1.Next"</span>  <span class="ref">// 用户想映射到外部，但名字撞了</span><br><br>
+────────── 引擎实际做了什么 ──────────<br>
+EventDict 里只有一个 <span class="fsm-event">"Sub1.Next"</span> FSMEvent 实例，被两个地方引用：<br>
+&nbsp;&nbsp;• module 内部转移：<span class="fsm-node">Sub1.Work</span> --<span class="fsm-event">Sub1.Next</span>--> <span class="fsm-node">Sub1.End</span><br>
+&nbsp;&nbsp;• 外部转移：外部节点 --<span class="fsm-event">Sub1.Next</span>--> 某个 target<br><br>
+<span class="err">结果：</span>Sub1.Work 触发时，外部那条转移也跟着激活；<br>
+反过来，外部触发该事件也会激活内部转移。<br>
+两个本该独立的子图被悄悄连起来了。无报错，难排查。
+        </div>
+      </div>
+    </div>
+
+    <div class="verdict verdict-fix">
+      <div class="verdict-title">🔧 建议：展开时加碰撞检测</div>
+      <p>在 Phase 3 展开 output 映射事件时，检查 <code>mappedEvent</code> 是否等于 <code>currentModulePrefix + 任一内部事件名</code>，若冲突则 throw。触发条件需要用户主动构造碰撞名（罕见），但碰撞后果完全静默，值得加防护。改动集中在 <code>BuildStateVisitor</code> 和 <code>FSMDefineBuilder</code> 的展开循环。</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===================== Issue 3 ===================== -->
+<div class="issue" id="i3">
+  <div class="issue-head" onclick="toggle(this)">
+    <div class="issue-num num-warn">3</div>
+    <div class="issue-title">
+      input ∩ terminal 节点可能产生自环 transition
+      <small>同一节点既是入口又是出口，代码没有互斥校验</small>
+    </div>
+    <div class="chevron">▶</div>
+  </div>
+  <div class="issue-body">
+
+    <div class="section">
+      <div class="section-label">在哪儿</div>
+      <span class="file-ref">BuildStateVisitor.cs:670-673</span>（标记 input/terminal，无交叉检查）
+      <span class="file-ref">BuildTransitionVisitor.cs:107-134</span>（连线，无 source==target 检查）
+    </div>
+
+    <div class="section">
+      <div class="section-label">为什么是问题</div>
+      <p style="color:var(--text-dim);font-size:13px">语义上 <strong>input</strong>（模块入口）和 <strong>terminal</strong>（模块出口）是互斥概念。但声明期（<code>VisitInput_declaration</code> / <code>VisitTerminal_declaration</code>）和展开期（670-673）都没有交叉校验，允许同一节点身兼两职。</p>
+    </div>
+
+    <div class="section">
+      <div class="section-label">触发场景演示</div>
+      <div class="demo">
+        <div class="demo-label">📋 场景：节点 X 同时声明为 input 和 terminal</div>
+        <div class="fsm-graph">
+module M：<br>
+&nbsp;&nbsp;input <span class="fsm-node">X</span><br>
+&nbsp;&nbsp;terminal <span class="fsm-node">X</span>   <span class="ref">// 同一个 X</span><br>
+&nbsp;&nbsp;<span class="fsm-node">X</span> 的 branch 发布 output <span class="fsm-event">Out</span><br><br>
+实例 Sub1，output Out → <span class="fsm-event">EventA</span><br>
+外部连线：<span class="fsm-event">EventA</span> → <span class="fsm-node">Sub1</span> to <span class="fsm-node">Target</span><br><br>
+────────── 引擎实际做了什么 ──────────<br>
+<code>ResolveSourceNodes("EventA")</code> → 经 <code>ExternalEventToInternalNodes</code> → [<span class="fsm-node">Sub1.X</span>]<br>
+<code>ResolveTargetNodes("Sub1")</code> → 经 <code>InputNodeNames</code> → [<span class="fsm-node">Sub1.X</span>]<br><br>
+创建转移：<span class="fsm-node">Sub1.X</span> --<span class="fsm-event">EventA</span>--> <span class="fsm-node">Sub1.X</span>  <span class="err">（自环，合法通过）</span><br><br>
+<span class="err">结果：</span>逻辑上荒谬的自环被允许创建。
+        </div>
+      </div>
+    </div>
+
+    <div class="verdict verdict-check">
+      <div class="verdict-title">🔍 建议：声明期加 input/terminal 互斥校验</div>
+      <p>触发条件较刻意（用户得主动把同一节点声明两次），实际脚里很少见。但 <strong>input/terminal 互斥</strong>是基本语义，应在声明期（<code>VisitTerminal_declaration</code>）就校验，而不是等连线时产生诡异自环。改动小，回归风险低。</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===================== Issue 4 ===================== -->
+<div class="issue" id="i4">
+  <div class="issue-head" onclick="toggle(this)">
+    <div class="issue-num num-info">4</div>
+    <div class="issue-title">
+      多节点发布同一 output → fan-out 行为未文档化
+      <small>行为本身合理，但代码里没写清楚这是预期的</small>
+    </div>
+    <div class="chevron">▶</div>
+  </div>
+  <div class="issue-body">
+
+    <div class="section">
+      <div class="section-label">在哪儿</div>
+      <span class="file-ref">BuildStateVisitor.cs:820-822</span>（去重只按节点名）
+      <span class="file-ref">BuildTransitionVisitor.cs:27-31</span>（整表返回）
+    </div>
+
+    <div class="section">
+      <div class="section-label">行为</div>
+      <div class="demo">
+        <div class="demo-label">📋 场景：module 内两个节点都发布同一 output</div>
+        <div class="fsm-graph">
+module M：<br>
+&nbsp;&nbsp;<span class="fsm-node">Check1</span> branch 发布 <span class="fsm-event">Out</span><br>
+&nbsp;&nbsp;<span class="fsm-node">Check2</span> branch 也发布 <span class="fsm-event">Out</span><br><br>
+实例 Sub1，output Out → <span class="fsm-event">EventA</span><br>
+外部连线：<span class="fsm-event">EventA</span> → <span class="fsm-node">Sub1</span> to <span class="fsm-node">Target</span><br><br>
+────────── 引擎实际做了什么 ──────────<br>
+<code>ExternalEventToInternalNodes["EventA"]</code> = [<span class="fsm-node">Sub1.Check1</span>, <span class="fsm-node">Sub1.Check2</span>]<br>
+创建 <span class="ok">两条</span> transition：<br>
+&nbsp;&nbsp;• <span class="fsm-node">Sub1.Check1</span> --<span class="fsm-event">EventA</span>--> <span class="fsm-node">Target</span><br>
+&nbsp;&nbsp;• <span class="fsm-node">Sub1.Check2</span> --<span class="fsm-event">EventA</span>--> <span class="fsm-node">Target</span><br><br>
+<span class="ok">结果：</span>fan-out 到所有发布者。<br>
+<span class="ref">这其实是合理的 —— 比如"两个检查节点任一发 NG 都跳到同一目标"是常见设计。</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="verdict verdict-doc">
+      <div class="verdict-title">📝 建议：在 CONTEXT.md / ADR 里写明 fan-out 语义</div>
+      <p>行为本身不是 bug。"两个检查节点都发 NG"是合理设计。但代码里没有任何注释说明这是预期，未来维护者（或下次的我）可能误以为是 bug 想去"修复"成单发布者。建议在 <code>archive/CONTEXT.md</code> 的 module 术语条目里加一句"output 可多发布者，外部连线 fan-out 到全部"。</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===================== Issue 5 ===================== -->
+<div class="issue" id="i5">
+  <div class="issue-head" onclick="toggle(this)">
+    <div class="issue-num num-info">5</div>
+    <div class="issue-title">
+      Transform 路径静默覆盖既有 transition
+      <small>唯一会悄悄丢连线的路径，其他路径都 throw</small>
+    </div>
+    <div class="chevron">▶</div>
+  </div>
+  <div class="issue-body">
+
+    <div class="section">
+      <div class="section-label">在哪儿</div>
+      <span class="file-ref">FSMDefineBuilder_FluentApi.cs:108</span>（Transform 调 TryForceConnectNode）
+      <span class="file-ref">FSMEngine_Function.cs:194-197</span>（DeleteTransition + 重连）
+    </div>
+
+    <div class="section">
+      <div class="section-label">四个路径的对比</div>
+      <table>
+        <thead>
+          <tr><th>路径</th><th>(source, event) 重复时</th><th>调用</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>脚本 <code>BuildTransitionVisitor</code></td><td><span class="err">throw</span></td><td><code>AddTransition</code> 前检查</td></tr>
+          <tr><td>脚本 module 展开 Phase 4</td><td><span class="err">throw</span></td><td><code>BuildStateVisitor.cs:725-728</code></td></tr>
+          <tr><td>Fluent <code>FSMDefineBuilder.Build</code></td><td><span class="err">throw</span></td><td><code>engine.ConnectNode</code></td></tr>
+          <tr><td>Fluent module 展开 Phase 3</td><td><span class="err">throw</span></td><td><code>FSMDefineBuilder_FluentApi.cs:512-513</code></td></tr>
+          <tr style="background:rgba(255,180,84,0.06)"><td><strong>Fluent <code>FSMTransformBuilder</code></strong></td><td><span class="hl">静默覆盖（删旧重连）</span></td><td><code>engine.TryForceConnectNode</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="section-label">是不是 bug？</div>
+      <p style="color:var(--text-dim);font-size:13px">大概率<strong>不是</strong>。"Transform"（变换/重构）这个名字本身暗示"重新接线"，Force 语义（<code>ForceConnectNode</code> 在重复时删旧重连）像是给"运行期重连"留的口子。但 <code>IFSMTransformBuilder</code> 接口<strong>没有任何 XML 注释</strong>说明这点，用户用 <code>TransformFSMDefine</code> 时容易意外丢失旧连线。</p>
+    </div>
+
+    <div class="verdict verdict-doc">
+      <div class="verdict-title">📝 建议：给 IFSMTransformBuilder 加 XML 注释</div>
+      <p>在 <code>IFSMTransformBuilder</code> 接口和 <code>TransformFSMDefine</code> 方法上加 <code>&lt;summary&gt;</code> 注释，明确写"当 (source, event) 已存在时，会静默覆盖既有 transition（删除旧的、接上新的）。如需严格模式请用 <code>ConfigureFSMDefine</code>"。不改行为，只补文档。需要你确认 Force 语义是否真是设计意图。</p>
+    </div>
+
+  </div>
+</div>
+
+<div class="footnote">
+  <p><strong>审计方法：</strong>通读 <code>BuildStateVisitor.cs</code>、<code>BuildTransitionVisitor.cs</code>、<code>FSMDefineBuilder_FluentApi.cs</code>、<code>FSMExecutor.cs</code>、<code>FSMEngine_Function.cs</code>，针对 module 展开 / output 映射 / 连线解析 / 事件字典合并等关键路径提出 5 个假设，逐个在代码里验证。已通过 <code>FSMScriptAnalyzerTest</code> Test 1-9 确认现有脚本不受影响。</p>
+  <p style="margin-top:8px"><strong>与刚才 rename 工作的关系：</strong>本报告所有发现都在核心库 <code>StateMachine/</code>，与 <code>FSMDemo.API</code> 编辑层的 rename / output map 编辑<strong>无关</strong>。两者是独立的语义层。</p>
+</div>
+
+</div>
+
+<script>
+function toggle(head) {
+  const issue = head.parentElement;
+  issue.classList.toggle('open');
+}
+</script>
+</body>
+</html>
