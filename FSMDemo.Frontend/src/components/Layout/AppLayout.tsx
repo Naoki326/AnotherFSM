@@ -24,21 +24,21 @@ export function AppLayout() {
       <AntLayout.Header
         style={{
           background: '#fff',
-          padding: '0 24px',
+          padding: '0 12px',
           height: 'auto',
           lineHeight: 'unset',
           borderBottom: '1px solid #f0f0f0',
         }}
       >
-        <div style={{ fontWeight: 600, fontSize: 36, padding: '14px 0' }}>
+        <div style={{ fontWeight: 600, fontSize: 18, padding: '7px 0' }}>
           AnotherFSM Editor
         </div>
         <ExecutionToolbar />
       </AntLayout.Header>
       <AntLayout>
         <Sider
-          width={280}
-          style={{ background: '#fff', borderRight: '1px solid #f0f0f0', padding: 16 }}
+          width={200}
+          style={{ background: '#fff', borderRight: '1px solid #f0f0f0', padding: 8 }}
         >
           <NodePalette />
         </Sider>
@@ -48,8 +48,8 @@ export function AppLayout() {
           </ReactFlowProvider>
         </Content>
         <Sider
-          width={420}
-          style={{ background: '#fff', borderLeft: '1px solid #f0f0f0', padding: 16 }}
+          width={300}
+          style={{ background: '#fff', borderLeft: '1px solid #f0f0f0', padding: 8 }}
         >
           <PropertyPanel />
         </Sider>

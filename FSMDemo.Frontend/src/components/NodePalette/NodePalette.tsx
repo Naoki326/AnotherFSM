@@ -96,11 +96,11 @@ export function NodePalette({ onAddNode }: NodePaletteProps) {
   );
 
   return (
-    <Card title="Node Types" size="small" style={{ height: '100%', overflow: 'auto', fontSize: 20 }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <Card title="Node Types" size="small" style={{ height: '100%', overflow: 'auto', fontSize: 14 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {modules.length > 0 && (
           <>
-            <Text style={{ fontSize: 20, fontWeight: 600, color: '#333' }}>Modules</Text>
+            <Text style={{ fontSize: 14, fontWeight: 600, color: '#333' }}>Modules</Text>
             {modules.map((m) => (
               <div
                 key={m.moduleName}
@@ -108,25 +108,25 @@ export function NodePalette({ onAddNode }: NodePaletteProps) {
                 onDragStart={(e) => handleModuleDragStart(e, m.moduleName)}
                 onClick={() => handleModuleClick(m.moduleName)}
                 style={{
-                  padding: '14px 18px',
-                  borderRadius: 8,
+                  padding: '7px 9px',
+                  borderRadius: 4,
                   background: 'linear-gradient(135deg, #7c4dff, #651fff)',
                   color: '#fff',
                   cursor: 'grab',
                   textAlign: 'center',
-                  fontSize: 20,
+                  fontSize: 14,
                   fontWeight: 500,
                   userSelect: 'none',
                 }}
               >
-                <div style={{ fontSize: 22, fontWeight: 700 }}>📦 {m.moduleName}</div>
-                <div style={{ fontSize: 12, opacity: 0.7, marginTop: 2 }}>
+                <div style={{ fontSize: 14, fontWeight: 700 }}>📦 {m.moduleName}</div>
+                <div style={{ fontSize: 11, opacity: 0.7, marginTop: 1 }}>
                   inputs: {m.inputs.join(', ') || '-'} | outputs: {m.outputs.join(', ') || '-'}
                 </div>
               </div>
             ))}
-            <div style={{ borderBottom: '2px solid #e8e8e8', margin: '4px 0' }} />
-            <Text style={{ fontSize: 20, fontWeight: 600, color: '#333' }}>Basic Nodes</Text>
+            <div style={{ borderBottom: '1px solid #e8e8e8', margin: '2px 0' }} />
+            <Text style={{ fontSize: 14, fontWeight: 600, color: '#333' }}>Basic Nodes</Text>
           </>
         )}
         {NODE_TYPES.map((nt) => (
@@ -136,18 +136,18 @@ export function NodePalette({ onAddNode }: NodePaletteProps) {
             onDragStart={(e) => handleDragStart(e, nt.type, nt.color)}
             onClick={() => handleClick(nt.type, nt.color)}
             style={{
-              padding: '14px 18px',
-              borderRadius: 8,
+              padding: '7px 9px',
+              borderRadius: 4,
               background: nt.color,
               color: '#fff',
               cursor: 'grab',
               textAlign: 'center',
-              fontSize: 20,
+              fontSize: 14,
               fontWeight: 500,
               userSelect: 'none',
             }}
           >
-            <Text style={{ color: '#fff', fontSize: 20 }}>{nt.type}</Text>
+            <Text style={{ color: '#fff', fontSize: 14 }}>{nt.type}</Text>
           </div>
         ))}
       </div>

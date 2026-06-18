@@ -9,6 +9,9 @@ function edgeIdFor(source: string, target: string, eventName: string): string {
   return `${source}->${target}::${eventName}`;
 }
 
+const descLabelStyle = { fontSize: 14, whiteSpace: 'nowrap' as const };
+const descContentStyle = { fontSize: 14, wordBreak: 'break-all' as const };
+
 export function PropertyPanel() {
   const selectedNodeName = useEngineStore((s) => s.selectedNodeName);
   const selectedEdgeId = useEngineStore((s) => s.selectedEdgeId);
@@ -154,21 +157,39 @@ export function PropertyPanel() {
     }
   }, [refreshGraph]);
 
+  const handleOutputEventMapChange = useCallback(async (
+    instanceName: string,
+    outputKey: string,
+    newExternalEvent: string,
+    outputs: string[],
+  ) => {
+    try {
+      const index = outputs.indexOf(outputKey);
+      if (index < 0) return;
+      // 复用 updateNodeEvent：后端 UpdateNodeEvent 当 name==instance 时转发到 UpdateModuleInstanceOutputEvent
+      await api.updateNodeEvent(instanceName, index, newExternalEvent);
+      await refreshGraph();
+      message.success('Output map updated');
+    } catch {
+      message.error('Failed to update output event map');
+    }
+  }, [refreshGraph]);
+
   // Edge selected
   if (!node && selectedConnection) {
     return (
-      <Card title="Connection Properties" style={{ height: '100%', overflow: 'auto', fontSize: 22 }}>
-        <Descriptions column={1} bordered labelStyle={{ fontSize: 20 }} contentStyle={{ fontSize: 20 }}>
+      <Card title="Connection" style={{ height: '100%', overflow: 'auto', fontSize: 14 }}>
+        <Descriptions column={1} bordered labelStyle={descLabelStyle} contentStyle={descContentStyle}>
           <Descriptions.Item label="From">{selectedConnection.fromNodeName}</Descriptions.Item>
           <Descriptions.Item label="To">{selectedConnection.toNodeName}</Descriptions.Item>
           <Descriptions.Item label="Event">
-            <Tag style={{ fontSize: 18 }}>{selectedConnection.eventName}</Tag>
+            <Tag style={{ fontSize: 13 }}>{selectedConnection.eventName}</Tag>
           </Descriptions.Item>
         </Descriptions>
-        <Space style={{ marginTop: 16 }} size="middle">
-          <Button onClick={() => handleRenameConnection(selectedConnection)}>Rename Event</Button>
+        <Space style={{ marginTop: 8 }} size="small">
+          <Button size="small" onClick={() => handleRenameConnection(selectedConnection)}>Rename</Button>
           <Popconfirm title="Delete this connection?" onConfirm={() => handleDeleteConnection(selectedConnection)} okText="Delete" cancelText="Cancel">
-            <Button danger>Delete Connection</Button>
+            <Button size="small" danger>Delete</Button>
           </Popconfirm>
         </Space>
       </Card>
@@ -192,84 +213,105 @@ export function PropertyPanel() {
     };
 
     return (
-      <Card title="Module Instance" style={{ height: '100%', overflow: 'auto', fontSize: 22 }}>
-        <Descriptions column={1} bordered labelStyle={{ fontSize: 20 }} contentStyle={{ fontSize: 20 }}>
+      <Card title="Module" style={{ height: '100%', overflow: 'auto', fontSize: 14 }}>
+        <Descriptions column={1} bordered labelStyle={descLabelStyle} contentStyle={descContentStyle}>
           <Descriptions.Item label="Instance">{selectedModule.instanceName}</Descriptions.Item>
           <Descriptions.Item label="Module">
-            <Tag style={{ fontSize: 18 }} color="purple">{selectedModule.moduleName}</Tag>
+            <Tag style={{ fontSize: 13 }} color="purple">{selectedModule.moduleName}</Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="Position">
+          <Descriptions.Item label="Pos">
             ({selectedModule.posX.toFixed(0)}, {selectedModule.posY.toFixed(0)})
           </Descriptions.Item>
         </Descriptions>
 
         {selectedModuleDef && (
           <>
-            <div style={{ marginTop: 16 }}>
-              <strong style={{ fontSize: 20 }}>Inputs:</strong>
+            <div style={{ marginTop: 8 }}>
+              <strong style={{ fontSize: 14 }}>Inputs:</strong>
               {selectedModuleDef.inputs.length > 0
                 ? selectedModuleDef.inputs.map((inp) => (
-                    <Tag key={inp} style={{ fontSize: 16, marginLeft: 8 }} color="blue">{inp}</Tag>
+                    <Tag key={inp} style={{ fontSize: 12, marginLeft: 4 }} color="blue">{inp}</Tag>
                   ))
-                : <span style={{ fontSize: 16, color: '#999' }}> none</span>}
+                : <span style={{ fontSize: 12, color: '#999' }}> none</span>}
             </div>
-            <div style={{ marginTop: 8 }}>
-              <strong style={{ fontSize: 20 }}>Outputs:</strong>
+            <div style={{ marginTop: 4 }}>
+              <strong style={{ fontSize: 14 }}>Outputs:</strong>
               {selectedModuleDef.outputs.length > 0
                 ? selectedModuleDef.outputs.map((out) => (
-                    <Tag key={out} style={{ fontSize: 16, marginLeft: 8 }} color="green">{out}</Tag>
+                    <Tag key={out} style={{ fontSize: 12, marginLeft: 4 }} color="green">{out}</Tag>
                   ))
-                : <span style={{ fontSize: 16, color: '#999' }}> none</span>}
+                : <span style={{ fontSize: 12, color: '#999' }}> none</span>}
             </div>
-            <div style={{ marginTop: 8 }}>
-              <strong style={{ fontSize: 20 }}>Terminals:</strong>
+            <div style={{ marginTop: 4 }}>
+              <strong style={{ fontSize: 14 }}>Terminals:</strong>
               {selectedModuleDef.terminals.length > 0
                 ? selectedModuleDef.terminals.map((terminal) => (
-                    <Tag key={terminal} style={{ fontSize: 16, marginLeft: 8 }} color="purple">{terminal}</Tag>
+                    <Tag key={terminal} style={{ fontSize: 12, marginLeft: 4 }} color="purple">{terminal}</Tag>
                   ))
-                : <span style={{ fontSize: 16, color: '#999' }}> none</span>}
+                : <span style={{ fontSize: 12, color: '#999' }}> none</span>}
+            </div>
+            <div style={{ marginTop: 4 }}>
+              <strong style={{ fontSize: 14 }}>Output Map:</strong>
+              {selectedModuleDef.outputs.length > 0
+                ? selectedModuleDef.outputs.map((key) => {
+                    const val = selectedModule.outputEventMap[key] ?? '';
+                    return (
+                      <div key={key} style={{ marginTop: 4, fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <Tag style={{ fontSize: 12 }} color="blue">[{key}]</Tag>
+                        <span>→</span>
+                        <Input
+                          key={`${selectedModule.instanceName}-oem-${key}`}
+                          defaultValue={val}
+                          size="small"
+                          style={{ fontSize: 12, flex: 1 }}
+                          onBlur={(e) => {
+                            if (e.target.value !== val) {
+                              handleOutputEventMapChange(
+                                selectedModule.instanceName,
+                                key,
+                                e.target.value,
+                                selectedModuleDef.outputs,
+                              );
+                            }
+                          }}
+                          onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                        />
+                      </div>
+                    );
+                  })
+                : <span style={{ fontSize: 12, color: '#999' }}> none</span>}
             </div>
           </>
         )}
 
-        <div style={{ marginTop: 16 }}>
-          <strong style={{ fontSize: 20 }}>Output Event Mapping:</strong>
-          {Object.entries(selectedModule.outputEventMap).map(([key, val]) => (
-            <div key={key} style={{ marginTop: 8, fontSize: 18, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Tag style={{ fontSize: 16 }} color="blue">[{key}]</Tag>
-              <span>→</span>
-              <Tag style={{ fontSize: 16 }} color="green">{val}</Tag>
-            </div>
-          ))}
-        </div>
-
         {selectedModule.internalNodeNames.length > 0 && (
-          <div style={{ marginTop: 16 }}>
-            <strong style={{ fontSize: 20 }}>Internal Nodes:</strong>
+          <div style={{ marginTop: 8 }}>
+            <strong style={{ fontSize: 14 }}>Internal:</strong>
             {selectedModule.internalNodeNames.map((n) => (
-              <div key={n} style={{ fontSize: 16, marginTop: 4, color: '#666' }}>{n}</div>
+              <div key={n} style={{ fontSize: 12, marginTop: 2, color: '#666' }}>{n}</div>
             ))}
           </div>
         )}
 
         {selectedModule.terminalNodeNames.length > 0 && (
-          <div style={{ marginTop: 16 }}>
-            <strong style={{ fontSize: 20 }}>Terminal Nodes:</strong>
+          <div style={{ marginTop: 8 }}>
+            <strong style={{ fontSize: 14 }}>Terminals:</strong>
             {selectedModule.terminalNodeNames.map((n) => (
-              <div key={n} style={{ fontSize: 16, marginTop: 4, color: '#666' }}>{n}</div>
+              <div key={n} style={{ fontSize: 12, marginTop: 2, color: '#666' }}>{n}</div>
             ))}
           </div>
         )}
 
-        <Space style={{ marginTop: 16 }} size="middle">
+        <Space style={{ marginTop: 8 }} size="small">
           <Button
             type="primary"
+            size="small"
             onClick={() => useEngineStore.getState().setViewModule(selectedModule.instanceName)}
           >
-            Enter Module
+            Enter
           </Button>
-          <Popconfirm title="Delete this module instance?" onConfirm={handleDeleteModule} okText="Delete" cancelText="Cancel">
-            <Button danger>Delete Module</Button>
+          <Popconfirm title="Delete?" onConfirm={handleDeleteModule} okText="Delete" cancelText="Cancel">
+            <Button size="small" danger>Delete</Button>
           </Popconfirm>
         </Space>
       </Card>
@@ -279,8 +321,8 @@ export function PropertyPanel() {
   // Nothing selected
   if (!node) {
     return (
-      <Card title="Properties" style={{ height: '100%', fontSize: 22 }}>
-        <span style={{ color: '#999' }}>Select a node or connection to view properties</span>
+      <Card title="Properties" style={{ height: '100%', fontSize: 14 }}>
+        <span style={{ color: '#999', fontSize: 13 }}>Select a node or connection</span>
       </Card>
     );
   }
@@ -291,37 +333,37 @@ export function PropertyPanel() {
 
   // Node selected
   return (
-    <Card title="Node Properties" style={{ height: '100%', overflow: 'auto', fontSize: 22 }}>
-      <Descriptions column={1} bordered labelStyle={{ fontSize: 20 }} contentStyle={{ fontSize: 20 }}>
+    <Card title="Node" style={{ height: '100%', overflow: 'auto', fontSize: 14 }}>
+      <Descriptions column={1} bordered labelStyle={descLabelStyle} contentStyle={descContentStyle}>
         <Descriptions.Item label="Name">{node.name}</Descriptions.Item>
         <Descriptions.Item label="Type">
-          <Tag style={{ fontSize: 18 }} color="blue">{node.classType}</Tag>
+          <Tag style={{ fontSize: 13 }} color="blue">{node.classType}</Tag>
         </Descriptions.Item>
         <Descriptions.Item label="Color">
-          <Tag style={{ fontSize: 18 }} color={node.color}>{node.color}</Tag>
+          <Tag style={{ fontSize: 13 }} color={node.color}>{node.color}</Tag>
         </Descriptions.Item>
-        <Descriptions.Item label="Position">
+        <Descriptions.Item label="Pos">
           ({node.posX.toFixed(0)}, {node.posY.toFixed(0)})
         </Descriptions.Item>
       </Descriptions>
 
-      <Space style={{ marginTop: 16 }} size="middle">
-        <Button onClick={handleRename}>Rename Node</Button>
-        <Popconfirm title="Delete this node?" onConfirm={handleDeleteNode} okText="Delete" cancelText="Cancel">
-          <Button danger>Delete Node</Button>
+      <Space style={{ marginTop: 8 }} size="small">
+        <Button size="small" onClick={handleRename}>Rename</Button>
+        <Popconfirm title="Delete?" onConfirm={handleDeleteNode} okText="Delete" cancelText="Cancel">
+          <Button size="small" danger>Delete</Button>
         </Popconfirm>
       </Space>
 
       {selectedModuleNode && selectedModuleLocalNodeName && (
-        <div style={{ marginTop: 16 }}>
-          <strong style={{ fontSize: 20 }}>Module Role:</strong>
-          <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-            <Tag style={{ fontSize: 16 }} color="purple">{selectedModuleNode.moduleName}</Tag>
-            <Tag style={{ fontSize: 16 }}>{selectedModuleLocalNodeName}</Tag>
+        <div style={{ marginTop: 8 }}>
+          <strong style={{ fontSize: 14 }}>Module:</strong>
+          <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            <Tag style={{ fontSize: 12 }} color="purple">{selectedModuleNode.moduleName}</Tag>
+            <Tag style={{ fontSize: 12 }}>{selectedModuleLocalNodeName}</Tag>
             <Checkbox
               checked={selectedModuleNodeIsTerminal}
               onChange={(e) => handleModuleTerminalChange(node.name, e.target.checked)}
-              style={{ fontSize: 18 }}
+              style={{ fontSize: 13 }}
             >
               Terminal
             </Checkbox>
@@ -330,9 +372,9 @@ export function PropertyPanel() {
       )}
 
       {isGroupNode && (
-        <div style={{ marginTop: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <strong style={{ fontSize: 20 }}>
+        <div style={{ marginTop: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+            <strong style={{ fontSize: 14 }}>
               {isParallelType ? 'Inner FSMs:' : 'Inner FSM:'}
             </strong>
             {isParallelType && (
@@ -344,18 +386,18 @@ export function PropertyPanel() {
                   handleGroupDefChange(node.name, newDefs);
                 }}
               >
-                Add FSM
+                Add
               </Button>
             )}
           </div>
           {(node.groupDefs || []).map((def, i) => (
-            <div key={i} style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <div key={i} style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
               <Input
                 addonBefore="Start"
                 key={`${node.name}-gd-${i}-start`}
                 defaultValue={def.startNode}
-                size="large"
-                style={{ fontSize: 16, flex: 1, minWidth: 100 }}
+                size="small"
+                style={{ fontSize: 12, flex: 1, minWidth: 50 }}
                 onBlur={(e) => {
                   if (e.target.value !== def.startNode) {
                     const newDefs = [...(node.groupDefs || [])];
@@ -365,13 +407,13 @@ export function PropertyPanel() {
                 }}
                 onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
               />
-              <span style={{ fontSize: 20 }}>→</span>
+              <span style={{ fontSize: 14 }}>→</span>
               <Input
                 addonBefore="End"
                 key={`${node.name}-gd-${i}-end`}
                 defaultValue={def.endEvent}
-                size="large"
-                style={{ fontSize: 16, flex: 1, minWidth: 100 }}
+                size="small"
+                style={{ fontSize: 12, flex: 1, minWidth: 50 }}
                 onBlur={(e) => {
                   if (e.target.value !== def.endEvent) {
                     const newDefs = [...(node.groupDefs || [])];
@@ -385,7 +427,7 @@ export function PropertyPanel() {
                 <Button
                   icon={<MinusCircleOutlined />}
                   danger
-                  size="large"
+                  size="small"
                   onClick={() => {
                     const newDefs = (node.groupDefs || []).filter((_, idx) => idx !== i);
                     handleGroupDefChange(node.name, newDefs);
@@ -398,17 +440,17 @@ export function PropertyPanel() {
       )}
 
       {node.eventDescriptions.length > 0 && (
-        <div style={{ marginTop: 16 }}>
-          <strong style={{ fontSize: 20 }}>Events:</strong>
+        <div style={{ marginTop: 8 }}>
+          <strong style={{ fontSize: 14 }}>Events:</strong>
           {node.eventDescriptions.map((ed) => (
-            <div key={ed.index} style={{ marginTop: 8, fontSize: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Tag style={{ fontSize: 18 }}>{ed.index}</Tag>
+            <div key={ed.index} style={{ marginTop: 4, fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Tag style={{ fontSize: 12 }}>{ed.index}</Tag>
               <span>→</span>
               <Input
                 key={`${node.name}-ev-${ed.index}`}
                 defaultValue={ed.description}
-                size="large"
-                style={{ fontSize: 18, flex: 1 }}
+                size="small"
+                style={{ fontSize: 12, flex: 1 }}
                 onBlur={async (e) => {
                   if (e.target.value !== ed.description) {
                     try {
@@ -427,10 +469,10 @@ export function PropertyPanel() {
       )}
 
       {nodeConnections.length > 0 && (
-        <div style={{ marginTop: 16 }}>
-          <strong style={{ fontSize: 20 }}>Connections:</strong>
+        <div style={{ marginTop: 8 }}>
+          <strong style={{ fontSize: 14 }}>Connections:</strong>
           {nodeConnections.map((c) => (
-            <div key={`${c.fromNodeName}-${c.toNodeName}-${c.eventName}`} style={{ fontSize: 20, marginTop: 6 }}>
+            <div key={`${c.fromNodeName}-${c.toNodeName}-${c.eventName}`} style={{ fontSize: 13, marginTop: 3 }}>
               {c.fromNodeName === node.name ? (
                 <span>→ <strong>{c.toNodeName}</strong> ({c.eventName})</span>
               ) : (

@@ -180,60 +180,60 @@ export function ExecutionToolbar() {
         flexDirection: 'column',
         alignItems: 'stretch',
         justifyContent: 'center',
-        gap: 8,
-        padding: '14px 0',
+        gap: 4,
+        padding: '7px 0',
         borderBottom: '1px solid #f0f0f0',
         background: '#fafafa',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
-        <Space size="middle">
-          <Button size="large" icon={<PlayCircleOutlined />} onClick={handleStart} disabled={!canStart} type="primary">Start</Button>
-          <Button size="large" icon={<PauseCircleOutlined />} onClick={async () => {
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexWrap: 'wrap' }}>
+        <Space size="small">
+          <Button size="small" icon={<PlayCircleOutlined />} onClick={handleStart} disabled={!canStart} type="primary">Start</Button>
+          <Button size="small" icon={<PauseCircleOutlined />} onClick={async () => {
             await api.pauseExecution();
             useEngineStore.getState().setExecution({ ...execution, state: 'Paused' });
           }} disabled={!canPause}>Pause</Button>
-          <Button size="large" icon={<CaretRightOutlined />} onClick={async () => {
+          <Button size="small" icon={<CaretRightOutlined />} onClick={async () => {
             await api.continueExecution();
             useEngineStore.getState().setExecution({ ...execution, state: 'Running' });
           }} disabled={!canContinue}>Continue</Button>
-          <Button size="large" icon={<StopOutlined />} onClick={async () => {
+          <Button size="small" icon={<StopOutlined />} onClick={async () => {
             await api.stopExecution();
             useEngineStore.getState().setExecution({ state: 'Idle' });
           }} disabled={!canStop} danger>Stop</Button>
         </Space>
 
-        <div style={{ width: 1, height: 32, background: '#d9d9d9', margin: '0 12px' }} />
+        <div style={{ width: 1, height: 16, background: '#d9d9d9', margin: '0 6px' }} />
 
-        <Space size="middle">
-          <Button size="large" icon={<ExperimentOutlined />} onClick={handleLoadDemo}>Load Demo</Button>
-          <Button size="large" icon={<ImportOutlined />} onClick={handleImport}>Import</Button>
-          <Button size="large" icon={<ExportOutlined />} onClick={handleExport}>Export</Button>
+        <Space size="small">
+          <Button size="small" icon={<ExperimentOutlined />} onClick={handleLoadDemo}>Demo</Button>
+          <Button size="small" icon={<ImportOutlined />} onClick={handleImport}>Import</Button>
+          <Button size="small" icon={<ExportOutlined />} onClick={handleExport}>Export</Button>
         </Space>
 
-        <div style={{ width: 1, height: 32, background: '#d9d9d9', margin: '0 12px' }} />
+        <div style={{ width: 1, height: 16, background: '#d9d9d9', margin: '0 6px' }} />
 
-        <Tag style={{ fontSize: 18, padding: '4px 12px' }} color={state === 'Running' ? 'green' : state === 'Paused' ? 'orange' : 'default'}>
+        <Tag style={{ fontSize: 12, padding: '2px 6px' }} color={state === 'Running' ? 'green' : state === 'Paused' ? 'orange' : 'default'}>
           {state}
         </Tag>
         {execution.currentNodeName && (
-          <Tag style={{ fontSize: 18, padding: '4px 12px' }} color="blue">Active: {execution.currentNodeName}</Tag>
+          <Tag style={{ fontSize: 12, padding: '2px 6px' }} color="blue">Active: {execution.currentNodeName}</Tag>
         )}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, minHeight: 32, padding: '0 24px', overflow: 'hidden' }}>
-        <Tag icon={<HistoryOutlined />} color="blue" style={{ margin: 0 }}>Flow</Tag>
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 6, overflowX: 'auto', whiteSpace: 'nowrap', paddingBottom: 2 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4, minHeight: 16, padding: '0 12px', overflow: 'hidden' }}>
+        <Tag icon={<HistoryOutlined />} color="blue" style={{ margin: 0, fontSize: 11 }}>Flow</Tag>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 3, overflowX: 'auto', whiteSpace: 'nowrap', paddingBottom: 1 }}>
           {recentExecutionLog.length === 0 ? (
-            <span style={{ color: '#999', fontSize: 13 }}>No execution log</span>
+            <span style={{ color: '#999', fontSize: 11 }}>No execution log</span>
           ) : (
             recentExecutionLog.map((entry) => (
               <Tag
                 key={entry.id}
                 color={entry.kind === 'enter' ? 'processing' : entry.kind === 'exit' ? 'default' : 'purple'}
-                style={{ margin: 0 }}
+                style={{ margin: 0, fontSize: 11 }}
               >
-                <span style={{ opacity: 0.65, marginRight: 6 }}>{entry.createdAt}</span>
+                <span style={{ opacity: 0.65, marginRight: 3 }}>{entry.createdAt}</span>
                 {entry.message}
               </Tag>
             ))
@@ -267,7 +267,7 @@ export function ExecutionToolbar() {
         width={700}
       >
         <textarea readOnly value={exportScript}
-          style={{ width: '100%', height: 400, fontFamily: 'monospace', fontSize: 16, padding: 12, border: '1px solid #d9d9d9', borderRadius: 4, resize: 'vertical', background: '#fafafa' }}
+          style={{ width: '100%', height: 400, fontFamily: 'monospace', fontSize: 11, padding: 6, border: '1px solid #d9d9d9', borderRadius: 4, resize: 'vertical', background: '#fafafa' }}
         />
       </Modal>
     </div>
