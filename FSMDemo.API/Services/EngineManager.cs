@@ -320,6 +320,17 @@ public class EngineManager
 
         if (Engine.ModuleInstances.TryGetValue(fromNodeName, out var instance))
         {
+            // 优先用 EventToInternalNodes 精确匹配：基于 branch 设置的权威映射。
+            if (instance.ExternalEventToInternalNodes.TryGetValue(eventName, out var outputNodes))
+            {
+                sourceNodeNames = outputNodes
+                    .Where(Engine.ContainsNode)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+                if (sourceNodeNames.Count > 0)
+                    return true;
+            }
+
             var terminalNodeNames = instance.TerminalNodeNames
                 .Where(Engine.ContainsNode)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
@@ -334,33 +345,12 @@ public class EngineManager
                 if (sourceNodeNames.Count > 0)
                     return true;
 
-                if (terminalNodeNames.Count == 1)
-                {
-                    sourceNodeNames = terminalNodeNames;
-                    return true;
-                }
-
-                error = $"Module instance '{fromNodeName}' has multiple terminal nodes, but none publishes event '{eventName}'";
+                error = $"Module instance '{fromNodeName}' has no terminal node publishing event '{eventName}'";
                 return false;
             }
 
-            // Backward compatibility for modules that still model outputs as event-to-source mappings.
-            if (sourceNodeNames.Count == 0
-                && instance.ExternalEventToInternalNodes.TryGetValue(eventName, out var legacyOutputNodes))
-            {
-                sourceNodeNames = legacyOutputNodes
-                    .Where(Engine.ContainsNode)
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .ToList();
-            }
-
-            if (sourceNodeNames.Count == 0)
-            {
-                error = $"Module instance '{fromNodeName}' has no terminal node";
-                return false;
-            }
-
-            return true;
+            error = $"Module instance '{fromNodeName}' has no terminal node";
+            return false;
         }
 
         if (Engine.ContainsNode(fromNodeName))
@@ -1190,11 +1180,42 @@ public class EngineManager
             return true;
         }
 
+        // 折叠视图 external connection rename：eventName 是 OutputEventMap 的 value（外部投影），
+        // rename 等价于改 OutputEventMap 对应条目，source 由 ExpandModuleInstanceNodes 自动重建。
+        if (Engine.ModuleInstances.TryGetValue(fromNodeName, out var foldedInstance))
+        {
+            if (!Engine.TryGetModule(foldedInstance.ModuleName, out var foldedModule))
+                return false;
+
+            var outputKey = foldedInstance.OutputEventMap
+                .FirstOrDefault(kv => string.Equals(kv.Value, eventName, StringComparison.OrdinalIgnoreCase)).Key;
+            if (outputKey == null)
+                return false;
+
+            var outputIndex = foldedModule.Outputs.FindIndex(o =>
+                string.Equals(o, outputKey, StringComparison.OrdinalIgnoreCase));
+            if (outputIndex < 0)
+                return false;
+
+            return UpdateModuleInstanceOutputEvent(foldedInstance, outputIndex, newEventName);
+        }
+
+        var virtualFromModuleInstanceName = ResolveVirtualModuleSourceForRename(fromNodeName, toNodeName);
         var resolveEventName = eventName ?? newEventName;
         if (!TryResolveConnectionSourceNodes(fromNodeName, resolveEventName, out var sourceNodeNames, out _))
             return false;
         if (!TryResolveConnectionTargetNodes(toNodeName, out var targetNodeNames, out _))
             return false;
+        List<string> newSourceNodeNames = [];
+        if (virtualFromModuleInstanceName != null
+            && !TryResolveConnectionSourceNodes(virtualFromModuleInstanceName, newEventName, out newSourceNodeNames, out _))
+        {
+            return false;
+        }
+        else if (virtualFromModuleInstanceName == null)
+        {
+            newSourceNodeNames = sourceNodeNames;
+        }
 
         var existingTransitions = new List<(string SourceNodeName, string TargetNodeName, string EventName)>();
         foreach (var sourceNodeName in sourceNodeNames)
@@ -1218,16 +1239,32 @@ public class EngineManager
         if (existingTransitions.Count == 0)
             return false;
 
-        foreach (var (sourceNodeName, targetNodeName, oldEventName) in existingTransitions)
+        foreach (var (_, targetNodeName, _) in existingTransitions)
         {
-            if (!CanAddTransition(sourceNodeName, targetNodeName, newEventName, sourceNodeName, targetNodeName, oldEventName))
-                return false;
-
-            if (IsTerminalSourceForVirtualModule(fromNodeName, sourceNodeName))
+            foreach (var newSourceNodeName in newSourceNodeNames)
             {
-                var fsmEvent = EnsureEngineEvent(newEventName);
-                if (!FSMNodeBranchEventHelper.EnsurePublishesEvent(Engine[sourceNodeName], fsmEvent))
+                var oldTransitionForSameSource = existingTransitions.FirstOrDefault(existing =>
+                    string.Equals(existing.SourceNodeName, newSourceNodeName, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(existing.TargetNodeName, targetNodeName, StringComparison.OrdinalIgnoreCase));
+
+                if (!CanAddTransition(
+                        newSourceNodeName,
+                        targetNodeName,
+                        newEventName,
+                        oldTransitionForSameSource.SourceNodeName,
+                        oldTransitionForSameSource.TargetNodeName,
+                        oldTransitionForSameSource.EventName))
+                {
                     return false;
+                }
+
+                if (virtualFromModuleInstanceName != null
+                    && IsTerminalSourceForVirtualModule(virtualFromModuleInstanceName, newSourceNodeName))
+                {
+                    var fsmEvent = EnsureEngineEvent(newEventName);
+                    if (!FSMNodeBranchEventHelper.EnsurePublishesEvent(Engine[newSourceNodeName], fsmEvent))
+                        return false;
+                }
             }
         }
 
@@ -1236,16 +1273,39 @@ public class EngineManager
             DeleteConnectionExact(sourceNodeName, targetNodeName, oldEventName);
         }
 
-        foreach (var (sourceNodeName, targetNodeName, _) in existingTransitions)
+        foreach (var (_, targetNodeName, _) in existingTransitions)
         {
-            AddConnectionExact(
-                sourceNodeName,
-                targetNodeName,
-                newEventName,
-                IsTerminalSourceForVirtualModule(fromNodeName, sourceNodeName));
+            foreach (var newSourceNodeName in newSourceNodeNames)
+            {
+                AddConnectionExact(
+                    newSourceNodeName,
+                    targetNodeName,
+                    newEventName,
+                    virtualFromModuleInstanceName != null
+                    && IsTerminalSourceForVirtualModule(virtualFromModuleInstanceName, newSourceNodeName));
+            }
         }
 
         return true;
+    }
+
+    private string? ResolveVirtualModuleSourceForRename(string fromNodeName, string toNodeName)
+    {
+        if (Engine.ModuleInstances.ContainsKey(fromNodeName))
+            return fromNodeName;
+
+        var fromModuleNode = GetModuleNodeRef(fromNodeName);
+        if (fromModuleNode == null)
+            return null;
+
+        var toModuleNode = GetModuleNodeRef(toNodeName);
+        if (toModuleNode != null
+            && string.Equals(fromModuleNode.InstanceName, toModuleNode.InstanceName, StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        return fromModuleNode.InstanceName;
     }
 
     public async Task<bool> StartExecution(string startNodeName, string endEventName)
@@ -1268,13 +1328,45 @@ public class EngineManager
 
         Engine.ReinitGroupNode();
 
-        _executor = new FSMExecutor(startNode, endEvent);
+        _executor = new FSMExecutor(startNode, ResolveExecutionEndEvents(endEvent));
         _executor.FSMStateChanged += OnFSMStateChanged;
         _executor.NodeStateChanged += OnNodeStateChanged;
         _executor.NodeExitChanged += OnNodeExitChanged;
 
         await _executor.RestartAsync(true);
         return true;
+    }
+
+    private List<FSMEvent> ResolveExecutionEndEvents(FSMEvent requestedEndEvent)
+    {
+        var result = new List<FSMEvent> { requestedEndEvent };
+        var seen = new HashSet<string>(StringComparer.Ordinal) { requestedEndEvent.EventID };
+        var modulePrefixes = Engine.ModuleInstances.Keys
+            .Select(instanceName => instanceName + ".")
+            .ToList();
+
+        foreach (var nodeName in Engine.GetNodeNames())
+        {
+            if (modulePrefixes.Any(prefix => nodeName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
+                continue;
+
+            var node = Engine[nodeName];
+            if (!string.Equals(node.ClassType, "End", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            node.UpdateEventDescriptions();
+            foreach (var desc in node.EventDescriptions)
+            {
+                if (!Engine.TryGetEvent(desc.Description, out var endEvent))
+                    continue;
+                if (!seen.Add(endEvent.EventID))
+                    continue;
+
+                result.Add(endEvent);
+            }
+        }
+
+        return result;
     }
 
     public async Task<bool> PauseExecution()

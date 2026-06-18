@@ -288,7 +288,7 @@ public sealed class DemoRuntime : IDisposable
         }
 
         executor?.Dispose();
-        executor = new FSMExecutor(startNode, endEvent);
+        executor = new FSMExecutor(startNode, ResolveExecutionEndEvents(endEvent));
         executor.NodeStateChanged += OnNodeEntered;
         executor.NodeExitChanged += OnNodeExited;
         executor.FSMStateChanged += OnStateChanged;
@@ -299,6 +299,46 @@ public sealed class DemoRuntime : IDisposable
         Logs.Add($"Starting at {startNodeName}, ending on {endEventName}.");
         await executor.RestartAsync();
         NotifyChanged();
+    }
+
+    private IReadOnlyList<FSMEvent> ResolveExecutionEndEvents(FSMEvent requestedEndEvent)
+    {
+        var result = new List<FSMEvent> { requestedEndEvent };
+        var seen = new HashSet<string>(StringComparer.Ordinal) { requestedEndEvent.EventID };
+        var modulePrefixes = engine.ModuleInstances.Keys
+            .Select(instanceName => instanceName + ".")
+            .ToArray();
+
+        foreach (var nodeName in engine.GetNodeNames())
+        {
+            if (modulePrefixes.Any(prefix => nodeName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
+            {
+                continue;
+            }
+
+            var node = engine[nodeName];
+            if (!string.Equals(node.ClassType, "End", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            node.UpdateEventDescriptions();
+            foreach (var desc in node.EventDescriptions)
+            {
+                if (!engine.TryGetEvent(desc.Description, out var endEvent))
+                {
+                    continue;
+                }
+                if (!seen.Add(endEvent.EventID))
+                {
+                    continue;
+                }
+
+                result.Add(endEvent);
+            }
+        }
+
+        return result;
     }
 
     public async Task PauseAsync()
