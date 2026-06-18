@@ -23,6 +23,10 @@
             if (!engine.moduleInstances.TryGetValue(fromNode, out var instance))
                 return [fromNode];
 
+            if (instance.ExternalEventToInternalNodes.TryGetValue(connectionName, out var outputNodes)
+                && outputNodes.Count > 0)
+                return outputNodes;
+
             if (instance.TerminalNodeNames.Count > 0)
             {
                 var matchingTerminals = instance.TerminalNodeNames
@@ -33,15 +37,8 @@
                 if (matchingTerminals.Count > 0)
                     return matchingTerminals;
 
-                if (instance.TerminalNodeNames.Count == 1)
-                    return instance.TerminalNodeNames;
-
-                throw new ScriptException($"模块实例 {fromNode} 连线出错, 多个 terminal 节点都没有发布事件 {connectionName}！");
+                throw new ScriptException($"模块实例 {fromNode} 连线出错, 没有 terminal 节点发布事件 {connectionName}！");
             }
-
-            if (instance.ExternalEventToInternalNodes.TryGetValue(connectionName, out var legacyOutputNodes)
-                && legacyOutputNodes.Count > 0)
-                return legacyOutputNodes;
 
             throw new ScriptException($"模块实例 {fromNode} 连线出错, 未声明 terminal 节点！");
         }
@@ -268,6 +265,10 @@
             if (!engine.moduleInstances.TryGetValue(fromNode, out var instance))
                 return [fromNode];
 
+            if (instance.ExternalEventToInternalNodes.TryGetValue(connectionName, out var outputNodes)
+                && outputNodes.Count > 0)
+                return outputNodes;
+
             if (instance.TerminalNodeNames.Count > 0)
             {
                 var matchingTerminals = instance.TerminalNodeNames
@@ -278,15 +279,8 @@
                 if (matchingTerminals.Count > 0)
                     return matchingTerminals;
 
-                if (instance.TerminalNodeNames.Count == 1)
-                    return instance.TerminalNodeNames;
-
-                throw new ScriptException($"模块实例 {fromNode} 连线出错, 多个 terminal 节点都没有发布事件 {connectionName}！");
+                throw new ScriptException($"模块实例 {fromNode} 连线出错, 没有 terminal 节点发布事件 {connectionName}！");
             }
-
-            if (instance.ExternalEventToInternalNodes.TryGetValue(connectionName, out var legacyOutputNodes)
-                && legacyOutputNodes.Count > 0)
-                return legacyOutputNodes;
 
             throw new ScriptException($"模块实例 {fromNode} 连线出错, 未声明 terminal 节点！");
         }
@@ -464,6 +458,23 @@
                         instance.InputNodeNames.Add(newNodeName);
                     if (template.Terminals.Contains(templateNodeName, StringComparer.OrdinalIgnoreCase))
                         instance.TerminalNodeNames.Add(newNodeName);
+                }
+
+                // Phase 2 前：检测 output 映射值是否与某个内部事件展开后的全名碰撞，
+                // 碰撞会让两者合并为同一个 FSMEvent，产生跨边界联动。
+                var internalEventFullNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                foreach (var name in template.TemplateEvents.Keys)
+                {
+                    if (!template.Outputs.Contains(name))
+                        internalEventFullNames.Add(prefix + name);
+                }
+                foreach (var mappedPair in outputMap)
+                {
+                    if (internalEventFullNames.Contains(mappedPair.Value))
+                    {
+                        throw new ScriptException(
+                            $"模块实例 {instance.InstanceName} 的 output 映射出错, 事件 {mappedPair.Value} 与模块内部事件全名碰撞, 请改用不同的外部事件名");
+                    }
                 }
 
                 // Phase 2: 展开模板事件

@@ -22,6 +22,14 @@ namespace StateMachine
             if (!ModuleInstances.TryGetValue(sourceStateName, out var instance))
                 return [sourceStateName];
 
+            // 优先用 EventToInternalNodes 精确匹配：它记录了 branch 引用 output 的真实节点，
+            // 是基于实际 branch 设置的权威映射。
+            if (instance.ExternalEventToInternalNodes.TryGetValue(eventName, out var outputNodes)
+                && outputNodes.Count > 0)
+            {
+                return outputNodes;
+            }
+
             if (instance.TerminalNodeNames.Count > 0)
             {
                 var matchingTerminals = instance.TerminalNodeNames
@@ -32,16 +40,7 @@ namespace StateMachine
                 if (matchingTerminals.Count > 0)
                     return matchingTerminals;
 
-                if (instance.TerminalNodeNames.Count == 1)
-                    return instance.TerminalNodeNames;
-
-                throw new ScriptException("模块实例 " + sourceStateName + " 连线出错, 多个 terminal 节点都没有发布事件 " + eventName + "！");
-            }
-
-            if (instance.ExternalEventToInternalNodes.TryGetValue(eventName, out var legacyOutputNodes)
-                && legacyOutputNodes.Count > 0)
-            {
-                return legacyOutputNodes;
+                throw new ScriptException("模块实例 " + sourceStateName + " 连线出错, 没有 terminal 节点发布事件 " + eventName + "！");
             }
 
             throw new ScriptException("模块实例 " + sourceStateName + " 连线出错, 未声明 terminal 节点！");

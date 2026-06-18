@@ -675,6 +675,23 @@ namespace StateMachine
                     node = default!;
                 }
 
+                // Phase 3 前：检测 output 映射值是否与某个内部事件展开后的全名碰撞，
+                // 碰撞会让两者合并为同一个 FSMEvent，产生跨边界联动。
+                var internalEventFullNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                foreach (var name in template.TemplateEvents.Keys)
+                {
+                    if (!template.Outputs.Contains(name))
+                        internalEventFullNames.Add(currentModulePrefix + name);
+                }
+                foreach (var mappedPair in currentOutputMap)
+                {
+                    if (internalEventFullNames.Contains(mappedPair.Value))
+                    {
+                        throw new ScriptException(
+                            $"模块实例 {instanceName} 的 output 映射出错, 事件 {mappedPair.Value} 与模块内部事件全名碰撞, 请改用不同的外部事件名");
+                    }
+                }
+
                 // Phase 3：展开模板事件
                 foreach (var kvp in template.TemplateEvents)
                 {
