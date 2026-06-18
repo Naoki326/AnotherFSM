@@ -26,9 +26,24 @@ namespace StateMachine
     {
 
         public FSMExecutor(IFSMNode start, FSMEvent endEvent, bool isAsyncObserver)
+            : this(start, new[] { endEvent }, isAsyncObserver)
+        {
+        }
+
+        public FSMExecutor(IFSMNode start, IEnumerable<FSMEvent> endEvents, bool isAsyncObserver)
         {
             this.start = start ?? throw new FSMException("Start 节点不能为空！");
-            this.endEvent = endEvent ?? throw new FSMException("结束事件不能为空！");
+
+            var distinctEndEvents = (endEvents ?? throw new FSMException("结束事件不能为空！"))
+                .Where(e => e != null)
+                .GroupBy(e => e.EventID)
+                .Select(g => g.First())
+                .ToList();
+            if (distinctEndEvents.Count == 0)
+                throw new FSMException("结束事件不能为空！");
+
+            this.endEvent = distinctEndEvents[0];
+            this.endEvents = distinctEndEvents;
 
             eventConsumer = Channel.CreateUnbounded<FSMEvent>();
             State = FSMState.Initialized;
@@ -42,6 +57,10 @@ namespace StateMachine
         {
         }
 
+        public FSMExecutor(IFSMNode start, IEnumerable<FSMEvent> endEvents) : this(start, endEvents, false)
+        {
+        }
+
         private readonly IEventAggregator eventAggregator;
 
         protected Channel<FSMEvent> eventConsumer;
@@ -50,6 +69,7 @@ namespace StateMachine
 
         protected IFSMNode start;
         protected FSMEvent endEvent;
+        protected IReadOnlyList<FSMEvent> endEvents;
 
         protected FSMEvent pauseEvent = new("PauseEvent");
         protected FSMEvent PauseEvent => pauseEvent;
@@ -519,7 +539,7 @@ namespace StateMachine
         [DebuggerHidden]
         public void Handle(FSMEvent @event)
         {
-            if (@event.EventID == endEvent.EventID)
+            if (endEvents.Any(endEvent => @event.EventID == endEvent.EventID))
             {
                 _ = eventConsumer.Writer.TryComplete();
                 State = FSMState.Finished;
