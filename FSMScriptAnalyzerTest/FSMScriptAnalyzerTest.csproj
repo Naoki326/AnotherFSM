@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FSMScriptAnalyzer\FSMScriptAnalyzer.csproj" />
+    <ProjectReference Include="..\DemoNodes\DemoNodes.csproj" />
     <ProjectReference Include="..\StateMachine\StateMachine.csproj" />
   </ItemGroup>
 
