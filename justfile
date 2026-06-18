@@ -27,7 +27,7 @@ start-api: build-api api
 # 同时启动 API 和前端
 [windows]
 dev: build-api
-    Start-Process -FilePath "dotnet" -ArgumentList "run","--project","FSMDemo.API/FSMDemo.API.csproj","--urls","http://localhost:{{api_port}}" -WorkingDirectory (Get-Location) -WindowStyle Hidden
+    Start-Process -FilePath "dotnet" -ArgumentList "run","--project","FSMDemo.API/FSMDemo.API.csproj","--urls","http://localhost:{{api_port}}" -WorkingDirectory (Get-Location) -WindowStyle Minimized
     npm.cmd run dev --prefix FSMDemo.Frontend -- --host 127.0.0.1 --port {{frontend_port}}
 
 [unix]
