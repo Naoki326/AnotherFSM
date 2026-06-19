@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\StateMachine\StateMachine.csproj" />
+    <ProjectReference Include="..\..\StateMachine\StateMachine.csproj" />
     <ProjectReference Include="..\DemoNodes\DemoNodes.csproj" />
   </ItemGroup>
 

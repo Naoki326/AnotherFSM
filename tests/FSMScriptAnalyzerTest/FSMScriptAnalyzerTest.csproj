@@ -8,7 +8,7 @@
   </PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\FSMScriptAnalyzer\FSMScriptAnalyzer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+		<ProjectReference Include="..\..\FSMScriptAnalyzer\FSMScriptAnalyzer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 	</ItemGroup>
 
   <ItemGroup>
@@ -17,9 +17,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FSMScriptAnalyzer\FSMScriptAnalyzer.csproj" />
-    <ProjectReference Include="..\DemoNodes\DemoNodes.csproj" />
-    <ProjectReference Include="..\StateMachine\StateMachine.csproj" />
+    <ProjectReference Include="..\..\FSMScriptAnalyzer\FSMScriptAnalyzer.csproj" />
+    <ProjectReference Include="..\..\demos\DemoNodes\DemoNodes.csproj" />
+    <ProjectReference Include="..\..\StateMachine\StateMachine.csproj" />
   </ItemGroup>
 
 </Project>
