@@ -70,8 +70,6 @@
 
     public interface IFSMNode : ITransitionContainer, IVisualNode, IDisposable
     {
-        internal void SetEngine(FSMEngine e);
-
         //执行的时候从上一状态传入的上下文
         FSMNodeContext Context { get; set; }
 

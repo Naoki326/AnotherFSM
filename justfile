@@ -3,6 +3,11 @@ set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
 api_port := "5079"
 frontend_port := "5174"
 wasm_port := "5180"
+test_project := "tests/StateMachineTest/StateMachineTest.csproj"
+
+# 运行 StateMachineTest 测试项目
+test:
+    dotnet test {{test_project}} --nologo
 
 # 编译 API 项目
 build-api:

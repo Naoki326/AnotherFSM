@@ -122,10 +122,10 @@ namespace StateMachine
         }
     }
 
-    public abstract partial class AbstractFSMNode : IFSMNode
+    public abstract partial class AbstractFSMNode : IFSMNode, IFSMEngineInjectable
     {
 
-        void IFSMNode.SetEngine(FSMEngine e)
+        void IFSMEngineInjectable.SetEngine(FSMEngine e)
         {
             Engine = e;
         }

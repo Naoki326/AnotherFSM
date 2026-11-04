@@ -116,7 +116,8 @@ namespace StateMachine
         {
             foreach (var node in nodeDict)
             {
-                node.Value.SetEngine(this);
+                if (node.Value is IFSMEngineInjectable injectable)
+                    injectable.SetEngine(this);
             }
         }
 
