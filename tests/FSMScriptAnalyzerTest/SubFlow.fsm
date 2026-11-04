@@ -1,24 +1,13 @@
-module SubFlow {
-    input Check
-
-    def Check(Accumulate)
-    {
-        1->NextEvent;
-        Pos:(100, 200);
-        Color: "light-blue";
+/* module Decoy { def Ghost(TestIdle) {} } */
+import Support;
+module Original as SubFlow {
+    input Entry, Retry;
+    output Done, Failed;
+    def Entry(TestAcc) { success -> Next; error -> Failed; }
+    def Retry as TestIdle state { success -> Done; failed -> Done; }
+    def Private(TestIdle) {
+        success -> Done;
+        Color: "https://example.invalid/*literal*/ import Missing;";
     }
-
-    def Process(Idle)
-    {
-        1->Done;
-        3->Failed;
-        Pos:(300, 200);
-        Color: "green";
-    }
-
-    def NextEvent as event;
-    def DoneEvent as event;
-    def FailedEvent as event;
-
-    NextEvent->Check to Process;
+    Next -> Entry to Private;
 }

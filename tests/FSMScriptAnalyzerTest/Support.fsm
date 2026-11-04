@@ -1,0 +1,2 @@
+// An imported file can be a plain template without a module wrapper.
+def Utility(TestIdle) { success -> UtilityDone; }

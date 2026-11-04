@@ -323,23 +323,21 @@ def MyNode(MyNodeType)
 
 ##### Module System
 
-The DSL supports module definition and import for process reuse and composition:
+Modules reuse flows through public Inputs (entry nodes) and Outputs (exit events). The module and main flow below share one file, so **no `import` is needed**. The node factory must provide the type keys in parentheses:
 
 ```csharp
-// Define a module
 module Checker {
-    input Entry;           // Declare input node name
-    output OK, NG;         // Declare output event names
-    terminal Entry, Exit;  // Declare terminal node names (exit points for module instance connections)
+    input Entry;
+    output OK, NG;
 
-    def Entry(TestIdle)
+    def Entry(Idle)
     {
         1 -> InternalDone;
         3 -> NG;
         Pos:(100, 100);
     }
 
-    def Exit(TestEnd)
+    def Exit(End)
     {
         1 -> OK;
         Pos:(300, 100);
@@ -349,36 +347,60 @@ module Checker {
     def OK as event;
     def NG as event;
 
-    // Internal connections within the module
     InternalDone -> Entry to Exit;
 }
 
-// Import the module
-import Checker;
+// Ordinary main-flow nodes and event
+def Launch as event;
+def Start(Start) { 1 -> Launch; }
+def Target(Idle) {}
+def Failure(End) {}
 
-// Instantiate the module (module name in parentheses)
-def MyChecker(Checker) {
-    OK -> CheckPassed;     // Map module output events to external events
-    NG -> CheckFailed;
-    Pos:(200, 100);
-}
+// Explicit module use; no runtime module node is created
+use Checker as CheckA;
 
-// Connect from a regular node to a module instance (auto-routes to input nodes)
-Launch -> Start to MyChecker;
+// Ordinary event transition: omit the entry name for a single-input module
+Launch -> Start to CheckA;
 
-// Connect from module instance to other nodes (auto-resolves exit via terminal nodes)
-CheckPassed -> MyChecker to NextStep;
+// Connect qualified output events directly, without output alias mapping
+CheckA.OK -> Target;
+CheckA.NG -> Failure;
 ```
 
-**Three module declaration keywords:**
+**Interface and connection rules:**
 
-| Keyword | Description |
-| --- | --- |
-| `input` | Declares module input node names; external connections entering the module instance route to these internal nodes |
-| `output` | Declares module output event names; mapped at instantiation via `eventName -> externalEvent;` |
-| `terminal` | Declares module terminal node names; external connections from the module instance land on these internal nodes. With multiple terminal nodes, the exit is auto-matched by the events published by each node |
+- `input` exposes ordinary nodes. For a single Input, use `CheckA` or explicitly write `CheckA.Entry`. With multiple Inputs, select a public Input using `instance.input`; connections to unexposed internal nodes are not allowed.
+- `output` exposes events, not exit or terminal nodes. `CheckA.OK -> Target;` can also target another single-input instance (`CheckA.OK -> CheckB;`). Multiple Inputs require an explicit selection (`CheckA.OK -> CheckB.Retry;`, where `Retry` must be a public Input).
+- Ordinary event transitions, `event -> source to target;`, remain unchanged, and resolution still gives ordinary events priority. Dotted ordinary event names do not become ordinary node member access; only module interface connections follow public Input/Output resolution rules.
+- Output publishers are determined by actual internal Branch event bindings: `Exit` publishes `OK` and `Entry` publishes `NG` here. All nodes publishing an Output are connected; multiple Branches on the same node publishing that Output are deduplicated by node. External connections neither rewrite Branch bindings nor rename events to bridge flows.
+- Instances retain isolated, qualified events such as `CheckA.OK`; no additional bare global output `OK` is published. An optional `use` body accepts only `Pos`, `Color`, and `FlowID` metadata, e.g. `use Checker as CheckA { Pos:(200, 100); Color:"red"; FlowID:check; }` (replacing the declaration without a body above).
+- Modules are compile-time reuse units: real nodes and events expand into the parent `FSMEngine` under `instance.originalName`. No runtime module node or separate engine is created. Visual proxies do not execute, and modules are not `GroupNode`s.
+- Namespace remains an independent way to organize node and event names with a shared prefix. It does not replace module interfaces and flow reuse, nor do modules replace Namespace. Neither provides runtime isolation.
 
-**Module connection resolution rules:**
+**External files and source generation:**
 
-- Connection into a module instance → auto-routes to `input`-declared internal nodes
-- Connection from a module instance → matches exit via events published by `terminal` nodes; if only one terminal node, uses it directly; falls back to `output` mapping when no terminals exist
+If the `module Checker { ... }` definition above is moved to an external `Checker.fsm`, import it in the main script before using it (keep the main-flow nodes and connections unchanged):
+
+```csharp
+import Checker;
+use Checker as CheckA;
+```
+
+Filesystem lookup resolves relative paths from the current script's directory. The existing source generator also supports supplying the main `.FSMScript` and module `.fsm` as `AdditionalFiles`:
+
+```xml
+<ItemGroup>
+  <AdditionalFiles Include="MainFlow.FSMScript" />
+  <AdditionalFiles Include="Checker.fsm" />
+</ItemGroup>
+```
+
+The generator follows imports to collect module text from these `.fsm` files and embeds it in the generated class's `ModuleScripts`. When constructing `Engine`, it registers the modules before initializing the main script; this path does not require reading module files at runtime. Query real module objects by qualified name through the generated class's existing `Engine`; no module-specific strongly typed API is added, and instance visual proxies are not accessed as `IFSMNode`s:
+
+```csharp
+var flow = MainFlow.Create(factory);
+var entry = flow.Engine.GetNode<StateMachine.IFSMNode>("CheckA.Entry");
+var ok = flow.Engine.GetEvent("CheckA.OK");
+```
+
+**Intentional breaking change:** The new module DSL uses only `use … as …` and direct qualified-output connections. It no longer supports `terminal`, named or numeric output mappings, old module `def` instance declarations, or module instances as placeholder sources in external event transitions. Inputs/Outputs belong to the module definition; instances select and connect public interfaces rather than redefine outputs in their bodies. Ordinary node/event scripts need no migration, and this change does not require a wholesale cleanup of the independent C# Fluent API or legacy public fields used by consumers. See [GLOSSARY](./GLOSSARY.md) and [ADR-0001](./docs/adr/0001-module-system-compile-time-expansion.md) for terminology and rationale.

@@ -1,0 +1,27 @@
+/* def Ghost(TestStart) { success -> GhostEvent; }
+   import Missing; module Fake { def Template(TestIdle) {} } */
+namespace Area {
+    def
+        Start
+        as TestStart state
+    {
+        none -> Waiting;
+        success trigger Signal.Dot;
+        failed -> Failure;
+        error -> ErrorEvent;
+        break -> BreakEvent;
+        cancel -> CancelEvent;
+        branch 7 -> Custom;
+        -1 -> Negative;
+        Color: "https://example.invalid/*literal*/ } def Phantom(TestIdle) { success -> PhantomEvent; } import Missing;";
+        Pos: (-1.5, 2);
+        FlowID: scoped;
+    }
+    def End(TestEnd) { 1 -> EndEvent; }
+    def Dotted.Node as TestIdle state { }
+    def Declared as event; def Bare event;
+    Signal.Dot -> Start to End;
+    TransitionOnly -> End to Dotted.Node;
+}
+// def Commented(TestIdle) { 1 -> CommentEvent; }
+def Outside(TestStart) { success -> OutsideEvent; }

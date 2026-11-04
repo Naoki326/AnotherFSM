@@ -4,8 +4,11 @@
 	<AssemblyName>AnotherFSM.ScriptAnalyzer</AssemblyName>
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
     <IsRoslynComponent>true</IsRoslynComponent>
     <IncludeBuildOutput>false</IncludeBuildOutput>
+    <!-- Analyzer-only package: Roslyn is supplied by the compiler host. -->
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
     <DevelopmentDependency>true</DevelopmentDependency>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
@@ -24,9 +27,6 @@
   <!-- 将生成器程序集打包到 analyzers/dotnet/cs 路径 -->
   <ItemGroup>
     <None Include="$(OutputPath)$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\StateMachine\StateMachine.csproj" />
   </ItemGroup>
 
 

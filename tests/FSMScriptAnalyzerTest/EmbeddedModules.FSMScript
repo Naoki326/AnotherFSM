@@ -1,0 +1,18 @@
+import SubFlow as Worker;
+use Worker as Remote;
+namespace Area {
+    use Worker as One { Pos:(30,40); Color:"blue"; FlowID:one; }
+    use Worker as Two;
+    def Start as TestStart state { success -> Launch; }
+    def Finish(TestEnd) { 1 -> Finished; }
+    // This node and its events are ordinary, even though One is also an instance.
+    def One.Observer(TestIdle) { success -> One.Custom; }
+    def One.Unused event;
+    Launch -> Start to One.Retry;
+    One.Done -> Two.Entry;
+    Two.Done -> Finish;
+    One.Failed -> Finish;
+    Two.Failed -> Finish;
+    Remote.Done -> Finish;
+    One.Custom -> One.Observer to Finish;
+}

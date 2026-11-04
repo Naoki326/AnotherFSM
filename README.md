@@ -323,23 +323,21 @@ def MyNode(MyNodeType)
 
 ##### 模块化系统
 
-DSL 支持模块定义与导入，实现流程的复用与组合：
+模块通过公开 Input（入口节点）和 Output（出口事件）复用流程。以下模块与主流程在同一文件中，**不需要 `import`**；括号中的节点类型 Key 需由节点工厂提供：
 
 ```csharp
-// 定义模块
 module Checker {
-    input Entry;           // 声明入口节点名
-    output OK, NG;         // 声明输出事件名
-    terminal Entry, Exit;  // 声明终止节点名（模块实例连线时的出口点）
+    input Entry;
+    output OK, NG;
 
-    def Entry(TestIdle)
+    def Entry(Idle)
     {
         1 -> InternalDone;
         3 -> NG;
         Pos:(100, 100);
     }
 
-    def Exit(TestEnd)
+    def Exit(End)
     {
         1 -> OK;
         Pos:(300, 100);
@@ -349,36 +347,60 @@ module Checker {
     def OK as event;
     def NG as event;
 
-    // 模块内部连线
     InternalDone -> Entry to Exit;
 }
 
-// 导入模块
-import Checker;
+// 普通主流程节点和事件
+def Launch as event;
+def Start(Start) { 1 -> Launch; }
+def Target(Idle) {}
+def Failure(End) {}
 
-// 实例化模块（括号内为模块名）
-def MyChecker(Checker) {
-    OK -> CheckPassed;     // 将模块输出事件映射到外部事件
-    NG -> CheckFailed;
-    Pos:(200, 100);
-}
+// 显式使用模块，不创建运行时模块节点
+use Checker as CheckA;
 
-// 从普通节点连线到模块实例（自动路由到模块的 input 节点）
-Launch -> Start to MyChecker;
+// 普通事件转移：单入口模块可省略入口名
+Launch -> Start to CheckA;
 
-// 从模块实例连线到其他节点（自动通过 terminal 节点解析出口）
-CheckPassed -> MyChecker to NextStep;
+// 限定出口事件直接连接目标，无需输出别名映射
+CheckA.OK -> Target;
+CheckA.NG -> Failure;
 ```
 
-**模块声明的三个关键字：**
+**接口与连线规则：**
 
-| 关键字 | 说明 |
-| --- | --- |
-| `input` | 声明模块的入口节点名，外部连线进入模块实例时路由到这些内部节点 |
-| `output` | 声明模块的输出事件名，在实例化时通过 `事件名 -> 外部事件;` 映射 |
-| `terminal` | 声明模块的终止节点名，外部从模块实例出发的连线会落到这些内部节点上。多个 terminal 节点时，会根据节点发布的事件自动匹配出口 |
+- `input` 声明公开的普通节点；单入口可写 `CheckA`，也可显式写 `CheckA.Entry`。多入口必须用 `实例名.入口名` 选择公开 Input，不能连接未公开的内部节点。
+- `output` 声明公开事件，不是出口节点或终止节点。`CheckA.OK -> Target;` 也可连接另一个单入口实例（如 `CheckA.OK -> CheckB;`）；多入口则必须显式选择（如 `CheckA.OK -> CheckB.Retry;`，其中 `Retry` 必须是公开 Input）。
+- 普通事件转移 `事件 -> 源节点 to 目标;` 保持不变，解析时仍优先按普通事件处理。普通点号事件名不会因此变成普通节点的成员访问；只有模块接口连接按公开 Input/Output 规则解析。
+- 出口发布者由模块内部真实 Branch 的事件绑定确定：示例中 `Exit` 发布 `OK`，`Entry` 发布 `NG`。多个节点发布同一出口时全部连接；同一节点的多个 Branch 发布同一出口时按节点去重。外部连线不改写 Branch，也不靠重命名事件桥接流程。
+- 不同实例保留独立的限定事件（如 `CheckA.OK`），不额外发布裸名全局出口 `OK`。`use` 的可选 body 仅允许 `Pos`、`Color`、`FlowID` 元数据，例如 `use Checker as CheckA { Pos:(200, 100); Color:"red"; FlowID:check; }`（替换上述无 body 的声明）。
+- 模块是编译期复用单元：真实节点和事件以 `实例名.原名` 展平到父 `FSMEngine`。不创建运行时模块节点或独立引擎；视觉代理不参与执行，模块也不等同于 `GroupNode`。
+- Namespace 仍独立用于以统一前缀组织节点和事件名称；它不能替代模块的公开接口和流程复用，模块也不替代 Namespace。两者都不提供运行时隔离。
 
-**模块连线解析规则：**
+**外部文件与源生成集成：**
 
-- 连线进入模块实例 → 自动路由到 `input` 声明的内部节点
-- 连线从模块实例出发 → 根据 `terminal` 节点发布的事件匹配出口；若只有一个 terminal 节点则直接使用；无 terminal 时回退到 `output` 映射
+若将上述 `module Checker { ... }` 定义移到外部 `Checker.fsm`，主脚本通过 `import` 引入，再使用模块（主流程节点及连线保持不变）：
+
+```csharp
+import Checker;
+use Checker as CheckA;
+```
+
+文件系统查找的相对路径基于当前脚本文件目录。现有源生成器也支持将主脚本 `.FSMScript` 和模块 `.fsm` 作为 `AdditionalFiles`：
+
+```xml
+<ItemGroup>
+  <AdditionalFiles Include="MainFlow.FSMScript" />
+  <AdditionalFiles Include="Checker.fsm" />
+</ItemGroup>
+```
+
+生成器按 `import` 从这些 `.fsm` 中收集模块文本，嵌入生成类的 `ModuleScripts`，在构建 `Engine` 时先注册模块再初始化主脚本；这条路径不要求运行时再读取模块文件。模块真实对象仍通过生成类已有的 `Engine` 按限定名查询，不新增模块专属强类型 API，也不把实例视觉代理当作 `IFSMNode` 访问：
+
+```csharp
+var flow = MainFlow.Create(factory);
+var entry = flow.Engine.GetNode<StateMachine.IFSMNode>("CheckA.Entry");
+var ok = flow.Engine.GetEvent("CheckA.OK");
+```
+
+**有意的破坏性变更：** 新模块 DSL 以 `use … as …` 和限定出口直连为唯一规范表达，不再支持 `terminal`、名称或数字输出映射、旧模块 `def` 实例声明，以及在外部事件转移中以实例名充当占位源节点。Input/Output 归模块定义所有，实例只选择并连接公开接口，不在实例 body 重定义出口。此变更不要求普通节点/事件脚本迁移，也不要求全面清理独立 C# Fluent API 或消费者依赖的旧公共字段。术语与设计依据见 [GLOSSARY](./GLOSSARY.md) 和 [ADR-0001](./docs/adr/0001-module-system-compile-time-expansion.md)。

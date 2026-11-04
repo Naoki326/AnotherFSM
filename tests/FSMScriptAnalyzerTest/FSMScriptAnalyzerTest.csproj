@@ -13,11 +13,17 @@
 
   <ItemGroup>
     <AdditionalFiles Include="ATest.FSMScript" />
+    <AdditionalFiles Include="InlineModules.FSMScript" />
+    <AdditionalFiles Include="PlainScopes.FSMScript" />
+    <AdditionalFiles Include="EmbeddedModules.FSMScript" />
     <AdditionalFiles Include="SubFlow.fsm" />
+    <AdditionalFiles Include="Support.fsm" />
+    <AdditionalFiles Include="Fixtures\Relative\RelativeImports.FSMScript" />
+    <AdditionalFiles Include="Fixtures\Relative\SubFlow.fsm" />
+    <AdditionalFiles Include="Fixtures\Relative\Support.fsm" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\FSMScriptAnalyzer\FSMScriptAnalyzer.csproj" />
     <ProjectReference Include="..\..\demos\DemoNodes\DemoNodes.csproj" />
     <ProjectReference Include="..\..\StateMachine\StateMachine.csproj" />
   </ItemGroup>

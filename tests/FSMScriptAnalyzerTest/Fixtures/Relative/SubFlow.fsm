@@ -1,0 +1,6 @@
+import Support;
+module SubFlow {
+    input LocalEntry;
+    output Done;
+    def LocalEntry(TestIdle) { success -> Done; }
+}

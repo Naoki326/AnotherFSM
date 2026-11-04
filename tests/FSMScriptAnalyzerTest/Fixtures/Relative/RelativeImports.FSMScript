@@ -1,0 +1,8 @@
+import SubFlow;
+use SubFlow as Check;
+use Support as Helper;
+def Start(TestStart) { success -> Launch; }
+def Finish(TestEnd) { success -> Finished; }
+Launch -> Start to Check;
+Check.Done -> Helper;
+Helper.Done -> Finish;

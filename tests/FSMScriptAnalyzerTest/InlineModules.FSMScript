@@ -1,0 +1,27 @@
+module Checker {
+    input Entry;
+    output Done, Failed;
+    def Entry(TestAcc) {
+        success -> Next;
+        error -> Failed;
+    }
+    def Exit(TestIdle) {
+        success -> Done;
+        failed -> Done;
+    }
+    Next -> Entry to Exit;
+}
+
+use Checker as First { Pos:(10,20); Color:"red"; FlowID:first; }
+use Checker as Second;
+def Start(TestStart) {
+    1 -> Launch;
+}
+def Finish(TestEnd) {
+    1 -> Finished;
+}
+Launch -> Start to First;
+First.Done -> Second;
+Second.Done -> Finish;
+First.Failed -> Finish;
+Second.Failed -> Finish;

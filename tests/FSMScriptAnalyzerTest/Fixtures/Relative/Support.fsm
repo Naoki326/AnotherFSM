@@ -1,0 +1,5 @@
+module Support {
+    input Local;
+    output Done;
+    def Local(TestIdle) { success -> Done; }
+}
