@@ -64,7 +64,7 @@
 
                 @foreach (var node in Runtime.Nodes)
                 {
-                    var activeClass = IsActiveNode(node) ? "active" : "";
+                    var activeClass = node.IsActive ? "active" : "";
                     var draggingClass = node.Name == draggingNodeName ? "dragging" : "";
                     <button
                         type="button"
@@ -86,7 +86,7 @@
                 <div class="node-list">
                     @foreach (var node in Runtime.Nodes)
                     {
-                        <div class="node-row @(IsActiveNode(node) ? "selected" : "") @(node.IsModuleInstance ? "module-row" : "")"
+                        <div class="node-row @(node.IsActive ? "selected" : "") @(node.IsModuleInstance ? "module-row" : "")"
                              @ondblclick="() => OnNodeDoubleClick(node)">
                             <strong>@node.DisplayName</strong>
                             <span>@(node.IsModuleInstance ? $"module {node.Type}" : node.Type)</span>
@@ -210,17 +210,6 @@
         {
             Runtime.EnterModule(node.Name);
         }
-    }
-
-    private bool IsActiveNode(FsmNodeView node)
-    {
-        if (node.Name == Runtime.ActiveNode)
-        {
-            return true;
-        }
-
-        return node.IsModuleInstance
-            && Runtime.ActiveNode?.StartsWith(node.Name + ".", StringComparison.OrdinalIgnoreCase) == true;
     }
 
     private void OnRuntimeChanged()

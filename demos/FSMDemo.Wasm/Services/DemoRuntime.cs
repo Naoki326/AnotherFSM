@@ -43,7 +43,10 @@ public sealed class DemoRuntime : IDisposable
                     node.PosY,
                     node.Color,
                     false,
-                    node.EventDescriptions.Select(e => $"{e.Index}: {e.Description}").ToArray()))
+                    node.EventDescriptions.Select(e => $"{e.Index}: {e.Description}").ToArray())
+                {
+                    IsActive = node.Name == ActiveNode
+                })
                 .OrderBy(node => node.Name)
                 .ToArray();
         }
@@ -59,7 +62,10 @@ public sealed class DemoRuntime : IDisposable
                 node.PosY,
                 node.Color,
                 false,
-                node.EventDescriptions.Select(e => $"{e.Index}: {e.Description}").ToArray()));
+                node.EventDescriptions.Select(e => $"{e.Index}: {e.Description}").ToArray())
+            {
+                IsActive = node.Name == ActiveNode
+            });
 
         var moduleNodes = engine.ModuleInstances.Values
             .Select(instance => new FsmNodeView(
@@ -70,7 +76,10 @@ public sealed class DemoRuntime : IDisposable
                 instance.PosY,
                 instance.Color,
                 true,
-                instance.OutputEventMap.Select(map => $"{map.Key}: {map.Value}").ToArray()));
+                instance.OutputEventMap.Select(map => $"{map.Key}: {map.Value}").ToArray())
+            {
+                IsActive = ActiveNode is not null && instance.ExpandedNodeNames.Contains(ActiveNode)
+            });
 
         return regularNodes
             .Concat(moduleNodes)
@@ -475,7 +484,10 @@ public sealed record FsmNodeView(
     double PosY,
     string Color,
     bool IsModuleInstance,
-    IReadOnlyList<string> Events);
+    IReadOnlyList<string> Events)
+{
+    public bool IsActive { get; init; }
+}
 
 public sealed record FsmConnectionView(string Source, string Target, string EventName);
 

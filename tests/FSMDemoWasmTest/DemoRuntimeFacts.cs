@@ -99,6 +99,41 @@ public class DemoRuntimeFacts
         runtime.Logs.Should().NotContain("Enter UnexpectedEnd");
     }
 
+    [Theory]
+    [InlineData("A.Observer", "A.Observer")]
+    [InlineData("A.Retry", "A")]
+    public async Task ActiveNodeProjection_HighlightsOnlyTheRealNodeOrItsOwningModule(string startNode, string rootActiveNode)
+    {
+        using var runtime = new DemoRuntime();
+        runtime.ImportScript(SamePrefixScript + "\ndef EndEvent as event;");
+        runtime.Error.Should().BeNull();
+        runtime.Nodes.Should().OnlyContain(n => !n.IsActive);
+
+        var entered = new TaskCompletionSource<FsmNodeView[]>(TaskCreationOptions.RunContinuationsAsynchronously);
+        void OnChanged()
+        {
+            if (runtime.ActiveNode == startNode) entered.TrySetResult(runtime.Nodes.ToArray());
+        }
+        runtime.Changed += OnChanged;
+        try
+        {
+            await runtime.StartAsync(startNode);
+            runtime.Error.Should().BeNull();
+            var rootNodes = await entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            rootNodes.Where(n => n.IsActive).Select(n => n.Name).Should().Equal(rootActiveNode);
+
+            runtime.EnterModule("A").Should().BeTrue();
+            runtime.Nodes.Where(n => n.IsActive).Select(n => n.Name).Should().BeEquivalentTo(
+                startNode == "A.Retry" ? new[] { "A.Retry" } : Array.Empty<string>());
+        }
+        finally
+        {
+            await runtime.StopAsync();
+            runtime.Changed -= OnChanged;
+        }
+        runtime.Nodes.Should().OnlyContain(n => !n.IsActive);
+    }
+
     private static async Task RunToCompletion(DemoRuntime runtime, string startNode)
     {
         var finished = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);

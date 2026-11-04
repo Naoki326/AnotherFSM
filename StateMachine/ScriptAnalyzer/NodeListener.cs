@@ -8,7 +8,7 @@ namespace StateMachine.ScriptAnalyzer
     {
         public event Action<IVisualNode>? StateCreated;
 
-        internal HashSet<string> ModuleInstanceNames { get; } = new(StringComparer.OrdinalIgnoreCase);
+        internal Dictionary<string, FsmModuleInstance> ModuleInstances { get; } = new(StringComparer.OrdinalIgnoreCase);
         internal HashSet<string> NodeNames { get; } = new(StringComparer.Ordinal);
         private string nameprev = "";
         private int moduleDepth;
@@ -31,7 +31,11 @@ namespace StateMachine.ScriptAnalyzer
                 ClassType = context.STRING()[0].GetText(),
                 Color = "white",
             };
-            ModuleInstanceNames.Add(currentNode.Name);
+            ModuleInstances.Add(currentNode.Name, new FsmModuleInstance
+            {
+                InstanceName = currentNode.Name,
+                ModuleName = currentNode.ClassType,
+            });
         }
 
         public override void ExitModule_instance(StateMachineScriptParser.Module_instanceContext context)

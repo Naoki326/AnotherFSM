@@ -1,12 +1,14 @@
 # 父规格 #2 整体验收
 
+> 本文为首轮历史记录。#6 修复后的最终复验与补齐结果见 [最终验收报告](../spec-2-reacceptance/ACCEPTANCE.md)，不要将下方历史 OPEN／失败状态当作当前状态。
+
 - 规格：[GitHub #2](https://github.com/Naoki326/AnotherFSM/issues/2)，原文快照见 [spec.md](spec.md)。
 - 验收代码：`4179c6a037f4645e689fbce1e8cb8cc9de18fee1`，分支 `develop_new_module`。
 - 合并审查基线：`06322e367f3f032315d8975b7e1ce08dbd6bebc5`。
 - 子票：#3（`d9f3ba9`）、#4（`a5b530a`）、#5（`4179c6a`），远端均为 CLOSED。
 - 本次只做整体验收，不改产品实现，不重新实现已交付子票。
 
-## 当前结论
+## 首轮结论（历史）
 
 **未通过：WASM 演示仍按名称前缀猜测模块归属，导致合法普通点号节点与连线被误投影。父规格保持开启，原生阻塞关系已指向待修复票 [#6](https://github.com/Naoki326/AnotherFSM/issues/6)。**
 

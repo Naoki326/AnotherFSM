@@ -124,7 +124,7 @@ export function FlowEditor({ onNodeSelect }: FlowEditorProps) {
 
   // Map active node to its module instance if it's an internal node (e.g. CheckA.Entry -> CheckA)
   const activeModuleName = !viewModule && activeNodeName
-    ? moduleInstances.find((m) => activeNodeName.startsWith(m.instanceName + '.'))?.instanceName ?? null
+    ? ownerOfNode(activeNodeName, moduleInstances)?.instanceName ?? null
     : null;
   const effectiveActiveNodeName = activeModuleName ?? activeNodeName;
 
@@ -132,11 +132,11 @@ export function FlowEditor({ onNodeSelect }: FlowEditorProps) {
     if (!activeTransition) return null;
 
     const resolveVisibleNodeName = (nodeName: string): string | null => {
+      const owner = ownerOfNode(nodeName, moduleInstances);
       if (viewModule) {
-        return nodeName.startsWith(viewModule + '.') ? nodeName : null;
+        return owner?.instanceName === viewModule ? nodeName : null;
       }
-      const moduleInstance = moduleInstances.find((m) => nodeName.startsWith(m.instanceName + '.'));
-      return moduleInstance?.instanceName ?? nodeName;
+      return owner?.instanceName ?? nodeName;
     };
 
     const source = resolveVisibleNodeName(activeTransition.fromNodeName);
@@ -175,7 +175,7 @@ export function FlowEditor({ onNodeSelect }: FlowEditorProps) {
     const { activeNodeName: curActive, selectedNodeName: curSelected } = useEngineStore.getState();
     let effActive = curActive;
     if (!viewModule && curActive) {
-      const modInst = moduleInstances.find(m => curActive.startsWith(m.instanceName + '.'));
+      const modInst = ownerOfNode(curActive, moduleInstances);
       if (modInst) effActive = modInst.instanceName;
     }
 

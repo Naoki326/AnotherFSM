@@ -61,6 +61,67 @@ public class ScriptAnalysisFacts
     }
 
     [Fact]
+    public void ReadScript_ResolvesDottedOutputsByDeclaredPublicIdentityNotLongestPrefix()
+    {
+        const string script = """
+            module Outer { input Entry; output Sub.Done; def Entry(Step) { 1->Sub.Done; } }
+            module Other { input Entry; output OK; def Entry(Step) { 1->OK; } }
+            use Outer as Check;
+            use Other as Check.Sub;
+            def End(Step) {}
+            Check.Sub.Done -> End;
+            """;
+        var engine = FSMEngineBuilder.Create().ConfigureNodeFactory(new TestInfrastructure.ScriptNodeFactory()).Build();
+        engine.CreateStateMachine(script);
+        engine.GetNode("Check.Entry").TargetState(engine.GetEvent("Check.Sub.Done")).Name.Should().Be("End");
+        var connections = new List<(string Event, string Source, string Target)>();
+
+        script.ReadScript(_ => { }, (ev, source, target) => connections.Add((ev, source, target)));
+
+        connections.Should().Equal(("Check.Sub.Done", "Check", "End"));
+    }
+
+    [Fact]
+    public void ReadScript_FullyQualifiedOutputIsNotShadowedByAnUnrelatedLocalPrefix()
+    {
+        const string script = """
+            module Outer { input Entry; output Done; def Entry(Step) { 1->Done; } }
+            module Other { input Entry; output OK; def Entry(Step) { 1->OK; } }
+            use Outer as Area.Check;
+            namespace N {
+                use Other as Area;
+                def End(Step) {}
+                Area.Check.Done -> End;
+            }
+            """;
+        var engine = FSMEngineBuilder.Create().ConfigureNodeFactory(new TestInfrastructure.ScriptNodeFactory()).Build();
+        engine.CreateStateMachine(script);
+        engine.GetNode("Area.Check.Entry").TargetState(engine.GetEvent("Area.Check.Done")).Name.Should().Be("N.End");
+        var connections = new List<(string Event, string Source, string Target)>();
+
+        script.ReadScript(_ => { }, (ev, source, target) => connections.Add((ev, source, target)));
+
+        connections.Should().Equal(("Area.Check.Done", "Area.Check", "N.End"));
+    }
+
+    [Fact]
+    public void ReadScript_RejectsAmbiguousExternalOutputOwnershipInsteadOfGuessing()
+    {
+        const string script = """
+            import External as Outer;
+            import Another as Inner;
+            use Outer as Check;
+            use Inner as Check.Sub;
+            def End(Step) {}
+            Check.Sub.Done -> End;
+            """;
+
+        Action analyze = () => script.ReadScript(_ => { }, (_, _, _) => { });
+
+        analyze.Should().Throw<ScriptException>().WithMessage("*Check.Sub.Done*多个*FSMEngine*");
+    }
+
+    [Fact]
     public void ReadScript_PreservesOrdinaryNodesDottedEventsAndBranchBindings()
     {
         const string script = """
