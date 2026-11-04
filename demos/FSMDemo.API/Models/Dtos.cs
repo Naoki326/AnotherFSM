@@ -79,10 +79,9 @@ public class ModuleInstanceDto
     public string Color { get; set; } = "white";
     public string FlowID { get; set; } = "";
     public List<string> InternalNodeNames { get; set; } = [];
-    public List<string> InputNodeNames { get; set; } = [];
-    public List<string> TerminalNodeNames { get; set; } = [];
-    public Dictionary<string, string> OutputEventMap { get; set; } = new();
-    public Dictionary<string, string> OutputSourceNodes { get; set; } = new();
+    public Dictionary<string, string> PublicInputs { get; set; } = new();
+    public Dictionary<string, string> PublicOutputs { get; set; } = new();
+    public Dictionary<string, string[]> OutputPublishers { get; set; } = new();
 }
 
 public class CreateModuleInstanceRequest
@@ -98,5 +97,4 @@ public class ModuleDefDto
     public string ModuleName { get; set; } = "";
     public List<string> Inputs { get; set; } = [];
     public List<string> Outputs { get; set; } = [];
-    public List<string> Terminals { get; set; } = [];
 }

@@ -1,5 +1,5 @@
-import { memo, useCallback } from 'react';
-import { Handle, Position, type NodeProps } from '@xyflow/react';
+import { memo, useCallback, useEffect } from 'react';
+import { Handle, Position, useUpdateNodeInternals, type NodeProps } from '@xyflow/react';
 import { useEngineStore } from '../../stores/engineStore';
 import { api } from '../../api/client';
 import { message } from 'antd';
@@ -14,6 +14,8 @@ interface FlowNodeData {
   isInnerStartNode?: boolean;
   isInnerEndNode?: boolean;
   isModuleInstance?: boolean;
+  publicInputs?: Record<string, string>;
+  publicOutputs?: Record<string, string>;
   events: { index: number; description: string }[];
   groupDefs?: GroupDef[];
 }
@@ -27,14 +29,17 @@ const NODE_COLORS: Record<string, string> = {
 };
 
 export const FlowNode = memo(({ data, id }: NodeProps) => {
-  const { label, classType, color, isActive, isSelected, isInnerStartNode, isInnerEndNode, isModuleInstance, events, groupDefs } = data as unknown as FlowNodeData;
+  const { label, classType, color, isActive, isSelected, isInnerStartNode, isInnerEndNode, isModuleInstance, events, groupDefs,
+    publicInputs = {}, publicOutputs = {} } = data as unknown as FlowNodeData;
+  const updateNodeInternals = useUpdateNodeInternals();
+  useEffect(() => { updateNodeInternals(id); }, [id, publicInputs, publicOutputs, updateNodeInternals]);
   const bgColor = color?.startsWith('#') ? color : (NODE_COLORS[color] || '#999');
-  const showEvents = isSelected && events.length > 0;
+  const showEvents = !isModuleInstance && isSelected && events.length > 0;
   const isGroupNode = classType?.startsWith('Group') || classType?.startsWith('Parallel');
   const showGroupDefs = isSelected && isGroupNode && groupDefs && groupDefs.length > 0;
 
   const borderColor = isModuleInstance
-    ? '2px dashed #fff, 1px solid rgba(255,255,255,0.3)'
+    ? '2px dashed rgba(255,255,255,0.7)'
     : isGroupNode ? '2px dashed rgba(255,255,255,0.5)'
       : isInnerStartNode && isInnerEndNode ? '2px solid #d4b106'
       : isInnerStartNode ? '2px solid #d4b106'
@@ -97,9 +102,7 @@ export const FlowNode = memo(({ data, id }: NodeProps) => {
         style={{
           padding: '10px 16px',
           borderRadius: isGroupNode ? 10 : isModuleInstance ? 8 : 6,
-          background: isModuleInstance
-            ? `linear-gradient(135deg, ${bgColor}, ${bgColor}dd)`
-            : bgColor,
+          background: bgColor,
           color: '#fff',
           minWidth: 120,
           textAlign: 'center',
@@ -112,7 +115,7 @@ export const FlowNode = memo(({ data, id }: NodeProps) => {
           cursor: isModuleInstance ? 'context-menu' : 'default',
         }}
       >
-        <Handle id="input" type="target" position={Position.Left} style={{ background: '#555', width: 10, height: 10 }} isConnectable={true} />
+        {!isModuleInstance && <Handle id="input" type="target" position={Position.Left} style={{ background: '#555', width: 10, height: 10 }} />}
         <div style={{ fontWeight: 600, marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {label}
         </div>
@@ -120,7 +123,17 @@ export const FlowNode = memo(({ data, id }: NodeProps) => {
         {isModuleInstance && (
           <div style={{ fontSize: 9, opacity: 0.6, marginTop: 2 }}>Right-click to enter</div>
         )}
-        <Handle id="output" type="source" position={Position.Right} style={{ background: '#555', width: 10, height: 10 }} isConnectable={true} />
+        {!isModuleInstance && <Handle id="output" type="source" position={Position.Right} style={{ background: '#555', width: 10, height: 10 }} />}
+        {isModuleInstance && <div style={{ marginTop: 8, fontSize: 11 }}>
+          {Object.keys(publicInputs).map((input) => <div key={`in-${input}`} style={{ position: 'relative', padding: '4px 2px', textAlign: 'left' }}>
+            <Handle id={`input:${input}`} type="target" position={Position.Left} style={{ left: -16, background: '#1677ff', width: 10, height: 10 }} />
+            Input: {input}
+          </div>)}
+          {Object.entries(publicOutputs).map(([output, event]) => <div key={`out-${output}`} title={event} style={{ position: 'relative', padding: '4px 2px', textAlign: 'right' }}>
+            Output: {output}
+            <Handle id={`output:${event}`} type="source" position={Position.Right} style={{ right: -16, background: '#52c41a', width: 10, height: 10 }} />
+          </div>)}
+        </div>}
       </div>
 
       {showGroupDefs && (
@@ -203,7 +216,7 @@ export const FlowNode = memo(({ data, id }: NodeProps) => {
           onClick={(e) => e.stopPropagation()}
         >
           {events.map((ev) => (
-            <div key={ev.index} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}>
+            <div key={`${ev.index}:${ev.description}`} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}>
               <span style={{ color: '#999', fontWeight: 600, minWidth: 18 }}>{ev.index}</span>
               <span style={{ color: '#999' }}>→</span>
               <input

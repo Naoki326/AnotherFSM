@@ -59,17 +59,15 @@ export interface ModuleInstance {
   color: string;
   flowID: string;
   internalNodeNames: string[];
-  inputNodeNames: string[];
-  terminalNodeNames: string[];
-  outputEventMap: Record<string, string>;
-  outputSourceNodes: Record<string, string>;
+  publicInputs: Record<string, string>;
+  publicOutputs: Record<string, string>;
+  outputPublishers: Record<string, string[]>;
 }
 
 export interface ModuleDef {
   moduleName: string;
   inputs: string[];
   outputs: string[];
-  terminals: string[];
 }
 
 export interface CreateModuleInstanceRequest {

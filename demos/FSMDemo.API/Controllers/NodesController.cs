@@ -71,7 +71,7 @@ public class NodesController : ControllerBase
     {
         if (_engineManager.UpdateNodeEvent(name, index, request.NewEventName))
             return Ok();
-        return NotFound(new { error = "Node not found" });
+        return BadRequest(new { error = "Node not found or module output renaming is disabled; edit the module template Branch instead" });
     }
 
     [HttpPut("{name}/groupdefs")]
@@ -85,9 +85,7 @@ public class NodesController : ControllerBase
     [HttpPut("{name}/module-terminal")]
     public ActionResult UpdateModuleTerminal(string name, [FromBody] UpdateModuleTerminalRequest request)
     {
-        if (_engineManager.UpdateModuleTerminal(name, request.IsTerminal))
-            return Ok();
-        return NotFound(new { error = "Module internal node not found" });
+        return BadRequest(new { error = "Module terminal configuration is disabled; connect a public output instead" });
     }
 
     [HttpPost("module-instance")]

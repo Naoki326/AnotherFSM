@@ -451,18 +451,14 @@ def Start(Start)
     Color: "red";
 }
 
-def CheckA(Checker)
+use Checker as CheckA
 {
-    0->CheckAOK;
-    1->CheckANG;
     Pos:(400, 100);
     Color: "orange";
 }
 
-def CheckB(Checker)
+use Checker as CheckB
 {
-    0->CheckBOK;
-    1->CheckBNG;
     Pos:(400, 350);
     Color: "teal";
 }
@@ -481,11 +477,11 @@ def ErrorEnd(End)
     Color: "red";
 }
 
-StartEvent->Start to CheckA.Entry;
-CheckAOK->CheckA to CheckB.Entry;
-CheckANG->CheckA to ErrorEnd;
-CheckBOK->CheckB to End;
-CheckBNG->CheckB to ErrorEnd;
+StartEvent->Start to CheckA;
+CheckA.OK->CheckB;
+CheckA.NG->ErrorEnd;
+CheckB.OK->End;
+CheckB.NG->ErrorEnd;
 """;
 }
 

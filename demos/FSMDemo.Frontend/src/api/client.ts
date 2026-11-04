@@ -75,11 +75,6 @@ export const api = {
       method: 'PUT',
       body: JSON.stringify(groupDefs),
     }),
-  updateModuleTerminal: (name: string, isTerminal: boolean) =>
-    request<void>(`/nodes/${encodeURIComponent(name)}/module-terminal`, {
-      method: 'PUT',
-      body: JSON.stringify({ isTerminal }),
-    }),
 
   // Connections
   getConnections: () => request<import('./types').ConnectionDto[]>('/connections'),

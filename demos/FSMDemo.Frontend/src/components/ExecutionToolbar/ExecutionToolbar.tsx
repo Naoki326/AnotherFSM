@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Button, Space, Tag, message, Modal, Tooltip } from 'antd';
+import { Alert, Button, Input, Space, Tag, message, Modal, Tooltip } from 'antd';
 import {
   PlayCircleOutlined,
   PauseCircleOutlined,
@@ -14,81 +14,7 @@ import {
 import { useEngineStore } from '../../stores/engineStore';
 import { api } from '../../api/client';
 
-const DEMO_SCRIPT = `module Checker {
-    input Entry;
-    output OK, NG;
-
-    def Entry(Accumulate)
-    {
-        1->NextEvent;
-        3->NG;
-        Pos:(100, 200);
-        Color: "light-blue";
-    }
-
-    def Exit(Idle)
-    {
-        1->OK;
-        Pos:(300, 200);
-        Color: "green";
-    }
-
-    def NextEvent as event;
-    def OK as event;
-    def NG as event;
-
-    NextEvent->Entry to Exit;
-}
-
-import Checker;
-
-def Start(Start)
-{
-    1->StartEvent;
-    Pos:(100, 200);
-    Color: "red";
-    Type: Start;
-    FlowID: 1;
-}
-
-def CheckA(Checker)
-{
-    0->CheckAOK;
-    1->CheckANG;
-    Pos:(400, 100);
-    Color: "orange";
-}
-
-def CheckB(Checker)
-{
-    0->CheckBOK;
-    1->CheckBNG;
-    Pos:(400, 350);
-    Color: "teal";
-}
-
-def End(End)
-{
-    1->EndEvent;
-    Pos:(700, 200);
-    Color: "indigo";
-    Type: End;
-    FlowID: 2;
-}
-
-def ErrorEnd(End)
-{
-    1->ErrorEndEvent;
-    Pos:(700, 450);
-    Color: "red";
-    FlowID: 3;
-}
-
-StartEvent->Start to CheckA.Entry;
-CheckAOK->CheckA to CheckB.Entry;
-CheckANG->CheckA to ErrorEnd;
-CheckBOK->CheckB to End;
-CheckBNG->CheckB to ErrorEnd;`;
+import DEMO_SCRIPT from '../../demo.fsm?raw';
 
 export function ExecutionToolbar() {
   const execution = useEngineStore((s) => s.execution);
@@ -97,6 +23,10 @@ export function ExecutionToolbar() {
 
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [exportScript, setExportScript] = useState('');
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [importScript, setImportScript] = useState('');
+  const [importError, setImportError] = useState('');
+  const [importing, setImporting] = useState(false);
 
   const state = execution.state;
   const canStart = state === 'Idle' || state === 'Finished';
@@ -122,54 +52,36 @@ export function ExecutionToolbar() {
     }
   }, [nodes]);
 
-  const handleImport = useCallback(async () => {
+  const handleImport = async () => {
+    setImporting(true);
+    setImportError('');
     try {
-      const script = prompt('Paste FSM script:');
-      if (script) {
-        const status = await api.importScript(script);
-        useEngineStore.getState().setStatus(status);
-        useEngineStore.getState().clearExecutionLog();
-        const [nodes, conns, modules] = await Promise.all([api.getNodes(), api.getConnections(), api.getModuleInstances()]);
-        useEngineStore.getState().setNodes(nodes);
-        useEngineStore.getState().setConnections(conns);
-        useEngineStore.getState().setModuleInstances(modules);
-        try {
-          const defs = await api.getModuleDefinitions();
-          useEngineStore.getState().setModuleDefs(defs);
-        } catch { /* ignore */ }
-        message.success('Imported successfully');
-      }
-    } catch (e: any) {
-      message.error(`Import failed: ${e.message}`);
+      await useEngineStore.getState().importScript(importScript);
+      setImportModalOpen(false);
+      message.success('Imported successfully');
+    } catch (e) {
+      setImportError(e instanceof Error ? e.message : 'Import failed');
+    } finally {
+      setImporting(false);
     }
-  }, []);
+  };
 
   const handleExport = useCallback(async () => {
     try {
       const script = await api.exportScript();
       setExportScript(script);
       setExportModalOpen(true);
-    } catch {
-      message.error('Export failed');
+    } catch (e) {
+      message.error(e instanceof Error ? e.message : 'Export failed', 8);
     }
   }, []);
 
   const handleLoadDemo = useCallback(async () => {
     try {
-      const status = await api.importScript(DEMO_SCRIPT);
-      useEngineStore.getState().setStatus(status);
-      useEngineStore.getState().clearExecutionLog();
-      const [nodes, conns, modules] = await Promise.all([api.getNodes(), api.getConnections(), api.getModuleInstances()]);
-      useEngineStore.getState().setNodes(nodes);
-      useEngineStore.getState().setConnections(conns);
-      useEngineStore.getState().setModuleInstances(modules);
-      try {
-        const defs = await api.getModuleDefinitions();
-        useEngineStore.getState().setModuleDefs(defs);
-      } catch { /* ignore */ }
+      await useEngineStore.getState().importScript(DEMO_SCRIPT);
       message.success('Demo loaded successfully');
-    } catch (e: any) {
-      message.error(`Failed to load demo: ${e.message}`);
+    } catch (e) {
+      message.error(e instanceof Error ? e.message : 'Failed to load demo');
     }
   }, []);
 
@@ -207,7 +119,7 @@ export function ExecutionToolbar() {
 
         <Space size="small">
           <Button size="small" icon={<ExperimentOutlined />} onClick={handleLoadDemo}>Demo</Button>
-          <Button size="small" icon={<ImportOutlined />} onClick={handleImport}>Import</Button>
+          <Button size="small" icon={<ImportOutlined />} onClick={() => { setImportError(''); setImportModalOpen(true); }}>Import</Button>
           <Button size="small" icon={<ExportOutlined />} onClick={handleExport}>Export</Button>
         </Space>
 
@@ -249,14 +161,38 @@ export function ExecutionToolbar() {
         </Tooltip>
       </div>
 
+      <Modal title="Import FSM script" open={importModalOpen} onCancel={() => setImportModalOpen(false)}
+        onOk={handleImport} okText="Import script" confirmLoading={importing} okButtonProps={{ disabled: !importScript.trim() }} width={800}>
+        <p>Paste new DSL or choose a file. Import replaces the current graph. Module Instances use use … as … and qualified Output events.</p>
+        <input aria-label="Import script file" type="file" accept=".fsm,.txt" onChange={async (e) => {
+          const file = e.target.files?.[0];
+          if (file) setImportScript(await file.text());
+          e.target.value = '';
+        }} />
+        <Input.TextArea aria-label="FSM script" value={importScript} onChange={(e) => setImportScript(e.target.value)}
+          rows={18} style={{ fontFamily: 'monospace', marginTop: 8 }} />
+        {importError && <Alert type="error" showIcon title={importError} style={{ marginTop: 8 }} />}
+      </Modal>
+
       <Modal
         title="Exported Script"
         open={exportModalOpen}
         onCancel={() => setExportModalOpen(false)}
         footer={[
-          <Button key="copy" type="primary" onClick={() => {
-            navigator.clipboard.writeText(exportScript);
-            message.success('Script copied to clipboard');
+          <Button key="download" onClick={() => {
+            const url = URL.createObjectURL(new Blob([exportScript], { type: 'text/plain' }));
+            const link = document.createElement('a');
+            link.href = url; link.download = 'flow.fsm'; link.click();
+            URL.revokeObjectURL(url);
+          }}>Download .fsm</Button>,
+          <Button key="reimport" onClick={() => {
+            setImportScript(exportScript); setExportModalOpen(false); setImportError(''); setImportModalOpen(true);
+          }}>Re-import…</Button>,
+          <Button key="copy" type="primary" onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(exportScript);
+              message.success('Script copied to clipboard');
+            } catch { message.error('Clipboard unavailable; select the script or download it.'); }
           }}>
             Copy to Clipboard
           </Button>,

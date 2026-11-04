@@ -1,13 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Card, Descriptions, Tag, Button, Space, Popconfirm, Input, message, Checkbox } from 'antd';
+import { useCallback } from 'react';
+import { Card, Descriptions, Tag, Button, Space, Popconfirm, Input, message } from 'antd';
 import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
 import { useEngineStore } from '../../stores/engineStore';
 import { api } from '../../api/client';
-import type { NodeInfo, ConnectionDto, GroupDef } from '../../api/types';
+import type { ConnectionDto, GroupDef } from '../../api/types';
 
-function edgeIdFor(source: string, target: string, eventName: string): string {
-  return `${source}->${target}::${eventName}`;
-}
+import { connectionEdgeId, ownerOfNode } from '../FlowEditor/moduleGraph';
 
 const descLabelStyle = { fontSize: 14, whiteSpace: 'nowrap' as const };
 const descContentStyle = { fontSize: 14, wordBreak: 'break-all' as const };
@@ -18,71 +16,26 @@ export function PropertyPanel() {
   const nodes = useEngineStore((s) => s.nodes);
   const connections = useEngineStore((s) => s.connections);
   const moduleInstances = useEngineStore((s) => s.moduleInstances);
-  const [node, setNode] = useState<NodeInfo | null>(null);
+  const node = nodes.find((n) => n.name === selectedNodeName) ?? null;
 
-  const selectedConnection = selectedEdgeId
-    ? (() => {
-        const direct = connections.find((c) => edgeIdFor(c.fromNodeName, c.toNodeName, c.eventName) === selectedEdgeId);
-        if (direct) return direct;
-        const { moduleInstances: mods, viewModule } = useEngineStore.getState();
-        if (!viewModule) {
-          return connections.find((c) => {
-            let from = c.fromNodeName, to = c.toNodeName;
-            for (const m of mods) {
-              const prefix = m.instanceName + '.';
-              if (from.startsWith(prefix)) from = m.instanceName;
-              if (to.startsWith(prefix)) to = m.instanceName;
-            }
-            return edgeIdFor(from, to, c.eventName) === selectedEdgeId;
-          }) || null;
-        }
-        return null;
-      })()
-    : null;
+  const selectedConnection = selectedEdgeId ? connections.find((c) => connectionEdgeId(c) === selectedEdgeId) : null;
+  const isPublicOutputConnection = !!selectedConnection && moduleInstances.some((m) => m.instanceName === selectedConnection.fromNodeName);
 
   const selectedModule = selectedNodeName
     ? moduleInstances.find((m) => m.instanceName === selectedNodeName) || null
     : null;
-  const moduleDefs = useEngineStore((s) => s.moduleDefs);
-  const selectedModuleDef = selectedModule
-    ? moduleDefs.find((d) => d.moduleName === selectedModule.moduleName) || null
-    : null;
   const selectedModuleNode = selectedNodeName
-    ? moduleInstances.find((m) => selectedNodeName.startsWith(m.instanceName + '.')) || null
+    ? ownerOfNode(selectedNodeName, moduleInstances) || null
     : null;
   const selectedModuleLocalNodeName = selectedModuleNode && selectedNodeName
     ? selectedNodeName.slice(selectedModuleNode.instanceName.length + 1)
     : null;
-  const selectedModuleNodeIsTerminal = !!selectedModuleNode
-    && !!selectedNodeName
-    && selectedModuleNode.terminalNodeNames.some((n) => n === selectedNodeName);
-
-  useEffect(() => {
-    if (selectedNodeName) {
-      const found = nodes.find((n) => n.name === selectedNodeName) || null;
-      setNode(found);
-    } else {
-      setNode(null);
-    }
-  }, [selectedNodeName, nodes]);
 
   const nodeConnections = connections.filter(
     (c) => c.fromNodeName === selectedNodeName || c.toNodeName === selectedNodeName
   );
 
-  const refreshGraph = useCallback(async () => {
-    const [nodes, mods, conns, defs] = await Promise.all([
-      api.getNodes(),
-      api.getModuleInstances(),
-      api.getConnections(),
-      api.getModuleDefinitions(),
-    ]);
-    const store = useEngineStore.getState();
-    store.setNodes(nodes);
-    store.setModuleInstances(mods);
-    store.setConnections(conns);
-    store.setModuleDefs(defs);
-  }, []);
+  const refreshGraph = useEngineStore((s) => s.refreshGraph);
 
   const handleRename = useCallback(async () => {
     if (!node) return;
@@ -90,27 +43,25 @@ export function PropertyPanel() {
       const newName = prompt('New name:', node.name);
       if (newName && newName !== node.name) {
         await api.renameNode(node.name, newName);
-        const [ns, conns] = await Promise.all([api.getNodes(), api.getConnections()]);
-        useEngineStore.getState().setNodes(ns);
-        useEngineStore.getState().setConnections(conns);
+        await refreshGraph();
         useEngineStore.getState().setSelectedNode(newName);
       }
     } catch {
       message.error('Rename failed');
     }
-  }, [node]);
+  }, [node, refreshGraph]);
 
   const handleDeleteNode = useCallback(async () => {
     if (!node) return;
     try {
       await api.deleteNode(node.name);
-      useEngineStore.getState().removeNode(node.name);
+      await refreshGraph();
       useEngineStore.getState().setSelectedNode(null);
       message.success(`Deleted node: ${node.name}`);
     } catch {
       message.error('Delete failed');
     }
-  }, [node]);
+  }, [node, refreshGraph]);
 
   const handleRenameConnection = useCallback(async (conn: ConnectionDto) => {
     try {
@@ -147,34 +98,6 @@ export function PropertyPanel() {
     }
   }, [refreshGraph]);
 
-  const handleModuleTerminalChange = useCallback(async (nodeName: string, isTerminal: boolean) => {
-    try {
-      await api.updateModuleTerminal(nodeName, isTerminal);
-      await refreshGraph();
-      message.success(isTerminal ? 'Terminal set' : 'Terminal removed');
-    } catch {
-      message.error('Failed to update terminal');
-    }
-  }, [refreshGraph]);
-
-  const handleOutputEventMapChange = useCallback(async (
-    instanceName: string,
-    outputKey: string,
-    newExternalEvent: string,
-    outputs: string[],
-  ) => {
-    try {
-      const index = outputs.indexOf(outputKey);
-      if (index < 0) return;
-      // 复用 updateNodeEvent：后端 UpdateNodeEvent 当 name==instance 时转发到 UpdateModuleInstanceOutputEvent
-      await api.updateNodeEvent(instanceName, index, newExternalEvent);
-      await refreshGraph();
-      message.success('Output map updated');
-    } catch {
-      message.error('Failed to update output event map');
-    }
-  }, [refreshGraph]);
-
   // Edge selected
   if (!node && selectedConnection) {
     return (
@@ -187,7 +110,7 @@ export function PropertyPanel() {
           </Descriptions.Item>
         </Descriptions>
         <Space style={{ marginTop: 8 }} size="small">
-          <Button size="small" onClick={() => handleRenameConnection(selectedConnection)}>Rename</Button>
+          {!isPublicOutputConnection && <Button size="small" onClick={() => handleRenameConnection(selectedConnection)}>Rename</Button>}
           <Popconfirm title="Delete this connection?" onConfirm={() => handleDeleteConnection(selectedConnection)} okText="Delete" cancelText="Cancel">
             <Button size="small" danger>Delete</Button>
           </Popconfirm>
@@ -222,81 +145,29 @@ export function PropertyPanel() {
           <Descriptions.Item label="Pos">
             ({selectedModule.posX.toFixed(0)}, {selectedModule.posY.toFixed(0)})
           </Descriptions.Item>
+          <Descriptions.Item label="Color">{selectedModule.color || 'default'}</Descriptions.Item>
+          <Descriptions.Item label="FlowID">{selectedModule.flowID || 'automatic'}</Descriptions.Item>
         </Descriptions>
 
-        {selectedModuleDef && (
-          <>
-            <div style={{ marginTop: 8 }}>
-              <strong style={{ fontSize: 14 }}>Inputs:</strong>
-              {selectedModuleDef.inputs.length > 0
-                ? selectedModuleDef.inputs.map((inp) => (
-                    <Tag key={inp} style={{ fontSize: 12, marginLeft: 4 }} color="blue">{inp}</Tag>
-                  ))
-                : <span style={{ fontSize: 12, color: '#999' }}> none</span>}
+        <div style={{ marginTop: 8 }}>
+          <strong>Public Inputs</strong>
+          {Object.entries(selectedModule.publicInputs).map(([input, realNode]) => (
+            <div key={input} title={realNode}><Tag color="blue">{input}</Tag></div>
+          ))}
+          <strong>Public Outputs (read-only)</strong>
+          {Object.entries(selectedModule.publicOutputs).map(([output, event]) => (
+            <div key={output} style={{ marginTop: 4 }}>
+              <Tag color="green">{output}</Tag> {event}
+              <div style={{ fontSize: 12, color: '#666' }}>Publishers: {(selectedModule.outputPublishers[output] ?? []).join(', ') || 'none'}</div>
             </div>
-            <div style={{ marginTop: 4 }}>
-              <strong style={{ fontSize: 14 }}>Outputs:</strong>
-              {selectedModuleDef.outputs.length > 0
-                ? selectedModuleDef.outputs.map((out) => (
-                    <Tag key={out} style={{ fontSize: 12, marginLeft: 4 }} color="green">{out}</Tag>
-                  ))
-                : <span style={{ fontSize: 12, color: '#999' }}> none</span>}
-            </div>
-            <div style={{ marginTop: 4 }}>
-              <strong style={{ fontSize: 14 }}>Terminals:</strong>
-              {selectedModuleDef.terminals.length > 0
-                ? selectedModuleDef.terminals.map((terminal) => (
-                    <Tag key={terminal} style={{ fontSize: 12, marginLeft: 4 }} color="purple">{terminal}</Tag>
-                  ))
-                : <span style={{ fontSize: 12, color: '#999' }}> none</span>}
-            </div>
-            <div style={{ marginTop: 4 }}>
-              <strong style={{ fontSize: 14 }}>Output Map:</strong>
-              {selectedModuleDef.outputs.length > 0
-                ? selectedModuleDef.outputs.map((key) => {
-                    const val = selectedModule.outputEventMap[key] ?? '';
-                    return (
-                      <div key={key} style={{ marginTop: 4, fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <Tag style={{ fontSize: 12 }} color="blue">[{key}]</Tag>
-                        <span>→</span>
-                        <Input
-                          key={`${selectedModule.instanceName}-oem-${key}`}
-                          defaultValue={val}
-                          size="small"
-                          style={{ fontSize: 12, flex: 1 }}
-                          onBlur={(e) => {
-                            if (e.target.value !== val) {
-                              handleOutputEventMapChange(
-                                selectedModule.instanceName,
-                                key,
-                                e.target.value,
-                                selectedModuleDef.outputs,
-                              );
-                            }
-                          }}
-                          onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-                        />
-                      </div>
-                    );
-                  })
-                : <span style={{ fontSize: 12, color: '#999' }}> none</span>}
-            </div>
-          </>
-        )}
+          ))}
+          <p style={{ fontSize: 12 }}>Use Connect or drag an Output handle to an Input. All publishers share one interface edge.</p>
+        </div>
 
         {selectedModule.internalNodeNames.length > 0 && (
           <div style={{ marginTop: 8 }}>
             <strong style={{ fontSize: 14 }}>Internal:</strong>
             {selectedModule.internalNodeNames.map((n) => (
-              <div key={n} style={{ fontSize: 12, marginTop: 2, color: '#666' }}>{n}</div>
-            ))}
-          </div>
-        )}
-
-        {selectedModule.terminalNodeNames.length > 0 && (
-          <div style={{ marginTop: 8 }}>
-            <strong style={{ fontSize: 14 }}>Terminals:</strong>
-            {selectedModule.terminalNodeNames.map((n) => (
               <div key={n} style={{ fontSize: 12, marginTop: 2, color: '#666' }}>{n}</div>
             ))}
           </div>
@@ -347,12 +218,12 @@ export function PropertyPanel() {
         </Descriptions.Item>
       </Descriptions>
 
-      <Space style={{ marginTop: 8 }} size="small">
+      {!selectedModuleNode && <Space style={{ marginTop: 8 }} size="small">
         <Button size="small" onClick={handleRename}>Rename</Button>
         <Popconfirm title="Delete?" onConfirm={handleDeleteNode} okText="Delete" cancelText="Cancel">
           <Button size="small" danger>Delete</Button>
         </Popconfirm>
-      </Space>
+      </Space>}
 
       {selectedModuleNode && selectedModuleLocalNodeName && (
         <div style={{ marginTop: 8 }}>
@@ -360,13 +231,7 @@ export function PropertyPanel() {
           <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
             <Tag style={{ fontSize: 12 }} color="purple">{selectedModuleNode.moduleName}</Tag>
             <Tag style={{ fontSize: 12 }}>{selectedModuleLocalNodeName}</Tag>
-            <Checkbox
-              checked={selectedModuleNodeIsTerminal}
-              onChange={(e) => handleModuleTerminalChange(node.name, e.target.checked)}
-              style={{ fontSize: 13 }}
-            >
-              Terminal
-            </Checkbox>
+            <span style={{ fontSize: 12 }}>Editing this module template affects all its instances. External connections use public interfaces only.</span>
           </div>
         </div>
       )}
@@ -447,7 +312,7 @@ export function PropertyPanel() {
               <Tag style={{ fontSize: 12 }}>{ed.index}</Tag>
               <span>→</span>
               <Input
-                key={`${node.name}-ev-${ed.index}`}
+                key={`${node.name}-ev-${ed.index}-${ed.description}`}
                 defaultValue={ed.description}
                 size="small"
                 style={{ fontSize: 12, flex: 1 }}

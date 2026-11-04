@@ -27,7 +27,14 @@ public class EngineController : ControllerBase
     [HttpGet("export")]
     public ActionResult<string> Export()
     {
-        return Ok(_engineManager.Export());
+        try
+        {
+            return Ok(_engineManager.Export());
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
     [HttpGet("modules")]

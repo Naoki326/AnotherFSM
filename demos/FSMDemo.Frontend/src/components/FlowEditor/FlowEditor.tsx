@@ -21,7 +21,9 @@ import { useEngineStore } from '../../stores/engineStore';
 import { api } from '../../api/client';
 import type { NodeInfo, ConnectionDto } from '../../api/types';
 import { FlowNode } from './FlowNode';
-import { message } from 'antd';
+import { Button, message } from 'antd';
+import { ConnectionDialog } from './ConnectionDialog';
+import { connectionEdgeId, nextInstanceName, ownerOfNode, targetEndpoint, visibleConnections } from './moduleGraph';
 
 const NODE_COLORS: Record<string, string> = {
   red: '#f44336', pink: '#e91e63', purple: '#9c27b0', 'deep-purple': '#673ab7',
@@ -57,20 +59,18 @@ interface VisibleTransition {
   target: string;
 }
 
-function edgeIdFor(source: string, target: string, eventName: string): string {
-  return `${source}->${target}::${eventName}`;
-}
-
-function connectionEdgeId(c: ConnectionDto): string {
-  return edgeIdFor(c.fromNodeName, c.toNodeName, c.eventName);
-}
-
-function toReactFlowEdge(c: ConnectionDto, isActive = false): Edge {
+function toReactFlowEdge(c: ConnectionDto, modules: import('../../api/types').ModuleInstance[], isActive = false): Edge {
+  const target = targetEndpoint(c.toNodeName, modules);
+  const sourceModule = modules.find((m) => m.instanceName === c.fromNodeName);
   return {
     id: connectionEdgeId(c),
     source: c.fromNodeName,
-    target: c.toNodeName,
-    label: c.eventName,
+    target: target.node,
+    sourceHandle: sourceModule ? `output:${c.eventName}` : 'output',
+    targetHandle: target.handle ? `input:${target.handle}` : 'input',
+    data: { connection: c },
+    label: target.handle && Object.keys(modules.find((m) => m.instanceName === target.node)!.publicInputs).length > 1
+      ? `${c.eventName} → ${target.handle}` : c.eventName,
     selectable: true,
     focusable: true,
     animated: isActive,
@@ -116,11 +116,11 @@ export function FlowEditor({ onNodeSelect }: FlowEditorProps) {
   const moduleInstances = useEngineStore((s) => s.moduleInstances);
   const viewModule = useEngineStore((s) => s.viewModule);
   const initializedViewsRef = useRef<Set<string>>(new Set());
-  const pendingConnections = useRef<Set<string>>(new Set());
+  const [newConnection, setNewConnection] = useState<Partial<ConnectionDto> | null>(null);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; nodeId: string } | null>(null);
 
   // Build set of module instance node names
-  const moduleNodeNames = new Set(moduleInstances.map((m) => m.instanceName));
+  const moduleNodeNames = useMemo(() => new Set(moduleInstances.map((m) => m.instanceName)), [moduleInstances]);
 
   // Map active node to its module instance if it's an internal node (e.g. CheckA.Entry -> CheckA)
   const activeModuleName = !viewModule && activeNodeName
@@ -148,14 +148,9 @@ export function FlowEditor({ onNodeSelect }: FlowEditorProps) {
   // Filter nodes/connections based on viewModule
   const filteredNodes = useMemo(() => {
     if (viewModule) {
-      return storeNodes.filter((n) => n.name.startsWith(viewModule + '.'));
+      return storeNodes.filter((n) => ownerOfNode(n.name, moduleInstances)?.instanceName === viewModule);
     }
-    const regular = storeNodes.filter((n) => {
-      for (const m of moduleInstances) {
-        if (n.name.startsWith(m.instanceName + '.')) return false;
-      }
-      return true;
-    });
+    const regular = storeNodes.filter((n) => !ownerOfNode(n.name, moduleInstances));
     // Add module instances as virtual nodes
     const virtualNodes = moduleInstances.map((m) => ({
       name: m.instanceName,
@@ -164,39 +159,13 @@ export function FlowEditor({ onNodeSelect }: FlowEditorProps) {
       posX: m.posX,
       posY: m.posY,
       flowID: m.flowID,
-      eventDescriptions: Object.entries(m.outputEventMap).map(([, extEvent], i) => ({
-        index: i,
-        description: extEvent,
-      })),
+      eventDescriptions: [],
     }));
     return [...regular, ...virtualNodes];
   }, [storeNodes, viewModule, moduleInstances]);
 
-  const filteredConnections = useMemo(() => {
-    if (viewModule) {
-      return storeConnections.filter((c) =>
-        c.fromNodeName.startsWith(viewModule + '.') && c.toNodeName.startsWith(viewModule + '.')
-      );
-    }
-    // Root view: rewrite module-internal node names to module instance names, then deduplicate exact event edges.
-    const instancePrefixes = moduleInstances.map((m) => ({ prefix: m.instanceName + '.', name: m.instanceName }));
-    return storeConnections
-      .map((c) => {
-        let from = c.fromNodeName;
-        let to = c.toNodeName;
-        for (const { prefix, name } of instancePrefixes) {
-          if (from.startsWith(prefix)) from = name;
-          if (to.startsWith(prefix)) to = name;
-        }
-        return { ...c, fromNodeName: from, toNodeName: to };
-      })
-      .filter((c) => {
-        // Hide self-connections within the same module instance (internal transitions)
-        if (c.fromNodeName === c.toNodeName) return false;
-        return true;
-      })
-      .filter((c, i, arr) => arr.findIndex((x) => connectionEdgeId(x) === connectionEdgeId(c)) === i);
-  }, [storeConnections, viewModule, moduleInstances]);
+  const filteredConnections = useMemo(() => visibleConnections(storeConnections, moduleInstances, viewModule),
+    [storeConnections, viewModule, moduleInstances]);
 
   // Sync from filtered data — reads current active/selected via getState() to keep flags correct
   const viewKey = viewModule || '__root__';
@@ -225,6 +194,9 @@ export function FlowEditor({ onNodeSelect }: FlowEditorProps) {
     const newNodes = filteredNodes.map((n) => {
       const isMod = moduleNodeNames.has(n.name);
       const rn = toReactFlowNode(n, n.name === effActive, n.name === curSelected, isMod);
+      const mod = moduleInstances.find((m) => m.instanceName === n.name);
+      if (mod) rn.data = { ...rn.data, publicInputs: mod.publicInputs, publicOutputs: mod.publicOutputs };
+      rn.deletable = !ownerOfNode(n.name, moduleInstances);
       const flags: Record<string, boolean> = {};
       if (innerStarts.has(n.name)) flags.isInnerStartNode = true;
       if (n.eventDescriptions.some(ed => endEventDescs.has(ed.description))) flags.isInnerEndNode = true;
@@ -232,7 +204,8 @@ export function FlowEditor({ onNodeSelect }: FlowEditorProps) {
       return rn;
     });
 
-    const newEdges = filteredConnections.map((c) => toReactFlowEdge(c, isActiveConnection(c, effectiveActiveTransition)));
+    const newEdges = filteredConnections.map((c) => toReactFlowEdge(c, viewModule ? [] : moduleInstances,
+      isActiveConnection({ ...c, toNodeName: viewModule ? c.toNodeName : targetEndpoint(c.toNodeName, moduleInstances).node }, effectiveActiveTransition)));
     if (!initializedViewsRef.current.has(viewKey)) {
       const allZero = newNodes.every(n => n.position.x === 0 && n.position.y === 0);
       setNodes(allZero ? autoLayout(newNodes, newEdges) : newNodes);
@@ -241,7 +214,7 @@ export function FlowEditor({ onNodeSelect }: FlowEditorProps) {
     }
     setEdges(newEdges);
     initializedViewsRef.current.add(viewKey);
-  }, [filteredNodes, filteredConnections, viewKey, effectiveActiveTransition]);
+  }, [filteredNodes, filteredConnections, viewKey, effectiveActiveTransition, storeNodes, viewModule, moduleInstances, moduleNodeNames, setNodes, setEdges]);
 
   // Sync active node highlight only (for changes without data sync)
   useEffect(() => {
@@ -252,7 +225,7 @@ export function FlowEditor({ onNodeSelect }: FlowEditorProps) {
         data: { ...n.data, isActive: n.id === effectiveActiveNodeName },
       }))
     );
-  }, [effectiveActiveNodeName, viewKey]);
+  }, [effectiveActiveNodeName, viewKey, setNodes]);
 
   // Sync active transition highlight only
   useEffect(() => {
@@ -294,8 +267,8 @@ export function FlowEditor({ onNodeSelect }: FlowEditorProps) {
       const innerEnds = new Set<string>();
       if (endEventDescs.size > 0) {
         for (const n of nds) {
-          const events = (n.data as any)?.events || [];
-          if (events.some((ev: any) => endEventDescs.has(ev.description))) {
+          const events = (n.data.events as NodeInfo['eventDescriptions'] | undefined) ?? [];
+          if (events.some((ev) => endEventDescs.has(ev.description))) {
             innerEnds.add(n.id);
           }
         }
@@ -310,70 +283,20 @@ export function FlowEditor({ onNodeSelect }: FlowEditorProps) {
         },
       }));
     });
-  }, [selectedNodeName, viewKey]);
+  }, [selectedNodeName, viewKey, setNodes]);
 
-  const onConnect = useCallback(
-    async (connection: Connection) => {
-      if (!connection.source || !connection.target) return;
-
-      // Resolve module instance names to internal nodes for backend API
-      const store = useEngineStore.getState();
-      let fromName = connection.source;
-      let toName = connection.target;
-      let eventName = 'NextEvent';
-
-      const sourceInst = store.moduleInstances.find(m => m.instanceName === connection.source);
-      if (sourceInst) {
-        fromName = sourceInst.instanceName;
-        const firstEvent = Object.values(sourceInst.outputEventMap)[0];
-        if (firstEvent) eventName = firstEvent;
-      }
-
-      const targetInst = store.moduleInstances.find(m => m.instanceName === connection.target);
-      if (targetInst)
-        toName = targetInst.instanceName;
-
-      const edgeId = edgeIdFor(connection.source, connection.target, eventName);
-      if (pendingConnections.current.has(edgeId)) return;
-      pendingConnections.current.add(edgeId);
-
-      const localEdge: Edge = {
-        id: edgeId,
-        source: connection.source,
-        target: connection.target,
-        sourceHandle: 'output',
-        targetHandle: 'input',
-        label: eventName,
-        selectable: true,
-        focusable: true,
-        labelShowBg: true,
-        markerEnd: { type: MarkerType.ArrowClosed },
-        style: { stroke: '#555', strokeWidth: 1.5 },
-        labelStyle: { fontSize: 10, fill: '#666' },
-        labelBgStyle: { fill: '#fff', fillOpacity: 0.8 },
-      };
-      setEdges((eds) => {
-        if (eds.some((e) => e.id === edgeId)) return eds;
-        return [...eds, localEdge];
-      });
-
-      try {
-        await api.createConnection({
-          fromNodeName: fromName,
-          toNodeName: toName,
-          eventName,
-        });
-        const conns = await api.getConnections();
-        useEngineStore.getState().setConnections(conns);
-      } catch (e: any) {
-        setEdges((eds) => eds.filter((e) => e.id !== edgeId));
-        message.error(e.message || 'Failed to create connection');
-      } finally {
-        pendingConnections.current.delete(edgeId);
-      }
-    },
-    [setEdges]
-  );
+  const onConnect = useCallback((connection: Connection) => {
+    if (!connection.source || !connection.target) return;
+    const store = useEngineStore.getState();
+    const target = store.moduleInstances.find((m) => m.instanceName === connection.target);
+    const input = connection.targetHandle?.startsWith('input:') ? connection.targetHandle.slice(6) : undefined;
+    const event = connection.sourceHandle?.startsWith('output:') ? connection.sourceHandle.slice(7)
+      : store.nodes.find((n) => n.name === connection.source)?.eventDescriptions[0]?.description;
+    setNewConnection({ fromNodeName: connection.source,
+      toNodeName: target && Object.keys(target.publicInputs).length > 1
+        ? (input ? `${target.instanceName}.${input}` : undefined) : connection.target,
+      eventName: event });
+  }, []);
 
   const onNodeClick = useCallback(
     (_: React.MouseEvent, node: Node) => {
@@ -412,10 +335,14 @@ export function FlowEditor({ onNodeSelect }: FlowEditorProps) {
     async (deleted: Node[]) => {
       for (const node of deleted) {
         try {
-          await api.deleteNode(node.id);
-          useEngineStore.getState().removeNode(node.id);
-        } catch {
-          message.error(`Failed to delete node ${node.id}`);
+          const store = useEngineStore.getState();
+          if (store.moduleInstances.some((m) => m.instanceName === node.id)) await api.deleteModuleInstance(node.id);
+          else await api.deleteNode(node.id);
+          await store.refreshGraph();
+          store.setSelectedNode(null);
+        } catch (e) {
+          await useEngineStore.getState().refreshGraph();
+          message.error(e instanceof Error ? e.message : `Failed to delete node ${node.id}`);
         }
       }
     },
@@ -426,7 +353,8 @@ export function FlowEditor({ onNodeSelect }: FlowEditorProps) {
     async (deleted: Edge[]) => {
       for (const edge of deleted) {
         try {
-          await api.deleteConnection(edge.source, edge.target, String(edge.label || ''));
+          const c = edge.data?.connection as ConnectionDto;
+          await api.deleteConnection(c.fromNodeName, c.toNodeName, c.eventName);
         } catch {
           setEdges((eds) => [...eds, edge]);
           message.error('Failed to delete connection');
@@ -453,7 +381,7 @@ export function FlowEditor({ onNodeSelect }: FlowEditorProps) {
           }
         } else {
           await api.updateNodePosition(node.id, node.position.x, node.position.y);
-          const isInternalModuleNode = store.moduleInstances.some(m => node.id.startsWith(m.instanceName + '.'));
+          const isInternalModuleNode = !!ownerOfNode(node.id, store.moduleInstances);
           if (isInternalModuleNode) {
             const [nodes, mods, conns] = await Promise.all([api.getNodes(), api.getModuleInstances(), api.getConnections()]);
             store.setNodes(nodes);
@@ -476,6 +404,11 @@ export function FlowEditor({ onNodeSelect }: FlowEditorProps) {
   );
 
   const reactFlowInstance = useReactFlow();
+  const visibleNodeIds = filteredNodes.map((n) => n.name).join('\n');
+  useEffect(() => {
+    const timer = window.setTimeout(() => { void reactFlowInstance.fitView({ padding: 0.2 }); }, 100);
+    return () => window.clearTimeout(timer);
+  }, [visibleNodeIds, viewModule, reactFlowInstance]);
 
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
@@ -497,44 +430,39 @@ export function FlowEditor({ onNodeSelect }: FlowEditorProps) {
       if (moduleType) {
         try {
           const store = useEngineStore.getState();
-          const count = store.moduleInstances.filter((m) => m.moduleName === moduleType).length;
-          const instanceName = `${moduleType}${count + 1}`;
+          if (store.viewModule) throw new Error('Create Module Instances in Root, not inside a template.');
+          const instanceName = nextInstanceName(moduleType, store.moduleInstances, store.nodes);
           await api.createModuleInstance({
             moduleName: moduleType,
             instanceName,
             posX: Math.round(position.x),
             posY: Math.round(position.y),
           });
-          const [nodes, mods, conns] = await Promise.all([api.getNodes(), api.getModuleInstances(), api.getConnections()]);
-          store.setNodes(nodes);
-          store.setModuleInstances(mods);
-          store.setConnections(conns);
-          try {
-            const defs = await api.getModuleDefinitions();
-            useEngineStore.getState().setModuleDefs(defs);
-          } catch { /* ignore */ }
+          await store.refreshGraph();
+          store.setSelectedNode(instanceName);
           message.success(`Created module instance: ${instanceName}`);
-        } catch (e: any) {
-          message.error(`Failed to create module instance: ${e.message}`);
+        } catch (e) {
+          message.error(e instanceof Error ? e.message : 'Failed to create module instance');
         }
         return;
       }
 
       if (!nodeType) return;
       try {
+        const store = useEngineStore.getState();
+        if (store.viewModule) throw new Error('Add nodes to module declarations through Import. This canvas edits template positions, Branches and connections.');
         await api.createNode({
           type: nodeType, name: nodeType,
           posX: Math.round(position.x), posY: Math.round(position.y),
           color: nodeColor || '',
         });
-        const nodes = await api.getNodes();
-        useEngineStore.getState().setNodes(nodes);
+        await store.refreshGraph();
         message.success(`${nodeType} node created`);
-      } catch {
-        message.error(`Failed to create ${nodeType} node`);
+      } catch (e) {
+        message.error(e instanceof Error ? e.message : `Failed to create ${nodeType} node`);
       }
     },
-    [reactFlowInstance, setNodes]
+    [reactFlowInstance]
   );
 
   return (
@@ -556,6 +484,7 @@ export function FlowEditor({ onNodeSelect }: FlowEditorProps) {
           gap: 8,
         }}
       >
+        <Button size="small" onClick={() => setNewConnection({})}>Connect</Button>
         <span
           style={{ cursor: viewModule ? 'pointer' : 'default', color: viewModule ? '#1976d2' : '#333', fontWeight: 600 }}
           onClick={() => { if (viewModule) useEngineStore.getState().setViewModule(null); }}
@@ -600,6 +529,8 @@ export function FlowEditor({ onNodeSelect }: FlowEditorProps) {
         </div>
       )}
 
+      {newConnection && <ConnectionDialog initial={newConnection} onClose={() => setNewConnection(null)} />}
+
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -617,7 +548,7 @@ export function FlowEditor({ onNodeSelect }: FlowEditorProps) {
         onNodeContextMenu={onNodeContextMenu}
         onContextMenu={(e) => e.preventDefault()}
         nodeTypes={nodeTypes}
-        connectionMode={ConnectionMode.Loose}
+        connectionMode={ConnectionMode.Strict}
         fitView
         deleteKeyCode={['Delete', 'Backspace']}
         edgesFocusable={true}
@@ -629,7 +560,7 @@ export function FlowEditor({ onNodeSelect }: FlowEditorProps) {
         <Controls />
         <MiniMap
           nodeColor={(n) => {
-            const c = (n.data as any)?.color || '';
+            const c = typeof n.data.color === 'string' ? n.data.color : '';
             return c.startsWith('#') ? c : (NODE_COLORS[c] || '#999');
           }}
           nodeStrokeWidth={2}

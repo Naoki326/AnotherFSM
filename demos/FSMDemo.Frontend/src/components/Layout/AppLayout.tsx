@@ -1,4 +1,4 @@
-import { Layout as AntLayout } from 'antd';
+import { Layout as AntLayout, message } from 'antd';
 import { ReactFlowProvider } from '@xyflow/react';
 import { ExecutionToolbar } from '../ExecutionToolbar/ExecutionToolbar';
 import { FlowEditor } from '../FlowEditor/FlowEditor';
@@ -6,12 +6,15 @@ import { NodePalette } from '../NodePalette/NodePalette';
 import { PropertyPanel } from '../PropertyPanel/PropertyPanel';
 import { useSignalR } from '../../hooks/useSignalR';
 import { useEngineStore } from '../../stores/engineStore';
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 
 const { Sider, Content } = AntLayout;
 
 export function AppLayout() {
   useSignalR();
+  useEffect(() => {
+    void useEngineStore.getState().refreshGraph().catch((e) => message.error(`Cannot load graph: ${e.message}`));
+  }, []);
 
   const handleNodeSelect = useCallback((nodeName: string | null) => {
     if (nodeName) {

@@ -1,0 +1,80 @@
+module Checker {
+    input Entry;
+    output OK, NG;
+
+    def Entry(Accumulate) {
+        1->NextEvent;
+        3->NG;
+        Pos:(100, 200);
+        Color:"light-blue";
+    }
+    def Exit(Idle) {
+        1->OK;
+        Pos:(300, 200);
+        Color:"green";
+    }
+    def NextEvent as event;
+    def OK as event;
+    def NG as event;
+    NextEvent->Entry to Exit;
+}
+
+module Review {
+    input Entry, Retry;
+    output OK;
+    def Entry(Idle) {
+        1->OK;
+        Pos:(100, 100);
+        Color:"blue";
+    }
+    def Retry(Idle) {
+        1->OK;
+        Pos:(100, 300);
+        Color:"orange";
+    }
+    def OK as event;
+}
+
+import Checker;
+import Review;
+
+def Start(Start) {
+    1->StartEvent;
+    Pos:(60, 200);
+    Color:"red";
+    FlowID:1;
+}
+use Checker as CheckA {
+    Pos:(310, 100);
+    Color:"orange";
+    FlowID:check_a;
+}
+use Checker as CheckB {
+    Pos:(590, 100);
+    Color:"teal";
+    FlowID:check_b;
+}
+use Review as ReviewA {
+    Pos:(870, 100);
+    Color:"purple";
+    FlowID:review_a;
+}
+def End(End) {
+    1->EndEvent;
+    Pos:(1150, 200);
+    Color:"indigo";
+    FlowID:2;
+}
+def ErrorEnd(End) {
+    1->ErrorEndEvent;
+    Pos:(590, 440);
+    Color:"red";
+    FlowID:3;
+}
+
+StartEvent->Start to CheckA;
+CheckA.OK->CheckB;
+CheckA.NG->ErrorEnd;
+CheckB.OK->ReviewA.Retry;
+CheckB.NG->ErrorEnd;
+ReviewA.OK->End;

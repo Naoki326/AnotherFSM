@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { api } from '../api/client';
 import type { EngineStatus, NodeInfo, ConnectionDto, ExecutionStatus, ModuleInstance, ModuleDef } from '../api/types';
 
 interface ActiveTransition {
@@ -45,6 +46,8 @@ interface EngineState {
   setModuleInstances: (modules: ModuleInstance[]) => void;
   setViewModule: (moduleName: string | null) => void;
   removeNode: (name: string) => void;
+  refreshGraph: () => Promise<void>;
+  importScript: (script: string) => Promise<void>;
 }
 
 export const useEngineStore = create<EngineState>((set) => ({
@@ -61,6 +64,20 @@ export const useEngineStore = create<EngineState>((set) => ({
   moduleDefs: [],
   viewModule: null,
 
+  refreshGraph: async () => {
+    const [status, nodes, connections, moduleInstances, moduleDefs] = await Promise.all([
+      api.getStatus(), api.getNodes(), api.getConnections(), api.getModuleInstances(), api.getModuleDefinitions(),
+    ]);
+    set({ status, nodes, connections, moduleInstances, moduleDefs });
+  },
+  importScript: async (script) => {
+    await api.importScript(script);
+    const [status, nodes, connections, moduleInstances, moduleDefs] = await Promise.all([
+      api.getStatus(), api.getNodes(), api.getConnections(), api.getModuleInstances(), api.getModuleDefinitions(),
+    ]);
+    set({ status, nodes, connections, moduleInstances, moduleDefs, viewModule: null,
+      selectedNodeName: null, selectedEdgeId: null, executionLog: [], activeNodeName: null, activeTransition: null });
+  },
   setStatus: (status) => set({ status }),
   setNodes: (nodes) => set({ nodes }),
   setConnections: (connections) => set({ connections }),

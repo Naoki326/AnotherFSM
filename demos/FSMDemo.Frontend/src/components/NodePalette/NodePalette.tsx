@@ -1,7 +1,8 @@
-import { useCallback } from 'react';
-import { Card, Typography, message } from 'antd';
+import { useCallback, useState } from 'react';
+import { Alert, Card, Input, Modal, Typography, message } from 'antd';
 import { api } from '../../api/client';
 import { useEngineStore } from '../../stores/engineStore';
+import { nextInstanceName } from '../FlowEditor/moduleGraph';
 
 const { Text } = Typography;
 
@@ -27,6 +28,12 @@ interface NodePaletteProps {
 export function NodePalette({ onAddNode }: NodePaletteProps) {
   const modules = useEngineStore((s) => s.moduleDefs);
   const moduleInstances = useEngineStore((s) => s.moduleInstances);
+  const nodes = useEngineStore((s) => s.nodes);
+  const viewModule = useEngineStore((s) => s.viewModule);
+  const [creatingModule, setCreatingModule] = useState<string | null>(null);
+  const [instanceName, setInstanceName] = useState('');
+  const [createError, setCreateError] = useState('');
+  const [creating, setCreating] = useState(false);
 
   const handleDragStart = useCallback(
     (e: React.DragEvent, nodeType: string, nodeColor: string) => {
@@ -48,6 +55,10 @@ export function NodePalette({ onAddNode }: NodePaletteProps) {
   const handleClick = useCallback(
     async (nodeType: string, nodeColor: string) => {
       try {
+        if (viewModule) {
+          message.info('Add template nodes through Import; this canvas edits positions, Branches and internal connections.');
+          return;
+        }
         const offset = Math.random() * 200;
         await api.createNode({
           type: nodeType,
@@ -56,49 +67,36 @@ export function NodePalette({ onAddNode }: NodePaletteProps) {
           posY: 100 + offset,
           color: nodeColor,
         });
-        const nodes = await api.getNodes();
-        useEngineStore.getState().setNodes(nodes);
+        await useEngineStore.getState().refreshGraph();
         onAddNode?.();
       } catch {
         message.error(`Failed to create ${nodeType} node`);
       }
     },
-    [onAddNode]
+    [onAddNode, viewModule]
   );
 
-  const handleModuleClick = useCallback(
-    async (moduleName: string) => {
-      try {
-        const offset = Math.random() * 200;
-        const count = moduleInstances.filter((m) => m.moduleName === moduleName).length;
-        const instanceName = `${moduleName}${count + 1}`;
-        await api.createModuleInstance({
-          moduleName,
-          instanceName,
-          posX: 100 + offset,
-          posY: 100 + offset,
-        });
-        const [nodes, mods, conns] = await Promise.all([api.getNodes(), api.getModuleInstances(), api.getConnections()]);
-        useEngineStore.getState().setNodes(nodes);
-        useEngineStore.getState().setModuleInstances(mods);
-        useEngineStore.getState().setConnections(conns);
-        try {
-          const defs = await api.getModuleDefinitions();
-          useEngineStore.getState().setModuleDefs(defs);
-        } catch { /* ignore */ }
-        onAddNode?.();
-        message.success(`Created module instance: ${instanceName}`);
-      } catch (e: any) {
-        message.error(`Failed to create module instance: ${e.message}`);
-      }
-    },
-    [onAddNode, moduleInstances]
-  );
+  const handleModuleCreate = async () => {
+    if (!creatingModule || !instanceName.trim()) return;
+    setCreating(true);
+    setCreateError('');
+    try {
+      await api.createModuleInstance({ moduleName: creatingModule, instanceName: instanceName.trim(), posX: 120, posY: 360 });
+      await useEngineStore.getState().refreshGraph();
+      useEngineStore.getState().setSelectedNode(instanceName.trim());
+      setCreatingModule(null);
+      onAddNode?.();
+      message.success(`Created module instance: ${instanceName.trim()}`);
+    } catch (e) {
+      setCreateError(e instanceof Error ? e.message : 'Failed to create module instance');
+    } finally { setCreating(false); }
+  };
 
   return (
     <Card title="Node Types" size="small" style={{ height: '100%', overflow: 'auto', fontSize: 14 }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {modules.length > 0 && (
+        {viewModule && <Alert type="info" title="Template editing" description="Edits affect all instances. Return to Root to create instances or connect public interfaces." />}
+        {!viewModule && modules.length > 0 && (
           <>
             <Text style={{ fontSize: 14, fontWeight: 600, color: '#333' }}>Modules</Text>
             {modules.map((m) => (
@@ -106,7 +104,13 @@ export function NodePalette({ onAddNode }: NodePaletteProps) {
                 key={m.moduleName}
                 draggable
                 onDragStart={(e) => handleModuleDragStart(e, m.moduleName)}
-                onClick={() => handleModuleClick(m.moduleName)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.click(); }}
+                onClick={() => {
+                  setInstanceName(nextInstanceName(m.moduleName, moduleInstances, nodes));
+                  setCreateError(''); setCreatingModule(m.moduleName);
+                }}
                 style={{
                   padding: '7px 9px',
                   borderRadius: 4,
@@ -129,7 +133,7 @@ export function NodePalette({ onAddNode }: NodePaletteProps) {
             <Text style={{ fontSize: 14, fontWeight: 600, color: '#333' }}>Basic Nodes</Text>
           </>
         )}
-        {NODE_TYPES.map((nt) => (
+        {!viewModule && NODE_TYPES.map((nt) => (
           <div
             key={nt.type}
             draggable
@@ -151,6 +155,13 @@ export function NodePalette({ onAddNode }: NodePaletteProps) {
           </div>
         ))}
       </div>
+      <Modal title={`Create Module Instance — ${creatingModule ?? ''}`} open={!!creatingModule} onCancel={() => setCreatingModule(null)}
+        onOk={handleModuleCreate} okText="Create instance" confirmLoading={creating} okButtonProps={{ disabled: !instanceName.trim() }}>
+        <p>Public Inputs and Outputs come from the module. No event alias mapping is needed.</p>
+        <label htmlFor="instance-name">Instance name (Namespace prefix allowed)</label>
+        <Input id="instance-name" value={instanceName} onChange={(e) => setInstanceName(e.target.value)} onPressEnter={handleModuleCreate} />
+        {createError && <Alert style={{ marginTop: 8 }} type="error" title={createError} showIcon />}
+      </Modal>
     </Card>
   );
 }

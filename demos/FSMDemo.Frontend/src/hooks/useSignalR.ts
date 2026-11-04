@@ -71,19 +71,7 @@ export function useSignalR() {
 
     connection.on('EngineImported', () => {
       useEngineStore.getState().clearExecutionLog();
-      import('../api/client').then(({ api }) => {
-        Promise.all([api.getNodes(), api.getConnections(), api.getStatus(), api.getModuleInstances()]).then(
-          ([nodes, connections, status, modules]) => {
-            useEngineStore.getState().setNodes(nodes);
-            useEngineStore.getState().setConnections(connections);
-            useEngineStore.getState().setStatus(status);
-            useEngineStore.getState().setModuleInstances(modules);
-            api.getModuleDefinitions().then((defs) => {
-              useEngineStore.getState().setModuleDefs(defs);
-            }).catch(() => {});
-          }
-        );
-      });
+      void useEngineStore.getState().refreshGraph().catch((error) => console.error('Failed to refresh imported graph', error));
     });
 
     const subscribeToExecution = async () => {

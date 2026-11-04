@@ -9,6 +9,10 @@ test_project := "tests/StateMachineTest/StateMachineTest.csproj"
 test:
     dotnet test {{test_project}} --nologo
 
+# 运行图编辑服务与模块导入导出合同测试
+test-api:
+    dotnet test tests/FSMDemoApiTest/FSMDemoApiTest.csproj --nologo
+
 # 编译 API 项目
 build-api:
     dotnet build demos/FSMDemo.API/FSMDemo.API.csproj /p:NuGetAudit=false
