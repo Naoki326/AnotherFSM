@@ -33,8 +33,7 @@ public sealed class DemoRuntime : IDisposable
         if (!string.IsNullOrWhiteSpace(ViewModule))
         {
             var prefix = ViewModule + ".";
-            return engine.GetNodeNames()
-                .Where(name => name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            return engine.ModuleInstances[ViewModule].ExpandedNodeNames
                 .Select(name => engine[name])
                 .Select(node => new FsmNodeView(
                     node.Name,
@@ -49,12 +48,8 @@ public sealed class DemoRuntime : IDisposable
                 .ToArray();
         }
 
-        var modulePrefixes = engine.ModuleInstances.Keys
-            .Select(name => name + ".")
-            .ToArray();
-
         var regularNodes = engine.GetNodeNames()
-            .Where(name => !modulePrefixes.Any(prefix => name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
+            .Where(name => GetNodeOwner(name) is null)
             .Select(name => engine[name])
             .Select(node => new FsmNodeView(
                 node.Name,
@@ -154,11 +149,9 @@ public sealed class DemoRuntime : IDisposable
 
         if (!string.IsNullOrWhiteSpace(ViewModule))
         {
-            var prefix = ViewModule + ".";
+            var members = engine.ModuleInstances[ViewModule].ExpandedNodeNames;
             return rawConnections
-                .Where(connection =>
-                    connection.Source.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
-                    && connection.Target.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                .Where(connection => members.Contains(connection.Source) && members.Contains(connection.Target))
                 .OrderBy(connection => connection.Source)
                 .ThenBy(connection => connection.Target)
                 .ToArray();
@@ -177,18 +170,11 @@ public sealed class DemoRuntime : IDisposable
             .ToArray();
     }
 
-    private string CollapseModuleNodeName(string nodeName)
-    {
-        foreach (var instanceName in engine.ModuleInstances.Keys.OrderByDescending(name => name.Length))
-        {
-            if (nodeName.StartsWith(instanceName + ".", StringComparison.OrdinalIgnoreCase))
-            {
-                return instanceName;
-            }
-        }
+    private FsmModuleInstance? GetNodeOwner(string nodeName)
+        => engine.ModuleInstances.Values.SingleOrDefault(instance => instance.ExpandedNodeNames.Contains(nodeName));
 
-        return nodeName;
-    }
+    private string CollapseModuleNodeName(string nodeName)
+        => GetNodeOwner(nodeName)?.InstanceName ?? nodeName;
 
     public IReadOnlyList<NodeTypeView> NodeTypes =>
         typeof(StartNode).Assembly.GetTypes()
@@ -305,13 +291,9 @@ public sealed class DemoRuntime : IDisposable
     {
         var result = new List<FSMEvent> { requestedEndEvent };
         var seen = new HashSet<string>(StringComparer.Ordinal) { requestedEndEvent.EventID };
-        var modulePrefixes = engine.ModuleInstances.Keys
-            .Select(instanceName => instanceName + ".")
-            .ToArray();
-
         foreach (var nodeName in engine.GetNodeNames())
         {
-            if (modulePrefixes.Any(prefix => nodeName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
+            if (GetNodeOwner(nodeName) is not null)
             {
                 continue;
             }

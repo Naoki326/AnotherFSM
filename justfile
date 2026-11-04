@@ -13,6 +13,10 @@ test:
 test-api:
     dotnet test tests/FSMDemoApiTest/FSMDemoApiTest.csproj --nologo
 
+# 在宿主 .NET 运行真实 WASM 服务的公开边界合同测试
+test-wasm:
+    dotnet test tests/FSMDemoWasmTest/FSMDemoWasmTest.csproj --nologo
+
 # 编译 API 项目
 build-api:
     dotnet build demos/FSMDemo.API/FSMDemo.API.csproj /p:NuGetAudit=false
