@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { Alert, Card, Input, Modal, Typography, message } from 'antd';
-import { api } from '../../api/client';
+import { runtime as api } from '../../runtime';
 import { useEngineStore } from '../../stores/engineStore';
 import { nextInstanceName } from '../FlowEditor/moduleGraph';
 

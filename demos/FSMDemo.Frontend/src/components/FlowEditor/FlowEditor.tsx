@@ -18,12 +18,12 @@ import {
 import '@xyflow/react/dist/style.css';
 import dagre from 'dagre';
 import { useEngineStore } from '../../stores/engineStore';
-import { api } from '../../api/client';
+import { runtime as api } from '../../runtime';
 import type { NodeInfo, ConnectionDto } from '../../api/types';
 import { FlowNode } from './FlowNode';
 import { Button, message } from 'antd';
 import { ConnectionDialog } from './ConnectionDialog';
-import { connectionEdgeId, nextInstanceName, ownerOfNode, targetEndpoint, visibleConnections } from './moduleGraph';
+import { connectionEdgeId, nextInstanceName, ownerOfNode, targetEndpoint, visibleConnections, visibleNodes, visibleActiveNode } from './moduleGraph';
 
 const NODE_COLORS: Record<string, string> = {
   red: '#f44336', pink: '#e91e63', purple: '#9c27b0', 'deep-purple': '#673ab7',
@@ -122,47 +122,20 @@ export function FlowEditor({ onNodeSelect }: FlowEditorProps) {
   // Build set of module instance node names
   const moduleNodeNames = useMemo(() => new Set(moduleInstances.map((m) => m.instanceName)), [moduleInstances]);
 
-  // Map active node to its module instance if it's an internal node (e.g. CheckA.Entry -> CheckA)
-  const activeModuleName = !viewModule && activeNodeName
-    ? ownerOfNode(activeNodeName, moduleInstances)?.instanceName ?? null
-    : null;
-  const effectiveActiveNodeName = activeModuleName ?? activeNodeName;
+  const effectiveActiveNodeName = visibleActiveNode(activeNodeName, moduleInstances, viewModule);
 
   const effectiveActiveTransition = useMemo<VisibleTransition | null>(() => {
     if (!activeTransition) return null;
 
-    const resolveVisibleNodeName = (nodeName: string): string | null => {
-      const owner = ownerOfNode(nodeName, moduleInstances);
-      if (viewModule) {
-        return owner?.instanceName === viewModule ? nodeName : null;
-      }
-      return owner?.instanceName ?? nodeName;
-    };
-
-    const source = resolveVisibleNodeName(activeTransition.fromNodeName);
-    const target = resolveVisibleNodeName(activeTransition.toNodeName);
+    const source = visibleActiveNode(activeTransition.fromNodeName, moduleInstances, viewModule);
+    const target = visibleActiveNode(activeTransition.toNodeName, moduleInstances, viewModule);
     if (!source || !target || source === target) return null;
     return { source, target };
   }, [activeTransition, moduleInstances, viewModule]);
 
   // Filter nodes/connections based on viewModule
-  const filteredNodes = useMemo(() => {
-    if (viewModule) {
-      return storeNodes.filter((n) => ownerOfNode(n.name, moduleInstances)?.instanceName === viewModule);
-    }
-    const regular = storeNodes.filter((n) => !ownerOfNode(n.name, moduleInstances));
-    // Add module instances as virtual nodes
-    const virtualNodes = moduleInstances.map((m) => ({
-      name: m.instanceName,
-      classType: m.moduleName,
-      color: m.color,
-      posX: m.posX,
-      posY: m.posY,
-      flowID: m.flowID,
-      eventDescriptions: [],
-    }));
-    return [...regular, ...virtualNodes];
-  }, [storeNodes, viewModule, moduleInstances]);
+  const filteredNodes = useMemo(() => visibleNodes(storeNodes, moduleInstances, viewModule),
+    [storeNodes, viewModule, moduleInstances]);
 
   const filteredConnections = useMemo(() => visibleConnections(storeConnections, moduleInstances, viewModule),
     [storeConnections, viewModule, moduleInstances]);
@@ -170,14 +143,8 @@ export function FlowEditor({ onNodeSelect }: FlowEditorProps) {
   // Sync from filtered data — reads current active/selected via getState() to keep flags correct
   const viewKey = viewModule || '__root__';
   useEffect(() => {
-    if (storeNodes.length === 0 && !initializedViewsRef.current.has(viewKey)) return;
-
     const { activeNodeName: curActive, selectedNodeName: curSelected } = useEngineStore.getState();
-    let effActive = curActive;
-    if (!viewModule && curActive) {
-      const modInst = ownerOfNode(curActive, moduleInstances);
-      if (modInst) effActive = modInst.instanceName;
-    }
+    const effActive = visibleActiveNode(curActive, moduleInstances, viewModule);
 
     const innerStarts = new Set<string>();
     const endEventDescs = new Set<string>();
@@ -341,8 +308,8 @@ export function FlowEditor({ onNodeSelect }: FlowEditorProps) {
           await store.refreshGraph();
           store.setSelectedNode(null);
         } catch (e) {
-          await useEngineStore.getState().refreshGraph();
           message.error(e instanceof Error ? e.message : `Failed to delete node ${node.id}`);
+          await useEngineStore.getState().refreshGraph().catch(() => { /* graphError is displayed in the layout. */ });
         }
       }
     },
@@ -360,8 +327,7 @@ export function FlowEditor({ onNodeSelect }: FlowEditorProps) {
           message.error('Failed to delete connection');
         }
       }
-      const conns = await api.getConnections();
-      useEngineStore.getState().setConnections(conns);
+      await useEngineStore.getState().refreshGraph().catch(() => { /* graphError is displayed in the layout. */ });
     },
     [setEdges]
   );
@@ -371,31 +337,9 @@ export function FlowEditor({ onNodeSelect }: FlowEditorProps) {
       try {
         const store = useEngineStore.getState();
         const isModule = store.moduleInstances.some(m => m.instanceName === node.id);
-        if (isModule) {
-          await api.updateModuleInstancePosition(node.id, node.position.x, node.position.y);
-          const mods = store.moduleInstances;
-          const idx = mods.findIndex(m => m.instanceName === node.id);
-          if (idx >= 0) {
-            mods[idx] = { ...mods[idx], posX: Math.round(node.position.x), posY: Math.round(node.position.y) };
-            store.setModuleInstances([...mods]);
-          }
-        } else {
-          await api.updateNodePosition(node.id, node.position.x, node.position.y);
-          const isInternalModuleNode = !!ownerOfNode(node.id, store.moduleInstances);
-          if (isInternalModuleNode) {
-            const [nodes, mods, conns] = await Promise.all([api.getNodes(), api.getModuleInstances(), api.getConnections()]);
-            store.setNodes(nodes);
-            store.setModuleInstances(mods);
-            store.setConnections(conns);
-          } else {
-            const nodes = store.nodes;
-            const idx = nodes.findIndex(n => n.name === node.id);
-            if (idx >= 0) {
-              nodes[idx] = { ...nodes[idx], posX: Math.round(node.position.x), posY: Math.round(node.position.y) };
-              store.setNodes([...nodes]);
-            }
-          }
-        }
+        if (isModule) await api.updateModuleInstancePosition(node.id, node.position.x, node.position.y);
+        else await api.updateNodePosition(node.id, node.position.x, node.position.y);
+        await store.refreshGraph();
       } catch {
         message.error(`Failed to save position for node ${node.id}`);
       }
@@ -406,7 +350,9 @@ export function FlowEditor({ onNodeSelect }: FlowEditorProps) {
   const reactFlowInstance = useReactFlow();
   const visibleNodeIds = filteredNodes.map((n) => n.name).join('\n');
   useEffect(() => {
-    const timer = window.setTimeout(() => { void reactFlowInstance.fitView({ padding: 0.2 }); }, 100);
+    const timer = window.setTimeout(() => {
+      void reactFlowInstance.fitView({ padding: 0.2 }).catch(() => message.error('Cannot fit graph view'));
+    }, 100);
     return () => window.clearTimeout(timer);
   }, [visibleNodeIds, viewModule, reactFlowInstance]);
 

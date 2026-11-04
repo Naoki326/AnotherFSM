@@ -161,10 +161,9 @@ namespace StateMachine
 
             using (Observable
                 .FromEvent((v) => currentNode.RaisePause += v, (v) => currentNode.RaisePause -= v)
-                .Subscribe(_ => Pause()))
+                .Subscribe(_ => Pause(nodeRequested: true)))
             {
                 currentNode.ExecuterContext = SolverContext;
-                State = FSMState.Running;
 
                 IDisposable? groupNodeHandle = default;
                 if (currentNode is IObservable<StateTrackInfo> stateObs)
@@ -175,7 +174,15 @@ namespace StateMachine
                 {
                     if (isCreateNew)
                     { await currentNode.CreateNewAsync(); }
-                    isExit = await currentNode.RunAsync();
+                    if (State == FSMState.Stopping || State == FSMState.Stoped) return false;
+                    var running = currentNode.RunAsync();
+                    // RunAsync installs its token before external callers see Running.
+                    // A synchronous node may already have requested Pause or Finished.
+                    if (State == FSMState.Initialized || State == FSMState.Proceeding)
+                        State = FSMState.Running;
+                    if (Interlocked.Exchange(ref pendingPause, 0) != 0)
+                        Pause(nodeRequested: true);
+                    isExit = await running;
                 }
                 catch (Exception ex)
                 {
@@ -200,6 +207,8 @@ namespace StateMachine
             // 设定同步上下文
             SynchronizationContext? prevContext = null;
             FSMSyncContext executorContext = null!;
+            isLongRunning = isLongRunning && !System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(
+                System.Runtime.InteropServices.OSPlatform.Create("BROWSER"));
             if (isLongRunning)
             {
                 prevContext = SynchronizationContext.Current;
@@ -208,6 +217,10 @@ namespace StateMachine
                 await Task.Yield();
             }
 
+            // Yield to the host event loop, including single-thread browser WASM. A
+            // timer also prevents a graph of synchronous nodes starving UI controls.
+            await Task.Delay(1);
+            if (State == FSMState.Stopping || State == FSMState.Stoped) return;
             long threadId = Thread.CurrentThread.ManagedThreadId;
             eventAggregator.Subscribe(this);
             try
@@ -224,6 +237,8 @@ namespace StateMachine
                 {
                     while (eventConsumer.Reader.TryRead(out FSMEvent? @event))
                     {
+                        await Task.Delay(1);
+                        if (State == FSMState.Stopping || State == FSMState.Stoped) return;
                         if (@event.EventID == ContinueEvent.EventID)
                         {
                             //这里是暂停之后继续的分支
@@ -324,57 +339,13 @@ namespace StateMachine
             return GetEnumerator();
         }
 
-        public void Stop()
-        {
-            TrackCallname();
-            State = FSMState.Stopping;
-            _ = Task.Run(async () =>
-            {
-                using IDisposable state2Stop = Disposable.Create(() =>
-                {
-                    State = FSMState.Stoped;
-                });
-                while (eventConsumer.Reader.Count > 0)
-                { _ = eventConsumer.Reader.TryRead(out _); }
-                Exception e = default!;
-                if (currentNode != null && !currentNode.Context.IsPaused)
-                {
-                    currentNode.Context.Pause();
-                    try
-                    {
-                        await currentNode.WaitCurrentTask;
-                    }
-                    catch (Exception ex)
-                    {
-                        e = ex;
-                    }
-                }
-                while (eventConsumer.Reader.Count > 0)
-                { _ = eventConsumer.Reader.TryRead(out _); }
-                _ = eventConsumer.Writer.TryComplete();
-                if (ExecutorTask != null)
-                {
-                    try
-                    {
-                        await ExecutorTask;
-                    }
-                    catch (Exception ex)
-                    {
-                        if (e != null)
-                        {
-                            throw new FSMException($"WaitCurrentTask 等待异常. {e.Message}");
-                        }
-                        throw new FSMException($"NodeTask 等待异常. {ex.Message}");
-                    }
-                }
-            });
-            return;
-        }
+        public void Stop() => _ = StopAsync();
 
         public async Task<bool> StopAsync()
         {
             TrackCallname();
             State = FSMState.Stopping;
+            Interlocked.Exchange(ref pendingPause, 0);
             using IDisposable state2Stop = Disposable.Create(() =>
             {
                 State = FSMState.Stoped;
@@ -438,12 +409,14 @@ namespace StateMachine
 
             currentNode = start;
 
+            Interlocked.Exchange(ref pendingPause, 0);
             pausing = false;
             start.Context ??= new FSMNodeContext();
             eventConsumer = Channel.CreateUnbounded<FSMEvent>();
 
             InitNodes();
-            ExecutorTask = await Task.Factory.StartNew(() => ConsumerTask(isLongRunning));
+            State = FSMState.Initialized;
+            ExecutorTask = ConsumerTask(isLongRunning);
 
             return true;
         }
@@ -464,12 +437,14 @@ namespace StateMachine
 
             currentNode = node ?? throw new FSMException("开始节点不能为空！");
 
+            Interlocked.Exchange(ref pendingPause, 0);
             pausing = false;
             node.Context ??= new FSMNodeContext();
             eventConsumer = Channel.CreateUnbounded<FSMEvent>();
 
             InitNodes();
-            ExecutorTask = await Task.Factory.StartNew(() => ConsumerTask(isLongRunning));
+            State = FSMState.Initialized;
+            ExecutorTask = ConsumerTask(isLongRunning);
 
             return true;
         }
@@ -481,12 +456,29 @@ namespace StateMachine
         }
 
         private bool pausing = false;
+        private int pendingPause;
 
         //暂停，不等待返回
-        public void Pause()
+        public void Pause() => Pause(nodeRequested: false);
+
+        private void Pause(bool nodeRequested)
         {
             TrackCallname();
-            if (currentNode.Context.IsPaused || pausing || (State != FSMState.Running && State != FSMState.Proceeding))
+            if (!nodeRequested && State == FSMState.Initialized)
+            {
+                // A parent Group can cancel after the child's enter notification but
+                // before RunAsync installs its token. Canceling the old token loses
+                // that request, so deliver it after the synchronous RunAsync prefix.
+                Interlocked.Exchange(ref pendingPause, 1);
+                if (State == FSMState.Initialized) return;
+                // Startup may have crossed into Running while we queued the request.
+                // Either this caller or RunCurrentNodeAsync must deliver it, not both.
+                if (Interlocked.Exchange(ref pendingPause, 0) == 0) return;
+            }
+            // An initial node can raise Pause synchronously inside RunAsync, after
+            // its token is installed but before Running is announced externally.
+            if (currentNode.Context.IsPaused || pausing || (State != FSMState.Running && State != FSMState.Proceeding
+                && !(nodeRequested && State == FSMState.Initialized)))
             { return; }
             State = FSMState.Pausing;
             pausing = true;
@@ -573,27 +565,15 @@ namespace StateMachine
                 {
                     eventAggregator.Unsubscribe(this);
                     _ = eventConsumer.Writer.TryComplete();
+                    currentNode?.Context?.Pause();
                     stateTrackObservable.OnCompleted();
                     executeTrackObservable.OnCompleted();
                     eventLoopScheduler.Dispose();
                 }
-                if (ExecutorTask != null)
-                {
-                    try
-                    {
-                        ExecutorTask.Wait();
-                    }
-                    catch (Exception)
-                    {
-                    }
-                    ExecutorTask.Dispose();
-                    //executorContext.Dispose();
-                }
-
-                // TODO: 将大型字段设置为 null
-                eventConsumer = default!;
-                ExecutorTask = default!;
-                //executorContext = default!;
+                // Never synchronously wait on an async consumer: browser WASM has
+                // only this event-loop thread. The completed writer and canceled node
+                // let it unwind cooperatively; retain its channel until it has done so.
+                // Task.Dispose is unnecessary (and invalid while still running).
 
                 disposedValue = true;
             }

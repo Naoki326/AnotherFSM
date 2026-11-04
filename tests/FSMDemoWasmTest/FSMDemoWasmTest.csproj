@@ -13,10 +13,7 @@
     <PackageReference Include="xunit" Version="2.5.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
     <PackageReference Include="FluentAssertions" Version="6.12.2" />
-    <ProjectReference Include="../../demos/DemoNodes/DemoNodes.csproj" />
-    <!-- Test the real browser services on the host, without a browser-wasm test runner. -->
-    <Compile Include="../../demos/FSMDemo.Wasm/Services/DemoRuntime.cs" Link="Services/DemoRuntime.cs" />
-    <Compile Include="../../demos/FSMDemo.Wasm/Services/BrowserNodeFactory.cs" Link="Services/BrowserNodeFactory.cs" />
+    <ProjectReference Include="../../demos/FSMDemo.Runtime/FSMDemo.Runtime.csproj" />
     <Using Include="Xunit" />
     <Using Include="FluentAssertions" />
   </ItemGroup>

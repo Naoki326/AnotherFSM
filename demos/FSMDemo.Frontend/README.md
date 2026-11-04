@@ -4,7 +4,7 @@
 
 ## 启动与验证
 
-先启动 `demos/FSMDemo.API`（HTTP `http://localhost:5079`），然后在本目录执行：
+默认 `VITE_RUNTIME_MODE=api`。先启动 `demos/FSMDemo.API`（HTTP `http://localhost:5079`，可用 `VITE_API_URL` 配置 origin），然后在本目录执行：
 
 ```sh
 npm ci --include=dev
@@ -20,7 +20,28 @@ npm test
 npm run build
 ```
 
-测试使用 Node 原生 TypeScript 支持（Node 22.18+ / 24+），覆盖公开接口选择、多入口身份、双实例限定事件、发布者边去重、内部模板边界、普通节点和 HTTP 请求合同。
+测试使用 Node 原生 TypeScript 支持（Node 22.18+ / 24+），覆盖公开接口选择、多入口身份、双实例限定事件、发布者边去重、内部模板边界、普通同前缀节点、执行高亮投影和 HTTP 请求合同。真实 API/WASM 共用合同由 Release 浏览器测试验证。
+
+## 统一运行时
+
+`src/runtime/types.ts` 定义 `EditorRuntime`：`initialize`、`subscribe`、`dispose` 和全部 25 项编辑/执行操作。组件与 Zustand 只使用此合同，不直接访问 fetch、SignalR 或 .NET。
+
+```ts
+import { createApiRuntime } from './src/runtime/apiRuntime';
+import { createWasmRuntime } from './src/runtime/wasmRuntime';
+
+const runtime = createApiRuntime('http://localhost:5079');
+// 或 createWasmRuntime('/AnotherFSM/')；默认使用 import.meta.env.BASE_URL。
+const unsubscribe = runtime.subscribe(event => console.log(event));
+await runtime.initialize();
+await runtime.getNodes();
+unsubscribe();
+await runtime.dispose();
+```
+
+启动时设置 `VITE_RUNTIME_MODE=wasm` 可选择浏览器本地运行，发布目录须包含 `FSMDemo.Browser` 的 `_framework/` 产物。页面顶部始终显示当前模式和初始化 loading/error/retry；WASM 失败不会回退 API。API 模式的 SignalR 建连/订阅失败同样作为初始化错误显示。初始化成功后点击原有 **Demo** 入口加载 `src/demo.fsm`。
+
+WASM 保留已创建的 .NET runtime，`dispose` 只释放 session；生命周期调用串行化以兼容 React StrictMode。图刷新与导入有失效保护，停止/导入会取消旧高亮定时器；刷新失败在页面显示并可重试。
 
 ## 导入 → 创建实例 → 接线 → 导出 → 再导入
 

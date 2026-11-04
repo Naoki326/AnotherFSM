@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <WasmBuildNative>false</WasmBuildNative>
+    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../FSMDemo.Runtime/FSMDemo.Runtime.csproj" />
+    <!-- DSL node/property and graph DTO reflection is intentional. Keep only our
+         business assemblies, while the platform libraries are Release-trimmed. -->
+    <TrimmerRootAssembly Include="AnotherFSM" />
+    <TrimmerRootAssembly Include="DemoNodes" />
+    <TrimmerRootAssembly Include="FSMDemo.Runtime" />
+  </ItemGroup>
+</Project>

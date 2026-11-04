@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Alert, AutoComplete, Form, Modal, Select, message } from 'antd';
 import type { ConnectionDto } from '../../api/types';
-import { api } from '../../api/client';
+import { runtime } from '../../runtime';
 import { useEngineStore } from '../../stores/engineStore';
 import { connectionTargets, ownerOfNode, validateConnection } from './moduleGraph';
 
@@ -28,7 +28,7 @@ export function ConnectionDialog({ initial, onClose }: { initial: Partial<Connec
     try {
       const connection = validateConnection({ fromNodeName: source ?? '', toNodeName: target ?? '', eventName: event }, nodes, modules, view);
       setSaving(true);
-      await api.createConnection(connection);
+      await runtime.createConnection(connection);
       await useEngineStore.getState().refreshGraph();
       message.success('Connection created');
       onClose();

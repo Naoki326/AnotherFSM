@@ -1,19 +1,30 @@
-import { Layout as AntLayout, message } from 'antd';
+import { Alert, Button, Layout as AntLayout, Spin, Tag } from 'antd';
 import { ReactFlowProvider } from '@xyflow/react';
 import { ExecutionToolbar } from '../ExecutionToolbar/ExecutionToolbar';
 import { FlowEditor } from '../FlowEditor/FlowEditor';
 import { NodePalette } from '../NodePalette/NodePalette';
 import { PropertyPanel } from '../PropertyPanel/PropertyPanel';
-import { useSignalR } from '../../hooks/useSignalR';
+import { useRuntimeEvents } from '../../hooks/useRuntimeEvents';
+import { runtimeConfigurationError, runtimeMode } from '../../runtime/index';
 import { useEngineStore } from '../../stores/engineStore';
 import { useCallback, useEffect } from 'react';
 
 const { Sider, Content } = AntLayout;
 
 export function AppLayout() {
-  useSignalR();
+  useRuntimeEvents();
+  const phase = useEngineStore((s) => s.runtimePhase);
+  const runtimeError = useEngineStore((s) => s.runtimeError);
+  const graphError = useEngineStore((s) => s.graphError);
+  const importing = useEngineStore((s) => s.importing);
+  const retry = useCallback(async () => {
+    await useEngineStore.getState().releaseRuntime();
+    await useEngineStore.getState().initializeRuntime();
+  }, []);
   useEffect(() => {
-    void useEngineStore.getState().refreshGraph().catch((e) => message.error(`Cannot load graph: ${e.message}`));
+    if (runtimeConfigurationError) return;
+    void useEngineStore.getState().initializeRuntime();
+    return () => { void useEngineStore.getState().releaseRuntime(); };
   }, []);
 
   const handleNodeSelect = useCallback((nodeName: string | null) => {
@@ -34,11 +45,16 @@ export function AppLayout() {
         }}
       >
         <div style={{ fontWeight: 600, fontSize: 18, padding: '7px 0' }}>
-          AnotherFSM Editor
+          AnotherFSM Editor <Tag aria-label="Runtime mode">{runtimeMode.toUpperCase()}</Tag>
         </div>
-        <ExecutionToolbar />
+        {(runtimeConfigurationError || runtimeError) && <Alert type="error" showIcon title={runtimeConfigurationError || runtimeError}
+          action={!runtimeConfigurationError && <Button onClick={() => { void retry(); }}>Retry initialization</Button>} />}
+        {phase === 'loading' && !runtimeConfigurationError && <div role="status"><Spin size="small" /> Initializing runtime…</div>}
+        {graphError && phase === 'ready' && <Alert type="error" showIcon title={`Cannot refresh graph: ${graphError}`}
+          action={<Button onClick={() => { void useEngineStore.getState().refreshGraph().catch(() => { /* Error is displayed above. */ }); }}>Retry refresh</Button>} />}
+        {phase === 'ready' && <ExecutionToolbar />}
       </AntLayout.Header>
-      <AntLayout>
+      {phase === 'ready' && <AntLayout style={importing ? { pointerEvents: 'none', opacity: 0.6 } : undefined} aria-busy={importing}>
         <Sider
           width={200}
           style={{ background: '#fff', borderRight: '1px solid #f0f0f0', padding: 8 }}
@@ -56,7 +72,7 @@ export function AppLayout() {
         >
           <PropertyPanel />
         </Sider>
-      </AntLayout>
+      </AntLayout>}
     </AntLayout>
   );
 }

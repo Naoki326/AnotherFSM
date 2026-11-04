@@ -5,6 +5,9 @@ public partial class FSMEngine
     internal Dictionary<string, FsmModuleInfo> moduleRegistry = new(StringComparer.OrdinalIgnoreCase);
     internal Dictionary<string, FsmModuleInstance> moduleInstances = new(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>Hosts without a filesystem can reject external module discovery explicitly.</summary>
+    public bool AllowExternalModuleFiles { get; set; } = true;
+
     public IReadOnlyDictionary<string, FsmModuleInstance> ModuleInstances => moduleInstances;
     public FsmModuleInterfaceResolver ModuleInterfaces => new(moduleInstances, nodeDict, eventDict);
 
@@ -24,7 +27,16 @@ public partial class FSMEngine
     }
 
     public void RegisterModuleByFile(string moduleName, string filePath)
-        => RegisterModule(moduleName, File.ReadAllText(filePath), Path.GetDirectoryName(filePath));
+    {
+        EnsureExternalModuleFilesAllowed(moduleName);
+        RegisterModule(moduleName, File.ReadAllText(filePath), Path.GetDirectoryName(filePath));
+    }
+
+    private void EnsureExternalModuleFilesAllowed(string moduleName)
+    {
+        if (!AllowExternalModuleFiles)
+            throw new ScriptException($"Browser runtime: external module files are not supported ('{moduleName}'); include the Module definition in the script.");
+    }
 
     public bool TryGetModule(string moduleName, out FsmModuleInfo moduleInfo)
         => moduleRegistry.TryGetValue(moduleName, out moduleInfo);
@@ -39,6 +51,7 @@ public partial class FSMEngine
         {
             if (!moduleRegistry.TryGetValue(moduleName, out var info))
             {
+                EnsureExternalModuleFilesAllowed(moduleName);
                 var path = Path.Combine(directoryPath, moduleName + ".fsm");
                 if (!File.Exists(path)) throw new ScriptException($"Module file not found: {path}");
                 RegisterModuleByFile(moduleName, path);

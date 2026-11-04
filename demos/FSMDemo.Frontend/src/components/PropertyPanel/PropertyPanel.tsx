@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { Card, Descriptions, Tag, Button, Space, Popconfirm, Input, message } from 'antd';
 import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
 import { useEngineStore } from '../../stores/engineStore';
-import { api } from '../../api/client';
+import { runtime as api } from '../../runtime';
 import type { ConnectionDto, GroupDef } from '../../api/types';
 
 import { connectionEdgeId, ownerOfNode } from '../FlowEditor/moduleGraph';
@@ -68,8 +68,7 @@ export function PropertyPanel() {
       const newName = prompt('New event name:', conn.eventName);
       if (newName && newName !== conn.eventName) {
         await api.renameConnection(conn.fromNodeName, conn.toNodeName, newName, conn.eventName);
-        const conns = await api.getConnections();
-        useEngineStore.getState().setConnections(conns);
+        await useEngineStore.getState().refreshGraph();
         message.success('Connection renamed');
       }
     } catch {
@@ -80,8 +79,7 @@ export function PropertyPanel() {
   const handleDeleteConnection = useCallback(async (conn: ConnectionDto) => {
     try {
       await api.deleteConnection(conn.fromNodeName, conn.toNodeName, conn.eventName);
-      const conns = await api.getConnections();
-      useEngineStore.getState().setConnections(conns);
+      await useEngineStore.getState().refreshGraph();
       useEngineStore.getState().setSelectedEdge(null);
       message.success('Connection deleted');
     } catch {
@@ -124,10 +122,7 @@ export function PropertyPanel() {
     const handleDeleteModule = async () => {
       try {
         await api.deleteModuleInstance(selectedModule.instanceName);
-        const [nodes, mods, conns] = await Promise.all([api.getNodes(), api.getModuleInstances(), api.getConnections()]);
-        useEngineStore.getState().setNodes(nodes);
-        useEngineStore.getState().setModuleInstances(mods);
-        useEngineStore.getState().setConnections(conns);
+        await useEngineStore.getState().refreshGraph();
         useEngineStore.getState().setSelectedNode(null);
         message.success(`Deleted module instance: ${selectedModule.instanceName}`);
       } catch {

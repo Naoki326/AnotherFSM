@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { ModuleInstance, NodeInfo } from '../src/api/types.ts';
-import { connectionEdgeId, connectionTargets, nextInstanceName, targetEndpoint, validateConnection, visibleConnections } from '../src/components/FlowEditor/moduleGraph.ts';
-import { api } from '../src/api/client.ts';
+import { connectionEdgeId, connectionTargets, nextInstanceName, targetEndpoint, validateConnection, visibleConnections, visibleNodes, visibleActiveNode } from '../src/components/FlowEditor/moduleGraph.ts';
+import { createApiRuntime } from '../src/runtime/apiRuntime.ts';
 
 const node = (name: string): NodeInfo => ({ name, classType: 'Idle', posX: 0, posY: 0, color: '', flowID: '', eventDescriptions: [{ index: 1, description: 'Next' }] });
 const instance = (name: string, multi = false): ModuleInstance => ({
@@ -55,7 +55,48 @@ test('ordinary nodes keep event connections and colliding instance names are ski
   assert.equal(nextInstanceName('Checker', [instance('Checker1'), instance('Checker3')], [node('Checker2')]), 'Checker4');
 });
 
+test('Root and Module views project only real members, not ordinary same-prefix nodes (legacy DemoRuntime projection)', () => {
+  const a = instance('A', true);
+  const allNodes = [node('Start'), node('A.Observer'), ...a.internalNodeNames.map(node), node('End')];
+  assert.deepEqual(visibleNodes(allNodes, [a], null).map((n) => n.name), ['Start', 'A.Observer', 'End', 'A']);
+  assert.deepEqual(visibleNodes(allNodes, [a], 'A').map((n) => n.name), ['A.Entry', 'A.Retry', 'A.Private']);
+  assert.equal(visibleActiveNode('A.Observer', [a], null), 'A.Observer');
+  assert.equal(visibleActiveNode('A.Observer', [a], 'A'), null);
+  assert.equal(visibleActiveNode('A.Retry', [a], null), 'A');
+  assert.equal(visibleActiveNode('A.Retry', [a], 'A'), 'A.Retry');
+  assert.equal(visibleActiveNode(null, [a], null), null);
+  assert.deepEqual(visibleNodes([node('A.Observer'), node('End')], [], null).map((n) => n.name), ['A.Observer', 'End']);
+});
+
+test('legacy DemoRuntime connection projection keeps ordinary same-prefix nodes outside Module views', () => {
+  const a = instance('A', true);
+  const launch = { fromNodeName: 'Start', toNodeName: 'A.Retry', eventName: 'Launch' };
+  const output = { fromNodeName: 'A', toNodeName: 'End', eventName: 'A.OK' };
+  const observer = { fromNodeName: 'A.Observer', toNodeName: 'End', eventName: 'Observe' };
+  const ordinary = { fromNodeName: 'A.Source', toNodeName: 'A.Observer', eventName: 'Send' };
+  const internal = { fromNodeName: 'A.Entry', toNodeName: 'A.Retry', eventName: 'A.Next' };
+  const connections = [launch, output, observer, ordinary, internal];
+  assert.deepEqual(visibleConnections(connections, [a], null), [launch, output, observer, ordinary]);
+  assert.deepEqual(visibleConnections(connections, [a], 'A'), [internal]);
+});
+
+test('legacy DemoRuntime demo projects both Checker instances and their internal transitions', () => {
+  const checkers = ['CheckA', 'CheckB'].map((name) => ({ ...instance(name),
+    internalNodeNames: [`${name}.Entry`, `${name}.Exit`] }));
+  const demoNodes = [node('Start'), node('End'), node('ErrorEnd'),
+    ...checkers.flatMap((m) => m.internalNodeNames.map(node))];
+  const internal = checkers.map((m) => ({ fromNodeName: `${m.instanceName}.Entry`,
+    toNodeName: `${m.instanceName}.Exit`, eventName: `${m.instanceName}.NextEvent` }));
+  assert.deepEqual(visibleNodes(demoNodes, checkers, null).map((n) => n.name), ['Start', 'End', 'ErrorEnd', 'CheckA', 'CheckB']);
+  assert.deepEqual(visibleNodes(demoNodes, checkers, 'CheckA').map((n) => n.name), ['CheckA.Entry', 'CheckA.Exit']);
+  assert.deepEqual(visibleNodes(demoNodes, checkers, 'CheckB').map((n) => n.name), ['CheckB.Entry', 'CheckB.Exit']);
+  assert.deepEqual(visibleConnections(internal, checkers, null), []);
+  assert.deepEqual(visibleConnections(internal, checkers, 'CheckA'), [internal[0]]);
+  assert.deepEqual(visibleConnections(internal, checkers, 'CheckB'), [internal[1]]);
+});
+
 test('HTTP client sends canonical interface names for create/delete and reports API export refusals', async () => {
+  const api = createApiRuntime('http://localhost:5079');
   const previous = globalThis.fetch;
   const calls: { url: string; method: string; body: unknown }[] = [];
   globalThis.fetch = async (url, init) => {

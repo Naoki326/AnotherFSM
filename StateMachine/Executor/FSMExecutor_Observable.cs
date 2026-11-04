@@ -5,6 +5,7 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace StateMachine
 {
@@ -59,12 +60,16 @@ namespace StateMachine
 
         IDisposable IObservable<StateTrackInfo>.Subscribe(IObserver<StateTrackInfo> observer)
         {
-            return stateTrackObservable.ObserveOn(eventLoopScheduler).Subscribe(observer);
+            return RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER"))
+                ? stateTrackObservable.Subscribe(observer)
+                : stateTrackObservable.ObserveOn(eventLoopScheduler).Subscribe(observer);
         }
 
         IDisposable IObservable<ExecuteTrackInfo>.Subscribe(IObserver<ExecuteTrackInfo> observer)
         {
-            return executeTrackObservable.ObserveOn(eventLoopScheduler).Subscribe(observer);
+            return RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER"))
+                ? executeTrackObservable.Subscribe(observer)
+                : executeTrackObservable.ObserveOn(eventLoopScheduler).Subscribe(observer);
         }
 
         public event EventHandler<string>? NodeStateChanged;

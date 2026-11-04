@@ -8,6 +8,21 @@ export function ownerOfNode(name: string, modules: ModuleInstance[]) {
   return modules.find((m) => m.internalNodeNames.includes(name));
 }
 
+export function visibleNodes(nodes: NodeInfo[], modules: ModuleInstance[], view: string | null): NodeInfo[] {
+  if (view) return nodes.filter((n) => ownerOfNode(n.name, modules)?.instanceName === view);
+  return [
+    ...nodes.filter((n) => !ownerOfNode(n.name, modules)),
+    ...modules.map((m) => ({ name: m.instanceName, classType: m.moduleName, color: m.color,
+      posX: m.posX, posY: m.posY, flowID: m.flowID, eventDescriptions: [] })),
+  ];
+}
+
+export function visibleActiveNode(name: string | null, modules: ModuleInstance[], view: string | null): string | null {
+  if (!name) return null;
+  const owner = ownerOfNode(name, modules);
+  return view ? (owner?.instanceName === view ? name : null) : (owner?.instanceName ?? name);
+}
+
 export function targetEndpoint(name: string, modules: ModuleInstance[]) {
   for (const m of modules) {
     const inputs = Object.keys(m.publicInputs);

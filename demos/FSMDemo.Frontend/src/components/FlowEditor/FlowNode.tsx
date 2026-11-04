@@ -1,7 +1,7 @@
 import { memo, useCallback, useEffect } from 'react';
 import { Handle, Position, useUpdateNodeInternals, type NodeProps } from '@xyflow/react';
 import { useEngineStore } from '../../stores/engineStore';
-import { api } from '../../api/client';
+import { runtime as api } from '../../runtime';
 import { message } from 'antd';
 import type { GroupDef } from '../../api/types';
 
@@ -64,15 +64,7 @@ export const FlowNode = memo(({ data, id }: NodeProps) => {
     async (index: number, newDesc: string) => {
       try {
         await api.updateNodeEvent(id, index, newDesc);
-        const [nodes, modules, connections] = await Promise.all([
-          api.getNodes(),
-          api.getModuleInstances(),
-          api.getConnections(),
-        ]);
-        const store = useEngineStore.getState();
-        store.setNodes(nodes);
-        store.setModuleInstances(modules);
-        store.setConnections(connections);
+        await useEngineStore.getState().refreshGraph();
       } catch {
         message.error('Failed to update event');
       }
@@ -87,8 +79,7 @@ export const FlowNode = memo(({ data, id }: NodeProps) => {
         const newDefs = [...current];
         newDefs[index] = { ...newDefs[index], [field]: value };
         await api.updateGroupDefs(id, newDefs);
-        const nodes = await api.getNodes();
-        useEngineStore.getState().setNodes(nodes);
+        await useEngineStore.getState().refreshGraph();
       } catch {
         message.error('Failed to update group definition');
       }
@@ -99,6 +90,7 @@ export const FlowNode = memo(({ data, id }: NodeProps) => {
   return (
     <div>
       <div
+        aria-current={isActive ? 'step' : undefined}
         style={{
           padding: '10px 16px',
           borderRadius: isGroupNode ? 10 : isModuleInstance ? 8 : 6,

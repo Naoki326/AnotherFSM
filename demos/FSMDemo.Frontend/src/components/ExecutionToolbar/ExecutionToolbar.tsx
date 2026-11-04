@@ -12,7 +12,7 @@ import {
   HistoryOutlined,
 } from '@ant-design/icons';
 import { useEngineStore } from '../../stores/engineStore';
-import { api } from '../../api/client';
+import { runtime } from '../../runtime';
 
 import DEMO_SCRIPT from '../../demo.fsm?raw';
 
@@ -20,6 +20,7 @@ export function ExecutionToolbar() {
   const execution = useEngineStore((s) => s.execution);
   const nodes = useEngineStore((s) => s.nodes);
   const executionLog = useEngineStore((s) => s.executionLog);
+  const busy = useEngineStore((s) => s.importing);
 
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [exportScript, setExportScript] = useState('');
@@ -29,10 +30,10 @@ export function ExecutionToolbar() {
   const [importing, setImporting] = useState(false);
 
   const state = execution.state;
-  const canStart = state === 'Idle' || state === 'Finished';
-  const canPause = state === 'Running';
-  const canContinue = state === 'Paused';
-  const canStop = state === 'Running' || state === 'Paused';
+  const canStart = !busy && (state === 'Idle' || state === 'Finished');
+  const canPause = !busy && state === 'Running';
+  const canContinue = !busy && state === 'Paused';
+  const canStop = !busy && (state === 'Running' || state === 'Paused');
   const recentExecutionLog = executionLog.slice(-10);
 
   const handleStart = useCallback(async () => {
@@ -42,13 +43,11 @@ export function ExecutionToolbar() {
     }
     try {
       const store = useEngineStore.getState();
-      store.clearExecutionLog();
-      store.setActiveNode(null);
-      store.setActiveTransition(null);
-      await api.startExecution('Start', 'EndEvent');
-      useEngineStore.getState().setExecution({ state: 'Running' });
-    } catch {
-      message.error('Failed to start execution');
+      store.resetExecution();
+      await runtime.startExecution('Start', 'EndEvent');
+      await store.refreshExecution();
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : 'Failed to start execution');
     }
   }, [nodes]);
 
@@ -68,7 +67,7 @@ export function ExecutionToolbar() {
 
   const handleExport = useCallback(async () => {
     try {
-      const script = await api.exportScript();
+      const script = await runtime.exportScript();
       setExportScript(script);
       setExportModalOpen(true);
     } catch (e) {
@@ -102,25 +101,31 @@ export function ExecutionToolbar() {
         <Space size="small">
           <Button size="small" icon={<PlayCircleOutlined />} onClick={handleStart} disabled={!canStart} type="primary">Start</Button>
           <Button size="small" icon={<PauseCircleOutlined />} onClick={async () => {
-            await api.pauseExecution();
-            useEngineStore.getState().setExecution({ ...execution, state: 'Paused' });
+            try {
+              await runtime.pauseExecution();
+              await useEngineStore.getState().refreshExecution();
+            } catch (error) { message.error(error instanceof Error ? error.message : 'Pause failed'); }
           }} disabled={!canPause}>Pause</Button>
           <Button size="small" icon={<CaretRightOutlined />} onClick={async () => {
-            await api.continueExecution();
-            useEngineStore.getState().setExecution({ ...execution, state: 'Running' });
+            try {
+              await runtime.continueExecution();
+              await useEngineStore.getState().refreshExecution();
+            } catch (error) { message.error(error instanceof Error ? error.message : 'Continue failed'); }
           }} disabled={!canContinue}>Continue</Button>
           <Button size="small" icon={<StopOutlined />} onClick={async () => {
-            await api.stopExecution();
-            useEngineStore.getState().setExecution({ state: 'Idle' });
+            try {
+              await useEngineStore.getState().stopExecution();
+              await useEngineStore.getState().refreshExecution();
+            } catch (error) { message.error(error instanceof Error ? error.message : 'Stop failed'); }
           }} disabled={!canStop} danger>Stop</Button>
         </Space>
 
         <div style={{ width: 1, height: 16, background: '#d9d9d9', margin: '0 6px' }} />
 
         <Space size="small">
-          <Button size="small" icon={<ExperimentOutlined />} onClick={handleLoadDemo}>Demo</Button>
-          <Button size="small" icon={<ImportOutlined />} onClick={() => { setImportError(''); setImportModalOpen(true); }}>Import</Button>
-          <Button size="small" icon={<ExportOutlined />} onClick={handleExport}>Export</Button>
+          <Button size="small" icon={<ExperimentOutlined />} onClick={handleLoadDemo} disabled={busy}>Demo</Button>
+          <Button size="small" icon={<ImportOutlined />} onClick={() => { setImportError(''); setImportModalOpen(true); }} disabled={busy}>Import</Button>
+          <Button size="small" icon={<ExportOutlined />} onClick={handleExport} disabled={busy}>Export</Button>
         </Space>
 
         <div style={{ width: 1, height: 16, background: '#d9d9d9', margin: '0 6px' }} />
@@ -166,7 +171,9 @@ export function ExecutionToolbar() {
         <p>Paste new DSL or choose a file. Import replaces the current graph. Module Instances use use … as … and qualified Output events.</p>
         <input aria-label="Import script file" type="file" accept=".fsm,.txt" onChange={async (e) => {
           const file = e.target.files?.[0];
-          if (file) setImportScript(await file.text());
+          try {
+            if (file) setImportScript(await file.text());
+          } catch (error) { setImportError(error instanceof Error ? error.message : 'Cannot read file'); }
           e.target.value = '';
         }} />
         <Input.TextArea aria-label="FSM script" value={importScript} onChange={(e) => setImportScript(e.target.value)}

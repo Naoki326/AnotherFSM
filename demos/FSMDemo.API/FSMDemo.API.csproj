@@ -11,8 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\StateMachine\StateMachine.csproj" />
-    <ProjectReference Include="..\DemoNodes\DemoNodes.csproj" />
+    <ProjectReference Include="..\FSMDemo.Runtime\FSMDemo.Runtime.csproj" />
   </ItemGroup>
 
 </Project>

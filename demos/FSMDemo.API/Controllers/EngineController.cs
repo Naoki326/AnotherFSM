@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using FSMDemo.API.Hubs;
-using FSMDemo.API.Services;
+using FSMDemo.Runtime;
 
 namespace FSMDemo.API.Controllers;
 
@@ -54,7 +54,7 @@ public class EngineController : ControllerBase
     {
         try
         {
-            _engineManager.Import(request.Script);
+            await _engineManager.ImportAsync(request.Script);
             await _hubContext.Clients.Group("Execution").SendAsync("EngineImported");
             return Ok(_engineManager.GetStatus());
         }

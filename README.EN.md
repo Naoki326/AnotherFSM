@@ -26,7 +26,8 @@ Additionally, a state machine DSL has been introduced to quickly build state mac
 | **StateMachine** | Core library, based on .NET Standard 2.0, fully functional and usable independently |
 | **FSMDemo.API** | Web visual editor backend, ASP.NET Core Web API + SignalR |
 | **FSMDemo.Frontend** | Web visual editor frontend, React + xyflow + Ant Design |
-| **FSMDemo.Wasm** | Browser WASM demo, based on Blazor WebAssembly, runs state machines in-browser without a backend |
+| **FSMDemo.Runtime** | Shared C# graph editing, DSL import/export and execution for API and browser hosts |
+| **FSMDemo.Browser** | .NET WASM host without a Blazor UI, used by the same React editor |
 | **DemoNodes** | Demo custom node collection |
 | **FSMScriptAnalyzer** / **FSMNodeAnalyzer** | Antlr4-based script/node analyzers |
 | **FSMScriptAnalyzerTest** / **FSMNodeAnalyzerTest** | Analyzer test projects |
@@ -36,7 +37,7 @@ Additionally, a state machine DSL has been introduced to quickly build state mac
 - **StateMachine** is based on **.NET Standard 2.0**, can be used independently without UI dependencies
 - **FSMDemo.API** is based on **.NET 10**, providing RESTful API and SignalR real-time communication
 - **FSMDemo.Frontend** is built with React + [xyflow](https://github.com/xyflow/xyflow) + [Ant Design](https://ant.design/), using [dagre](https://github.com/dagrejs/dagre) for auto-layout and [zustand](https://github.com/pmndrs/zustand) for state management, providing a flowchart visual editor with execution control
-- **FSMDemo.Wasm** is based on **Blazor WebAssembly**, runs the state machine demo directly in the browser (no backend required)
+- **FSMDemo.Browser** uses **.NET 10 WebAssembly** and JavaScript interop to execute C# in-browser without a business backend. The old Blazor application is removed; both modes use one React UI. See [ADR-0003](docs/adr/0003-react-browser-runtime.md).
 
 ### References
 
@@ -60,10 +61,18 @@ just dev
 just api        # Start API server (port 5079)
 just frontend   # Start frontend dev server (port 5174)
 
-# Browser WASM demo (no backend required)
-just wasm       # Start WASM demo (port 5180)
-just build-wasm # Publish WASM demo (for GitHub Pages)
+# Full React WASM editor (no business backend)
+just wasm       # Build Release and serve static assets on port 5180
+just build-wasm # Publish to release/wwwroot for GitHub Pages
+just test-browser # API/real WASM browser contracts and UI regression
 ```
+
+Prerequisites: .NET 10 SDK, Node.js 22.18+ (or 24+), npm, and a JDK for ANTLR generation. Run `npm ci --prefix demos/FSMDemo.Frontend` first. Use Git Bash on Windows.
+
+- API development defaults to `api` mode; configure its origin with `VITE_API_URL` (default `http://localhost:5079`).
+- `just build-wasm` explicitly selects `wasm`. The default base path is `/AnotherFSM/`; visit `http://127.0.0.1:5180/AnotherFSM/`. Set `VITE_BASE_PATH` for another hosting path, starting and ending with `/`.
+- Browser mode supports self-contained DSL, inline Module definitions and browser-safe built-in/Demo nodes. Server filesystem discovery, dynamic plugins and device nodes fail explicitly.
+- See [runtime development notes](docs/react-runtime.md) for builds, capability coverage and browser verification.
 
 ### Simple Usage Tutorial (StateMachine project only)
 

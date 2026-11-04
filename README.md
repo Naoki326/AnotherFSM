@@ -26,7 +26,8 @@ AnotherFSM 是一个**基于有限状态机、快速构建流程的工具库**�
 | **StateMachine** | 核心库，基于 .NET Standard 2.0，功能完整可独立使用 |
 | **FSMDemo.API** | Web 可视化编辑器后端，ASP.NET Core Web API + SignalR |
 | **FSMDemo.Frontend** | Web 可视化编辑器前端，React + xyflow + Ant Design |
-| **FSMDemo.Wasm** | 浏览器内 WASM Demo，基于 Blazor WebAssembly，无需后端即可在浏览器中运行状态机 |
+| **FSMDemo.Runtime** | API 与浏览器共用的 C# 图编辑、DSL 导入导出和执行行为 |
+| **FSMDemo.Browser** | 无 Blazor UI 的 .NET WASM 宿主，供同一 React 编辑器在浏览器内运行 |
 | **DemoNodes** | 演示用自定义节点集合 |
 | **FSMScriptAnalyzer** / **FSMNodeAnalyzer** | 基于 Antlr4 的脚本/节点分析器 |
 | **FSMScriptAnalyzerTest** / **FSMNodeAnalyzerTest** | 分析器测试项目 |
@@ -36,7 +37,7 @@ AnotherFSM 是一个**基于有限状态机、快速构建流程的工具库**�
 - **StateMachine** 项目基于 **.NET Standard 2.0**，可独立使用，无界面依赖
 - **FSMDemo.API** 基于 **.NET 10**，提供 RESTful API 和 SignalR 实时通信
 - **FSMDemo.Frontend** 基于 React + [xyflow](https://github.com/xyflow/xyflow) + [Ant Design](https://ant.design/) 构建，使用 [dagre](https://github.com/dagrejs/dagre) 自动布局，[zustand](https://github.com/pmndrs/zustand) 管理状态，提供流程图可视化编辑与执行控制界面
-- **FSMDemo.Wasm** 基于 **Blazor WebAssembly**，可在浏览器中直接运行状态机 Demo（无需后端服务）
+- **FSMDemo.Browser** 使用 **.NET 10 WebAssembly** 与 JavaScript 互操作，在浏览器内执行 C#，无需业务后端；旧 Blazor 应用已删除。两种模式共用同一 React UI，见 [ADR-0003](docs/adr/0003-react-browser-runtime.md)。
 
 ### 引用
 
@@ -60,10 +61,18 @@ just dev
 just api        # 启动 API 服务（端口 5079）
 just frontend   # 启动前端开发服务器（端口 5174）
 
-# 浏览器内 WASM Demo（无需后端）
-just wasm       # 启动 WASM Demo（端口 5180）
-just build-wasm # 发布 WASM Demo（用于 GitHub Pages）
+# 完整 React WASM 编辑器（无需业务后端）
+just wasm       # 构建 Release 并在端口 5180 提供静态站点
+just build-wasm # 发布到 release/wwwroot，用于 GitHub Pages
+just test-browser # API/真实 WASM 的浏览器合同及 UI 回归
 ```
+
+前置条件：.NET 10 SDK、Node.js 22.18+（或 24+）、npm、JDK（ANTLR 构建使用）。首次运行前执行 `npm ci --prefix demos/FSMDemo.Frontend`。Windows 命令使用 Git Bash。
+
+- API 开发默认模式为 `api`；`VITE_API_URL` 可配置 API origin，默认 `http://localhost:5079`。
+- `just build-wasm` 固定选择 `wasm`，默认基路径 `/AnotherFSM/`；打开 `http://127.0.0.1:5180/AnotherFSM/`。其他托管路径通过 `VITE_BASE_PATH` 配置，须以 `/` 开头和结尾。
+- 浏览器只支持自包含 DSL 与其中的 Module 定义，以及安全内置/Demo 节点。服务器文件系统模块发现、动态插件、设备节点不受支持，会明确报错。
+- 构建、合同覆盖和浏览器验证方法见 [运行时开发说明](docs/react-runtime.md)。
 
 ### 简单使用教程（仅 StateMachine 项目）
 
