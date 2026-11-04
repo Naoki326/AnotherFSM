@@ -40,10 +40,15 @@ terminal_declaration
 ;
 
 expression
-	: state_statement
+	: module_instance
+	| state_statement
 	| event_statement
 	| transition
 	| state_branch
+;
+
+module_instance
+    : 'use' STRING 'as' STRING (SEMICOLON | '{' state_branch* '}')
 ;
 
 state_statement
@@ -87,7 +92,8 @@ event_statement
 ;
 
 transition
-	: STRING TRIGGER STRING 'to' STRING SEMICOLON							#DefTransition
+	: STRING TRIGGER STRING 'to' STRING SEMICOLON                         #DefTransition
+    | STRING TRIGGER STRING SEMICOLON                                     #ModuleOutputTransition
 ;
 
 

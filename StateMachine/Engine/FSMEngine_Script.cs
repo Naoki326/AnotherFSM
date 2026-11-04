@@ -88,11 +88,7 @@ namespace StateMachine
             ClearEvents();
             ClearNodes();
             moduleInstances.Clear();
-            var stream = new AntlrInputStream(input);
-            var lexer = new StateMachineScriptLexer(stream);
-            var tokens = new CommonTokenStream(lexer);
-            var parser = new StateMachineScriptParser(tokens);
-            var tree = parser.machine();
+            var tree = FsmScriptParser.Parse(input);
 
             var state = new BuildStateVisitor(eventDict, nodeDict, nodeFactory, this);
             state.Visit(tree);
@@ -177,11 +173,7 @@ namespace StateMachine
         {
             UnhandleGroupNode();
 
-            var stream = new AntlrInputStream(input);
-            var lexer = new StateMachineScriptLexer(stream);
-            var tokens = new CommonTokenStream(lexer);
-            var parser = new StateMachineScriptParser(tokens);
-            var tree = parser.machine();
+            var tree = FsmScriptParser.Parse(input);
 
             foreach (var state in nodeDict.Values)
             {

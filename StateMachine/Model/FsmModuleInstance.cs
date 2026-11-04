@@ -9,6 +9,15 @@ public class FsmModuleInstance
     // 关联的模块名称，对应 FsmModuleInfo.ModuleName
     public string ModuleName { get; set; } = "";
 
+    // 记录实际展开对象的归属；普通同前缀点号名称不自动成为模块内部成员。
+    public HashSet<string> ExpandedNodeNames { get; set; } = new(StringComparer.Ordinal);
+    public HashSet<string> ExpandedEventNames { get; set; } = new(StringComparer.Ordinal);
+
+    // 新 DSL 的公开接口：公开名称 -> 展平后的真实节点/事件名称。
+    public Dictionary<string, string> PublicInputs { get; set; } = new(StringComparer.Ordinal);
+    public Dictionary<string, string> PublicOutputs { get; set; } = new(StringComparer.Ordinal);
+
+    // 仅供历史模型及独立 Fluent API 使用；新 DSL 不生成出口别名。
     // 输出事件映射：key=模块内部 output 事件名, value=映射到外部的实际事件名
     public Dictionary<string, string> OutputEventMap { get; set; } = new();
 

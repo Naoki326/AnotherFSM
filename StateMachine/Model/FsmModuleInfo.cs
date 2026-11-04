@@ -21,6 +21,9 @@ public class FsmModuleInfo
     // import 解析时的相对路径，用于定位模块文件
     public string? DirectoryPath { get; set; }
 
+    // 空模块同样可以完成解析；不能用节点数量作为解析完成标记。
+    internal bool IsParsed { get; set; }
+
     // ---- 以下为编译期解析后的模板数据 ----
 
     // 模板节点：key=节点名, value=节点实例（不含前缀，仅作模板）
