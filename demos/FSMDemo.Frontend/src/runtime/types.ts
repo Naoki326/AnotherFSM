@@ -1,6 +1,6 @@
 import type {
   EngineStatus, NodeInfo, ConnectionDto, ExecutionStatus, ModuleInstance, ModuleDef,
-  CreateModuleInstanceRequest, CreateNodeRequest, CreateConnectionRequest, GroupDef,
+  CreateModuleInstanceRequest, CreateNodeRequest, CreateConnectionRequest,
 } from '../api/types.ts';
 
 export type RuntimeEvent =
@@ -31,7 +31,6 @@ export interface EditorRuntime {
   renameNode(name: string, newName: string): Promise<void>;
   updateNodePosition(name: string, posX: number, posY: number): Promise<void>;
   updateNodeEvent(name: string, index: number, newEventName: string): Promise<void>;
-  updateGroupDefs(name: string, groupDefs: GroupDef[]): Promise<void>;
   getConnections(): Promise<ConnectionDto[]>;
   createConnection(req: CreateConnectionRequest): Promise<void>;
   deleteConnection(fromNodeName: string, toNodeName: string, eventName?: string): Promise<void>;

@@ -333,55 +333,6 @@ public partial class EngineManager : IAsyncDisposable
         };
     }
 
-    private List<GroupDefDto>? GetGroupDefs(IFSMNode node)
-    {
-        var type = node.GetType();
-        var classType = node.ClassType ?? "";
-        if (classType.StartsWith("Group", StringComparison.OrdinalIgnoreCase))
-            return [new() {
-                StartNode = type.GetProperty("StartNode")?.GetValue(node)?.ToString() ?? "",
-                EndEvent = type.GetProperty("EndEvent")?.GetValue(node)?.ToString() ?? "",
-            }];
-        if (classType.StartsWith("Parallel", StringComparison.OrdinalIgnoreCase)
-            && type.GetProperty("FSMs")?.GetValue(node) is System.Collections.IList fsms)
-            return fsms.Cast<object>().Select(fsm => new GroupDefDto {
-                StartNode = fsm.GetType().GetProperty("StartNode")?.GetValue(fsm)?.ToString() ?? "",
-                EndEvent = fsm.GetType().GetProperty("EndEvent")?.GetValue(fsm)?.ToString() ?? "",
-            }).ToList();
-        return null;
-    }
-
-    private static bool ApplyGroupDefs(IFSMNode node, List<GroupDefDto> defs)
-    {
-        // Core group contracts are internal; retain the existing reflection adapter.
-        var type = node.GetType();
-        var classType = node.ClassType ?? "";
-        if (classType.StartsWith("Group", StringComparison.OrdinalIgnoreCase) && defs.Count == 1)
-        {
-            var start = type.GetProperty("StartNode");
-            var end = type.GetProperty("EndEvent");
-            if (start == null || end == null) return false;
-            start.SetValue(node, defs[0].StartNode); end.SetValue(node, defs[0].EndEvent);
-            return true;
-        }
-        if (classType.StartsWith("Parallel", StringComparison.OrdinalIgnoreCase)
-            && type.GetProperty("FSMs") is { } property
-            && property.GetValue(node) is System.Collections.IList fsms)
-        {
-            fsms.Clear();
-            var fsmType = property.PropertyType.GetGenericArguments().Single();
-            foreach (var def in defs)
-            {
-                var fsm = Activator.CreateInstance(fsmType)!;
-                fsmType.GetProperty("StartNode")?.SetValue(fsm, def.StartNode);
-                fsmType.GetProperty("EndEvent")?.SetValue(fsm, def.EndEvent);
-                fsms.Add(fsm);
-            }
-            return true;
-        }
-        return false;
-    }
-
     public List<NodeInfo> GetNodes() => Engine.GetNodeNames().Select(name => GetNode(name)!).ToList();
 
     public NodeInfo? GetNode(string name)
@@ -393,7 +344,6 @@ public partial class EngineManager : IAsyncDisposable
             Name = node.Name, ClassType = node.ClassType ?? "", Color = node.Color ?? "",
             PosX = node.PosX, PosY = node.PosY, FlowID = node.FlowID ?? "", Discription = node.Discription,
             EventDescriptions = node.EventDescriptions?.Select(ed => new NodeEventDescriptionDto { Index = ed.Index, Description = ed.Description }).ToList() ?? [],
-            GroupDefs = GetGroupDefs(node),
         };
     }
 
@@ -475,26 +425,6 @@ public partial class EngineManager : IAsyncDisposable
         node.SetBranchEvent(index, EnsureEngineEvent(newEventName));
         node.UpdateEventDescriptions();
         return true;
-    }
-
-    public bool UpdateGroupDefs(string name, List<GroupDefDto> groupDefs)
-    {
-        if (groupDefs == null || groupDefs.Any(def => def == null || def.StartNode == null || def.EndEvent == null))
-            return false;
-        var moduleNode = GetModuleNodeRef(name);
-        if (moduleNode != null)
-        {
-            if (!moduleNode.Module.TemplateNodes.TryGetValue(moduleNode.LocalName, out var template)) return false;
-            var normalized = groupDefs.Select(def => new GroupDefDto
-            {
-                StartNode = NormalizeTemplateNodeName(moduleNode, def.StartNode),
-                EndEvent = NormalizeTemplateNodeName(moduleNode, def.EndEvent),
-            }).ToList();
-            if (!ApplyGroupDefs(template, normalized)) return false;
-            RebuildModuleInstances(moduleNode.Instance.ModuleName);
-            return true;
-        }
-        return Engine.TryGetNode(name, out var node) && ApplyGroupDefs(node, groupDefs);
     }
 
     // Retained as a disabled service seam for older callers; no terminal semantics remain.

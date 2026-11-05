@@ -93,7 +93,6 @@ export function createWasmRuntime(baseUrl = import.meta.env?.BASE_URL ?? '/'): E
     renameNode: (name, newName) => invoke('renameNode', { name, newName }),
     updateNodePosition: (name, posX, posY) => invoke('updateNodePosition', { name, posX, posY }),
     updateNodeEvent: (name, index, newEventName) => invoke('updateNodeEvent', { name, index, newEventName }),
-    updateGroupDefs: (name, groupDefs) => invoke('updateGroupDefs', { name, groupDefs }),
     getConnections: () => invoke('getConnections'),
     createConnection: (req) => invoke('createConnection', req),
     deleteConnection: (fromNodeName, toNodeName, eventName) => invoke('deleteConnection', { fromNodeName, toNodeName, eventName }),

@@ -105,7 +105,7 @@
                         engine.TryForceConnectNode(connection.connectionName, sourceNode, targetNode);
                     }
             }
-            engine.HandleGroupNode();
+            engine.InjectNodeEngines();
         }
     }
 
@@ -373,7 +373,7 @@
                         engine.ConnectNode(connectionName, sourceNode, targetNode);
                     }
             }
-            engine.HandleGroupNode();
+            engine.InjectNodeEngines();
         }
 
         private void ExpandModuleInstances()
@@ -423,9 +423,6 @@
                     newNode.PosY = templateNode.PosY;
                     newNode.Color = templateNode.Color;
                     newNode.FlowID = templateNode.FlowID;
-
-                    // 复制 GroupNode/ParallelNode 信息（带前缀）
-                    CopyGroupInfo(templateNode, newNode, prefix);
 
                     // 应用分支事件（含 output 映射 / 前缀）
                     foreach (var desc in templateNode.EventDescriptions)
@@ -531,27 +528,6 @@
             }
         }
 
-        private static void CopyGroupInfo(IFSMNode templateNode, IFSMNode newNode, string prefix)
-        {
-            if (newNode is IGroupNode gn && templateNode is IGroupNode tGn)
-            {
-                if (!string.IsNullOrEmpty(tGn.StartNode))
-                    gn.StartNode = prefix + tGn.StartNode;
-                if (!string.IsNullOrEmpty(tGn.EndEvent))
-                    gn.EndEvent = prefix + tGn.EndEvent;
-            }
-            if (newNode is IParallelNode pn && templateNode is IParallelNode tPn)
-            {
-                foreach (var fsm in tPn.FSMs)
-                {
-                    pn.FSMs.Add(new FSMDescribe
-                    {
-                        StartNode = prefix + fsm.StartNode,
-                        EndEvent = prefix + fsm.EndEvent,
-                    });
-                }
-            }
-        }
     }
 
     public class FSMNodeDefineBuilder(FSMEngine engine, IFSMNode node) : IFSMNodeDefineBuilder
@@ -625,7 +601,6 @@
 
         public static IFSMBuilderStepConstruct Create(FSMEngine e)
         {
-            e.UnhandleGroupNode();
             return new FSMEngineBuilder() { engine = e };
         }
 

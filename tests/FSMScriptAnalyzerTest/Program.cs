@@ -18,7 +18,7 @@ internal static class Program
             });
             SameFileModules(factory);
             PlainScriptScopes(factory);
-            ExistingPlainScript(factory);
+            ExistingMigratedFixture(factory);
             EmbeddedModulesAndNamespace(factory);
             RelativeAdditionalFiles(factory);
             var inline = InlineModules.Create(factory);
@@ -27,7 +27,11 @@ internal static class Program
             var embedded = EmbeddedModules.Create(factory);
             await ExecutesToFinish(embedded.Area_Start, embedded.Area_Finished,
                 "Area.Start", "Area.One.Retry", "Area.Two.Entry", "Area.Two.Private", "Area.Finish");
-            Console.WriteLine("PASS: generated consumers compiled, initialized and queried successfully.");
+            var migrated = ATest.Create(factory);
+            migrated.Check.Count = 1;
+            await ExecutesToFinish(migrated.Start, migrated.EndEvent,
+                "Start", "Check", "Wrapped.Entry", "Wrapped.Exit", "End");
+            Console.WriteLine("PASS: generated consumers compiled, queried and real Module flows executed successfully.");
             return 0;
         }
         catch (Exception ex)
@@ -151,11 +155,11 @@ internal static class Program
         Check(PlainScopes.ModuleScripts.Length == 0, "fake imports in comments and strings are ignored");
     }
 
-    private static void ExistingPlainScript(IFSMNodeFactory factory)
+    private static void ExistingMigratedFixture(IFSMNodeFactory factory)
     {
         var flow = ATest.Create(factory);
         AssertRealAccessors(flow, flow.Engine);
-        Check(flow.Engine.GetNodeNames().Count() == 15, "existing plain fixture keeps all nodes");
+        Check(flow.Engine.GetNodeNames().Count() == 15, "migrated fixture keeps 15 real nodes, without runtime wrapper proxies");
         Same(((IFSMNode)flow.Start).TargetState(flow.NextEvent), flow.Check, "existing plain transition");
         Same(((IFSMNode)flow.Check).TargetState(flow.BreakEvent), flow.End, "existing Branch transition");
     }

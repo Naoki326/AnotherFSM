@@ -110,59 +110,26 @@ public class RuntimeSessionFacts
         (await Value(session, "getExecutionStatus")).GetProperty("state").GetString().Should().Be("Idle");
     }
 
-    private sealed class ChildStartupGate
+    [Theory]
+    [InlineData("def Old(Group) {}")]
+    [InlineData("def Old(Parallel) {}")]
+    [InlineData("def Old(Start) { [Child->Done]; }")]
+    [InlineData("module M { input Old; def Old(Parallel) {} } use M as A;")]
+    public async Task LegacyImportsFailBeforeExecutionAndPreserveTheExistingGraph(string script)
     {
-        public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
-    }
-
-    // A real cancellable node with asynchronous setup pins the otherwise tiny
-    // NodeActivated -> RunAsync token-installation window, without executor internals.
-    private sealed class GatedChildNode(ChildStartupGate gate) : BaseFSMNode, IFSMNode
-    {
-        async Task IFSMNode.CreateNewAsync()
-        {
-            gate.Entered.TrySetResult();
-            await gate.Release.Task;
-        }
-
-        protected override Task ExecuteAsync() => Task.Delay(TimeSpan.FromSeconds(5), Context.Token);
-    }
-
-    private sealed class GatedChildFactory(ChildStartupGate gate) : IFSMNodeFactory
-    {
-        private readonly BrowserNodeFactory _browser = new();
-        public IFSMNode CreateNode(string key) => key == "GatedChild" ? new GatedChildNode(gate) : _browser.CreateNode(key);
-        public Type GetNodeType(string key) => key == "GatedChild" ? typeof(GatedChildNode) : _browser.GetNodeType(key);
-        public string GetNodeFeatureName(Type type) => type == typeof(GatedChildNode) ? "GatedChild" : _browser.GetNodeFeatureName(type);
+        var notifications = new List<string>();
+        await using var session = new RuntimeSession(new BrowserNodeFactory(), notifications.Add);
+        await Value(session, "importScript", new { script = SamePrefixScript });
+        notifications.Clear();
+        var before = (await Value(session, "exportScript")).GetString();
+        using var error = JsonDocument.Parse(await session.InvokeAsync("importScript", JsonSerializer.Serialize(new { script })));
+        error.RootElement.GetProperty("error").GetString().Should().Contain("Module").And.Contain("not equivalent");
+        (await Value(session, "exportScript")).GetString().Should().Be(before);
+        notifications.Should().BeEmpty();
     }
 
     [Fact]
-    public async Task CompositeStopDuringChildSetupCancelsTheTokenInstalledAfterTheEnterNotification()
-    {
-        var gate = new ChildStartupGate();
-        var events = System.Threading.Channels.Channel.CreateUnbounded<JsonElement>();
-        await using var session = new RuntimeSession(new GatedChildFactory(gate), json =>
-        {
-            using var doc = JsonDocument.Parse(json);
-            events.Writer.TryWrite(doc.RootElement.Clone());
-        });
-        await Value(session, "importScript", new { script = "def G(Group) {[Child->Done]; 1->Finish;} def Child(GatedChild) {1->Done;}" });
-        try
-        {
-            await Value(session, "startExecution", new { startNodeName = "G", endEventName = "Finish" });
-            await gate.Entered.Task.WaitAsync(TimeSpan.FromSeconds(2));
-            await Until(events.Reader, e => e.GetProperty("type").GetString() == "NodeActivated" && e.GetProperty("nodeName").GetString() == "Child");
-            var stopping = Value(session, "stopExecution");
-            gate.Release.TrySetResult();
-            await stopping.WaitAsync(TimeSpan.FromSeconds(2));
-            (await Value(session, "getExecutionStatus")).GetProperty("state").GetString().Should().Be("Idle");
-        }
-        finally { gate.Release.TrySetResult(); }
-    }
-
-    [Fact]
-    public async Task CompositeExecutionCanStopAndRestartWithoutLeavingItsChildExecutorAlive()
+    public async Task FlattenedModuleExecutionCanStopAndRestart()
     {
         var events = System.Threading.Channels.Channel.CreateUnbounded<JsonElement>();
         await using var session = new RuntimeSession(new BrowserNodeFactory(), json =>
@@ -170,11 +137,12 @@ public class RuntimeSessionFacts
             using var doc = JsonDocument.Parse(json);
             events.Writer.TryWrite(doc.RootElement.Clone());
         });
-        await Value(session, "importScript", new { script = "def G(Group) {[Child->Done]; 1->Finish;} def Child(Idle) {1->Done;}" });
+        await Value(session, "importScript", new { script = "module M { input Entry; output Done; def Entry(Idle) {1->Done;} } use M as A;" });
         for (var i = 0; i < 20; i++)
         {
-            await Value(session, "startExecution", new { startNodeName = "G", endEventName = "Finish" }).WaitAsync(TimeSpan.FromSeconds(2));
-            await Until(events.Reader, e => e.GetProperty("type").GetString() == "NodeActivated" && e.GetProperty("nodeName").GetString() == "Child");
+            await Value(session, "startExecution", new { startNodeName = "A.Entry", endEventName = "A.Done" }).WaitAsync(TimeSpan.FromSeconds(2));
+            await Until(events.Reader, e => e.GetProperty("type").GetString() == "NodeActivated" && e.GetProperty("nodeName").GetString() == "A.Entry");
+            await Until(events.Reader, e => e.TryGetProperty("state", out var state) && state.GetString() == "Running");
             await Value(session, "stopExecution").WaitAsync(TimeSpan.FromSeconds(2));
         }
     }
@@ -300,30 +268,29 @@ public class RuntimeSessionFacts
     }
 
     [Fact]
-    public async Task MalformedCompositeEditReportsAnErrorWithoutPartiallyChangingDefinitions()
+    public async Task RemovedCompositeOperationReportsMigrationWithoutChangingTheGraph()
     {
         await using var session = new RuntimeSession(new BrowserNodeFactory(), _ => { });
-        await Value(session, "importScript", new { script = "def P(Parallel) {[Child->Done];} def Child(Start) {1->Done;}" });
-        var before = (await Value(session, "getNode", new { name = "P" })).ToString();
-        using var error = JsonDocument.Parse(await session.InvokeAsync("updateGroupDefs", "{\"name\":\"P\",\"groupDefs\":[{\"startNode\":\"Other\",\"endEvent\":\"Next\"},null]}"));
-        error.RootElement.GetProperty("error").GetString().Should().NotBeNullOrWhiteSpace();
-        (await Value(session, "getNode", new { name = "P" })).ToString().Should().Be(before);
+        await Value(session, "importScript", new { script = SamePrefixScript });
+        var before = (await Value(session, "exportScript")).GetString();
+        using var error = JsonDocument.Parse(await session.InvokeAsync("updateGroupDefs", "{\"name\":\"A.Entry\",\"groupDefs\":[]}"));
+        error.RootElement.GetProperty("error").GetString().Should().Contain("Module").And.Contain("not equivalent");
+        (await Value(session, "exportScript")).GetString().Should().Be(before);
     }
 
     [Fact]
-    public async Task NodeEditsAndCompositeDefinitionsAreObservableAndFailedEditsAreErrors()
+    public async Task OrdinaryNodeEditsAreObservableAndFailedEditsAreErrors()
     {
         await using var session = new RuntimeSession(new BrowserNodeFactory(), _ => { });
-        await Value(session, "createNode", new { type = "Group", name = "G", posX = 0, posY = 0 });
+        await Value(session, "createNode", new { type = "Sleep", name = "G", posX = 0, posY = 0 });
         (await Value(session, "renameNode", new { name = "G", newName = "Wrapper" })).ValueKind.Should().Be(JsonValueKind.Null);
         await Value(session, "updateNodePosition", new { name = "Wrapper", posX = 42, posY = 24 });
         await Value(session, "updateNodeEvent", new { name = "Wrapper", index = 1, newEventName = "Done" });
-        await Value(session, "updateGroupDefs", new { name = "Wrapper", groupDefs = new[] { new { startNode = "Child", endEvent = "Done" } } });
         var nodes = await Value(session, "getNodes");
         nodes.GetArrayLength().Should().Be(1);
         var node = nodes[0];
         node.GetProperty("posY").GetDouble().Should().Be(24);
-        node.GetProperty("groupDefs")[0].GetProperty("startNode").GetString().Should().Be("Child");
+        node.TryGetProperty("groupDefs", out _).Should().BeFalse();
         node.GetProperty("eventDescriptions").EnumerateArray().Should().Contain(e => e.GetProperty("description").GetString() == "Done");
         await Value(session, "deleteNode", new { name = "Wrapper" });
         (await Value(session, "getStatus")).GetProperty("nodeNames").GetArrayLength().Should().Be(0);
@@ -333,6 +300,18 @@ public class RuntimeSessionFacts
                 "{\"name\":\"Missing\",\"newName\":\"X\",\"posX\":1,\"posY\":2,\"index\":1,\"newEventName\":\"X\",\"groupDefs\":[]}"));
             error.RootElement.GetProperty("error").GetString().Should().NotBeNullOrWhiteSpace();
         }
+    }
+
+    [Theory]
+    [InlineData("{\"type\":\"Group\",\"name\":\"Old\",\"posX\":0,\"posY\":0}")]
+    [InlineData("{\"type\":\"Parallel\",\"name\":\"Old\",\"posX\":0,\"posY\":0}")]
+    [InlineData("{\"type\":\"Sleep\",\"name\":\"Old\",\"posX\":0,\"posY\":0,\"groupDefs\":[]}")]
+    public async Task LegacyCreationRequestsFailWithMigrationInsteadOfIgnoringConfiguration(string payload)
+    {
+        await using var session = new RuntimeSession(new BrowserNodeFactory(), _ => { });
+        using var reply = JsonDocument.Parse(await session.InvokeAsync("createNode", payload));
+        reply.RootElement.GetProperty("error").GetString().Should().Contain("Module").And.Contain("not equivalent");
+        (await Value(session, "getNodes")).GetArrayLength().Should().Be(0);
     }
 
     [Fact]

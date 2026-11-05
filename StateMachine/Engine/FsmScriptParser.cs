@@ -14,7 +14,34 @@ internal static class FsmScriptParser
         var parser = new StateMachineScriptParser(tokens);
         parser.RemoveErrorListeners();
         parser.AddErrorListener(errors);
-        return parser.machine();
+        var tree = parser.machine();
+        // Validate rejection-only syntax even for Transform, which visits transitions only.
+        new UnsupportedComposition().Visit(tree);
+        return tree;
+    }
+
+    private sealed class UnsupportedComposition : StateMachineScriptBaseVisitor<object>
+    {
+        public override object? VisitDefState(StateMachineScriptParser.DefStateContext context)
+        {
+            CheckType(context.STRING().Last().GetText(), context.Start);
+            return base.VisitDefState(context);
+        }
+
+        public override object? VisitDefState2(StateMachineScriptParser.DefState2Context context)
+        {
+            CheckType(context.STRING().Last().GetText(), context.Start);
+            return base.VisitDefState2(context);
+        }
+
+        private static void CheckType(string type, IToken start)
+        {
+            try { RemovedComposition.RejectType(type); }
+            catch (ScriptException ex) { throw new ScriptException($"{ex.Message} At line {start.Line}, column {start.Column + 1}."); }
+        }
+
+        public override object? VisitRemovedCompositionDef(StateMachineScriptParser.RemovedCompositionDefContext context)
+            => throw new ScriptException($"{RemovedComposition.Diagnostic} Unsupported structure {context.GetText()} at line {context.Start.Line}, column {context.Start.Column + 1}.");
     }
 
     private sealed class ScriptErrors : BaseErrorListener, IAntlrErrorListener<int>

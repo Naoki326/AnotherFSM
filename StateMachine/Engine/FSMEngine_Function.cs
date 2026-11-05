@@ -16,6 +16,7 @@ namespace StateMachine
 
         public void CreateNode(string node_type, string name, string namePrev = "")
         {
+            RemovedComposition.RejectType(node_type);
             if (name.EndsWith("."))
                 throw new ScriptException($"Node name \"{name}\" 不能以 '.' 结尾");
             IFSMNode proc;
@@ -41,6 +42,8 @@ namespace StateMachine
         }
         public bool TryCreateNode(string node_type, string name, string namePrev = "")
         {
+            try { RemovedComposition.RejectType(node_type); }
+            catch (ScriptException) { return false; }
             IFSMNode proc;
             //预定义的Node
             switch (node_type.ToLower())

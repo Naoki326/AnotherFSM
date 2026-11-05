@@ -72,7 +72,8 @@ state_branch
     | 'Type' COLON STRING	 SEMICOLON										#TypeDef
     | 'FlowID' COLON (GUID | STRING | INT)	 SEMICOLON						#FlowIDDef
     | STRING TRIGGER STRING SEMICOLON                                      #NamedOutputMapDef
-	| '[' STRING TRIGGER STRING ']' SEMICOLON								#GroudFSMDef
+    // Recognized solely for an actionable assembly/import error; never built or expanded.
+	| '[' STRING TRIGGER STRING ']' SEMICOLON								#RemovedCompositionDef
 ;
 
 position

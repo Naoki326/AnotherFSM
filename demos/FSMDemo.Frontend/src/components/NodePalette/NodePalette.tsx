@@ -17,8 +17,6 @@ const NODE_TYPES: NodeTypeDef[] = [
   { type: 'Sleep', color: '#03a9f4' },
   { type: 'Accumulate', color: '#4caf50' },
   { type: 'Idle', color: '#ff9800' },
-  { type: 'Group', color: '#9c27b0' },
-  { type: 'Parallel', color: '#009688' },
 ];
 
 interface NodePaletteProps {

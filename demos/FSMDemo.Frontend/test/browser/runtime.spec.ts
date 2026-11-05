@@ -77,16 +77,6 @@ for (const mode of ['wasm', 'api']) {
     await call(page, 'startExecution', 'New', 'EndEvent');
     await expect.poll(() => call(page, 'getExecutionStatus')).toMatchObject({ state: 'Finished' });
     expect((await events(page)).filter(e => e.nodeName).every(e => e.nodeName === 'New')).toBe(true);
-    for (const type of ['Group', 'Parallel']) {
-      await call(page, 'importScript', `def Composite(${type}) { [Child->Done]; 1->Finish; } def Child(Idle) { 1->Done; }`);
-      for (let run = 0; run < 2; ++run) {
-        await page.evaluate(() => { (window as unknown as { contractEvents: unknown[] }).contractEvents = []; });
-        await call(page, 'startExecution', 'Composite', 'Finish');
-        await expect.poll(async () => (await events(page)).some(e => e.type === 'NodeActivated' && e.nodeName === 'Child')).toBe(true);
-        await call(page, 'stopExecution');
-        expect(await call(page, 'getExecutionStatus')).toMatchObject({ state: 'Idle' });
-      }
-    }
     await call(page, 'dispose');
   });
   test(`${mode}: preserves Module interfaces, actual ownership and script round trips`, async ({ page }) => {
@@ -141,10 +131,10 @@ for (const mode of ['wasm', 'api']) {
     await call(page, 'dispose');
   });
 
-  test(`${mode}: edits nodes, branches, GroupNode and ParallelNode through the runtime`, async ({ page }) => {
+  test(`${mode}: edits ordinary nodes and branches through the runtime`, async ({ page }) => {
     await page.goto(`test/runtime.html?mode=${mode}`);
     await expect(page.locator('#result')).toContainText('"ready":true');
-    await call(page, 'importScript', 'def End(End) { 1->EndEvent; } def G(Group) { [End->EndEvent]; } def P(Parallel) { [End->EndEvent]; }');
+    await call(page, 'importScript', 'def End(End) { 1->EndEvent; }');
     await call(page, 'createNode', { type: 'Sleep', name: 'Step', posX: 2, posY: 3 });
     await call(page, 'renameNode', 'Step', 'Renamed');
     await call(page, 'updateNodePosition', 'Renamed', 123, 456);
@@ -155,16 +145,50 @@ for (const mode of ['wasm', 'api']) {
     await call(page, 'renameConnection', 'Renamed', 'End', 'Changed', 'Go');
     expect(await call(page, 'getConnections')).toContainEqual({ fromNodeName: 'Renamed', toNodeName: 'End', eventName: 'Changed' });
     await call(page, 'deleteConnection', 'Renamed', 'End', 'Changed');
-    for (const name of ['G', 'P']) {
-      await call(page, 'updateGroupDefs', name, [{ startNode: 'Renamed', endEvent: 'EndEvent' }]);
-      expect(await call(page, 'getNode', name)).toMatchObject({ groupDefs: [{ startNode: 'Renamed', endEvent: 'EndEvent' }] });
-    }
+    expect(await call(page, 'getNode', 'Renamed')).not.toHaveProperty('groupDefs');
     const script = await call(page, 'exportScript');
     await call(page, 'importScript', script);
     expect(await call(page, 'getNode', 'Renamed')).toMatchObject({ posX: 123, posY: 456 });
     await call(page, 'deleteNode', 'Renamed');
     await expect(call(page, 'getNode', 'Renamed')).rejects.toThrow();
     await expect(call(page, 'deleteNode', 'Renamed')).rejects.toThrow();
+    await call(page, 'dispose');
+  });
+
+  test(`${mode}: rejects removed composition without replacing the Module graph`, async ({ page }) => {
+    await page.goto(`test/runtime.html?mode=${mode}`);
+    await expect(page.locator('#result')).toContainText('"ready":true');
+    await call(page, 'importScript', 'module M { input Entry; output Done; def Entry(End) { 1->Done; } } use M as A; def End(End) { 1->Finish; } A.Done -> End;');
+    const before = await call(page, 'exportScript');
+    for (const type of ['Group', 'GroupT', 'GroupTU', 'Parallel', 'ParallelT', 'ParallelTU']) {
+      await expect(call(page, 'createNode', { type, name: 'Old', posX: 0, posY: 0 })).rejects.toThrow(/Module.*not equivalent/);
+      for (const script of [`def Old(${type}) {}`, `module Legacy { input Old; def Old(${type}) {} } use Legacy as L;`]) {
+        await expect(call(page, 'importScript', script)).rejects.toThrow(/Module.*not equivalent/);
+      }
+    }
+    for (const script of ['def Old(Start) { [Entry->Done]; }', 'module Legacy { input Old; def Old(Start) { [Entry->Done]; } }']) {
+      await expect(call(page, 'importScript', script)).rejects.toThrow(/Module.*not equivalent/);
+    }
+    await expect(call(page, 'createNode', { type: 'Sleep', name: 'Old', posX: 0, posY: 0, groupDefs: [] })).rejects.toThrow(/Module.*not equivalent/);
+    expect(await call(page, 'exportScript')).toBe(before);
+    expect(await page.evaluate(() => 'updateGroupDefs' in (window as unknown as { contractRuntime: object }).contractRuntime)).toBe(false);
+    // Exercise the old transport operation itself, not just its removed TS method.
+    const legacyError = await page.evaluate(async (mode) => {
+      if (mode === 'api') {
+        const response = await fetch('http://127.0.0.1:5079/api/nodes/A.Entry/groupdefs', {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: '[]',
+        });
+        if (response.ok) throw new Error('Legacy API unexpectedly succeeded');
+        return (await response.json()).error;
+      }
+      const runtime = (globalThis as unknown as { getDotnetRuntime(id: number): { getAssemblyExports(name: string): Promise<{ FSMDemo: { Browser: { BrowserExports: { Invoke(op: string, payload: string): Promise<string> } } } }> } }).getDotnetRuntime(0);
+      const exports = await runtime.getAssemblyExports('FSMDemo.Browser');
+      return JSON.parse(await exports.FSMDemo.Browser.BrowserExports.Invoke('updateGroupDefs', '{"name":"A.Entry","groupDefs":[]}')).error;
+    }, mode);
+    expect(legacyError).toMatch(/Module.*not equivalent/);
+    await call(page, 'startExecution', 'A.Entry', 'Finish');
+    await expect.poll(() => call(page, 'getExecutionStatus')).toMatchObject({ state: 'Finished' });
+    expect((await events(page)).filter(e => e.type === 'NodeActivated').map(e => e.nodeName)).toEqual(['A.Entry', 'End']);
     await call(page, 'dispose');
   });
 

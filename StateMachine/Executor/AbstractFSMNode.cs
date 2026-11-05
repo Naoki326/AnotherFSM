@@ -91,11 +91,6 @@ namespace StateMachine
             return transitions.First(p => p.Value.Target.Name == target).Value;
         }
 
-        private protected virtual string GroupScript()
-        {
-            return "";
-        }
-
         private string BranchScript()
         {
             return branchDict.Aggregate("", (p, q) => p + "\r\n" + "\t" + q.Key + "->" + q.Value.EventName + ";");
@@ -107,7 +102,7 @@ namespace StateMachine
             string outString =
             $$"""
             def {{node.Name.TrimStart(node.NamePrefix.ToCharArray())}}({{node.ClassType}})
-            {{{GroupScript()}}{{BranchScript()}}
+            {{{BranchScript()}}
                 Pos:({{node.PosX}}, {{node.PosY}});
                 Color: "{{node.Color}}";
                 Type: {{node.ClassType}};

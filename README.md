@@ -179,7 +179,7 @@ internal class YourModule : Module
 | 常用函数 | 描述 |
 | --- | --- |
 | CreateNode | 创建一个节点，需要输入节点类型和节点名称 |
-| ReinitGroupNode | 初始化 GroupNode 或 ParallelNode（需在 CreateNode 之后调用） |
+| ReinitGroupNode | 向所有 IFSMEngineInjectable 节点注入引擎（历史方法名；需在 CreateNode 之后调用） |
 | ConnectNode | 创建节点之间的连线（事件名、出节点、入节点） |
 | ChangeNodeName | 修改节点名称 |
 | ChangeTransitionName | 修改连线名称 |
@@ -282,12 +282,16 @@ var engine = FSMEngineBuilder.Create()
 
 | 类 | 描述 |
 | --- | --- |
-| GroupNode | 流程包装节点，内部包装另一个流程 |
-| ParallelNode | 并行流程包装节点，内部包装多个并行流程 |
 | StartNode | 启动节点，默认抛出 NextEvent |
 | EndNode | 结束节点，默认抛出 EndEvent |
 | IdleNode | 空闲节点，默认抛出 NextEvent |
 | AccumulateNode | 累积计数节点，用于实现计次的 for 循环 |
+
+**破坏性移除：运行时组合（#17）**
+
+`GroupNode` / `ParallelNode` 的非泛型、单泛型、双泛型类型以及专属描述、子执行器、钩子、控制联动和包装出口已删除，旧 C# 源码需迁移，不能继续编译。旧类型键（含 `GroupT`/`GroupTU`/`ParallelT`/`ParallelTU`）、`[StartNode->EndEvent];`（包括 Module 模板内）在装配/导入阶段明确报错。API/WASM 拒绝旧创建与 `updateGroupDefs` 请求；React 不再提供组合编辑入口。
+
+纯定义封装使用下文普通 Module 的 Input/Output 和真实 Branch；这不是等价迁移：父子生命周期、观察通知、暂停传播、Next/Cancel/Error 包装出口不会自动转换。Parallel 没有内置替代、ParallelModule 或隐含汇合，也不会静默串行化；独立并发由宿主组织不同 FSMEngine。新业务绑定、生命周期隔离、共享事件和协调启动属后续工单，本票不改变这些契约。
 
 #### 7. 自定义 DSL 规则
 

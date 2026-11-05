@@ -75,7 +75,6 @@ export function createApiRuntime(baseUrl = 'http://localhost:5079'): EditorRunti
     renameNode: (name, newName) => request(`${namePath(name)}/rename`, 'PUT', { newName }),
     updateNodePosition: (name, posX, posY) => request(`${namePath(name)}/position`, 'PUT', { posX, posY }),
     updateNodeEvent: (name, index, newEventName) => request(`${namePath(name)}/events/${index}`, 'PUT', { newEventName }),
-    updateGroupDefs: (name, groupDefs) => request(`${namePath(name)}/groupdefs`, 'PUT', groupDefs),
     getConnections: () => request('/connections'),
     createConnection: (req) => request('/connections', 'POST', req),
     deleteConnection: (fromNodeName, toNodeName, eventName) => request('/connections', 'DELETE', { fromNodeName, toNodeName, eventName }),

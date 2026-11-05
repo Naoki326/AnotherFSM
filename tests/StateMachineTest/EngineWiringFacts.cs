@@ -9,6 +9,53 @@ namespace StateMachineTest;
 /// </summary>
 public class EngineWiringFacts
 {
+    private sealed class BackendNode(List<(string Name, FSMEngine? Engine)> visits) : EngineBackendNode
+    {
+        protected override async IAsyncEnumerable<IYieldAction> ExecuteEnumerable()
+        {
+            visits.Add((Name, Backend));
+            yield return new YieldEvent(1);
+            await Task.CompletedTask;
+        }
+    }
+
+    private sealed class BackendFactory(List<(string Name, FSMEngine? Engine)> visits) : IFSMNodeFactory
+    {
+        public IFSMNode CreateNode(string key) => key == "Backend" ? new BackendNode(visits) : throw new ArgumentException(key);
+        public Type GetNodeType(string key) => typeof(BackendNode);
+        public string GetNodeFeatureName(Type type) => "Backend";
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task OrdinaryBackendNodesInFlattenedModulesReceiveTheirEngineAndReallyExecute(bool fluent)
+    {
+        var visits = new List<(string Name, FSMEngine? Engine)>();
+        var factory = new BackendFactory(visits);
+        const string module = "module Work { input Entry; output Done; def Entry(Backend) { 1->Done; } }";
+        FSMEngine engine;
+        if (fluent)
+            engine = FSMEngineBuilder.Create(factory).ConfigureFSMDefine(builder => builder
+                .RegisterModule("Work", module).AddModule("Work", "A")
+                .AddNode("Finish", "Backend", node => node.SetEventBinding(1, "Finished"))
+                .AddConnection("A.Done", "A.Entry", "Finish")).Build();
+        else
+        {
+            engine = new FSMEngine(factory);
+            engine.CreateStateMachine(module + "use Work as A; def Finish(Backend) { 1->Finished; } A.Done -> Finish;");
+        }
+        using var executor = new FSMExecutor(engine.GetNode("A.Entry"), engine.GetEvent("Finished"));
+        (await executor.RestartAsync(true)).Should().BeTrue();
+        await executor.ExecutorTask.WaitAsync(TimeSpan.FromSeconds(5));
+        executor.State.Should().Be(FSMState.Finished);
+        visits.Select(visit => visit.Name).Should().Equal("A.Entry", "Finish");
+        visits.Should().OnlyContain(visit => ReferenceEquals(visit.Engine, engine));
+        engine.GetEventNames().Should().NotContain("Done");
+        engine.GetNode("A.Entry").UpdateEventDescriptions();
+        engine.GetNode("A.Entry").EventDescriptions.Should().Contain(branch => branch.Index == 1 && branch.Description == "A.Done");
+    }
+
     [Fact]
     public void ReinitGroupNode_WiresEngineIntoCreatedNode()
     {
@@ -16,7 +63,7 @@ public class EngineWiringFacts
         var engine = new FSMEngine(new FakeNodeFactory());
         engine.CreateNode("FakeType", "N1");
 
-        // Act —— 用【公开】入口触发接线（HandleGroupNode 经 ReinitGroupNode 暴露）
+        // Act —— 历史命名的公开入口仍为普通节点接线
         engine.ReinitGroupNode();
 
         // Assert —— 该节点拿到了 engine 引用（且就是同一个 engine）

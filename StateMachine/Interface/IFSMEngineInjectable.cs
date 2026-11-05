@@ -12,7 +12,7 @@ namespace StateMachine;
 /// </para>
 /// <para>
 /// 典型地，<see cref="AbstractFSMNode"/>（核心提供的节点基类）会实现本接口，
-/// 因此所有继承它的节点（GroupNode、用户自定义节点等）自动获得引擎回指。
+/// 因此所有继承它的普通节点自动获得引擎回指。
 /// 如果一个 <see cref="IFSMNode"/> 实现者<strong>不</strong>实现本接口，引擎会跳过它、
 /// 不做注入——这是被允许的（优雅降级）。
 /// </para>

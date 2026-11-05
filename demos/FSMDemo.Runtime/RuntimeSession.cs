@@ -50,6 +50,8 @@ public sealed class RuntimeSession : IAsyncDisposable
             using var document = JsonDocument.Parse(payloadJson);
             var p = document.RootElement;
             if (p.ValueKind != JsonValueKind.Object) throw new ArgumentException("Runtime payload must be a JSON object");
+            if (operation == "createNode" && p.TryGetProperty("groupDefs", out _))
+                throw new NotSupportedException(RemovedComposition.Diagnostic);
             object? value = operation switch
             {
                 "createNode" => _manager.CreateNode(p.GetProperty("type").GetString()!, p.GetProperty("name").GetString()!,
@@ -78,7 +80,7 @@ public sealed class RuntimeSession : IAsyncDisposable
                 "renameNode" => Edited(_manager.RenameNode(Text(p, "name"), Text(p, "newName"))),
                 "updateNodePosition" => Edited(_manager.UpdateNodePosition(Text(p, "name"), p.GetProperty("posX").GetDouble(), p.GetProperty("posY").GetDouble())),
                 "updateNodeEvent" => Edited(_manager.UpdateNodeEvent(Text(p, "name"), p.GetProperty("index").GetInt32(), Text(p, "newEventName"))),
-                "updateGroupDefs" => Edited(_manager.UpdateGroupDefs(Text(p, "name"), p.GetProperty("groupDefs").Deserialize(RuntimeJsonContext.Default.ListGroupDefDto)!)),
+                "updateGroupDefs" => throw new NotSupportedException(RemovedComposition.Diagnostic),
                 _ => throw new InvalidOperationException($"Unknown runtime operation '{operation}'"),
             };
             return JsonSerializer.Serialize(new RuntimeReply(value), RuntimeJsonContext.Default.RuntimeReply);
@@ -137,7 +139,6 @@ internal sealed record RuntimeEvent(string Type,
 [JsonSerializable(typeof(NodeInfo))]
 [JsonSerializable(typeof(List<NodeInfo>))]
 [JsonSerializable(typeof(EngineStatus))]
-[JsonSerializable(typeof(List<GroupDefDto>))]
 [JsonSerializable(typeof(string))]
 [JsonSerializable(typeof(ModuleInstanceDto))]
 [JsonSerializable(typeof(List<ModuleInstanceDto>))]

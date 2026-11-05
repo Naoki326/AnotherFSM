@@ -1,80 +1,5 @@
-﻿using Antlr4.Runtime;
-using System.Diagnostics;
-using System.Reflection;
-
-namespace StateMachine
+﻿namespace StateMachine
 {
-    internal static class BaseGroupNodeHelper
-    {
-        public static bool TrySubscribeEvent<T>(object target, string eventName, T subscriber, string methodName)
-        {
-            if (target == null) return false;
-
-            var eventInfo = target.GetType().GetBaseGroupNodeType().GetEvent(eventName, BindingFlags.NonPublic | BindingFlags.Instance);
-            if (eventInfo != null)
-            {
-                MethodInfo methodInfo = typeof(T).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance);
-                Delegate handler = Delegate.CreateDelegate(eventInfo.EventHandlerType, subscriber, methodInfo);
-
-                MethodInfo addMethod = eventInfo.GetAddMethod(true);
-                addMethod.Invoke(target, [handler]);
-                return true;
-            }
-            return false;
-        }
-
-        public static bool TryUnsubscribeEvent<T>(object target, string eventName, T subscriber, string methodName)
-        {
-            if (target == null) return false;
-
-            var eventInfo = target.GetType().GetBaseGroupNodeType().GetEvent(eventName, BindingFlags.NonPublic | BindingFlags.Instance);
-            if (eventInfo != null)
-            {
-                MethodInfo methodInfo = typeof(T).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance);
-                Delegate handler = Delegate.CreateDelegate(eventInfo.EventHandlerType, subscriber, methodInfo);
-
-                MethodInfo removeMethod = eventInfo.GetRemoveMethod(true);
-                removeMethod.Invoke(target, [handler]);
-                return true;
-            }
-            return false;
-        }
-
-        // 方法3：获取继承链中所有的 ABC<> 基类
-        public static Type GetBaseGroupNodeType(this Type type)
-        {
-            return type.GetBaseTypes()
-                       .First(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(BaseGroupNode<>));
-        }
-
-        // 获取类型的所有基类（包括间接基类）
-        private static IEnumerable<Type> GetBaseTypes(this Type type)
-        {
-            var current = type.BaseType;
-            while (current != null && current != typeof(object))
-            {
-                yield return current;
-                current = current.BaseType;
-            }
-        }
-
-        public static bool InheritsFromBaseGroupNode(this Type type)
-        {
-            if (type == null) return false;
-
-            var current = type.BaseType;
-            while (current != null && current != typeof(object))
-            {
-                if (current.IsGenericType &&
-                    current.GetGenericTypeDefinition() == typeof(BaseGroupNode<>))
-                {
-                    return true;
-                }
-                current = current.BaseType;
-            }
-            return false;
-        }
-    }
     //通过脚本创建流程结构
     public partial class FSMEngine
     {
@@ -83,7 +8,6 @@ namespace StateMachine
         public void CreateStateMachine(string input, string? directoryPath = null)
         {
             CurrentScriptDirectory = directoryPath;
-            UnhandleGroupNode();
 
             ClearEvents();
             ClearNodes();
@@ -95,20 +19,14 @@ namespace StateMachine
             var transition = new BuildTransitionVisitor(eventDict, nodeDict, moduleInstances);
             transition.Visit(tree);
 
-            HandleGroupNode();
+            InjectNodeEngines();
         }
 
-        public void ReinitGroupNode()
-        {
-            UnhandleGroupNode();
-            HandleGroupNode();
-        }
+        // Historical name retained: this serves every IFSMEngineInjectable node,
+        // not runtime composition.
+        public void ReinitGroupNode() => InjectNodeEngines();
 
-        internal void UnhandleGroupNode()
-        {
-        }
-
-        internal void HandleGroupNode()
+        internal void InjectNodeEngines()
         {
             foreach (var node in nodeDict)
             {
@@ -116,21 +34,6 @@ namespace StateMachine
                     injectable.SetEngine(this);
             }
         }
-
-        [DebuggerStepThrough]
-        private void Gn_NodeExitChanged(object sender, string e)
-        {
-            GroupNodeExitChanged?.Invoke(sender, e);
-        }
-
-        [DebuggerStepThrough]
-        private void Gn_NodeStateChanged(object sender, string e)
-        {
-            GroupNodeStateChanged?.Invoke(sender, e);
-        }
-
-        public event EventHandler<string>? GroupNodeStateChanged;
-        public event EventHandler<string>? GroupNodeExitChanged;
 
         public bool TryCreateStateMachine(string input)
         {
@@ -171,8 +74,6 @@ namespace StateMachine
 
         public void Transform(string input)
         {
-            UnhandleGroupNode();
-
             var tree = FsmScriptParser.Parse(input);
 
             foreach (var state in nodeDict.Values)
@@ -183,7 +84,7 @@ namespace StateMachine
             var transition = new BuildTransitionVisitor(eventDict, nodeDict, moduleInstances);
             transition.Visit(tree);
 
-            HandleGroupNode();
+            InjectNodeEngines();
         }
 
         //变形：删除原有连线，重新连线

@@ -9,7 +9,7 @@ namespace DemoNodes
     /// <summary>
     /// 演示，使用Autofac注入设计的Demo节点
     /// 注入时按照FSMNodeAttribute特性标记的Key作为容器的Key
-    /// 需要额外注意在注入时将StateMachine中的GroupNode和ParalleNode也注入到容器中
+    /// 流程定义封装使用普通 Module；不再注册旧运行时组合节点
     /// </summary>
     internal class DemoNodesModule : Module
     {

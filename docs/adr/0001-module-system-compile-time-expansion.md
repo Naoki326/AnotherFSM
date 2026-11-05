@@ -54,5 +54,5 @@ AnotherFSM 当前是单文件扁平状态机模型：所有 Node 和 Event 存�
 - `FSMEngine` 上的 `ModuleRegistry` 承载编译期模块信息，运行时仍执行展平后的节点与事件
 - 独立 C# Fluent API 保留其程序化构建职责，不要求与新 DSL 的语法变更同步清理所有旧接口或消费者字段
 - Namespace 保持独立的名称组织含义，不由 Module 替代
-- `GroupNode`/`ParallelNode` 暂时保留不动，后续评估是否可以废弃
+- 后续决策 [#14](https://github.com/Naoki326/AnotherFSM/issues/14#issuecomment-6647973766) 已取代暂留安排；[#17](https://github.com/Naoki326/AnotherFSM/issues/17) 删除 GroupNode/ParallelNode 六种形态及运行时组合入口。普通 Module 只承接定义复用，不等价替代父子生命周期、包装出口或并行汇合，不新增 ParallelModule。
 - 本次只更新架构决策与领域术语；使用指南、生成示例与编辑器文档另行处理

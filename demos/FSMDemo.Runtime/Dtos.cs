@@ -26,19 +26,12 @@ public class NodeInfo
     public string FlowID { get; set; } = "";
     public string? Discription { get; set; }
     public List<NodeEventDescriptionDto> EventDescriptions { get; set; } = [];
-    public List<GroupDefDto>? GroupDefs { get; set; }
 }
 
 public class NodeEventDescriptionDto
 {
     public int Index { get; set; }
     public string Description { get; set; } = "";
-}
-
-public class GroupDefDto
-{
-    public string StartNode { get; set; } = "";
-    public string EndEvent { get; set; } = "";
 }
 
 public class ConnectionDto
@@ -50,6 +43,9 @@ public class ConnectionDto
 
 public class CreateNodeRequest
 {
+    // Capture unsupported legacy input so it cannot be silently discarded by JSON binding.
+    [System.Text.Json.Serialization.JsonExtensionData]
+    public Dictionary<string, System.Text.Json.JsonElement>? AdditionalProperties { get; set; }
     public string Type { get; set; } = "";
     public string Name { get; set; } = "";
     public double PosX { get; set; }

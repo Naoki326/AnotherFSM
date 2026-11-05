@@ -244,16 +244,6 @@ internal class BuildStateVisitor : StateMachineScriptBaseVisitor<object>
         return null;
     }
 
-    public override object? VisitGroudFSMDef(StateMachineScriptParser.GroudFSMDefContext context)
-    {
-        var start = context.STRING()[0].GetText();
-        var end = context.STRING()[1].GetText();
-        if (node is IGroupNode group) { group.StartNode = start; group.EndEvent = end; }
-        else if (node is IParallelNode parallel)
-            parallel.FSMs.Add(new FSMDescribe { StartNode = start, EndEvent = end });
-        return null;
-    }
-
     public override object? VisitPOSX(StateMachineScriptParser.POSXContext context)
     {
         var value = double.Parse(context.GetText(), System.Globalization.CultureInfo.InvariantCulture);
@@ -324,14 +314,6 @@ internal class BuildStateVisitor : StateMachineScriptBaseVisitor<object>
             target.PosX = source.PosX;
             target.PosY = source.PosY;
             target.Color = source.Color;
-            if (target is IGroupNode group && source is IGroupNode templateGroup)
-            {
-                if (!string.IsNullOrEmpty(templateGroup.StartNode)) group.StartNode = prefix + templateGroup.StartNode;
-                if (!string.IsNullOrEmpty(templateGroup.EndEvent)) group.EndEvent = prefix + templateGroup.EndEvent;
-            }
-            if (target is IParallelNode parallel && source is IParallelNode templateParallel)
-                foreach (var fsm in templateParallel.FSMs)
-                    parallel.FSMs.Add(new FSMDescribe { StartNode = prefix + fsm.StartNode, EndEvent = prefix + fsm.EndEvent });
             source.UpdateEventDescriptions();
             foreach (var branch in source.EventDescriptions)
                 target.SetBranchEvent(branch.Index, GetOrAddEvent(prefix + branch.Description));

@@ -36,7 +36,7 @@ def Check(Accumulate)
     Type: Accumulate;
     FlowID: 6;
 }
-NextEvent->Check to Parallel;
+NextEvent->Check to Wrapped;
 BreakEvent->Check to End;
 
 def Start1(Start)
@@ -97,27 +97,16 @@ def Sleep2(Sleep)
 }
 Next2Event->Sleep2 to End2;
 
-def Parallel(Parallel)
-{
-    1->NextEvent;
-    5->CancelEvent;
-    Pos:(478, -2.25);
-    Color: "indigo";
-    Type: Parallel;
-    FlowID: 17;
+// Definition reuse only: not a replacement for parallel joins or child lifecycles.
+module Wrapper {
+    input Entry;
+    output Done;
+    def Entry(Start) { 1->Next; }
+    def Exit(Start) { 1->Done; }
+    Next -> Entry to Exit;
 }
-NextEvent->Parallel to Group;
-
-def Group(Group)
-{
-    1->NextEvent;
-    5->CancelEvent;
-    Pos:(207, 209);
-    Color: "light-blue";
-    Type: Group;
-    FlowID: 23;
-}
-NextEvent->Group to Check;
+use Wrapper as Wrapped { Pos:(478,-2.25); Color:"indigo"; FlowID:17; }
+Wrapped.Done -> Check;
 
 def Sleep(Idle)
 {

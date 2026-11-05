@@ -29,20 +29,6 @@ public class EngineEditingFacts
         return manager;
     }
 
-    private sealed class GroupFactory : IFSMNodeFactory
-    {
-        private readonly ScriptNodeFactory _steps = new();
-        public IFSMNode CreateNode(string featureName) => featureName switch
-        {
-            "Group" => new GroupNode(), "Parallel" => new ParallelNode(), _ => _steps.CreateNode(featureName),
-        };
-        public Type GetNodeType(string featureName) => featureName switch
-        {
-            "Group" => typeof(GroupNode), "Parallel" => typeof(ParallelNode), _ => _steps.GetNodeType(featureName),
-        };
-        public string GetNodeFeatureName(Type type) => type == typeof(GroupNode) ? "Group" : type == typeof(ParallelNode) ? "Parallel" : _steps.GetNodeFeatureName(type);
-    }
-
     private static string[] Branches(EngineManager manager, string node)
     {
         var info = manager.GetNode(node)!;
@@ -268,30 +254,43 @@ public class EngineEditingFacts
         manager.Engine.GetEventNames().Should().BeEquivalentTo(before);
     }
 
-    [Fact]
-    public void GroupAndParallelTemplateEditing_ReusesCoreQualificationAndPreservesPublicEdges()
+    [Theory]
+    [InlineData("def Old(Group) {}")]
+    [InlineData("def Old(Parallel) {}")]
+    [InlineData("module M { input Entry; def Entry(Step) { [Start->Done]; } } use M as A;")]
+    public void LegacyImportFailsWithoutReplacingTheModuleGraph(string script)
     {
-        var manager = new EngineManager(NullLogger<EngineManager>.Instance, new GroupFactory());
-        manager.Import("""
-            module M {
-                input Entry; output Done;
-                def Entry(Step) { 1->Done; }
-                def Retry(Step) { 1->Done; }
-                def G(Group) { [Entry->Done]; }
-                def P(Parallel) { [Entry->Done]; }
-            }
-            use M as A; use M as B;
-            def End(Step) {}
-            A.Done -> End;
-            def Ordinary(Group) { [End->Finish]; }
-            """);
-        manager.UpdateGroupDefs("A.G", [new() { StartNode = "A.Retry", EndEvent = "A.Done" }]).Should().BeTrue();
-        manager.UpdateGroupDefs("A.P", [new() { StartNode = "A.Retry", EndEvent = "A.Done" }]).Should().BeTrue();
-        ((GroupNode)manager.Engine["B.G"]).StartNode.Should().Be("B.Retry");
-        ((ParallelNode)manager.Engine["B.P"]).FSMs.Single().EndEvent.Should().Be("B.Done");
-        manager.Engine["A.Retry"].TargetState(manager.Engine.GetEvent("A.Done")).Name.Should().Be("End");
-        manager.UpdateGroupDefs("Ordinary", [new() { StartNode = "End", EndEvent = "Finish" }]).Should().BeTrue();
-        manager.GetNode("Ordinary")!.GroupDefs!.Single().EndEvent.Should().Be("Finish");
+        var manager = Create();
+        var before = manager.Export();
+        Action import = () => manager.Import(script);
+        import.Should().Throw<ScriptException>().WithMessage("*Module*not equivalent*");
+        manager.Export().Should().Be(before);
+    }
+
+    [Fact]
+    public void LegacyControllerOperationIsRejectionOnly()
+    {
+        var manager = Create();
+        var controller = new FSMDemo.API.Controllers.NodesController(manager);
+        using var payload = System.Text.Json.JsonDocument.Parse("[]");
+        var result = controller.RejectRuntimeComposition("A.Entry", payload.RootElement);
+        result.Should().BeOfType<Microsoft.AspNetCore.Mvc.BadRequestObjectResult>();
+        System.Text.Json.JsonSerializer.Serialize(((Microsoft.AspNetCore.Mvc.BadRequestObjectResult)result).Value)
+            .Should().Contain("Module").And.Contain("not equivalent");
+    }
+
+    [Fact]
+    public void LegacyCreatePayloadCannotSilentlyDiscardSubflowDefinitions()
+    {
+        var manager = Create();
+        var before = manager.Export();
+        var request = System.Text.Json.JsonSerializer.Deserialize<CreateNodeRequest>(
+            """{"Type":"Step","Name":"Old","groupDefs":[]}""")!;
+        var result = new FSMDemo.API.Controllers.NodesController(manager).Create(request);
+        result.Result.Should().BeOfType<Microsoft.AspNetCore.Mvc.BadRequestObjectResult>();
+        System.Text.Json.JsonSerializer.Serialize(((Microsoft.AspNetCore.Mvc.BadRequestObjectResult)result.Result!).Value)
+            .Should().Contain("Module").And.Contain("not equivalent");
+        manager.Export().Should().Be(before);
     }
 
     [Fact]

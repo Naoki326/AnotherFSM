@@ -126,9 +126,6 @@ public partial class EngineManager
         sb.AppendLine($"def {name}({node.ClassType}) {{");
         foreach (var branch in node.EventDescriptions)
             sb.AppendLine($"{branch.Index}->{RemovePrefix(branch.Description, prefix)};");
-        var groups = GetGroupDefs(node);
-        if (groups != null)
-            foreach (var group in groups) sb.AppendLine($"[{group.StartNode}->{group.EndEvent}];");
         AppendDisplayMetadata(sb, node.PosX, node.PosY, node.Color, node.FlowID);
         sb.AppendLine("}");
     }

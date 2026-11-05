@@ -36,7 +36,6 @@
 | renameNode | REST | 共享 C# | 普通节点重命名 |
 | updateNodePosition | REST | 共享 C# | 布局保存与导出 |
 | updateNodeEvent | REST | 共享 C# | Branch 编辑与公开 Output 不被重绑 |
-| updateGroupDefs | REST | 共享 C# | GroupNode/ParallelNode 子流程配置 |
 | getConnections | REST | 共享 C# | 多发布者投影去重、多 Input 选择 |
 | createConnection | REST | 共享 C# | 公开接口约束及失败不变更 |
 | deleteConnection | REST | 共享 C# | 指定源、目标与事件删除 |
@@ -51,7 +50,7 @@
 
 ## 浏览器能力边界
 
-浏览器安全节点由 `BrowserNodeFactory` 显式注册，包括内置 GroupNode/ParallelNode 和 Demo 节点；未知节点明确失败。不支持服务器任意路径扫描、外部文件模块发现、任意动态插件或设备节点。请导入包含 Module 定义的自包含 DSL；同文件模块无需服务器文件访问。
+浏览器安全节点由 `BrowserNodeFactory` 显式注册，包括 Start、End、Idle、Sleep、Accumulate；未知节点明确失败。GroupNode/ParallelNode 六种形态均已移除；旧 DSL（含模板子流程描述）、创建请求及旧 groupdefs 路由/WASM 操作明确失败，并提示迁向普通 Module 仅能复用定义，不等价于父子生命周期、包装出口或并行汇合。EditorRuntime、DTO 与 React 不再提供这些组合编辑能力。不支持服务器任意路径扫描、外部文件模块发现、任意动态插件或设备节点。请导入包含 Module 定义的自包含 DSL；同文件模块无需服务器文件访问。
 
 Release 裁剪保留 DSL/节点及 DTO 所需业务反射元数据，不强制 AOT 或 Worker；平台库仍裁剪。`WasmBuildNative=false` 不需要安装原生 WASM 构建工具链。
 

@@ -15,13 +15,9 @@ public sealed class BrowserNodeFactory : IFSMNodeFactory
         Register<IdleNode>("Idle");
         Register<SleepNode>("Sleep");
         Register<AccumulateNode>("Accumulate");
-        Register<GroupNode>("Group");
-        Register<ParallelNode>("Parallel");
     }
 
-    // DSL properties, Branch setters and composite descriptors are accessed by reflection.
-    // Preserve their complete contracts in trimmed Release builds, not just constructors.
-    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(FSMDescribe))]
+    // Preserve DSL properties and Branch setters in trimmed Release builds, not just constructors.
     private void Register<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(string key) where T : IFSMNode
         => _types.Add(key, typeof(T));
 

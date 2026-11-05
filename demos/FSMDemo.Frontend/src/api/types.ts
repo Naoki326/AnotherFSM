@@ -13,17 +13,11 @@ export interface NodeInfo {
   flowID: string;
   discription?: string;
   eventDescriptions: NodeEventDescription[];
-  groupDefs?: GroupDef[];
 }
 
 export interface NodeEventDescription {
   index: number;
   description: string;
-}
-
-export interface GroupDef {
-  startNode: string;
-  endEvent: string;
 }
 
 export interface ConnectionDto {

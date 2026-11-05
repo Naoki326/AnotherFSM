@@ -6,7 +6,7 @@ using System.Text;
 namespace StateMachine
 {
     [DebuggerNonUserCode]
-    public abstract class EngineBackendNode : BaseGroupNode
+    public abstract class EngineBackendNode : AsyncEnumFSMNode
     {
         public FSMEngine? Backend => Engine;
 

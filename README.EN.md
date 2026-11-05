@@ -179,7 +179,7 @@ internal class YourModule : Module
 | Common Functions | Description |
 | --- | --- |
 | CreateNode | Creates a node, requires node type and name |
-| ReinitGroupNode | Initializes GroupNode or ParallelNode (call after CreateNode) |
+| ReinitGroupNode | Injects the engine into all IFSMEngineInjectable nodes (historical name; call after CreateNode) |
 | ConnectNode | Creates connections between nodes (event name, from node, to node) |
 | ChangeNodeName | Modifies the node name |
 | ChangeTransitionName | Modifies the connection name |
@@ -282,12 +282,16 @@ Used in EnumFSMNode and AsyncEnumFSMNode to insert pause checkpoints with `yield
 
 | Class | Description |
 | --- | --- |
-| GroupNode | Process wrapper node, wraps another internal process |
-| ParallelNode | Parallel process wrapper node, wraps multiple parallel processes |
 | StartNode | Start node, emits NextEvent by default |
 | EndNode | End node, emits EndEvent by default |
 | IdleNode | Idle node, emits NextEvent by default |
 | AccumulateNode | Accumulative counting node for counted for-loops |
+
+**Breaking removal: runtime composition (#17)**
+
+The non-generic, one-parameter and two-parameter `GroupNode` / `ParallelNode` types, dedicated descriptors, child executors, hooks, control propagation and wrapper exits have been removed. Old C# consumers must migrate and no longer compile. Legacy type keys (including `GroupT`/`GroupTU`/`ParallelT`/`ParallelTU`) and `[StartNode->EndEvent];` fail at assembly/import, including inside Module templates. API/WASM reject legacy creation and `updateGroupDefs` requests; React no longer offers composition editing.
+
+For definition reuse, use ordinary Module Input/Output and real Branch publishers as shown below. Migration is **not equivalent**: child lifecycles, observer notifications, pause propagation and Next/Cancel/Error wrapper exits are not automatically translated. There is no built-in parallel replacement, ParallelModule, implicit join or silent sequential fallback; hosts organize concurrency with separate FSMEngine instances. New business binding, execution isolation, event sharing and coordinated startup belong to later tickets and are unchanged here.
 
 #### 7. Custom DSL Rules
 

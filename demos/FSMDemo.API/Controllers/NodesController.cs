@@ -33,6 +33,8 @@ public class NodesController : ControllerBase
     {
         try
         {
+            if (request.AdditionalProperties?.Keys.Any(key => string.Equals(key, "groupDefs", StringComparison.OrdinalIgnoreCase)) == true)
+                throw new NotSupportedException(StateMachine.RemovedComposition.Diagnostic);
             var node = _engineManager.CreateNode(request.Type, request.Name, request.PosX, request.PosY, request.Color);
             return Ok(node);
         }
@@ -75,12 +77,9 @@ public class NodesController : ControllerBase
     }
 
     [HttpPut("{name}/groupdefs")]
-    public ActionResult UpdateGroupDefs(string name, [FromBody] List<GroupDefDto> groupDefs)
-    {
-        if (_engineManager.UpdateGroupDefs(name, groupDefs))
-            return Ok();
-        return NotFound(new { error = "Node not found or not a group/parallel node" });
-    }
+    // Rejection-only tombstone: never accepts or applies legacy definitions.
+    public ActionResult RejectRuntimeComposition(string name, [FromBody] System.Text.Json.JsonElement payload)
+        => BadRequest(new { error = StateMachine.RemovedComposition.Diagnostic });
 
     [HttpPut("{name}/module-terminal")]
     public ActionResult UpdateModuleTerminal(string name, [FromBody] UpdateModuleTerminalRequest request)

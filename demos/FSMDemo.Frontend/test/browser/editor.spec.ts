@@ -33,6 +33,9 @@ test('wasm: full editor loop edits nodes, instances and edges, executes and roun
   await expect(page.getByRole('button', { name: 'import Import', exact: true })).toBeVisible();
   await importScript(page, `module M { input Entry; output Done; def Entry(Idle) { 1->Done; } }
     def Start(Start) { 1->Launch; Pos:(20,20); } def End(End) { 1->EndEvent; Pos:(600,20); }`);
+  for (const type of ['Group', 'Parallel']) {
+    await expect(page.locator('aside').first().getByText(type, { exact: true })).toHaveCount(0);
+  }
   await page.locator('aside').first().getByText('Sleep', { exact: true }).click();
   await page.locator('.react-flow__node[data-id="Sleep"]').click();
   page.once('dialog', dialog => dialog.accept('Edited'));

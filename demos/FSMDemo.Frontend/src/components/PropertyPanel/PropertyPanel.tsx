@@ -1,9 +1,8 @@
 import { useCallback } from 'react';
 import { Card, Descriptions, Tag, Button, Space, Popconfirm, Input, message } from 'antd';
-import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
 import { useEngineStore } from '../../stores/engineStore';
 import { runtime as api } from '../../runtime';
-import type { ConnectionDto, GroupDef } from '../../api/types';
+import type { ConnectionDto } from '../../api/types';
 
 import { connectionEdgeId, ownerOfNode } from '../FlowEditor/moduleGraph';
 
@@ -86,15 +85,6 @@ export function PropertyPanel() {
       message.error('Delete connection failed');
     }
   }, []);
-
-  const handleGroupDefChange = useCallback(async (nodeName: string, newDefs: GroupDef[]) => {
-    try {
-      await api.updateGroupDefs(nodeName, newDefs);
-      await refreshGraph();
-    } catch {
-      message.error('Failed to update group definitions');
-    }
-  }, [refreshGraph]);
 
   // Edge selected
   if (!node && selectedConnection) {
@@ -193,10 +183,6 @@ export function PropertyPanel() {
     );
   }
 
-  const isGroupType = node.classType?.startsWith('Group');
-  const isParallelType = node.classType?.startsWith('Parallel');
-  const isGroupNode = isGroupType || isParallelType;
-
   // Node selected
   return (
     <Card title="Node" style={{ height: '100%', overflow: 'auto', fontSize: 14 }}>
@@ -228,74 +214,6 @@ export function PropertyPanel() {
             <Tag style={{ fontSize: 12 }}>{selectedModuleLocalNodeName}</Tag>
             <span style={{ fontSize: 12 }}>Editing this module template affects all its instances. External connections use public interfaces only.</span>
           </div>
-        </div>
-      )}
-
-      {isGroupNode && (
-        <div style={{ marginTop: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-            <strong style={{ fontSize: 14 }}>
-              {isParallelType ? 'Inner FSMs:' : 'Inner FSM:'}
-            </strong>
-            {isParallelType && (
-              <Button
-                icon={<PlusOutlined />}
-                size="small"
-                onClick={() => {
-                  const newDefs = [...(node.groupDefs || []), { startNode: '', endEvent: '' }];
-                  handleGroupDefChange(node.name, newDefs);
-                }}
-              >
-                Add
-              </Button>
-            )}
-          </div>
-          {(node.groupDefs || []).map((def, i) => (
-            <div key={i} style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
-              <Input
-                addonBefore="Start"
-                key={`${node.name}-gd-${i}-start`}
-                defaultValue={def.startNode}
-                size="small"
-                style={{ fontSize: 12, flex: 1, minWidth: 50 }}
-                onBlur={(e) => {
-                  if (e.target.value !== def.startNode) {
-                    const newDefs = [...(node.groupDefs || [])];
-                    newDefs[i] = { ...newDefs[i], startNode: e.target.value };
-                    handleGroupDefChange(node.name, newDefs);
-                  }
-                }}
-                onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-              />
-              <span style={{ fontSize: 14 }}>→</span>
-              <Input
-                addonBefore="End"
-                key={`${node.name}-gd-${i}-end`}
-                defaultValue={def.endEvent}
-                size="small"
-                style={{ fontSize: 12, flex: 1, minWidth: 50 }}
-                onBlur={(e) => {
-                  if (e.target.value !== def.endEvent) {
-                    const newDefs = [...(node.groupDefs || [])];
-                    newDefs[i] = { ...newDefs[i], endEvent: e.target.value };
-                    handleGroupDefChange(node.name, newDefs);
-                  }
-                }}
-                onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-              />
-              {isParallelType && (node.groupDefs || []).length > 1 && (
-                <Button
-                  icon={<MinusCircleOutlined />}
-                  danger
-                  size="small"
-                  onClick={() => {
-                    const newDefs = (node.groupDefs || []).filter((_, idx) => idx !== i);
-                    handleGroupDefChange(node.name, newDefs);
-                  }}
-                />
-              )}
-            </div>
-          ))}
         </div>
       )}
 

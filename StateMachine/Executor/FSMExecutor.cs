@@ -165,11 +165,6 @@ namespace StateMachine
             {
                 currentNode.ExecuterContext = SolverContext;
 
-                IDisposable? groupNodeHandle = default;
-                if (currentNode is IObservable<StateTrackInfo> stateObs)
-                {
-                    groupNodeHandle = stateObs.Subscribe(stateTrackObservable);
-                }
                 try
                 {
                     if (isCreateNew)
@@ -188,11 +183,6 @@ namespace StateMachine
                 {
                     isExit = true;
                 }
-                finally
-                {
-                    groupNodeHandle?.Dispose();
-                }
-
                 if (currentNode.Context.IsPaused)
                 {
                     pausing = false;
@@ -466,7 +456,7 @@ namespace StateMachine
             TrackCallname();
             if (!nodeRequested && State == FSMState.Initialized)
             {
-                // A parent Group can cancel after the child's enter notification but
+                // An external caller can pause after the enter notification but
                 // before RunAsync installs its token. Canceling the old token loses
                 // that request, so deliver it after the synchronous RunAsync prefix.
                 Interlocked.Exchange(ref pendingPause, 1);

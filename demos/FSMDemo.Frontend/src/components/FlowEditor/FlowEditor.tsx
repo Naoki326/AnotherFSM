@@ -48,7 +48,6 @@ function toReactFlowNode(n: NodeInfo, isActive: boolean, isSelected: boolean, is
       isActive,
       isSelected,
       events: n.eventDescriptions || [],
-      groupDefs: n.groupDefs || [],
       isModuleInstance: !!isModuleInstance,
     },
   };
@@ -146,28 +145,12 @@ export function FlowEditor({ onNodeSelect }: FlowEditorProps) {
     const { activeNodeName: curActive, selectedNodeName: curSelected } = useEngineStore.getState();
     const effActive = visibleActiveNode(curActive, moduleInstances, viewModule);
 
-    const innerStarts = new Set<string>();
-    const endEventDescs = new Set<string>();
-    if (curSelected) {
-      const selNode = storeNodes.find(n => n.name === curSelected);
-      if (selNode?.groupDefs) {
-        for (const gd of selNode.groupDefs) {
-          if (gd.startNode) innerStarts.add(gd.startNode);
-          if (gd.endEvent) endEventDescs.add(gd.endEvent);
-        }
-      }
-    }
-
     const newNodes = filteredNodes.map((n) => {
       const isMod = moduleNodeNames.has(n.name);
       const rn = toReactFlowNode(n, n.name === effActive, n.name === curSelected, isMod);
       const mod = moduleInstances.find((m) => m.instanceName === n.name);
       if (mod) rn.data = { ...rn.data, publicInputs: mod.publicInputs, publicOutputs: mod.publicOutputs };
       rn.deletable = !ownerOfNode(n.name, moduleInstances);
-      const flags: Record<string, boolean> = {};
-      if (innerStarts.has(n.name)) flags.isInnerStartNode = true;
-      if (n.eventDescriptions.some(ed => endEventDescs.has(ed.description))) flags.isInnerEndNode = true;
-      if (Object.keys(flags).length > 0) rn.data = { ...rn.data, ...flags };
       return rn;
     });
 
@@ -218,38 +201,10 @@ export function FlowEditor({ onNodeSelect }: FlowEditorProps) {
   // Sync selection highlight only (for changes without data sync)
   useEffect(() => {
     if (!initializedViewsRef.current.has(viewKey)) return;
-    const currentStoreNodes = useEngineStore.getState().nodes;
-    const innerStarts = new Set<string>();
-    const endEventDescs = new Set<string>();
-    if (selectedNodeName) {
-      const selNode = currentStoreNodes.find((n) => n.name === selectedNodeName);
-      if (selNode?.groupDefs) {
-        for (const gd of selNode.groupDefs) {
-          if (gd.startNode) innerStarts.add(gd.startNode);
-          if (gd.endEvent) endEventDescs.add(gd.endEvent);
-        }
-      }
-    }
-    setNodes((nds) => {
-      const innerEnds = new Set<string>();
-      if (endEventDescs.size > 0) {
-        for (const n of nds) {
-          const events = (n.data.events as NodeInfo['eventDescriptions'] | undefined) ?? [];
-          if (events.some((ev) => endEventDescs.has(ev.description))) {
-            innerEnds.add(n.id);
-          }
-        }
-      }
-      return nds.map((n) => ({
-        ...n,
-        data: {
-          ...n.data,
-          isSelected: n.id === selectedNodeName,
-          isInnerStartNode: innerStarts.has(n.id),
-          isInnerEndNode: innerEnds.has(n.id),
-        },
-      }));
-    });
+    setNodes((nds) => nds.map((n) => ({
+      ...n,
+      data: { ...n.data, isSelected: n.id === selectedNodeName },
+    })));
   }, [selectedNodeName, viewKey, setNodes]);
 
   const onConnect = useCallback((connection: Connection) => {
