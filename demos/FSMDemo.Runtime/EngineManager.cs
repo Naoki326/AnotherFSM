@@ -10,6 +10,8 @@ public partial class EngineManager : IAsyncDisposable
     private readonly object _executionSync = new();
     private long _executionVersion;
     private bool _startPending;
+    private TaskCompletionSource? _starting;
+    private sealed class StartRetiredException : Exception { }
     private bool _disposed;
     private Task _retirement = Task.CompletedTask;
     private EditingEngine? _engine;
@@ -583,69 +585,77 @@ public partial class EngineManager : IAsyncDisposable
     public async Task<bool> StartExecution(string startNodeName, string endEventName)
     {
         long version;
-        Task retirement;
+        FSMEngine graph;
+        TaskCompletionSource starting;
         lock (_executionSync)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
-            if (!Engine.ContainsNode(startNodeName))
+            if (_startPending || !_retirement.IsCompleted || (_executor?.ExecutorTask is { IsCompleted: false }))
+                throw new FSMException("Engine has an unexited execution; conflicting start rejected. Stop and await exit first.");
+            graph = Engine;
+            if (!graph.ContainsNode(startNodeName))
             {
                 _logger.LogWarning("Start node '{NodeName}' not found", startNodeName);
                 return false;
             }
-            if (_startPending || !_retirement.IsCompleted || (_executor?.ExecutorTask is { IsCompleted: false }))
-                throw new FSMException("Engine has an unexited execution; conflicting start rejected. Stop and await exit first.");
             _startPending = true;
+            _starting = starting = new(TaskCreationOptions.RunContinuationsAsynchronously);
             version = _executionVersion;
-            retirement = _retirement;
         }
-        await retirement;
-        Task<bool> started;
-        FSMExecutor executor;
-        lock (_executionSync)
+        try
         {
-            if (_disposed || version != _executionVersion) return false;
-            try
+            // User source getters and node initialization must never hold the host
+            // status lock. Explicit retirement waits for this startup barrier.
+            ValidateHostContext(graph);
+            if (!graph.TryGetEvent(endEventName, out var endEvent)) endEvent = new FSMEvent(endEventName);
+            graph.ReinitGroupNode();
+            void Observe(FSMExecutor value)
             {
-                ValidateHostContext(Engine);
-                if (!Engine.TryGetEvent(endEventName, out var endEvent)) endEvent = new FSMEvent(endEventName);
-                Engine.ReinitGroupNode();
-                void Observe(FSMExecutor value)
+                lock (_executionSync)
                 {
+                    if (_disposed || version != _executionVersion) throw new StartRetiredException();
                     _executor = value;
                     value.FSMStateChanged += OnFSMStateChanged;
                     value.NodeStateChanged += OnNodeStateChanged;
                     value.NodeExitChanged += OnNodeExitChanged;
                 }
-                var ends = ResolveExecutionEndEvents(endEvent);
-                if (_context != null && Engine.OfType<IFSMContextNode>().Any(node => node.ContextType != null))
-                {
-                    using var prepared = _context.Prepare(Engine);
-                    executor = prepared.StartAsync(startNodeName, ends, Observe).GetAwaiter().GetResult();
-                    started = Task.FromResult(true);
-                }
-                else
-                {
-                    executor = new FSMExecutor(Engine[startNodeName], ends);
-                    Observe(executor);
-                    started = executor.RestartAsync();
-                }
             }
-            finally { _startPending = false; }
+            var ends = ResolveExecutionEndEvents(graph, endEvent);
+            FSMExecutor executor;
+            bool result;
+            if (_context != null && graph.OfType<IFSMContextNode>().Any(node => node.ContextType != null))
+            {
+                using var prepared = _context.Prepare(graph);
+                executor = await prepared.StartAsync(startNodeName, ends, Observe);
+                result = true;
+            }
+            else
+            {
+                executor = new FSMExecutor(graph[startNodeName], ends);
+                Observe(executor);
+                result = await executor.RestartAsync();
+            }
+            lock (_executionSync) return result && version == _executionVersion && ReferenceEquals(_executor, executor);
         }
-        var result = await started;
-        lock (_executionSync) return result && ReferenceEquals(_executor, executor);
+        catch (StartRetiredException) { return false; }
+        finally
+        {
+            lock (_executionSync)
+                if (ReferenceEquals(_starting, starting)) _startPending = false;
+            starting.TrySetResult();
+        }
     }
 
-    private List<FSMEvent> ResolveExecutionEndEvents(FSMEvent requestedEndEvent)
+    private static List<FSMEvent> ResolveExecutionEndEvents(FSMEngine graph, FSMEvent requestedEndEvent)
     {
         var result = new List<FSMEvent> { requestedEndEvent };
         var seen = new HashSet<string>(StringComparer.Ordinal) { requestedEndEvent.EventID };
-        foreach (var node in Engine)
+        foreach (var node in graph)
         {
-            if (GetNodeOwner(node.Name) != null || !string.Equals(node.ClassType, "End", StringComparison.OrdinalIgnoreCase)) continue;
+            if (graph.ModuleInstances.Values.Any(i => i.ExpandedNodeNames.Contains(node.Name)) || !string.Equals(node.ClassType, "End", StringComparison.OrdinalIgnoreCase)) continue;
             node.UpdateEventDescriptions();
             foreach (var desc in node.EventDescriptions)
-                if (Engine.TryGetEvent(desc.Description, out var endEvent) && seen.Add(endEvent.EventID)) result.Add(endEvent);
+                if (graph.TryGetEvent(desc.Description, out var endEvent) && seen.Add(endEvent.EventID)) result.Add(endEvent);
         }
         return result;
     }
@@ -674,6 +684,7 @@ public partial class EngineManager : IAsyncDisposable
     private void RetireExecution()
     {
         ++_executionVersion;
+        if (_startPending && _starting != null) _retirement = Task.WhenAll(_retirement, _starting.Task);
         _startPending = false;
         var old = _executor;
         _executor = null;

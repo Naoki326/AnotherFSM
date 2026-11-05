@@ -20,6 +20,36 @@ public class TypedHostFacts
         """;
 
     [Fact]
+    public async Task PreparingHostRejectsConflictingStartImmediatelyAndExplicitStopWaitsForPreparation()
+    {
+        using var release = new ManualResetEventSlim();
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var context = HostContext.Create(() =>
+        {
+            entered.TrySetResult();
+            release.Wait();
+            return new DemoNodes.DemoBusinessInput();
+        });
+        await using var host = new EngineManager(NullLogger<EngineManager>.Instance, new BrowserNodeFactory(), true, context);
+        await host.ImportAsync("def Query(BusinessQuery) {1->Done;}");
+        var first = Task.Run(() => host.StartExecution("Query", "Done"));
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var second = Task.Run(() => host.StartExecution("Query", "Done"));
+        try
+        {
+            Func<Task> conflict = async () => await second.WaitAsync(TimeSpan.FromSeconds(1));
+            await conflict.Should().ThrowAsync<FSMException>();
+            var stopped = host.StopExecution();
+            stopped.IsCompleted.Should().BeFalse();
+            release.Set();
+            await stopped.WaitAsync(TimeSpan.FromSeconds(5));
+            (await first).Should().BeFalse();
+            host.CurrentState.Should().Be(ExecutionState.Idle);
+        }
+        finally { release.Set(); await Task.WhenAll(first, second.ContinueWith(_ => { })); }
+    }
+
+    [Fact]
     public async Task ExternallyPreparedEngineRejectsStartBeforeChangingGraphOrHostInput()
     {
         await using var host = new EngineManager(NullLogger<EngineManager>.Instance, new BrowserNodeFactory(), true, DemoBusinessHost.Create());

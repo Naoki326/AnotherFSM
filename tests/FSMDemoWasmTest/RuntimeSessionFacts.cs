@@ -131,6 +131,60 @@ public class RuntimeSessionFacts
         notifications.Should().BeEmpty();
     }
 
+    private sealed class ExitProbe
+    {
+        public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource Cleaning { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource Released { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public bool Disposed;
+    }
+    private sealed class ExitNode(ExitProbe probe) : BaseFSMNode
+    {
+        protected override async Task ExecuteAsync()
+        {
+            probe.Entered.TrySetResult();
+            try { await Task.Delay(Timeout.Infinite, Control.Token); }
+            finally { probe.Cleaning.TrySetResult(); await probe.Released.Task; }
+        }
+        protected override void Dispose(bool disposing) { if (disposing) probe.Disposed = true; base.Dispose(disposing); }
+    }
+    private sealed class ExitFactory(ExitProbe probe) : IFSMNodeFactory
+    {
+        private readonly BrowserNodeFactory browser = new();
+        public IFSMNode CreateNode(string key) => key == "Exit" ? new ExitNode(probe) : browser.CreateNode(key);
+        public Type GetNodeType(string key) => key == "Exit" ? typeof(ExitNode) : browser.GetNodeType(key);
+        public string GetNodeFeatureName(Type type) => type == typeof(ExitNode) ? "Exit" : browser.GetNodeFeatureName(type);
+    }
+
+    [Fact]
+    public async Task ExplicitImportWaitsForActualNodeCleanupBeforeDisposalAndNewExecution()
+    {
+        var probe = new ExitProbe();
+        await using var manager = new EngineManager(Microsoft.Extensions.Logging.Abstractions.NullLogger<EngineManager>.Instance, new ExitFactory(probe), true);
+        await manager.ImportAsync("def Old(Exit) {1->Done;}");
+        await manager.StartExecution("Old", "Done");
+        await probe.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var old = manager.Executor!;
+        var importing = manager.ImportAsync("def New(End) {1->Done;}");
+        try
+        {
+            await probe.Cleaning.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            importing.IsCompleted.Should().BeFalse();
+            old.Execution.Completion.IsCompleted.Should().BeFalse();
+            probe.Disposed.Should().BeFalse();
+            Func<Task> conflicting = () => manager.StartExecution("New", "Done");
+            await conflicting.Should().ThrowAsync<FSMException>();
+        }
+        finally { probe.Released.TrySetResult(); }
+        await importing.WaitAsync(TimeSpan.FromSeconds(5));
+        probe.Disposed.Should().BeTrue();
+        var activated = new List<string>();
+        manager.NodeActivated += activated.Add;
+        await manager.StartExecution("New", "Done");
+        await manager.Executor!.Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
+        activated.Should().Equal("New");
+    }
+
     public sealed class EmptyInput { }
 
     private sealed class ControlProbe

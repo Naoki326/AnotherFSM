@@ -39,9 +39,9 @@ public sealed class RuntimeSession : IAsyncDisposable
         var entered = false;
         try
         {
-            // Serialize graph operations across async import/start boundaries. Controls
-            // must bypass this gate so they can cancel a pending start or pause.
-            if (operation is not ("pauseExecution" or "continueExecution" or "stopExecution" or "getExecutionStatus"))
+            // Serialize graph edits/imports. Start must reach the host's conflict
+            // check immediately, and controls must be able to cancel pending startup.
+            if (operation is not ("startExecution" or "pauseExecution" or "continueExecution" or "stopExecution" or "getExecutionStatus"))
             {
                 await _operations.WaitAsync();
                 entered = true;
