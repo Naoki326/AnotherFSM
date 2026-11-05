@@ -111,6 +111,23 @@ test('wasm: failed import preserves the paused executor, controls and existing l
   await expect(page.getByRole('button', { name: 'play-circle Start', exact: true })).toBeEnabled();
 });
 
+test('wasm: rejected start keeps the existing execution log and shows the host error', async ({ page }) => {
+  await page.goto('./');
+  await expect(page.getByRole('button', { name: 'import Import', exact: true })).toBeVisible();
+  await importScript(page, 'def Start(End) {1->EndEvent; Pos:(20,20); }');
+  await page.getByRole('button', { name: 'play-circle Start', exact: true }).click();
+  await expect(page.getByRole('banner')).toContainText('Finished');
+  await expect(page.getByRole('banner')).toContainText('Enter Start');
+  await page.locator('.react-flow__node[data-id="Start"]').click();
+  page.once('dialog', dialog => dialog.accept('Other'));
+  await page.getByRole('button', { name: 'Rename', exact: true }).click();
+  await expect(page.locator('.react-flow__node[data-id="Other"]')).toBeVisible();
+  await page.getByRole('button', { name: 'play-circle Start', exact: true }).click();
+  await expect(page.getByText('Edit or execution control failed: object not found or operation not allowed', { exact: true })).toBeVisible();
+  await expect(page.getByRole('banner')).toContainText('Enter Start');
+  await expect(page.getByRole('banner')).toContainText('Finished');
+});
+
 test('wasm: starting records and highlights the first entered node', async ({ page }) => {
   await page.goto('./');
   await expect(page.getByRole('button', { name: 'import Import', exact: true })).toBeVisible();

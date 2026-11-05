@@ -43,7 +43,8 @@ export function ExecutionToolbar() {
     }
     try {
       const store = useEngineStore.getState();
-      store.resetExecution();
+      // Start may be rejected without changing the current execution. Keep its
+      // state/log until the host accepts and publishes the next execution.
       await runtime.startExecution('Start', 'EndEvent');
       await store.refreshExecution();
     } catch (error) {

@@ -23,6 +23,40 @@ async function events(page: Page): Promise<Array<{ type: string; nodeName?: stri
 }
 
 for (const mode of ['wasm', 'api']) {
+  test(`${mode}: C# host binds fresh business input, rejects conflicts and missing sources`, async ({ page }) => {
+    await page.goto(`test/runtime.html?mode=${mode}`);
+    await expect(page.locator('#result')).toContainText('"ready":true');
+    const script = `module Work {
+      input Query; output Done;
+      def Query(BusinessQuery) {1->Next;}
+      def Process(BusinessProcess) {1->Done;}
+      Next -> Query to Process;
+    } use Work as A;
+    def Wait(Idle) {1->EndEvent;} A.Done -> Wait;`;
+    await call(page, 'importScript', script);
+    await call(page, 'startExecution', 'A.Query', 'EndEvent');
+    await expect.poll(() => call(page, 'getExecutionStatus')).toMatchObject({ state: 'Running', currentNodeName: 'Wait', businessResult: 42, businessRun: 1 });
+    await call(page, 'pauseExecution');
+    const before = await call(page, 'getExecutionStatus');
+    const notifications = (await events(page)).length;
+    await expect(call(page, 'startExecution', 'A.Query', 'EndEvent')).rejects.toThrow(/unexited/);
+    expect(await call(page, 'getExecutionStatus')).toEqual(before);
+    expect((await events(page)).length).toBe(notifications);
+    await call(page, 'stopExecution');
+    await call(page, 'startExecution', 'A.Query', 'EndEvent');
+    await expect.poll(() => call(page, 'getExecutionStatus')).toMatchObject({ currentNodeName: 'Wait', businessResult: 42, businessRun: 2 });
+    // Explicit import, unlike start, replaces the old execution and isolates its notifications.
+    await call(page, 'importScript', 'def Approval(BusinessApproval) {1->EndEvent;}');
+    await page.evaluate(() => { (window as unknown as { contractEvents: unknown[] }).contractEvents = []; });
+    await expect(call(page, 'startExecution', 'Approval', 'EndEvent')).rejects.toThrow(/Approval.*IApprovalBusiness.*Approval.*null/);
+    expect(await call(page, 'getExecutionStatus')).toMatchObject({ state: 'Idle', businessRun: 2 });
+    expect((await events(page)).filter(e => e.nodeName)).toEqual([]);
+    await call(page, 'importScript', script);
+    await call(page, 'startExecution', 'A.Query', 'EndEvent');
+    await expect.poll(() => call(page, 'getExecutionStatus')).toMatchObject({ currentNodeName: 'Wait', businessResult: 42, businessRun: 3 });
+    expect((await events(page)).filter(e => e.nodeName).every(e => ['A.Query', 'A.Process', 'Wait'].includes(e.nodeName!))).toBe(true);
+    await call(page, 'dispose');
+  });
   test(`${mode}: repeated initialization and subscription cleanup do not duplicate notifications`, async ({ page }) => {
     await page.goto(`test/runtime.html?mode=${mode}`);
     await expect(page.locator('#result')).toContainText('"ready":true');
