@@ -73,7 +73,7 @@ just build-wasm # Publish to release/wwwroot for GitHub Pages
 just test-browser # API/real WASM browser contracts and UI regression
 ```
 
-Prerequisites: .NET 10 SDK, Node.js 22.18+ (or 24+), npm, and a JDK for ANTLR generation. Run `npm ci --prefix demos/FSMDemo.Frontend` first. Use Git Bash on Windows.
+Prerequisites: .NET 10 SDK, Node.js 22.18+ (or 24+), npm, and a JDK for ANTLR generation. Run `npm ci --include=dev --prefix demos/FSMDemo.Frontend` first. On Windows use Git Bash and add npm's `--script-shell='C:/Program Files/Git/bin/bash.exe'`.
 
 - API development defaults to `api` mode; configure its origin with `VITE_API_URL` (default `http://localhost:5079`).
 - `just build-wasm` explicitly selects `wasm`. The default base path is `/AnotherFSM/`; visit `http://127.0.0.1:5180/AnotherFSM/`. Set `VITE_BASE_PATH` for another hosting path, starting and ending with `/`.
@@ -143,6 +143,10 @@ public class AutofacNodeFactory : IFSMNodeFactory
         throw new InvalidOperationException($"No IFSMNode service with key '{name}' found.");
     }
 
+    public string GetNodeFeatureName(Type type)
+        => type.GetCustomAttribute<FSMNodeAttribute>()?.Key
+            ?? throw new InvalidOperationException($"Node key missing for {type}.");
+
     public IEnumerable<Type> GetNodeTypes()
     {
         return container.ComponentRegistry.Registrations
@@ -206,15 +210,18 @@ internal class YourModule : Module
 - ***FSMEngineBuilder*** (Fluent API)
 
 ```csharp
-var engine = FSMEngineBuilder.Create()
-    .ConfigureNodeFactory(new AutofacNodeFactory())
-    .ConfigureFSMDefine(build =>
-    {
-        build.AddNode<SleepNode>("Sleep")
-            .AddConnection("NextEvent", "Start", "Sleep")
-            .AddNode("Sleep2", "SleepNodeKey");
-    })
+// factory registers accurate types/requirements for Start/Idle/End.
+var engine = FSMEngineBuilder.Create(factory)
+    .ConfigureFSMDefine(build => build
+        .AddNode("Start", "Start", n => n.SetEventBinding(1, "Go"))
+        .AddNode("Work", "Idle", n => n.SetEventBinding(1, "Next"))
+        .AddNode("Finish", "End", n => n.SetEventBinding(1, "Done"))
+        .AddConnection("Go", "Start", "Work")
+        .AddConnection("Next", "Work", "Finish"))
     .Build();
+using var prepared = engine.Prepare(); // All three nodes dependency-free; no empty input
+using var executor = await prepared.StartAsync("Start", "Done");
+await executor.Execution.Completion;
 ```
 
 #### 3. State Machine Execution

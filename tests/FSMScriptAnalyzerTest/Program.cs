@@ -29,6 +29,7 @@ internal static class Program
             using (var execution = await prepared.StartAsync(begin.Name, "Work.Done"))
                 await execution.Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
             Check(input.Job.Value == 42, "generated Module consumer uses explicitly paired typed business input");
+            await FixedReferencesAndOverridesInGeneratedModules(business);
             SameFileModules(factory);
             PlainScriptScopes(factory);
             ExistingMigratedFixture(factory);
@@ -52,6 +53,37 @@ internal static class Program
             Console.Error.WriteLine(ex);
             return 1;
         }
+    }
+
+    private sealed class ChangingInput
+    {
+        public DemoNodes.DemoJob Job { get; private set; } = new();
+        public DemoNodes.DemoJob Other { get; private set; } = new() { Value = 100 };
+        public void Replace() { Job = new() { Value = 700 }; Other = new() { Value = 800 }; }
+    }
+
+    private static async Task FixedReferencesAndOverridesInGeneratedModules(BusinessModules generated)
+    {
+        var plan = generated.Engine.BindContext<ChangingInput>(b =>
+        {
+            b.DefaultSource(x => x.Job);
+            b.Node<DemoNodes.IProcessBusiness>("Work.Process", x => x.Other);
+        });
+        var input = new ChangingInput();
+        var original = input.Job;
+        var overridden = input.Other;
+        using var prepared = plan.Prepare(input);
+        input.Replace();
+        overridden.Value = 150;
+        using (var executor = await prepared.StartAsync(generated.Begin.Name, "Work.Done"))
+            await executor.Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
+        Check(original.Value == 41 && overridden.Value == 151, "generated Module shared views and override use live members of fixed references");
+        Check(input.Job.Value == 700 && input.Other.Value == 800, "Prepare fixes references before generated nodes run");
+        using (var next = plan.Prepare(input))
+        using (var executor = await next.StartAsync(generated.Begin.Name, "Work.Done"))
+            await executor.Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
+        Check(input.Job.Value == 41 && input.Other.Value == 801 && overridden.Value == 151,
+            "generated consumer next round requires explicit input and never inherits old references");
     }
 
     private static async Task ExecutesToFinish(FSMEngine engine, IFSMNode start, FSMEvent end, params string[] expectedNodes)

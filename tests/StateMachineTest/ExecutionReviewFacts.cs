@@ -48,7 +48,7 @@ public class ExecutionReviewFacts
     [InlineData(1)]
     [InlineData(2)]
     [InlineData(3)]
-    public async Task EveryRestartRejectsForeignDescendantsAddedAfterConstructionBeforeRebinding(int overload)
+    public async Task EveryPreparationStartShapeRejectsForeignDescendantsBeforeRebinding(int overload)
     {
         var entered = Signal();
         var release = Signal();
@@ -85,7 +85,7 @@ public class ExecutionReviewFacts
     [InlineData(1)]
     [InlineData(2)]
     [InlineData(3)]
-    public async Task EveryLegacyRestartValidatesRequirementsAddedAfterConstruction(int overload)
+    public async Task EveryPreparationStartShapeRejectsUnassembledDependentDescendants(int overload)
     {
         var visits = 0;
         var engine = Engine(("Start", new Probe(() => { visits++; return Task.CompletedTask; })));
@@ -104,7 +104,7 @@ public class ExecutionReviewFacts
     [InlineData(1)]
     [InlineData(2)]
     [InlineData(3)]
-    public async Task ResumeAcceptedAtNodeExitCannotLeakIntoAnyRestartOverload(int overload)
+    public async Task ResumeAcceptedAtNodeExitCannotLeakIntoAnyPreparationStartShape(int overload)
     {
         var runs = 0;
         var targetEntered = Signal();
@@ -221,7 +221,7 @@ public class ExecutionReviewFacts
     [InlineData(1, true)]
     [InlineData(2, true)]
     [InlineData(3, true)]
-    public async Task StopDuringEveryRestartInitializationWaitsAndPreventsNodeExecution(int overload, bool dispose)
+    public async Task StopDuringEveryPreparationStartShapeInitializationWaitsAndPreventsNodeExecution(int overload, bool dispose)
     {
         var node = new Initializing();
         var engine = Engine(("Start", node));
@@ -379,7 +379,7 @@ public class ExecutionReviewFacts
     [Theory]
     [InlineData("Go")]
     [InlineData("Done")]
-    public async Task UnscopedHandleCallbacksCannotDeliverIntoALaterExecution(string eventName)
+    public async Task SavedReceiverCallbacksCannotDeliverIntoALaterExecution(string eventName)
     {
         var engine = Engine(("Start", new Probe()), ("Target", new Probe()));
         engine.ConnectNode("Go", "Start", "Target");

@@ -54,9 +54,9 @@
 
 Release 裁剪保留 DSL/节点及 DTO 所需业务反射元数据，不强制 AOT 或 Worker；平台库仍裁剪。`WasmBuildNative=false` 不需要安装原生 WASM 构建工具链。
 
-## 业务输入与启动策略（#21）
+## 业务输入与启动策略
 
-API 与 Browser 启动代码显式安装 `DemoBusinessHost.Create()`，指定聚合类型、关系及每次新实例。依赖节点走 BindContext/Prepare，非泛型无依赖节点不制造空对象。前端只接收固定 `businessResult/businessRun` 结果 DTO，不传业务对象或 CLR 名称；双 Adapter 保持相同 start/end 接口。详见 [中英宿主配置](consumer-host.md)。
+API 与 Browser 启动代码显式安装 `DemoBusinessHost.Create()`，指定聚合类型、关系及每次新实例。依赖节点走 BindContext/Prepare；整个引擎无依赖时走 `engine.Prepare()`，不制造空对象。旧执行器构造/Restart 和 Context.Data 包装已删除，两模式不会回退旧驱动。前端只接收固定 `businessResult/businessRun` 结果 DTO，不传业务对象或 CLR 名称；双 Adapter 保持相同 start/end 接口。详见 [中英宿主配置](consumer-host.md)。
 
 普通 start 遇到准备占用或任何未退出执行立即拒绝，不 Retire、不换绑定、不清状态或日志；停止并等待后可提供新实例。显式 Import 先验证候选装配，再等待旧执行真正退出、隔离旧通知。非法候选保留原执行。宿主来源工厂与节点初始化不持状态锁，控制不被准备阻塞。
 
@@ -68,6 +68,6 @@ API 与 Browser 启动代码显式安装 `DemoBusinessHost.Create()`，指定聚
 4. `npm test --prefix demos/FSMDemo.Frontend`：React 图投影与运行时配置/生命周期回归。
 5. `just test-browser`：先构建 Release .NET 和 React，再在 Chrome 中使用真实 API/WASM Adapter 运行相同行为合同、UI 集成与错误场景。首次运行执行 `npx playwright install chrome`（在前端目录）；Linux CI 加 `--with-deps`。
 
-浏览器测试先确认业务 API 未运行，在 `/AnotherFSM/` 上验证真实 WASM、监测业务 REST/SignalR 请求，再启动真实 API 执行同合同。使用事件或状态条件等待，不用固定 sleep。测试日志与失败 trace 保存在 `.scratch/issue-7/`；#21 真实逐层结果及独立工作树外的原始日志位置见 [验收记录](implementation/21-consumer-host-migration.md)；合同页仅在 `RUNTIME_CONTRACT=true` 时构建，不进入 Pages 最终产物。
+浏览器测试先确认业务 API 未运行，在 `/AnotherFSM/` 上验证真实 WASM、监测业务 REST/SignalR 请求，再启动真实 API 执行同合同。使用事件或状态条件等待，不用固定 sleep。测试日志与失败 trace 保存在 `.scratch/issue-7/`；最终源码真实逐层结果及独立工作树外的原始日志位置见 [最终验收记录](implementation/22-final-acceptance.md)；合同页仅在 `RUNTIME_CONTRACT=true` 时构建，不进入 Pages 最终产物。
 
 最终发布使用 `bash tools/build-browser.sh`（无合同页），并检查解决方案、React 构建、子路径刷新及活动配置中无旧应用引用。

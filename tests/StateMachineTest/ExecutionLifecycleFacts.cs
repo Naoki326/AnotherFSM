@@ -167,7 +167,7 @@ public class ExecutionLifecycleFacts
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task LateNodeNotificationKeepsItsOriginalRoundAcrossLegacyRestart(bool pause)
+    public async Task LateNodeNotificationKeepsItsOriginalRoundAcrossFreshPreparation(bool pause)
     {
         var scenario = new LateScenario { PauseOnly = pause };
         var node = new LateNode(scenario);
@@ -350,7 +350,7 @@ public class ExecutionLifecycleFacts
     }
 
     [Fact]
-    public async Task AContinueInterruptedByStopCannotResumeTheNextLegacyRound()
+    public async Task AContinueInterruptedByStopCannotResumeTheNextPreparedRound()
     {
         var visits = 0;
         var hits = new List<string>();
@@ -441,7 +441,7 @@ public class ExecutionLifecycleFacts
     }
 
     [Fact]
-    public async Task LegacyLoopInitializesNodePrivateStateOncePerNewExecution()
+    public async Task PreparationInitializesNodePrivateStateOncePerNewExecution()
     {
         var node = new InitializingIdle();
         var engine = new FSMEngine(new Factory(() => node, typeof(InitializingIdle)));
@@ -514,7 +514,7 @@ public class ExecutionLifecycleFacts
     }
 
     [Fact]
-    public async Task ExitedExecutorLegacyEventAndPauseEntriesRejectActiveCalls()
+    public async Task ExitedExecutionEventAndPauseEntriesRejectActiveCalls()
     {
         var engine = Engine();
         using var executor = await engine.BindContext<Input>("Start", "Done").Prepare(new Input()).StartAsync();
@@ -528,7 +528,7 @@ public class ExecutionLifecycleFacts
     }
 
     [Fact]
-    public async Task ConcreteHandleCannotOperateTheNextLegacyExecution()
+    public async Task ConcreteHandleCannotOperateTheNextPreparedExecution()
     {
         var engine = Engine();
         using var first = await engine.Prepare().StartAsync("Start", "Done");
@@ -733,7 +733,7 @@ public class ExecutionLifecycleFacts
     }
 
     [Fact]
-    public async Task QueuedBusinessEventsAreNotCarriedAcrossAStoppedLegacyRound()
+    public async Task QueuedBusinessEventsAreNotCarriedAcrossAStoppedPreparedRound()
     {
         var hits = new List<string>();
         var engine = RoutedEngine(new FSMEvent("Go"), hits);
@@ -800,7 +800,7 @@ public class ExecutionLifecycleFacts
     }
 
     [Fact]
-    public async Task LegacyAlternateGraphCannotRebindANodeBorrowedByAnotherEngine()
+    public async Task PreparingAnAlternateGraphCannotRebindANodeBorrowedByAnotherEngine()
     {
         var probe = new RestartProbe();
         var owner = new FSMEngine(new Factory(() => new LegacyWait(probe), typeof(LegacyWait)));
@@ -834,7 +834,7 @@ public class ExecutionLifecycleFacts
     }
 
     [Fact]
-    public async Task LegacyStartCannotBypassPreparedEngineOwnership()
+    public async Task DependencyFreePreparationCannotBypassPreparedEngineOwnership()
     {
         var engine = Engine();
         using var prepared = engine.BindContext<Input>("Start", "Done").Prepare(new Input());
@@ -852,7 +852,7 @@ public class ExecutionLifecycleFacts
     }
 
     [Fact]
-    public void StandaloneLegacyGraphsCheckSharedNodesByReferenceNotBusinessEquality()
+    public void PreparedGraphsCheckSharedNodesByReferenceNotBusinessEquality()
     {
         IFSMNode first = new EqualIdle { Name = "First" };
         IFSMNode second = new EqualIdle { Name = "Second" };

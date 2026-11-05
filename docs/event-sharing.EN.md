@@ -22,7 +22,7 @@ await runningB.StopAsync();
 
 Prepare fixes this round's business references and reserves the engine. Explicitly dispose abandoned, unstarted preparations. Disposing a started preparation does not replace Stop/Completion. Business resources remain caller-owned.
 
-For flows without an assembled entry, call `preparation.WithEntry("Start", "Done")` before batch startup. Existing `preparation.StartAsync()` and `StartAsync(startNode, endEvent, isLongRunning)` remain supported, but use the same range barrier: individual starts cannot bypass a connected pending range.
+Wholly dependency-free engines use `engine.Prepare().WithEntry("Start", "Done")`, without aggregate objects; these can share/start alongside business preparations. For flows without an assembled entry, call `preparation.WithEntry("Start", "Done")` before batch startup. Existing `preparation.StartAsync()` and `StartAsync(startNode, endEvent, isLongRunning)` remain supported, but use the same range barrier: individual starts cannot bypass a connected pending range.
 
 ## Ranges, notifications and names
 
@@ -37,7 +37,7 @@ For flows without an assembled entry, call `preparation.WithEntry("Start", "Done
 
 Start lists only the pending executions being started, but must cover **all pending members** of every involved range. Duplicate preparations/engines, stale/already started handles, missing entries, changed graphs and incomplete selections are rejected; ordinary startup never replaces an existing execution. A batch may include independent ranges without connecting them.
 
-All checks and rollbackable receiver preparation complete before committing receiver visibility and releasing any node in the batch. Initial synchronous publications can queue at other ready receivers. This is not physically simultaneous execution. Start returns startup results, not a business completion join.
+All checks and rollbackable receiver preparation complete before committing receiver visibility and releasing any node in the batch. Initial synchronous publications can queue at other ready receivers. This neither promises physically simultaneous execution nor requires the target's initial business to execute first. An early business end can finish a target before its initial Run, with zero business execution and normal true exit. Start returns startup results, not a business completion join.
 
 Check/receiver failure releases zero nodes, rolls back temporary receivers and retains valid Prepare handles and engine reservations. Correct and retry with the same handles, or explicitly dispose them. Errors identify the stage, with entry/engine details for omissions and InnerException for root causes. After node release, initialization/business errors use each execution's #19 lifecycle, not transactional batch rollback. Completion still waits for synchronous initialization, cancellation callbacks and non-cooperative nodes to actually return.
 
@@ -53,4 +53,4 @@ Merging existing active ranges takes effect at Connect. New pending members join
 
 Paused members keep receiving into this round's queue, including business end events, and process them after Continue. Stopping/exited members refuse events; stopping one member does not stop others. Receiver/member cleanup belongs inside the true Completion barrier. Finished, Stop or Dispose returning does not permit early engine reuse. Active operations on stale handles fail observably; captured old node routes, old queues and in-flight notifications cannot retarget a replacement round.
 
-See the [#20 implementation evidence](implementation/20-event-sharing.md). No parent-child execution, ParallelModule, completion join, persistent messaging or frontend communication panel is introduced.
+See [#20 historical implementation evidence](implementation/20-event-sharing.md) and [final post-contraction acceptance](implementation/22-final-acceptance.md). No parent-child execution, ParallelModule, completion join, persistent messaging or frontend communication panel is introduced.

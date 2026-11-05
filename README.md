@@ -73,7 +73,7 @@ just build-wasm # 发布到 release/wwwroot，用于 GitHub Pages
 just test-browser # API/真实 WASM 的浏览器合同及 UI 回归
 ```
 
-前置条件：.NET 10 SDK、Node.js 22.18+（或 24+）、npm、JDK（ANTLR 构建使用）。首次运行前执行 `npm ci --prefix demos/FSMDemo.Frontend`。Windows 命令使用 Git Bash。
+前置条件：.NET 10 SDK、Node.js 22.18+（或 24+）、npm、JDK（ANTLR 构建使用）。首次运行前执行 `npm ci --include=dev --prefix demos/FSMDemo.Frontend`。Windows 使用 Git Bash，npm 额外传 `--script-shell='C:/Program Files/Git/bin/bash.exe'`。
 
 - API 开发默认模式为 `api`；`VITE_API_URL` 可配置 API origin，默认 `http://localhost:5079`。
 - `just build-wasm` 固定选择 `wasm`，默认基路径 `/AnotherFSM/`；打开 `http://127.0.0.1:5180/AnotherFSM/`。其他托管路径通过 `VITE_BASE_PATH` 配置，须以 `/` 开头和结尾。
@@ -143,6 +143,10 @@ public class AutofacNodeFactory : IFSMNodeFactory
         throw new InvalidOperationException($"No IFSMNode service with key '{name}' found.");
     }
 
+    public string GetNodeFeatureName(Type type)
+        => type.GetCustomAttribute<FSMNodeAttribute>()?.Key
+            ?? throw new InvalidOperationException($"Node key missing for {type}.");
+
     public IEnumerable<Type> GetNodeTypes()
     {
         return container.ComponentRegistry.Registrations
@@ -206,15 +210,18 @@ internal class YourModule : Module
 - ***FSMEngineBuilder***（Fluent API）
 
 ```csharp
-var engine = FSMEngineBuilder.Create()
-    .ConfigureNodeFactory(new AutofacNodeFactory())
-    .ConfigureFSMDefine(build =>
-    {
-        build.AddNode<SleepNode>("Sleep")
-            .AddConnection("NextEvent", "Start", "Sleep")
-            .AddNode("Sleep2", "SleepNodeKey");
-    })
+// factory 已注册 Start/Idle/End 的准确类型与需求元数据。
+var engine = FSMEngineBuilder.Create(factory)
+    .ConfigureFSMDefine(build => build
+        .AddNode("Start", "Start", n => n.SetEventBinding(1, "Go"))
+        .AddNode("Work", "Idle", n => n.SetEventBinding(1, "Next"))
+        .AddNode("Finish", "End", n => n.SetEventBinding(1, "Done"))
+        .AddConnection("Go", "Start", "Work")
+        .AddConnection("Next", "Work", "Finish"))
     .Build();
+using var prepared = engine.Prepare(); // 三个节点均无业务依赖，无空输入对象
+using var executor = await prepared.StartAsync("Start", "Done");
+await executor.Execution.Completion;
 ```
 
 #### 3. 流程执行类
