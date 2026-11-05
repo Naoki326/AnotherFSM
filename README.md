@@ -9,7 +9,7 @@
 
 ### 类型化 Context（迁移中）
 
-新增核心用法见 [类型化局部 Context](docs/typed-context.md)：节点直接使用局部业务接口，聚合绑定在执行前固定，控制与触发分离。旧 Context/Data/Restart 示例是暂存迁移入口，不是新业务绑定用法；完整宿主/生成消费者迁移及生命周期保障由 #19–#22 完成。
+新增核心用法见 [类型化局部 Context](docs/typed-context.md)：节点直接使用局部业务接口，聚合绑定在执行前固定，控制与触发分离。旧 Context/Data/Restart 示例是暂存迁移入口，不是新业务绑定用法。#19 已提供 Prepare 占用、具体执行句柄与真正退出保障；无轮次公共 Handle 投递明确拒绝。共享事件、完整宿主/生成消费者迁移及过渡入口删除仍由 #20–#22 完成。
 
 ### Demo
 
@@ -295,7 +295,7 @@ var engine = FSMEngineBuilder.Create()
 
 `GroupNode` / `ParallelNode` 的非泛型、单泛型、双泛型类型以及专属描述、子执行器、钩子、控制联动和包装出口已删除，旧 C# 源码需迁移，不能继续编译。旧类型键（含 `GroupT`/`GroupTU`/`ParallelT`/`ParallelTU`）、`[StartNode->EndEvent];`（包括 Module 模板内）在装配/导入阶段明确报错。API/WASM 拒绝旧创建与 `updateGroupDefs` 请求；React 不再提供组合编辑入口。
 
-纯定义封装使用下文普通 Module 的 Input/Output 和真实 Branch；这不是等价迁移：父子生命周期、观察通知、暂停传播、Next/Cancel/Error 包装出口不会自动转换。Parallel 没有内置替代、ParallelModule 或隐含汇合，也不会静默串行化；独立并发由宿主组织不同 FSMEngine。新业务绑定、生命周期隔离、共享事件和协调启动属后续工单，本票不改变这些契约。
+纯定义封装使用下文普通 Module 的 Input/Output 和真实 Branch；这不是等价迁移：父子生命周期、观察通知、暂停传播、Next/Cancel/Error 包装出口不会自动转换。Parallel 没有内置替代、ParallelModule 或隐含汇合，也不会静默串行化；独立并发由宿主组织不同 FSMEngine。核心新业务绑定与生命周期隔离见上述 #18/#19 指南；共享事件、协调启动和完整宿主迁移仍由 #20/#21 承接。
 
 #### 7. 自定义 DSL 规则
 

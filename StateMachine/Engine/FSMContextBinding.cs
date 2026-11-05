@@ -186,20 +186,22 @@ namespace StateMachine
             lock (sync)
             {
                 if (started || released) throw new FSMException("This execution preparation is already started or released.");
+                started = true;
+            }
+            // User initialization must not hold the preparation lock: a competing
+            // start observes the consumed handle immediately, even if Init blocks.
+            try
+            {
                 validateGraph();
                 var executor = new FSMExecutor(engine.GetNode(startNode), engine.GetEvent(endEvent));
-                started = true;
-                try
-                {
-                    executor.StartContext(nodes, values, isLongRunning, owner, () => engine.ReleaseExecution(owner));
-                    return Task.FromResult(executor);
-                }
-                catch
-                {
-                    released = true;
-                    engine.ReleaseExecution(owner);
-                    throw;
-                }
+                executor.StartContext(nodes, values, isLongRunning, owner, () => engine.ReleaseExecution(owner));
+                return Task.FromResult(executor);
+            }
+            catch
+            {
+                lock (sync) released = true;
+                engine.ReleaseExecution(owner);
+                throw;
             }
         }
     }

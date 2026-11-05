@@ -196,6 +196,33 @@ public class RuntimeSessionFacts
     }
 
     [Fact]
+    public async Task HostNodeCallbackCanContinueWhileAnotherThreadFinishesTheExecution()
+    {
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var allowContinue = new ManualResetEventSlim();
+        var returned = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var manager = new EngineManager(Microsoft.Extensions.Logging.Abstractions.NullLogger<EngineManager>.Instance, new BrowserNodeFactory(), true);
+        await manager.ImportAsync("def Start(Idle) {1->Done;}");
+        manager.NodeActivated += _ =>
+        {
+            entered.TrySetResult();
+            allowContinue.Wait();
+            manager.ContinueExecution();
+            returned.TrySetResult();
+        };
+        await manager.StartExecution("Start", "Done");
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var executor = manager.Executor!;
+        var finish = Task.Run(() => executor.Execution.PublishEvent("Done"));
+        // Finished is assigned before the synchronous host state notification.
+        SpinWait.SpinUntil(() => executor.State == FSMState.Finished, TimeSpan.FromSeconds(5)).Should().BeTrue();
+        allowContinue.Set();
+        // Do not join an intentionally deadlocked manager on red.
+        await Task.WhenAll(returned.Task, finish).WaitAsync(TimeSpan.FromSeconds(2));
+        await manager.DisposeAsync();
+    }
+
+    [Fact]
     public async Task EditorAddedModuleCannotBypassTheHostsEngineOccupancy()
     {
         await using var manager = new EngineManager(Microsoft.Extensions.Logging.Abstractions.NullLogger<EngineManager>.Instance, new BrowserNodeFactory(), true);

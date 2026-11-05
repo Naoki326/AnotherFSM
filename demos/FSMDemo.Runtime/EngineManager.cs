@@ -733,18 +733,27 @@ public partial class EngineManager : IAsyncDisposable
 
     private void OnNodeStateChanged(object? sender, string nodeName)
     {
+        Action<string>? notify;
         lock (_executionSync)
         {
             if (_disposed || !ReferenceEquals(sender, _executor)) return;
             CurrentNodeName = nodeName;
-            NodeActivated?.Invoke(nodeName);
+            notify = NodeActivated;
         }
+        // A subscriber may reenter core control. Do not lend it the host lock:
+        // another core notification can already be waiting for that lock.
+        notify?.Invoke(nodeName);
     }
 
     private void OnNodeExitChanged(object? sender, string nodeName)
     {
+        Action<string>? notify;
         lock (_executionSync)
-            if (!_disposed && ReferenceEquals(sender, _executor)) NodeDeactivated?.Invoke(nodeName);
+        {
+            if (_disposed || !ReferenceEquals(sender, _executor)) return;
+            notify = NodeDeactivated;
+        }
+        notify?.Invoke(nodeName);
     }
 
     public event Action<ExecutionState, string?>? StateChanged;

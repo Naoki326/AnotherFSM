@@ -99,7 +99,7 @@ namespace StateMachine
                 ?? throw new FSMException($"Event {name} does not exist in this execution.");
             var notification = (FSMEvent)value.Clone();
             notification.EventContext = payload!;
-            Handle(notification);
+            ReceiveEvent(notification);
         }
         public Task CurrentNodeTask => currentNode.WaitCurrentTask;
 
@@ -188,7 +188,7 @@ namespace StateMachine
             {
                 lock (controlSync)
                     if (ReferenceEquals(Execution, round) && !round.Completion.IsCompleted
-                        && State != FSMState.Stopping && State != FSMState.Stoped && State != FSMState.Finished) Handle(value);
+                        && State != FSMState.Stopping && State != FSMState.Stoped && State != FSMState.Finished) ReceiveEvent(value);
             }, () =>
             {
                 lock (controlSync)
@@ -639,6 +639,10 @@ namespace StateMachine
 
         [DebuggerHidden]
         public void Handle(FSMEvent @event)
+            => throw new FSMException("Execution identity is required; publish through the concrete FSMExecution handle.");
+
+        // Only round-validated external calls and captured node routes reach here.
+        private void ReceiveEvent(FSMEvent @event)
         {
             lock (controlSync)
             {
