@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Reactive.Linq;
 using FSMDemo.Runtime;
 using StateMachine;
 
@@ -126,6 +127,127 @@ public class RuntimeSessionFacts
         error.RootElement.GetProperty("error").GetString().Should().Contain("Module").And.Contain("not equivalent");
         (await Value(session, "exportScript")).GetString().Should().Be(before);
         notifications.Should().BeEmpty();
+    }
+
+    public sealed class EmptyInput { }
+
+    private sealed class ControlProbe
+    {
+        public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource Pause { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource CancelEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource QueryAllowed { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource QueryFinished { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public Func<ExecutionStatus> Query { get; set; } = null!;
+        public bool QueryTimedOut;
+        public int Calls;
+    }
+    private sealed class ControlNode(ControlProbe probe) : BaseFSMNode
+    {
+        protected override async Task ExecuteAsync()
+        {
+            if (Interlocked.Increment(ref probe.Calls) != 1) return;
+            using var registration = Control.Token.Register(() =>
+            {
+                probe.CancelEntered.TrySetResult();
+                probe.QueryAllowed.Task.GetAwaiter().GetResult();
+                // Bound a possible lock inversion; this timeout is not a scheduling delay.
+                try { Task.Run(probe.Query).WaitAsync(TimeSpan.FromSeconds(2)).GetAwaiter().GetResult(); }
+                catch (TimeoutException) { probe.QueryTimedOut = true; }
+                finally { probe.QueryFinished.TrySetResult(); }
+            });
+            probe.Entered.TrySetResult();
+            await probe.Pause.Task;
+            Pause();
+            Control.CheckPause();
+        }
+    }
+    private sealed class ControlFactory(ControlProbe probe) : IFSMNodeFactory
+    {
+        public IFSMNode CreateNode(string key) => new ControlNode(probe);
+        public Type GetNodeType(string key) => typeof(ControlNode);
+        public string GetNodeFeatureName(Type type) => "Control";
+    }
+
+    [Fact]
+    public async Task HostContinueDoesNotHoldItsStatusLockWhileWaitingForCoreControl()
+    {
+        var probe = new ControlProbe();
+        var manager = new EngineManager(Microsoft.Extensions.Logging.Abstractions.NullLogger<EngineManager>.Instance, new ControlFactory(probe), true);
+        probe.Query = manager.GetExecutionStatus;
+        await manager.ImportAsync("def Start(Control) {1->Done;}");
+        await Task.Run(() => manager.StartExecution("Start", "Done"));
+        await probe.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var continueEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var track = ((IObservable<StateTrackInfo>)manager.Executor!).Subscribe(info =>
+        {
+            if (info.IsCallEvent && info.CallMethodName == "Continue") continueEntered.TrySetResult();
+        });
+        probe.Pause.TrySetResult();
+        await probe.CancelEntered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var continuing = Task.Run(manager.ContinueExecution);
+        try { await continueEntered.Task.WaitAsync(TimeSpan.FromSeconds(5)); }
+        finally { probe.QueryAllowed.TrySetResult(); }
+        await probe.QueryFinished.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        // On red, do not join an intentionally deadlocked manager in test cleanup.
+        probe.QueryTimedOut.Should().BeFalse();
+        await continuing.WaitAsync(TimeSpan.FromSeconds(5));
+        await manager.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task HostNodeCallbackCanContinueWhileAnotherThreadFinishesTheExecution()
+    {
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var allowContinue = new ManualResetEventSlim();
+        var returned = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var manager = new EngineManager(Microsoft.Extensions.Logging.Abstractions.NullLogger<EngineManager>.Instance, new BrowserNodeFactory(), true);
+        await manager.ImportAsync("def Start(Idle) {1->Done;}");
+        manager.NodeActivated += _ =>
+        {
+            entered.TrySetResult();
+            allowContinue.Wait();
+            manager.ContinueExecution();
+            returned.TrySetResult();
+        };
+        await manager.StartExecution("Start", "Done");
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var executor = manager.Executor!;
+        var finish = Task.Run(() => executor.Execution.PublishEvent("Done"));
+        // Finished is assigned before the synchronous host state notification.
+        SpinWait.SpinUntil(() => executor.State == FSMState.Finished, TimeSpan.FromSeconds(5)).Should().BeTrue();
+        allowContinue.Set();
+        // Do not join an intentionally deadlocked manager on red.
+        await Task.WhenAll(returned.Task, finish).WaitAsync(TimeSpan.FromSeconds(2));
+        await manager.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task EditorAddedModuleCannotBypassTheHostsEngineOccupancy()
+    {
+        await using var manager = new EngineManager(Microsoft.Extensions.Logging.Abstractions.NullLogger<EngineManager>.Instance, new BrowserNodeFactory(), true);
+        await manager.ImportAsync("module M { input Entry; output Done; def Entry(Idle) {1->Done;} }");
+        manager.AddModuleInstance("M", "Added", 0, 0);
+        (await manager.StartExecution("Added.Entry", "Added.Done")).Should().BeTrue();
+        var plan = manager.Engine.BindContext<EmptyInput>("Added.Entry", "Added.Done");
+        Action conflict = () => { using var unexpected = plan.Prepare(new EmptyInput()); };
+        conflict.Should().Throw<FSMException>();
+        await manager.StopExecution();
+    }
+
+    [Fact]
+    public async Task EditorAddedModuleInstanceExecutesWithItsOwnEngineNodes()
+    {
+        var events = System.Threading.Channels.Channel.CreateUnbounded<JsonElement>();
+        await using var session = new RuntimeSession(new BrowserNodeFactory(), json =>
+        {
+            using var doc = JsonDocument.Parse(json);
+            events.Writer.TryWrite(doc.RootElement.Clone());
+        });
+        await Value(session, "importScript", new { script = "module M { input Entry; output Done; def Entry(End) {1->Done;} }" });
+        await Value(session, "createModuleInstance", new { moduleName = "M", instanceName = "Added", posX = 0, posY = 0 });
+        await Value(session, "startExecution", new { startNodeName = "Added.Entry", endEventName = "Added.Done" });
+        await Until(events.Reader, e => e.TryGetProperty("state", out var state) && state.GetString() == "Finished");
     }
 
     [Fact]

@@ -204,7 +204,7 @@ internal class BuildStateVisitor : StateMachineScriptBaseVisitor<object>
         EnsureNotModuleOwned(name, isNode: true);
         if (NodeDict.ContainsKey(name))
             throw new ScriptException($"State {name} 定义出错，已存在相同名字的 State");
-        node = CreateNode(names[names.Length - 1]);
+        node = CreateNode(names[names.Length - 1], name);
         node.Name = name;
         node.NamePrefix = nameprev;
         NodeDict.Add(name, node);
@@ -308,7 +308,7 @@ internal class BuildStateVisitor : StateMachineScriptBaseVisitor<object>
             var name = prefix + pair.Key;
             if (NodeDict.ContainsKey(name))
                 throw new ScriptException($"模块实例 {instance.InstanceName} 节点 {name} 名称碰撞");
-            var target = CreateNode(source.ClassType);
+            var target = CreateNode(source.ClassType, name);
             target.Name = name;
             target.NamePrefix = nameprev;
             target.PosX = source.PosX;
@@ -333,14 +333,15 @@ internal class BuildStateVisitor : StateMachineScriptBaseVisitor<object>
         engine.moduleInstances.Add(instance.InstanceName, instance);
     }
 
-    protected virtual IFSMNode CreateNode(string stateType)
+    protected virtual IFSMNode CreateNode(string stateType, string name)
     {
         try
         {
-            var result = nodeFactory.CreateNode(stateType);
+            var result = engine.CreateOwnedNode(stateType, name);
             result.ClassType = stateType;
             return result;
         }
+        catch (FSMException) { throw; }
         catch (Exception)
         {
             if (engine.ContainsModule(stateType))

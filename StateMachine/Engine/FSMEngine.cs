@@ -181,16 +181,16 @@ namespace StateMachine
         {
             if (!eventDict.TryGetValue(name, out FSMEvent? value))
             { return; }
-            FSMEventAggregator.EventAggregator.Publish(value);
+            FSMNodeEventScope.Publish(this, (FSMEvent)value.Clone());
         }
 
         public void PublishEvent<T>(string name, T eventContext)
         {
             if (!eventDict.TryGetValue(name, out FSMEvent value))
             { return; }
-            var eventValue = value;
+            var eventValue = (FSMEvent)value.Clone();
             eventValue.EventContext = eventContext!;
-            FSMEventAggregator.EventAggregator.Publish(eventValue);
+            FSMNodeEventScope.Publish(this, eventValue);
         }
 
         public void PublishEvent(string name, object eventContext)

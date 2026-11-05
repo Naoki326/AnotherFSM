@@ -26,9 +26,10 @@ namespace StateMachine
                 default:
                     try
                     {
-                        proc = nodeFactory.CreateNode(node_type);
+                        proc = CreateOwnedNode(node_type, namePrev + name);
                         proc.ClassType = node_type;
                     }
+                    catch (FSMException) { throw; }
                     catch (Exception)
                     { throw new ScriptException("Node " + node_type + " 定义出错, " + "该Node未注入IoC中！"); }
                     break;
@@ -51,7 +52,7 @@ namespace StateMachine
                 default:
                     try
                     {
-                        proc = nodeFactory.CreateNode(node_type);
+                        proc = CreateOwnedNode(node_type, namePrev + name);
                         proc.ClassType = node_type;
                     }
                     catch (Exception)
@@ -73,9 +74,10 @@ namespace StateMachine
             try
             {
                 string node_type = nodeFactory.GetNodeFeatureName(typeof(T));
-                proc = nodeFactory.CreateNode(node_type);
+                proc = CreateOwnedNode(node_type, namePrev + name);
                 proc.ClassType = node_type;
             }
+            catch (FSMException) { throw; }
             catch (Exception e)
             { throw new ScriptException("Node " + typeof(T) + " 定义出错, " + "该Node未注入IoC中！", e); }
             if (proc is null)
@@ -93,7 +95,7 @@ namespace StateMachine
             try
             {
                 string node_type = nodeFactory.GetNodeFeatureName(typeof(T));
-                proc = nodeFactory.CreateNode(node_type);
+                proc = CreateOwnedNode(node_type, namePrev + name);
                 proc.ClassType = node_type;
             }
             catch (Exception)

@@ -9,7 +9,7 @@
 
 ### Typed Context (migration in progress)
 
-See [Typed local Context](docs/typed-context.EN.md) for the new core API: local business interfaces, aggregate bindings fixed before execution, separate control and triggers. Legacy Context/Data/Restart examples are transitional, not the new business binding API. #19–#22 complete lifecycle guarantees and host/generated-consumer migration.
+See [Typed local Context](docs/typed-context.EN.md) for the new core API: local business interfaces, aggregate bindings fixed before execution, separate control and triggers. Legacy Context/Data/Restart examples are transitional, not the new business binding API. #19 provides Prepare ownership, concrete execution handles and true exit barriers; unscoped public Handle delivery is explicitly rejected. Event sharing, full host/generated-consumer migration and transitional entry removal remain in #20–#22.
 
 ### Demo
 
@@ -295,7 +295,7 @@ Used in EnumFSMNode and AsyncEnumFSMNode to insert pause checkpoints with `yield
 
 The non-generic, one-parameter and two-parameter `GroupNode` / `ParallelNode` types, dedicated descriptors, child executors, hooks, control propagation and wrapper exits have been removed. Old C# consumers must migrate and no longer compile. Legacy type keys (including `GroupT`/`GroupTU`/`ParallelT`/`ParallelTU`) and `[StartNode->EndEvent];` fail at assembly/import, including inside Module templates. API/WASM reject legacy creation and `updateGroupDefs` requests; React no longer offers composition editing.
 
-For definition reuse, use ordinary Module Input/Output and real Branch publishers as shown below. Migration is **not equivalent**: child lifecycles, observer notifications, pause propagation and Next/Cancel/Error wrapper exits are not automatically translated. There is no built-in parallel replacement, ParallelModule, implicit join or silent sequential fallback; hosts organize concurrency with separate FSMEngine instances. New business binding, execution isolation, event sharing and coordinated startup belong to later tickets and are unchanged here.
+For definition reuse, use ordinary Module Input/Output and real Branch publishers as shown below. Migration is **not equivalent**: child lifecycles, observer notifications, pause propagation and Next/Cancel/Error wrapper exits are not automatically translated. There is no built-in parallel replacement, ParallelModule, implicit join or silent sequential fallback; hosts organize concurrency with separate FSMEngine instances. See the #18/#19 guide above for core business binding and execution isolation; event sharing, coordinated startup and full host migration remain in #20/#21.
 
 #### 7. Custom DSL Rules
 
