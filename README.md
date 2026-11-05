@@ -9,7 +9,7 @@
 
 ### 类型化 Context（迁移中）
 
-新增核心用法见 [类型化局部 Context](docs/typed-context.md)：节点直接使用局部业务接口，聚合绑定在执行前固定，控制与触发分离。旧 Context/Data/Restart 示例是暂存迁移入口，不是新业务绑定用法。#19 已提供 Prepare 占用、具体执行句柄与真正退出保障；无轮次公共 Handle 投递明确拒绝。共享事件、完整宿主/生成消费者迁移及过渡入口删除仍由 #20–#22 完成。
+新增核心用法见 [类型化局部 Context](docs/typed-context.md)：节点直接使用局部业务接口，聚合绑定在执行前固定，控制与触发分离。旧 Context/Data/Restart 示例是暂存迁移入口，不是新业务绑定用法。#19 已提供 Prepare 占用、具体执行句柄与真正退出保障；无轮次公共 Handle 投递明确拒绝。DSL/Fluent/Module、生成消费者、三种实际工厂及 API/Release WASM 宿主已接入，见 [C# 宿主配置](docs/consumer-host.md)。普通 start 拒绝未退出执行；只有显式导入允许等待退出后替换。共享/协调启动归 #20，过渡入口删除归 #22。
 
 ### Demo
 
@@ -102,10 +102,10 @@ just test-browser # API/真实 WASM 的浏览器合同及 UI 回归
 
 ##### 基于反射的节点工厂
 
-Demo 项目提供了一个基于反射的实现 `ReflectionNodeFactory`，无需 IoC 容器即可使用：
+API 项目提供生产程序集扫描工厂 `FSMDemo.API.Services.AssemblyScanningNodeFactory`，无需 IoC 容器；浏览器只能使用封闭白名单 `BrowserNodeFactory`：
 
 ```csharp
-var factory = new ReflectionNodeFactory(Assembly.GetExecutingAssembly());
+var factory = new FSMDemo.API.Services.AssemblyScanningNodeFactory();
 var engine = new FSMEngine(factory);
 ```
 
@@ -225,8 +225,8 @@ var engine = FSMEngineBuilder.Create()
 
 | 函数 | 描述 |
 | --- | --- |
-| FSMExecutor | 构造函数，需要传入启动节点与完成事件 |
-| RestartAsync | 重启动（自动调用停止，等待前次执行正确退出） |
+| BindContext / Prepare / StartAsync | 业务流程：装配全引擎关系、显式输入并独占准备、启动取得具体 Execution |
+| FSMExecutor / RestartAsync | 暂存的无业务依赖入口；不能启动类型化业务节点，不能作为宿主普通 start 隐式抢占 |
 | PauseAsync | 暂停（等待当前执行节点正确暂停） |
 | Continue | 继续（从暂停位置恢复，同步方法） |
 | StopAsync | 停止（等待当前节点阻塞操作完成） |
@@ -255,14 +255,14 @@ var engine = FSMEngineBuilder.Create()
 | EnumFSMNode | 基于 C# yield 机制实现了局部暂停继续的节点，需实现 ExecuteEnumerable 返回 IEnumerable\<object\> |
 | AsyncEnumFSMNode | 同 EnumFSMNode，增加异步执行环境（IAsyncEnumerable\<object\>） |
 
-- 所有节点基础类型中包含一个 Context 作为流程上下文
+- 泛型节点的 `Context : T` 只读局部业务视图；非泛型节点明确无业务依赖，不制造空业务对象。
 
-| Context 的属性 | 描述 |
+| 入口 | 描述 |
 | --- | --- |
-| TriggerEvent | 触发导致进入当前节点的事件 |
-| Data | 从之前节点传入的数据 |
-| ManualLevel | 手动调试的级别 |
-| Token | 当前流程的 Token，暂停或停止时变为取消状态，用于响应外部控制 |
+| Context | 宿主聚合来源的局部业务接口，转移不覆盖绑定 |
+| TriggerEvent | 触发进入节点的业务事件；载荷不是业务 Context |
+| Control.IsPaused | 当前节点的暂停控制信息 |
+| Control.Token / Control.CheckPause() | 独立取消与暂停控制 |
 
 - 节点使用特性
 
@@ -295,7 +295,7 @@ var engine = FSMEngineBuilder.Create()
 
 `GroupNode` / `ParallelNode` 的非泛型、单泛型、双泛型类型以及专属描述、子执行器、钩子、控制联动和包装出口已删除，旧 C# 源码需迁移，不能继续编译。旧类型键（含 `GroupT`/`GroupTU`/`ParallelT`/`ParallelTU`）、`[StartNode->EndEvent];`（包括 Module 模板内）在装配/导入阶段明确报错。API/WASM 拒绝旧创建与 `updateGroupDefs` 请求；React 不再提供组合编辑入口。
 
-纯定义封装使用下文普通 Module 的 Input/Output 和真实 Branch；这不是等价迁移：父子生命周期、观察通知、暂停传播、Next/Cancel/Error 包装出口不会自动转换。Parallel 没有内置替代、ParallelModule 或隐含汇合，也不会静默串行化；独立并发由宿主组织不同 FSMEngine。核心新业务绑定与生命周期隔离见上述 #18/#19 指南；共享事件、协调启动和完整宿主迁移仍由 #20/#21 承接。
+纯定义封装使用下文普通 Module 的 Input/Output 和真实 Branch；这不是等价迁移：父子生命周期、观察通知、暂停传播、Next/Cancel/Error 包装出口不会自动转换。Parallel 没有内置替代、ParallelModule 或隐含汇合，也不会静默串行化；独立并发由宿主组织不同 FSMEngine。核心新业务绑定与生命周期隔离见上述 #18/#19 指南；宿主迁移见 [#21 C# 配置指南](docs/consumer-host.md)；共享事件与协调启动由 #20 承接。
 
 #### 7. 自定义 DSL 规则
 

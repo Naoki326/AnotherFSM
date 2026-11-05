@@ -43,6 +43,9 @@ export interface CreateConnectionRequest {
 export interface ExecutionStatus {
   state: string;
   currentNodeName?: string;
+  /** Fixed demo projection only; business objects never cross the adapter. */
+  businessResult?: number | null;
+  businessRun?: number | null;
 }
 
 export interface ModuleInstance {

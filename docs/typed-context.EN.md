@@ -2,7 +2,7 @@
 
 [简体中文](typed-context.md)
 
-This is the new core C# entry point, not the final context-decoupling release. #21 pairs real DSL/Fluent/Module/generated consumers, all three factories and API/WASM hosts with this entry point. #19 owns execution occupancy, true exit and round isolation; #20 owns event sharing/coordinated start; #22 removes transitional entries.
+This is the new core C# entry point, not the final context-decoupling release. #21 connects real DSL/Fluent/Module/generated consumers, all three factories and API/WASM hosts to this entry point; see [host configuration](consumer-host.EN.md). #19 owns execution occupancy, true exit and round isolation; #20 owns event sharing/coordinated start; #22 removes transitional entries.
 
 ## Nodes depend only on local business interfaces
 
@@ -86,7 +86,7 @@ await execution.Completion;                   // borrowed resources may now be r
 - All four retained restart overloads revalidate ownership and business requirements across the complete reachable graph, including descendants added after construction or reached from an alternate entry. Ownership/requirement failures do not rebind a foreign engine's Context. They await the old exit before initializing control/triggers (including resume flags), binding explicit Data, and starting. No-Data overloads never inherit old Data. `FSMExecutor` is a transitional driver: reacquire its `Execution` after restart; saved `FSMExecution` handles never follow. Typed executions use explicit stop/wait followed by a fresh Prepare.
 - Initialize private node state through `InitBeforeStart` each round. The framework does not reflectively clear fields, roll back business mutations, or dispose caller objects. Business tasks detached from node lifetime gain no automatic reclamation guarantee.
 
-#20 implements shared sets/coordinated startup; #21 migrates host normal-start replacement policy and full typed bindings; #22 removes transitional entries. This section does not prematurely promise those capabilities.
+Host ordinary start rejects unexited executions; explicit Import validates the candidate and awaits old exit. See [#21 host configuration](consumer-host.EN.md). Shared sets/coordinated startup belong to #20; transitional entry removal belongs to #22.
 
 ## Rules and failure stages
 
@@ -94,7 +94,7 @@ await execution.Completion;                   // borrowed resources may now be r
 - Automatic scanning uses only the **declared types** of direct public-readable, instance, non-indexed properties. No field/collection/nested-object scanning, name/order matching or runtime-subtype guessing.
 - Explicit expressions may only follow existing public property paths rooted in the input parameter, such as `x => x.Nested.Job`. No conversions, conditionals, calls, captured external objects, construction/copy/projection or indexers. Sources must have reference declaration types, preventing boxed business copies.
 - Ordinary `public set` anywhere on a source path fails assembly. `init`, `private set` and getter-only properties are supported. The C# compiler rejects subsequent external assignment; the framework does not introduce a source generator validating arbitrary aggregate declarations.
-- `BindContext` validates the **entire engine**, including unreachable nodes, and checks factory-declared/actual node types and requirement metadata. Failed assembly produces no executable plan. Future hosts must reuse this validator rather than implement another binding algorithm.
+- `BindContext` validates the **entire engine**, including unreachable nodes, and checks factory-declared/actual node types and requirement metadata. Failed assembly produces no executable plan. Shared hosts reuse this validator rather than implement another binding algorithm.
 - `Prepare` resolves every necessary source before any node runs. Null aggregates/sources and getter failures fail without candidate fallback. Dynamic hosts use the separately named `PrepareDynamic(object?)`; wrong types also fail before nodes run. Normal C# callers use typed `Prepare(TInput)`.
 - Diagnostics include known qualified node identities, requirements, paths, declared/actual types and root causes. Unknown DSL locations are not invented; assembly does not guess runtime types before instances exist.
 - Source identity uses the complete property declaration chain, not the diagnostic name path; hidden same-name inherited properties can be independent sources. Multiple interfaces of one source share one fixed object per preparation. Later internal property replacement does not rebind this execution; business members (including collection references) remain mutable. Business-field readiness belongs to business nodes.
@@ -107,6 +107,6 @@ Loops and pause/continue do not clear business objects. The framework does not c
 
 ## Transitional entries and evidence
 
-`IFSMNode.Context`, the non-generic base's legacy `Context`, `FSMNodeContext[<T>]` and old `FSMExecutor` constructors/RestartAsync remain temporarily so existing no-business-dependency hosts, demos and generated consumers build. The new path never reads legacy Data. These are not final compatibility promises; old samples are not the typed business Context API.
+`IFSMNode.Context`, the non-generic base's legacy `Context`, `FSMNodeContext[<T>]` and old `FSMExecutor` constructors/RestartAsync remain temporarily; constructors/no-Data Restart still drive explicitly dependency-free flows. Demo/generated control code uses Control; business flows use BindContext/Prepare. The new path never reads legacy Data. These are not final compatibility promises; old samples are not the typed business Context API.
 
 Real execution/assembly tests: `tests/StateMachineTest/TypedContextFacts.cs`, `TypedExecutionFacts.cs`, `ExecutionLifecycleFacts.cs`; affected editor regressions are in `tests/FSMDemoWasmTest/RuntimeSessionFacts.cs`. Real compiler positive/negative cases: `bash tools/test-typed-context.sh`. Red/green evidence and scope: [#18 historical acceptance record](https://github.com/Naoki326/AnotherFSM/blob/0d80339f91b1063649d5880980bd04374ec1d097/.scratch/ticket-18/implementation.md). Host .NET regressions are not real Release WASM acceptance.

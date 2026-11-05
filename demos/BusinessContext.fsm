@@ -1,0 +1,11 @@
+module Work {
+    input Query; output Done;
+    def Query(BusinessQuery) {1->Next;}
+    def Process(BusinessProcess) {1->Done;}
+    Next -> Query to Process;
+}
+def Start(Start) {1->Launch;}
+use Work as A;
+def End(End) {1->EndEvent;}
+Launch -> Start to A;
+A.Done -> End;

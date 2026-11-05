@@ -2,7 +2,7 @@
 
 [English](typed-context.EN.md)
 
-这是核心 C# 新入口；不是整个 Context 解耦迁移的最终发布。完整 DSL/Fluent/Module/生成消费者、三种工厂及 API/WASM 配对由 #21 接入本入口；#19 负责执行占用、真正退出和轮次隔离，#20 负责事件共享与协调启动，#22 删除过渡入口。
+这是核心 C# 新入口；不是整个 Context 解耦迁移的最终发布。完整 DSL/Fluent/Module/生成消费者、三种工厂及 API/WASM 已由 #21 接入本入口，见 [宿主配置](consumer-host.md)；#19 负责执行占用、真正退出和轮次隔离，#20 负责事件共享与协调启动，#22 删除过渡入口。
 
 ## 节点只认识局部业务接口
 
@@ -86,7 +86,7 @@ await execution.Completion;                   // 现在才能释放本轮借用�
 - 保留的四个旧重启重载均重新检查完整可达图的实例归属和业务需求，包括构造后新增的后继及指定入口的后继；归属或需求失败不会换写外引擎 Context。它们也先等本执行退出，再初始化控制/触发信息（含继续标记）、绑定显式 Data 和启动；无 Data 重载不会沿用上轮 Data。`FSMExecutor` 是过渡驱动入口，重启后需重新获取它的 `Execution`；已保存的旧 `FSMExecution` 永远不跟随重启。类型化新路径用显式停止/等待 + 新 Prepare。
 - 节点私有状态在每轮 `InitBeforeStart` 初始化；框架不反射清字段、不回滚业务、不 Dispose 调用方对象。业务自行脱离节点生命周期的后台任务没有新增自动回收保证。
 
-共享集合/协调启动由 #20 实现，宿主普通启动取消隐式替换及完整新绑定迁移由 #21 实现，过渡入口删除由 #22 实现；本节不提前承诺这些能力。
+宿主普通 start 拒绝未退出执行，显式 Import 先验证候选并等待旧执行退出，见 [#21 宿主配置](consumer-host.md)。共享集合/协调启动归 #20，过渡入口删除归 #22。
 
 ## 规则和失败阶段
 
@@ -94,7 +94,7 @@ await execution.Completion;                   // 现在才能释放本轮借用�
 - 自动扫描仅使用直接公开可读、非静态、非索引器属性的**声明类型**。不扫描字段/集合/嵌套对象，不看属性名字、顺序或运行时子类。
 - 显式表达式仅允许从参数开始的已有公开属性路径，例如 `x => x.Nested.Job`。不允许转换、条件、方法调用、捕获外部对象、构造/复制/投影或索引器；来源必须声明为引用类型，不能通过装箱复制业务数据。
 - 来源路径上的普通 `public set` 在装配时拒绝；`init`、`private set`、仅 getter 可以使用。C# 编译器拒绝外部后续赋值；框架不是验证所有聚合类的源码生成器。
-- `BindContext` 校验**整个引擎**和工厂声明/实际类型/需求元数据，不可达节点也不例外。装配失败没有可执行方案。未来宿主必须复用这个校验器，不另写绑定算法。
+- `BindContext` 校验**整个引擎**和工厂声明/实际类型/需求元数据，不可达节点也不例外。装配失败没有可执行方案。共享宿主复用这个校验器，不另写绑定算法。
 - `Prepare` 在任何节点运行之前解析全方案必要来源；聚合或必要来源 null、getter 异常均失败，不回退候选。动态宿主使用单独命名的 `PrepareDynamic(object?)`，错误类型同样在节点运行前拒绝。正常 C# 使用类型化 `Prepare(TInput)`。
 - 诊断提供已知的节点限定名、需求、来源路径、声明/实际类型及根因；未知的 DSL 行列不伪造。装配时尚无运行实例的实际类型不作猜测。
 - 来源身份按完整属性声明链区分，不按名称路径合并；继承中隐藏的同名属性可以是独立来源。名称路径仅用于诊断。一次准备中同一来源用于多接口仍是同一个对象。类内后来换掉属性引用，不改变本次绑定；业务成员（包括集合引用）仍可更新。合法业务对象字段是否就绪由节点判断。
@@ -107,6 +107,6 @@ await execution.Completion;                   // 现在才能释放本轮借用�
 
 ## 过渡入口与验证
 
-`IFSMNode.Context`、非泛型基类的旧 `Context`、`FSMNodeContext[<T>]`、旧 `FSMExecutor` 构造/RestartAsync 仍暂存，以保持既有无业务依赖宿主、Demo 和生成消费者构建。新路径不读旧 Data。它们不是最终兼容承诺；旧样例不适用于类型化业务 Context。
+`IFSMNode.Context`、非泛型基类的旧 `Context`、`FSMNodeContext[<T>]`、旧 `FSMExecutor` 构造/RestartAsync 仍暂存，其中构造/无 Data Restart 仍驱动明确无依赖流程；Demo 和生成消费者的控制已迁移为 Control，业务流程走 BindContext/Prepare。新路径不读旧 Data。它们不是最终兼容承诺；旧样例不适用于类型化业务 Context。
 
 真实执行/装配测试：`tests/StateMachineTest/TypedContextFacts.cs`、`TypedExecutionFacts.cs`、`ExecutionLifecycleFacts.cs`；受影响编辑器回归位于 `tests/FSMDemoWasmTest/RuntimeSessionFacts.cs`。真实编译正负例：`bash tools/test-typed-context.sh`。红绿日志与范围说明见 [#18 历史验收记录](https://github.com/Naoki326/AnotherFSM/blob/0d80339f91b1063649d5880980bd04374ec1d097/.scratch/ticket-18/implementation.md)。宿主 .NET 回归不等于真实 Release WASM 验收。

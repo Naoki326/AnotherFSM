@@ -15,6 +15,9 @@ public sealed class BrowserNodeFactory : IFSMNodeFactory
         Register<IdleNode>("Idle");
         Register<SleepNode>("Sleep");
         Register<AccumulateNode>("Accumulate");
+        Register<DemoNodes.BusinessQueryNode>("BusinessQuery");
+        Register<DemoNodes.BusinessProcessNode>("BusinessProcess");
+        Register<DemoNodes.BusinessApprovalNode>("BusinessApproval");
     }
 
     // Preserve DSL properties and Branch setters in trimmed Release builds, not just constructors.

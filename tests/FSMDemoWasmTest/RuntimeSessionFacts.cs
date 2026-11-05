@@ -94,7 +94,7 @@ public class RuntimeSessionFacts
     }
 
     [Fact]
-    public async Task StopCanCancelARestartWhileThePreviousExecutorIsRetiring()
+    public async Task DuplicateStartFailsWithoutChangingTheRunningExecution()
     {
         var events = System.Threading.Channels.Channel.CreateUnbounded<JsonElement>();
         await using var session = new RuntimeSession(new BrowserNodeFactory(), json =>
@@ -105,9 +105,11 @@ public class RuntimeSessionFacts
         await Value(session, "importScript", new { script = "def Wait(Idle) {1->Done;}" });
         await Value(session, "startExecution", new { startNodeName = "Wait", endEventName = "Done" });
         await Until(events.Reader, e => e.TryGetProperty("state", out var s) && s.GetString() == "Running");
-        var restarting = session.InvokeAsync("startExecution", "{\"startNodeName\":\"Wait\",\"endEventName\":\"Done\"}");
+        var before = (await Value(session, "getExecutionStatus")).ToString();
+        using var rejected = JsonDocument.Parse(await session.InvokeAsync("startExecution", "{\"startNodeName\":\"Wait\",\"endEventName\":\"Done\"}"));
+        rejected.RootElement.GetProperty("error").GetString().Should().Contain("unexited");
+        (await Value(session, "getExecutionStatus")).ToString().Should().Be(before);
         await Value(session, "stopExecution").WaitAsync(TimeSpan.FromSeconds(1));
-        await restarting.WaitAsync(TimeSpan.FromSeconds(1));
         (await Value(session, "getExecutionStatus")).GetProperty("state").GetString().Should().Be("Idle");
     }
 
@@ -127,6 +129,117 @@ public class RuntimeSessionFacts
         error.RootElement.GetProperty("error").GetString().Should().Contain("Module").And.Contain("not equivalent");
         (await Value(session, "exportScript")).GetString().Should().Be(before);
         notifications.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task SessionStartDoesNotQueueBehindAnOccupiedHostPreparation()
+    {
+        using var release = new ManualResetEventSlim();
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var context = HostContext.Create(() =>
+        {
+            entered.TrySetResult();
+            release.Wait();
+            return new DemoNodes.DemoBusinessInput();
+        });
+        await using var session = new RuntimeSession(new BrowserNodeFactory(), _ => { }, context: context);
+        await Value(session, "importScript", new { script = "def Query(BusinessQuery) {1->Done;}" });
+        const string payload = "{\"startNodeName\":\"Query\",\"endEventName\":\"Done\"}";
+        var first = Task.Run(() => session.InvokeAsync("startExecution", payload));
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var second = Task.Run(() => session.InvokeAsync("startExecution", payload));
+        try
+        {
+            using var rejected = JsonDocument.Parse(await second.WaitAsync(TimeSpan.FromSeconds(1)));
+            rejected.RootElement.GetProperty("error").GetString().Should().Contain("unexited");
+            var stopping = Value(session, "stopExecution");
+            stopping.IsCompleted.Should().BeFalse();
+            release.Set();
+            await stopping.WaitAsync(TimeSpan.FromSeconds(5));
+            using var abandoned = JsonDocument.Parse(await first);
+            abandoned.RootElement.GetProperty("error").GetString().Should().NotBeNullOrEmpty();
+        }
+        finally { release.Set(); await Task.WhenAll(first, second); }
+    }
+
+    private sealed class ExitProbe
+    {
+        public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource Cleaning { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource Released { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public bool Disposed;
+    }
+    private sealed class ExitNode(ExitProbe probe) : BaseFSMNode
+    {
+        protected override async Task ExecuteAsync()
+        {
+            probe.Entered.TrySetResult();
+            try { await Task.Delay(Timeout.Infinite, Control.Token); }
+            finally { probe.Cleaning.TrySetResult(); await probe.Released.Task; }
+        }
+        protected override void Dispose(bool disposing) { if (disposing) probe.Disposed = true; base.Dispose(disposing); }
+    }
+    private sealed class ExitFactory(ExitProbe probe) : IFSMNodeFactory
+    {
+        private readonly BrowserNodeFactory browser = new();
+        public IFSMNode CreateNode(string key) => key == "Exit" ? new ExitNode(probe) : browser.CreateNode(key);
+        public Type GetNodeType(string key) => key == "Exit" ? typeof(ExitNode) : browser.GetNodeType(key);
+        public string GetNodeFeatureName(Type type) => type == typeof(ExitNode) ? "Exit" : browser.GetNodeFeatureName(type);
+    }
+
+    [Fact]
+    public async Task FinishedBeforeTrueExitStillRejectsOrdinaryStartWithoutResettingStatus()
+    {
+        var probe = new ExitProbe();
+        await using var manager = new EngineManager(Microsoft.Extensions.Logging.Abstractions.NullLogger<EngineManager>.Instance, new ExitFactory(probe), true);
+        await manager.ImportAsync("def Old(Exit) {1->Done;}");
+        await manager.StartExecution("Old", "Done");
+        await probe.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var old = manager.Executor!;
+        var finished = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        manager.StateChanged += (state, _) => { if (state == ExecutionState.Finished) finished.TrySetResult(); };
+        old.Execution.PublishEvent("Done");
+        try
+        {
+            await finished.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            old.Execution.Completion.IsCompleted.Should().BeFalse();
+            manager.CurrentState.Should().Be(ExecutionState.Finished);
+            Func<Task> conflicting = () => manager.StartExecution("Old", "Done");
+            await conflicting.Should().ThrowAsync<FSMException>();
+            manager.CurrentState.Should().Be(ExecutionState.Finished);
+            manager.Executor.Should().BeSameAs(old);
+        }
+        finally { probe.Released.TrySetResult(); old.Stop(); }
+        await old.Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
+    }
+
+    [Fact]
+    public async Task ExplicitImportWaitsForActualNodeCleanupBeforeDisposalAndNewExecution()
+    {
+        var probe = new ExitProbe();
+        await using var manager = new EngineManager(Microsoft.Extensions.Logging.Abstractions.NullLogger<EngineManager>.Instance, new ExitFactory(probe), true);
+        await manager.ImportAsync("def Old(Exit) {1->Done;}");
+        await manager.StartExecution("Old", "Done");
+        await probe.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var old = manager.Executor!;
+        var importing = manager.ImportAsync("def New(End) {1->Done;}");
+        try
+        {
+            await probe.Cleaning.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            importing.IsCompleted.Should().BeFalse();
+            old.Execution.Completion.IsCompleted.Should().BeFalse();
+            probe.Disposed.Should().BeFalse();
+            Func<Task> conflicting = () => manager.StartExecution("New", "Done");
+            await conflicting.Should().ThrowAsync<FSMException>();
+        }
+        finally { probe.Released.TrySetResult(); }
+        await importing.WaitAsync(TimeSpan.FromSeconds(5));
+        probe.Disposed.Should().BeTrue();
+        var activated = new List<string>();
+        manager.NodeActivated += activated.Add;
+        await manager.StartExecution("New", "Done");
+        await manager.Executor!.Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
+        activated.Should().Equal("New");
     }
 
     public sealed class EmptyInput { }

@@ -30,8 +30,8 @@ namespace StateMachine
                         proc.ClassType = node_type;
                     }
                     catch (FSMException) { throw; }
-                    catch (Exception)
-                    { throw new ScriptException("Node " + node_type + " 定义出错, " + "该Node未注入IoC中！"); }
+                    catch (Exception ex)
+                    { throw new ScriptException($"Node {namePrev + name}, key {node_type}: factory creation failed: {ex.GetBaseException().Message}", ex); }
                     break;
             }
             if (proc is null)
@@ -79,7 +79,7 @@ namespace StateMachine
             }
             catch (FSMException) { throw; }
             catch (Exception e)
-            { throw new ScriptException("Node " + typeof(T) + " 定义出错, " + "该Node未注入IoC中！", e); }
+            { throw new ScriptException($"Node {namePrev + name}, declared {typeof(T)}: factory creation failed: {e.GetBaseException().Message}", e); }
             if (proc is null)
             { throw new ScriptException("Node " + typeof(T) + " 获取失败！"); }
             proc.Name = name;

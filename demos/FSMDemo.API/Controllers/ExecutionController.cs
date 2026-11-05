@@ -25,9 +25,13 @@ public class ExecutionController : ControllerBase
     [HttpPost("start")]
     public async Task<ActionResult> Start([FromBody] StartExecutionRequest request)
     {
-        var result = await _engineManager.StartExecution(request.StartNodeName, request.EndEventName);
-        if (result) return Ok();
-        return BadRequest(new { error = "Failed to start execution" });
+        try
+        {
+            var result = await _engineManager.StartExecution(request.StartNodeName, request.EndEventName);
+            if (result) return Ok();
+            return BadRequest(new { error = "Failed to start execution: start node not found" });
+        }
+        catch (Exception ex) { return BadRequest(new { error = ex.Message }); }
     }
 
     [HttpPost("pause")]

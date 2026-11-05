@@ -43,6 +43,10 @@ await runtime.dispose();
 
 WASM 保留已创建的 .NET runtime，`dispose` 只释放 session；生命周期调用串行化以兼容 React StrictMode。图刷新与导入有失效保护，停止/导入会取消旧高亮定时器；刷新失败在页面显示并可重试。
 
+## C# 业务输入与启动失败（#21）
+
+API/WASM 均由 C# `DemoBusinessHost` 显式配置 `DemoBusinessInput` 及每次实例；可导入 `demos/BusinessContext.fsm` 执行业务示例。前端不配置任意 JSON/CLR 依赖，只接收固定结果 DTO。普通 start 遇到未退出执行立即失败，不自动停止旧执行、不清除原状态/日志；显式 Stop 等待后才启动新执行。Import 是单独的显式替换，先验证候选，再等旧执行真实退出。详细双语配置见 [宿主说明](../../docs/consumer-host.md)，真实 Release WASM/API 证据见 [#21 记录](../../docs/implementation/21-consumer-host-migration.md)。
+
 ## 导入 → 创建实例 → 接线 → 导出 → 再导入
 
 1. 点击 **Demo**，加载 `src/demo.fsm`；或者点击 **Import**，粘贴多行新 DSL / 选择 `.fsm` 文件，再点 **Import script**。成功导入才替换当前图；解析错误或旧组合用法被拒绝时保留原图，并在对话框中显示诊断。

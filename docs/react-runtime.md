@@ -41,7 +41,7 @@
 | deleteConnection | REST | 共享 C# | 指定源、目标与事件删除 |
 | renameConnection | REST | 共享 C# | 普通事件修改，限定出口事件拒绝重命名 |
 | getExecutionStatus | REST | 共享 C# | Idle/Running/Paused/Finished 查询 |
-| startExecution | REST | 共享 C# | 非阻塞启动、模块 End 不提前结束 |
+| startExecution | REST | 共享 C# | C# 聚合绑定、缺失输入、冲突立即拒绝且原状态不变；模块 End 不提前结束 |
 | pauseExecution | REST | 共享 C# | 异步节点执行时可响应 |
 | continueExecution | REST | 共享 C# | 暂停后继续 |
 | stopExecution | REST | 共享 C# | 停止后可再次启动，旧通知隔离 |
@@ -50,9 +50,15 @@
 
 ## 浏览器能力边界
 
-浏览器安全节点由 `BrowserNodeFactory` 显式注册，包括 Start、End、Idle、Sleep、Accumulate；未知节点明确失败。GroupNode/ParallelNode 六种形态均已移除；旧 DSL（含模板子流程描述）、创建请求及旧 groupdefs 路由/WASM 操作明确失败，并提示迁向普通 Module 仅能复用定义，不等价于父子生命周期、包装出口或并行汇合。EditorRuntime、DTO 与 React 不再提供这些组合编辑能力。不支持服务器任意路径扫描、外部文件模块发现、任意动态插件或设备节点。请导入包含 Module 定义的自包含 DSL；同文件模块无需服务器文件访问。
+浏览器安全节点由 `BrowserNodeFactory` 显式注册，包括 Start、End、Idle、Sleep、Accumulate、BusinessQuery、BusinessProcess、BusinessApproval；未知节点明确失败。GroupNode/ParallelNode 六种形态均已移除；旧 DSL（含模板子流程描述）、创建请求及旧 groupdefs 路由/WASM 操作明确失败，并提示迁向普通 Module 仅能复用定义，不等价于父子生命周期、包装出口或并行汇合。EditorRuntime、DTO 与 React 不再提供这些组合编辑能力。不支持服务器任意路径扫描、外部文件模块发现、任意动态插件或设备节点。请导入包含 Module 定义的自包含 DSL；同文件模块无需服务器文件访问。
 
 Release 裁剪保留 DSL/节点及 DTO 所需业务反射元数据，不强制 AOT 或 Worker；平台库仍裁剪。`WasmBuildNative=false` 不需要安装原生 WASM 构建工具链。
+
+## 业务输入与启动策略（#21）
+
+API 与 Browser 启动代码显式安装 `DemoBusinessHost.Create()`，指定聚合类型、关系及每次新实例。依赖节点走 BindContext/Prepare，非泛型无依赖节点不制造空对象。前端只接收固定 `businessResult/businessRun` 结果 DTO，不传业务对象或 CLR 名称；双 Adapter 保持相同 start/end 接口。详见 [中英宿主配置](consumer-host.md)。
+
+普通 start 遇到准备占用或任何未退出执行立即拒绝，不 Retire、不换绑定、不清状态或日志；停止并等待后可提供新实例。显式 Import 先验证候选装配，再等待旧执行真正退出、隔离旧通知。非法候选保留原执行。宿主来源工厂与节点初始化不持状态锁，控制不被准备阻塞。
 
 ## 验证分层
 
@@ -62,6 +68,6 @@ Release 裁剪保留 DSL/节点及 DTO 所需业务反射元数据，不强制 A
 4. `npm test --prefix demos/FSMDemo.Frontend`：React 图投影与运行时配置/生命周期回归。
 5. `just test-browser`：先构建 Release .NET 和 React，再在 Chrome 中使用真实 API/WASM Adapter 运行相同行为合同、UI 集成与错误场景。首次运行执行 `npx playwright install chrome`（在前端目录）；Linux CI 加 `--with-deps`。
 
-浏览器测试先确认业务 API 未运行，在 `/AnotherFSM/` 上验证真实 WASM、监测业务 REST/SignalR 请求，再启动真实 API 执行同合同。使用事件或状态条件等待，不用固定 sleep。测试日志与失败 trace 保存在 `.scratch/issue-7/`；合同页仅在 `RUNTIME_CONTRACT=true` 时构建，不进入 Pages 最终产物。
+浏览器测试先确认业务 API 未运行，在 `/AnotherFSM/` 上验证真实 WASM、监测业务 REST/SignalR 请求，再启动真实 API 执行同合同。使用事件或状态条件等待，不用固定 sleep。测试日志与失败 trace 保存在 `.scratch/issue-7/`；#21 真实逐层结果及独立工作树外的原始日志位置见 [验收记录](implementation/21-consumer-host-migration.md)；合同页仅在 `RUNTIME_CONTRACT=true` 时构建，不进入 Pages 最终产物。
 
 最终发布使用 `bash tools/build-browser.sh`（无合同页），并检查解决方案、React 构建、子路径刷新及活动配置中无旧应用引用。

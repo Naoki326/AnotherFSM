@@ -165,6 +165,8 @@ namespace StateMachine
         internal FSMEventSharing.Member Member { get; } = new FSMEventSharing.Member();
         internal string Description => $"entry {(selectedEntry ?? entry)?.Start ?? "<unset>"}, engine {System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(engine)}";
         private (string Start, string End)? selectedEntry;
+        private IReadOnlyList<FSMEvent>? selectedEndEvents;
+        private Action<FSMExecutor>? beforeStart;
         private IDisposable? receiverResource;
         // Narrow execution-receiver preparation seam, not a public messaging extension point.
         internal Func<IDisposable>? ReceiverPreparation { get; set; }
@@ -194,6 +196,25 @@ namespace StateMachine
         public Task<FSMExecutor> StartAsync(string startNode, string endEvent, bool isLongRunning = false)
         {
             WithEntry(startNode, endEvent);
+            return StartAsync(isLongRunning);
+        }
+
+        /// <summary>Install observers before any node runs; all end events belong to this execution.</summary>
+        public Task<FSMExecutor> StartAsync(string startNode, IEnumerable<string> endEvents, Action<FSMExecutor>? beforeStart = null, bool isLongRunning = false)
+            => StartAsync(startNode, endEvents.Select(engine.GetEvent), beforeStart, isLongRunning);
+
+        public Task<FSMExecutor> StartAsync(string startNode, IEnumerable<FSMEvent> endEvents, Action<FSMExecutor>? beforeStart = null, bool isLongRunning = false)
+        {
+            var ends = (endEvents ?? throw new FSMException("End events are required.")).ToArray();
+            lock (sync)
+            {
+                if (started || released || Member.Starting) throw new FSMException("This execution preparation is already started, starting or released.");
+                if (!engine.ContainsNode(startNode) || ends.Length == 0 || ends.Any(e => e == null))
+                    throw new FSMException($"Entry {startNode} requires an existing node and at least one non-null end event.");
+                selectedEntry = (startNode, ends[0].EventName);
+                selectedEndEvents = ends;
+                this.beforeStart = beforeStart;
+            }
             return Task.FromResult(FSMEventSharing.Start(new[] { this }, isLongRunning)[0]);
         }
 
@@ -206,6 +227,8 @@ namespace StateMachine
                 if (!engine.ContainsNode(startNode) || !engine.ContainsEvent(endEvent))
                     throw new FSMException($"Entry {startNode} / end event {endEvent} does not exist.");
                 selectedEntry = (startNode, endEvent);
+                selectedEndEvents = null;
+                beforeStart = null;
                 return this;
             }
         }
@@ -215,18 +238,21 @@ namespace StateMachine
             if (started || released || Member.Starting && !reserved) throw new FSMException($"This execution preparation ({Description}) is already started, starting or released.");
             validateGraph();
             var configured = selectedEntry ?? entry ?? throw new FSMException("No assembled entry; configure startNode/endEvent before coordinated Start.");
-            if (!engine.ContainsNode(configured.Start) || !engine.ContainsEvent(configured.End))
+            if (!engine.ContainsNode(configured.Start) || selectedEndEvents == null && !engine.ContainsEvent(configured.End))
                 throw new FSMException($"Entry {configured.Start} / end event {configured.End} does not exist.");
         }
 
         internal FSMExecutor CreateExecutor()
         {
             var configured = (selectedEntry ?? entry)!.Value;
-            return new FSMExecutor(engine.GetNode(configured.Start), engine.GetEvent(configured.End));
+            return new FSMExecutor(engine.GetNode(configured.Start), selectedEndEvents ?? new[] { engine.GetEvent(configured.End) });
         }
 
         internal void PrepareReceiver(FSMExecutor executor, bool isLongRunning)
         {
+            // Observer installation is user code too: retain #20's reservation and
+            // rollback/retry semantics, and never invoke it under the range lock.
+            beforeStart?.Invoke(executor);
             receiverResource = ReceiverPreparation?.Invoke();
             executor.PrepareContext(nodes, values, owner, () => engine.ReleaseExecution(owner), Member, RollbackReceiver);
         }

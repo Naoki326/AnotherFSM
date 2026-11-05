@@ -342,11 +342,11 @@ internal class BuildStateVisitor : StateMachineScriptBaseVisitor<object>
             return result;
         }
         catch (FSMException) { throw; }
-        catch (Exception)
+        catch (Exception ex)
         {
             if (engine.ContainsModule(stateType))
                 throw new ScriptException($"模块 {stateType} 不再支持旧 def 实例声明；请使用 use {stateType} as Instance;");
-            throw new ScriptException($"State {stateType} 定义出错，该 State 未注入 IoC 中");
+            throw new ScriptException($"Node {name}, key {stateType}: factory creation failed: {ex.GetBaseException().Message}", ex);
         }
     }
 }

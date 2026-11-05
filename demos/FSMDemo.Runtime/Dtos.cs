@@ -64,6 +64,8 @@ public class ExecutionStatus
 {
     public ExecutionState State { get; set; }
     public string? CurrentNodeName { get; set; }
+    public int? BusinessResult { get; set; }
+    public int? BusinessRun { get; set; }
 }
 
 public class ModuleInstanceDto

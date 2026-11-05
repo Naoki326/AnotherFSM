@@ -33,7 +33,7 @@ export function ExecutionToolbar() {
   const canStart = !busy && (state === 'Idle' || state === 'Finished');
   const canPause = !busy && state === 'Running';
   const canContinue = !busy && state === 'Paused';
-  const canStop = !busy && (state === 'Running' || state === 'Paused');
+  const canStop = !busy && (state === 'Running' || state === 'Paused' || state === 'Finished');
   const recentExecutionLog = executionLog.slice(-10);
 
   const handleStart = useCallback(async () => {
@@ -43,7 +43,8 @@ export function ExecutionToolbar() {
     }
     try {
       const store = useEngineStore.getState();
-      store.resetExecution();
+      // Start may be rejected without changing the current execution. Keep its
+      // state/log until the host accepts and publishes the next execution.
       await runtime.startExecution('Start', 'EndEvent');
       await store.refreshExecution();
     } catch (error) {

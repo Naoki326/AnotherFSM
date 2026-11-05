@@ -14,9 +14,9 @@ public sealed class RuntimeSession : IAsyncDisposable
     private readonly object _publishSync = new();
     private volatile bool _disposed;
 
-    public RuntimeSession(IFSMNodeFactory factory, Action<string> publish, bool browser = true)
+    public RuntimeSession(IFSMNodeFactory factory, Action<string> publish, bool browser = true, HostContext? context = null)
     {
-        _manager = new EngineManager(NullLogger<EngineManager>.Instance, factory, browser);
+        _manager = new EngineManager(NullLogger<EngineManager>.Instance, factory, browser, context);
         _publish = publish;
         _manager.StateChanged += (state, node) => Publish(new RuntimeEvent("StateChanged", state.ToString(), node));
         _manager.NodeActivated += node => Publish(new RuntimeEvent("NodeActivated", NodeName: node));
@@ -39,9 +39,9 @@ public sealed class RuntimeSession : IAsyncDisposable
         var entered = false;
         try
         {
-            // Serialize graph operations across async import/start boundaries. Controls
-            // must bypass this gate so they can cancel a pending start or pause.
-            if (operation is not ("pauseExecution" or "continueExecution" or "stopExecution" or "getExecutionStatus"))
+            // Serialize graph edits/imports. Start must reach the host's conflict
+            // check immediately, and controls must be able to cancel pending startup.
+            if (operation is not ("startExecution" or "pauseExecution" or "continueExecution" or "stopExecution" or "getExecutionStatus"))
             {
                 await _operations.WaitAsync();
                 entered = true;

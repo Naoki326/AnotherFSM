@@ -9,7 +9,7 @@
 
 ### Typed Context (migration in progress)
 
-See [Typed local Context](docs/typed-context.EN.md) for the new core API: local business interfaces, aggregate bindings fixed before execution, separate control and triggers. Legacy Context/Data/Restart examples are transitional, not the new business binding API. #19 provides Prepare ownership, concrete execution handles and true exit barriers; unscoped public Handle delivery is explicitly rejected. Event sharing, full host/generated-consumer migration and transitional entry removal remain in #20–#22.
+See [Typed local Context](docs/typed-context.EN.md) for the new core API: local business interfaces, aggregate bindings fixed before execution, separate control and triggers. Legacy Context/Data/Restart examples are transitional, not the new business binding API. #19 provides Prepare ownership, concrete execution handles and true exit barriers; unscoped public Handle delivery is explicitly rejected. DSL/Fluent/Module, generated consumers, all three production factories and API/Release WASM hosts are connected: see [C# host configuration](docs/consumer-host.EN.md). Ordinary start rejects unexited executions; only explicit import permits replacement after exit. Sharing/coordinated startup belongs to #20; transitional entry removal belongs to #22.
 
 ### Demo
 
@@ -102,10 +102,10 @@ This interface is a node factory class called when FSMEngine constructs node obj
 
 ##### Reflection-based Node Factory
 
-The Demo project provides a `ReflectionNodeFactory` implementation that works without an IoC container:
+The API provides the production scanning factory `FSMDemo.API.Services.AssemblyScanningNodeFactory`, without an IoC container. Browsers use only the closed `BrowserNodeFactory` whitelist:
 
 ```csharp
-var factory = new ReflectionNodeFactory(Assembly.GetExecutingAssembly());
+var factory = new FSMDemo.API.Services.AssemblyScanningNodeFactory();
 var engine = new FSMEngine(factory);
 ```
 
@@ -225,8 +225,8 @@ Every FSMExecutor instance manages a state machine execution object that can con
 
 | Functions | Description |
 | --- | --- |
-| FSMExecutor | Constructor, requires a starting node and completion event |
-| RestartAsync | Restarts (auto-calls stop, waits for previous execution to exit) |
+| BindContext / Prepare / StartAsync | Business flows: validate the entire graph, exclusively prepare explicit input, start a concrete Execution |
+| FSMExecutor / RestartAsync | Transitional dependency-free entry; cannot start typed business nodes or authorize implicit host start replacement |
 | PauseAsync | Pauses (waits for current node to properly pause) |
 | Continue | Continues from paused position (synchronous) |
 | StopAsync | Stops (waits for blocking operations in current node) |
@@ -255,14 +255,14 @@ Custom node classes need to inherit from node base classes to execute correspond
 | EnumFSMNode | Node based on C# yield mechanism for local pause/continuation |
 | AsyncEnumFSMNode | Like EnumFSMNode with async execution (IAsyncEnumerable) |
 
-- All node base types include a Context as the flow context
+- Generic nodes have a read-only local business `Context : T`. Non-generic nodes explicitly require no business dependency, without empty business objects.
 
-| Context Property | Description |
+| Entry | Description |
 | --- | --- |
-| TriggerEvent | The event that triggered entry into the current node |
-| Data | Data passed from the previous node |
-| ManualLevel | Manual debugging level |
-| Token | Current flow token; cancelled during pause/stop, used for responding to external control |
+| Context | Local interface borrowed from the host aggregate; transitions never rebind it |
+| TriggerEvent | Business trigger and payload, separate from business Context |
+| Control.IsPaused | Current node pause control |
+| Control.Token / Control.CheckPause() | Separate cancellation and pause control |
 
 - Node attributes
 
@@ -295,7 +295,7 @@ Used in EnumFSMNode and AsyncEnumFSMNode to insert pause checkpoints with `yield
 
 The non-generic, one-parameter and two-parameter `GroupNode` / `ParallelNode` types, dedicated descriptors, child executors, hooks, control propagation and wrapper exits have been removed. Old C# consumers must migrate and no longer compile. Legacy type keys (including `GroupT`/`GroupTU`/`ParallelT`/`ParallelTU`) and `[StartNode->EndEvent];` fail at assembly/import, including inside Module templates. API/WASM reject legacy creation and `updateGroupDefs` requests; React no longer offers composition editing.
 
-For definition reuse, use ordinary Module Input/Output and real Branch publishers as shown below. Migration is **not equivalent**: child lifecycles, observer notifications, pause propagation and Next/Cancel/Error wrapper exits are not automatically translated. There is no built-in parallel replacement, ParallelModule, implicit join or silent sequential fallback; hosts organize concurrency with separate FSMEngine instances. See the #18/#19 guide above for core business binding and execution isolation; event sharing, coordinated startup and full host migration remain in #20/#21.
+For definition reuse, use ordinary Module Input/Output and real Branch publishers as shown below. Migration is **not equivalent**: child lifecycles, observer notifications, pause propagation and Next/Cancel/Error wrapper exits are not automatically translated. There is no built-in parallel replacement, ParallelModule, implicit join or silent sequential fallback; hosts organize concurrency with separate FSMEngine instances. See the #18/#19 guide above for core business binding and execution isolation; host migration is documented in the [#21 C# configuration guide](docs/consumer-host.EN.md); event sharing and coordinated startup belong to #20.
 
 #### 7. Custom DSL Rules
 

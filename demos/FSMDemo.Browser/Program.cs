@@ -18,7 +18,7 @@ namespace FSMDemo.Browser
         public static void Initialize()
         {
             if (_session != null) return;
-            _session = new RuntimeSession(new BrowserNodeFactory(), Emit);
+            _session = new RuntimeSession(new BrowserNodeFactory(), Emit, context: DemoBusinessHost.Create());
         }
 
         [JSExport]
