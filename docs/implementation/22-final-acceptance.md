@@ -139,3 +139,9 @@
 已知限制不变：非协作初始化/节点/取消回调不返回仍保持占用；不强制中断或Dispose业务资源。完整构建66个警告包含既有nullable/打包/成员警告和确定性同步回归的xUnit1031（本次新增1个）；npm ci报告18 vulnerabilities（11 moderate、7 high），未升级依赖或改lock。Release保留反射/Reactive/Autofac裁剪及React chunk警告，浏览器真实结果不意味着无警告；同步初始化交错仍明确是.NET证据，非浏览器阻塞探针。
 
 交付分支 `pi-web-agent-fffc95fc-a9c1-4ca2-ac5d-84418023c187`，唯一worktree `C:/Work/AnotherFSM-worktrees/pi-web-agent-fffc95fc-a9c1-4ca2-ac5d-84418023c187`。最终提交SHA、与最新集成tip的merge核验、干净状态及证据校验和保存在外置 `handoff.txt` / `final-integration.log` / `SHA256SUMS.txt`。主代理负责复核、重新关闭 #19 及父规格最终处置；实施者未push/关票/合主树、未另建worktree或运行自建/隐藏审查。
+
+## 主代理最终独立闭合
+
+最终补修合入集成 `25be4e39e552369e0a23298a9e9463f5f928a48d`（受测 tree `45db7458da37de79c7bc85486b1086b1ed60b0b9`）后，主代理亲自重做全部门禁：Debug/Release 核心 **279/API83/宿主42**，29个真实编译负例、生成消费者、前端12/typecheck/lint、重新Release publish及真实Chrome **WASM12/API7**，全部通过。两JSON无跳过/异常/flaky，服务端口均closed；正常生产包重建且排除合同页。原Standards复审确认P1闭合、补丁新增缺陷/硬违规/smell均0，Spec补丁复核新增缺陷/缺口/范围蔓延均0。所有已知发现有主代理逐条核验和处置，无剩余已知未满足AC。
+
+完整主代理结果、两轴原始范围与最终结论、技术交付边界统一见 [#16 最终交付记录](16-final-delivery.md)。本矩阵仍保留每轮首次失败及分层证据，不以后续绿色覆盖历史；最终工单关闭及远端提交以GitHub交付回读为准。
