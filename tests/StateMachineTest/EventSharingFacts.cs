@@ -320,8 +320,7 @@ public class EventSharingFacts
         var foreign = (FSMEvent)source.GetEvent("Ping").Clone();
         target.GetNode("Start").AddTransition(foreign, target.GetNode("Start"));
         target.ConnectNode("Fence", "Start", "Start");
-        using var b = new FSMExecutor(target.GetNode("Start"), end ? foreign : target.GetEvent("Done"));
-        await b.RestartAsync();
+        using var b = await target.Prepare().StartAsync("Start", new[] { end ? foreign : target.GetEvent("Done") });
         try
         {
             (await Next(probe)).Should().Be("start");
@@ -450,8 +449,7 @@ public class EventSharingFacts
         var target = new FSMEngine(new BareFactory(probe));
         target.CreateNode("Bare", "Start");
         target.AddEvent(new FSMEvent("Done"));
-        using var b = new FSMExecutor(target.GetNode("Start"), new FSMEvent("Done"));
-        await b.RestartAsync();
+        using var b = await target.Prepare().StartAsync("Start", new[] { new FSMEvent("Done") });
         try
         {
             (await Next(probe)).Should().Be("start");

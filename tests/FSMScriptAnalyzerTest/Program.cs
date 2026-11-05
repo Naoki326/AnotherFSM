@@ -35,14 +35,14 @@ internal static class Program
             EmbeddedModulesAndNamespace(factory);
             RelativeAdditionalFiles(factory);
             var inline = InlineModules.Create(factory);
-            await ExecutesToFinish(inline.Start, inline.Finished,
+            await ExecutesToFinish(inline.Engine, inline.Start, inline.Finished,
                 "Start", "First.Entry", "First.Exit", "Second.Entry", "Second.Exit", "Finish");
             var embedded = EmbeddedModules.Create(factory);
-            await ExecutesToFinish(embedded.Area_Start, embedded.Area_Finished,
+            await ExecutesToFinish(embedded.Engine, embedded.Area_Start, embedded.Area_Finished,
                 "Area.Start", "Area.One.Retry", "Area.Two.Entry", "Area.Two.Private", "Area.Finish");
             var migrated = ATest.Create(factory);
             migrated.Check.Count = 1;
-            await ExecutesToFinish(migrated.Start, migrated.EndEvent,
+            await ExecutesToFinish(migrated.Engine, migrated.Start, migrated.EndEvent,
                 "Start", "Check", "Wrapped.Entry", "Wrapped.Exit", "End");
             Console.WriteLine("PASS: generated consumers compiled, queried and real Module flows executed successfully.");
             return 0;
@@ -54,12 +54,12 @@ internal static class Program
         }
     }
 
-    private static async Task ExecutesToFinish(IFSMNode start, FSMEvent end, params string[] expectedNodes)
+    private static async Task ExecutesToFinish(FSMEngine engine, IFSMNode start, FSMEvent end, params string[] expectedNodes)
     {
-        using var executor = new FSMExecutor(start, end);
         var visited = new System.Collections.Concurrent.ConcurrentQueue<string>();
-        executor.NodeStateChanged += (_, name) => visited.Enqueue(name);
-        Check(await executor.RestartAsync(true).WaitAsync(TimeSpan.FromSeconds(5)), "generated flow starts");
+        using var prepared = engine.Prepare();
+        using var executor = await prepared.StartAsync(start.Name, new[] { end },
+            value => value.NodeStateChanged += (_, name) => visited.Enqueue(name), true);
         await executor.ExecutorTask.WaitAsync(TimeSpan.FromSeconds(5));
         Check(executor.State == FSMState.Finished, "generated flow reaches its end event");
         foreach (var name in expectedNodes)

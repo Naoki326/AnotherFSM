@@ -21,15 +21,10 @@ namespace StateMachine
     }
 
     [DebuggerNonUserCode]
-    public partial class FSMExecutor : IHandle<FSMEvent>, IEnumerable<IFSMNode>
+    public partial class FSMExecutor : IEnumerable<IFSMNode>
     {
 
-        public FSMExecutor(IFSMNode start, FSMEvent endEvent, bool isAsyncObserver)
-            : this(start, new[] { endEvent }, isAsyncObserver)
-        {
-        }
-
-        public FSMExecutor(IFSMNode start, IEnumerable<FSMEvent> endEvents, bool isAsyncObserver)
+        internal FSMExecutor(IFSMNode start, IEnumerable<FSMEvent> endEvents, bool isAsyncObserver = false)
         {
             this.start = start ?? throw new FSMException("Start 节点不能为空！");
             engine = FSMEngine.OwnerOf(start) ?? new FSMEngine(null!);
@@ -52,14 +47,6 @@ namespace StateMachine
             InitObserver(isAsyncObserver);
 
             foreach (var node in this.Distinct(FSMNodeIdentityComparer.Instance)) engine.ClaimNode(node, node.Name);
-        }
-
-        public FSMExecutor(IFSMNode start, FSMEvent endEvent) : this(start, endEvent, false)
-        {
-        }
-
-        public FSMExecutor(IFSMNode start, IEnumerable<FSMEvent> endEvents) : this(start, endEvents, false)
-        {
         }
 
         private readonly FSMEngine engine;
@@ -522,12 +509,6 @@ namespace StateMachine
             }
         }
 
-        private void StartOwned(bool isLongRunning, object owner, Action release)
-        {
-            BeginOwned(owner);
-            RunPreparedContext(isLongRunning, release);
-        }
-
         internal void RunPreparedContext(bool isLongRunning, Action? release = null)
         {
             var round = Execution;
@@ -595,55 +576,6 @@ namespace StateMachine
             foreach (var node in executionNodes) node.InitBeforeStart();
         }
 
-
-        private void RejectBoundRestart(IFSMNode next)
-        {
-            if (hasBoundContext || engine.Concat(this).Concat(new[] { next }).Concat(Traversal(next, new ConcurrentBag<IFSMNode>()))
-                .Any(n => n is IFSMContextNode contextual && contextual.ContextType != null))
-                throw new FSMException("Typed execution requires a fresh flow.Prepare(input); legacy RestartAsync/Data cannot supply, reuse or replace its bindings.");
-        }
-
-        public Task<bool> RestartAsync(bool isLongRunning = false)
-            => RestartLegacyAsync(start, () => new FSMNodeContext(), isLongRunning);
-
-        public Task<bool> RestartAsync<T>(T data, bool isLongRunning = false) where T : class
-            => RestartLegacyAsync(start, () => new FSMNodeContext<T> { Data = data }, isLongRunning);
-
-        public Task<bool> RestartAsync(IFSMNode node, bool isLongRunning = false)
-            => RestartLegacyAsync(node, () => new FSMNodeContext(), isLongRunning);
-
-        public Task<bool> RestartAsync<T>(IFSMNode node, T data, bool isLongRunning = false) where T : class
-            => RestartLegacyAsync(node, () => new FSMNodeContext<T> { Data = data }, isLongRunning);
-
-        private async Task<bool> RestartLegacyAsync(IFSMNode node, Func<FSMNodeContext> contextFactory, bool isLongRunning)
-        {
-            if (node == null) throw new FSMException("开始节点不能为空！");
-            RejectBoundRestart(node);
-            if (disposedValue) throw new ObjectDisposedException(nameof(FSMExecutor));
-            var nodes = engine.Concat(new[] { node }).Concat(Traversal(node, new ConcurrentBag<IFSMNode>()))
-                .Distinct(FSMNodeIdentityComparer.Instance).ToArray();
-            foreach (var candidate in nodes) engine.ClaimNode(candidate, candidate.Name);
-            await StopAsync();
-            var owner = new object();
-            engine.AcquireExecution(owner);
-            var owned = false;
-            try
-            {
-                engine.ClaimNode(node, node.Name);
-                start = node;
-                currentNode = node;
-                Interlocked.Exchange(ref pendingPause, 0);
-                pausing = false;
-                executionNodes = nodes;
-                foreach (var child in executionNodes) child.Context = new FSMNodeContext();
-                node.Context = contextFactory();
-                eventConsumer = Channel.CreateUnbounded<FSMEvent>();
-                owned = true;
-                StartOwned(isLongRunning, owner, () => engine.ReleaseExecution(owner));
-                return true;
-            }
-            catch { if (!owned) engine.ReleaseExecution(owner); throw; }
-        }
 
         private TaskCompletionSource<bool>? resumeSignal;
         private Task WaitForResumeAsync()
@@ -732,10 +664,6 @@ namespace StateMachine
                 return true;
             }
         }
-
-        [DebuggerHidden]
-        public void Handle(FSMEvent @event)
-            => throw new FSMException("Execution identity is required; publish through the concrete FSMExecution handle.");
 
         // Only round-validated external calls and captured node routes reach here.
         private void ReceiveEvent(FSMEvent @event)

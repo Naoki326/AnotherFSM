@@ -30,9 +30,8 @@ public class RemovedCompositionFacts
         var engine = new FSMEngine(new ObservableFactory());
         engine.CreateStateMachine("def Actual(Ordinary) { 1->Done; }");
         var activated = new List<string>();
-        using var executor = new FSMExecutor(engine.GetNode("Actual"), engine.GetEvent("Done"));
-        executor.NodeStateChanged += (_, name) => activated.Add(name);
-        await executor.RestartAsync(true);
+        using var executor = await engine.Prepare().StartAsync("Actual", new[] { "Done" },
+            value => value.NodeStateChanged += (_, name) => activated.Add(name), true);
         await executor.ExecutorTask.WaitAsync(TimeSpan.FromSeconds(5));
         activated.Should().Equal("Actual");
     }
