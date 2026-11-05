@@ -72,7 +72,7 @@ With one compatible direct property, omit Configure: `engine.BindContext<SingleI
 - `BindContext` validates the **entire engine**, including unreachable nodes, and checks factory-declared/actual node types and requirement metadata. Failed assembly produces no executable plan. Future hosts must reuse this validator rather than implement another binding algorithm.
 - `Prepare` resolves every necessary source before any node runs. Null aggregates/sources and getter failures fail without candidate fallback. Dynamic hosts use the separately named `PrepareDynamic(object?)`; wrong types also fail before nodes run. Normal C# callers use typed `Prepare(TInput)`.
 - Diagnostics include known qualified node identities, requirements, paths, declared/actual types and root causes. Unknown DSL locations are not invented; assembly does not guess runtime types before instances exist.
-- Multiple interfaces of one source share one fixed object per preparation. Later internal property replacement does not rebind this execution; business members (including collection references) remain mutable. Business-field readiness belongs to business nodes.
+- Source identity uses the complete property declaration chain, not the diagnostic name path; hidden same-name inherited properties can be independent sources. Multiple interfaces of one source share one fixed object per preparation. Later internal property replacement does not rebind this execution; business members (including collection references) remain mutable. Business-field readiness belongs to business nodes.
 
 ## Control, triggers and ownership
 

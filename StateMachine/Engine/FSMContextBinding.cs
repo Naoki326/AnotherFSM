@@ -50,8 +50,7 @@ namespace StateMachine
                 ? new[] { r.Requirement } : r.Source.DeclaredType.GetInterfaces().Concat(new[] { r.Source.DeclaredType })).Distinct();
             foreach (var requirement in defaultRequirements)
             {
-                var defaults = rules.Where(r => r.Node == null && (r.Requirement == requirement
-                    || r.Requirement == null && requirement.IsAssignableFrom(r.Source.DeclaredType))).ToArray();
+                var defaults = rules.Where(r => MatchesDefault(r, requirement)).ToArray();
                 if (defaults.Length > 1)
                 {
                     var affected = engine.GetNodeNames().Where(name => ((IFSMContextNode)engine.GetNode(name)).ContextType == requirement);
@@ -72,8 +71,7 @@ namespace StateMachine
                 if (contextual.ContextType is not Type requirement) continue;
                 var qualifiedName = engine.GetNodeNames().Single(name => ReferenceEquals(engine.GetNode(name), node));
                 var overrides = rules.Where(r => r.Node == qualifiedName).Select(r => r.Source).ToArray();
-                var defaults = rules.Where(r => r.Node == null && (r.Requirement == requirement
-                    || r.Requirement == null && requirement.IsAssignableFrom(r.Source.DeclaredType))).Select(r => r.Source).ToArray();
+                var defaults = rules.Where(r => MatchesDefault(r, requirement)).Select(r => r.Source).ToArray();
                 var automatic = typeof(TInput).GetProperties(BindingFlags.Public | BindingFlags.Instance)
                     .Where(p => p.GetMethod?.IsPublic == true && p.GetIndexParameters().Length == 0
                         && requirement.IsAssignableFrom(p.PropertyType)).Select(p => new ContextSource(p)).ToArray();
@@ -87,6 +85,10 @@ namespace StateMachine
                 bindings.Add((node, candidates[0]));
             }
         }
+
+        private static bool MatchesDefault((string? Node, Type? Requirement, ContextSource Source) rule, Type requirement)
+            => rule.Node == null && (rule.Requirement == requirement
+                || rule.Requirement == null && requirement.IsAssignableFrom(rule.Source.DeclaredType));
 
         private void ValidateGraph()
         {
@@ -108,11 +110,11 @@ namespace StateMachine
         {
             if (input == null) return PrepareDynamic(input);
             ValidateGraph();
-            var resolved = new Dictionary<string, object>();
+            var resolved = new Dictionary<ContextSource, object>();
             var values = new List<(IFSMNode Node, object Value)>();
             foreach (var binding in bindings)
             {
-                if (!resolved.TryGetValue(binding.Source.Path, out var value))
+                if (!resolved.TryGetValue(binding.Source, out var value))
                 {
                     try { value = binding.Source.Resolve(input); }
                     catch (Exception ex)
@@ -121,7 +123,7 @@ namespace StateMachine
                     }
                     if (value == null)
                         throw new FSMException($"{Describe(binding)}, actual null: necessary source is null; no candidate fallback.");
-                    resolved.Add(binding.Source.Path, value);
+                    resolved.Add(binding.Source, value);
                 }
                 var requirement = ((IFSMContextNode)binding.Node).ContextType!;
                 if (!requirement.IsInstanceOfType(value))

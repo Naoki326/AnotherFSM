@@ -1,0 +1,10 @@
+.scratch/ticket-18/compiler/BAD_BINDING.txt: OK
+.scratch/ticket-18/compiler/BAD_BIND_ENTRY.txt: OK
+.scratch/ticket-18/compiler/BAD_CONTEXT_REBIND.txt: OK
+.scratch/ticket-18/compiler/BAD_INIT.txt: OK
+.scratch/ticket-18/compiler/BAD_INPUT.txt: OK
+.scratch/ticket-18/compiler/BAD_PRIVATE.txt: OK
+.scratch/ticket-18/compiler/BAD_READONLY.txt: OK
+.scratch/ticket-18/compiler/final-positive.txt: OK
+.scratch/ticket-18/compiler/positive.txt: OK
+.scratch/ticket-18/compiler/run.txt: OK

@@ -20,12 +20,30 @@ namespace StateMachine
         }
     }
 
-    internal sealed class ContextSource
+    internal sealed class ContextSource : IEquatable<ContextSource>
     {
+        private readonly (Module Module, int Token, Type? DeclaringType)[] identity;
         internal PropertyInfo[] Properties { get; }
         internal string Path => string.Join(".", Properties.Select(p => p.Name));
         internal Type DeclaredType => Properties.Last().PropertyType;
-        internal ContextSource(params PropertyInfo[] properties) => Properties = properties;
+        internal ContextSource(params PropertyInfo[] properties)
+        {
+            Properties = properties;
+            // ReflectedType can differ between automatic scanning and expressions for the
+            // same inherited property. Keep the constructed DeclaringType for generics.
+            identity = properties.Select(p => (p.Module, p.MetadataToken, p.DeclaringType)).ToArray();
+        }
+        public bool Equals(ContextSource? other) => other != null && identity.SequenceEqual(other.identity);
+        public override bool Equals(object? obj) => obj is ContextSource other && Equals(other);
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hash = 17;
+                foreach (var member in identity) hash = hash * 31 + member.GetHashCode();
+                return hash;
+            }
+        }
         internal static ContextSource Parse(LambdaExpression expression)
         {
             if (expression == null) throw new FSMException("Source expression is null.");

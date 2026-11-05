@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using StateMachine;
 
 namespace StateMachineTest;
@@ -472,6 +473,113 @@ public class TypedContextFacts
         results.Should().Equal("first run", "second run");
         firstInput.Other.Tasks.Should().Be("first run");
         secondInput.Other.Tasks.Should().Be("second run");
+    }
+
+    public sealed class QuerySource : IQuery { public string? Tasks { get; set; } }
+    public sealed class ProcessSource : IProcess { public string? Tasks => "independent process source"; }
+    public class HiddenSourceBaseInput { public QuerySource Source { get; } = new(); }
+    public sealed class HiddenSourceInput : HiddenSourceBaseInput { public new ProcessSource Source { get; } = new(); }
+
+    [Fact]
+    public async Task HiddenSameNameSourceDeclarationsRemainIndependentThroughoutExecution()
+    {
+        var results = new List<string?>();
+        var flow = Engine(results).BindContext<HiddenSourceInput>("Query", "Done");
+        var input = new HiddenSourceInput();
+        var prepared = flow.Prepare(input);
+        using var executor = await prepared.StartAsync();
+        await executor.ExecutorTask.WaitAsync(TimeSpan.FromSeconds(5));
+        results.Should().Equal("independent process source");
+        HiddenSourceBaseInput baseInput = input;
+        baseInput.Source.Tasks.Should().Be("queried");
+    }
+
+    public class InheritedSourceBase<T> where T : class, new()
+    {
+        public int SourceReads { get; private set; }
+        public T Source { get { SourceReads++; return new T(); } }
+    }
+    public sealed class InheritedSourceInput : InheritedSourceBase<Job> { }
+
+    [Theory]
+    [InlineData("automatic")]
+    [InlineData("interface-default")]
+    [InlineData("node")]
+    [InlineData("default-source")]
+    [InlineData("declaring-property")]
+    public async Task SameInheritedGenericPropertyIsEvaluatedOnceAcrossAutomaticAndExplicitRules(string rule)
+    {
+        var results = new List<string?>();
+        var flow = Engine(results).BindContext<InheritedSourceInput>("Query", "Done", b =>
+        {
+            switch (rule)
+            {
+                case "interface-default": b.Default<IProcess>(x => x.Source); break;
+                case "node": b.Node<IProcess>("Process", x => x.Source); break;
+                case "default-source": b.DefaultSource(x => x.Source); break;
+                case "declaring-property":
+                    // A public selector built from the declaring base's PropertyInfo;
+                    // automatic scanning reflects that same property through the derived input.
+                    var parameter = Expression.Parameter(typeof(InheritedSourceInput), "input");
+                    var property = typeof(InheritedSourceBase<Job>).GetProperty(nameof(InheritedSourceInput.Source))!;
+                    b.Default<IProcess>(Expression.Lambda<Func<InheritedSourceInput, IProcess>>(
+                        Expression.Property(parameter, property), parameter));
+                    break;
+            }
+        });
+        var input = new InheritedSourceInput();
+        var prepared = flow.Prepare(input);
+        input.SourceReads.Should().Be(1);
+        using var executor = await prepared.StartAsync();
+        await executor.ExecutorTask.WaitAsync(TimeSpan.FromSeconds(5));
+        results.Should().Equal("queried");
+        input.SourceReads.Should().Be(1);
+    }
+
+    public sealed class NestedIdentityInput
+    {
+        public Input Left { get; } = new();
+        public Input Right { get; } = new() { Job = new Job { Tasks = "right source" } };
+    }
+
+    [Fact]
+    public async Task DifferentOuterPathsToTheSameTerminalDeclarationKeepIndependentBusinessObjects()
+    {
+        var results = new List<string?>();
+        var flow = Engine(results).BindContext<NestedIdentityInput>("Query", "Done", b =>
+        {
+            b.DefaultSource(x => x.Left.Job);
+            b.Node<IProcess>("Process", x => x.Right.Job);
+        });
+        var input = new NestedIdentityInput();
+        using var executor = await flow.Prepare(input).StartAsync();
+        await executor.ExecutorTask.WaitAsync(TimeSpan.FromSeconds(5));
+        results.Should().Equal("right source");
+        input.Left.Job.Tasks.Should().Be("queried");
+        input.Right.Job.Tasks.Should().Be("right source");
+    }
+
+    public sealed class GenericSourceHolder<T> where T : class, new() { public T Source { get; } = new(); }
+    public sealed class ConstructedGenericPathsInput
+    {
+        public GenericSourceHolder<QuerySource> Query { get; } = new();
+        public GenericSourceHolder<ProcessSource> Process { get; } = new();
+    }
+
+    [Fact]
+    public async Task ExplicitPathsThroughDifferentConstructedGenericMembersKeepTheirDeclaredSources()
+    {
+        var results = new List<string?>();
+        var flow = Engine(results).BindContext<ConstructedGenericPathsInput>("Query", "Done", b =>
+        {
+            b.Default<IQuery>(x => x.Query.Source);
+            b.Default<IProcess>(x => x.Process.Source);
+        });
+        var input = new ConstructedGenericPathsInput();
+        using var executor = await flow.Prepare(input).StartAsync();
+        await executor.ExecutorTask.WaitAsync(TimeSpan.FromSeconds(5));
+        results.Should().Equal("independent process source");
+        input.Query.Source.Tasks.Should().Be("queried");
     }
 
     [Fact]
