@@ -44,4 +44,34 @@
 - 受影响宿主/Module：RuntimeSessionFacts、EngineWiringFacts、Module 测试族及 API 图编辑回归。
 - 类型约束及固定业务绑定：TypedContextFacts、TypedContextCompile 和编译负例脚本；完整消费者迁移不在本票声称完成。
 
-最终独立 Standards/Spec 复审及其处置另行补记；在完成前不宣称 #19 或父规格已验收。
+最终独立 Standards/Spec 复审及其处置见下节；本修复不宣称 #19 或父规格已整体验收。
+
+## 可见 Spec / Standards P1 修复（本轮）
+
+工作目录固定为 `C:/Work/AnotherFSM-worktrees/ticket-19-execution-lifecycle`，分支 `ticket/19-execution-lifecycle`，接手 HEAD `249b85d155529d00c8a1d32503c7a1e69ef49f9d`。已执行 `git merge implement/context-lifecycle`，集成 tip 为 `07c2f08334dcc641117d2505a1ba3fea5d42f678`，结果 Already up to date。本轮未调用代理、未另做独立审查、未改主 worktree；不涉及 #20/#21/#22。
+
+| 已采纳发现 | 修复与公开接缝回归 |
+| --- | --- |
+| Spec P1：用户 `InitBeforeStart` 阻塞时尚无本轮完成任务，StopAsync 提前成功，Stop/Dispose 被后续启动重置 | `StartOwned` 在同步用户初始化前发布本轮 `FSMExecution` / `ExecutorTask` 并初始化控制字段；初始化在 control/engine 锁外，返回后不重置停止状态。类型化 Start 与四个旧 Restart 共用此入口。`StopDuringEveryRestartInitializationWaitsAndPreventsNodeExecution` 覆盖四个重载 × Stop/Dispose：初始化未返回时停止不完成、占用不释放；放行后零节点执行，随后可重新 Prepare。 |
+| 初始化异常必须保持失败、不得放行节点或提前释放清理占用 | 初始化异常走原有 `RunOwnedAsync` 清理/退出路径并保持启动错误可观察；准备包装层不再抢先释放已发布执行的占用。`InitializationFailureNeverRunsNodesAndReleasesOnlyTheFailedRound` 覆盖类型化 Start 和四个 Restart：初始化屏障内竞争 Prepare 立即失败，失败后零节点执行、旧完成任务故障、随后可准备并启动新轮。原有 `DuplicatePreparationStartRejectsWithoutWaitingForUserInitialization` 保持通过。 |
+| Standards P1：同步取消回调 inline 驱动节点退出，使 Completion/占用释放早于回调返回和 StopException 捕获 | Stop 在通知/取消前登记本轮取消请求屏障，取消仍在原调用线程同步执行，但不持请求自身的 control/engine 锁；完成与释放在锁外异步等候回调返回，最终提交前再次核对并发 Stop。具体句柄 Stop/StopAsync 原子验证身份并捕获对应完成任务；Dispose 不再额外持锁调用取消。`CancellationCallbackMustReturnAndReportErrorsBeforeCompletionOrEngineReuse` 故意用允许 inline 延续的任务释放节点，随后将取消回调停在屏障：Completion 未完成，竞争 Prepare 立即拒绝且绑定不变，并发 Continue 不阻塞且返回 false；回调抛错时 Completion 必须故障、StopException 可观察。 |
+
+### 本轮真实 red → green 与最终验证
+
+- 第一行为先运行新增初始化回归：8 失败，均因初始化屏障内 StopAsync 已完成（`.scratch/19-init-red.log`）；最小修复后新增 8 例及既有重复 Start 共 9 通过（`19-init-green.log`）。
+- 第二行为先运行新增 inline 取消回归：2 失败，均因回调仍在屏障内 Completion 已完成（`19-cancel-red.log`）；修复后当时的 `ExecutionReviewFacts` 26 例全通过（`19-cancel-green.log`）。随后补充 5 个初始化失败/顺序复用回归，进入最终全量。
+- 测试只通过公开装配、准备、启动、执行句柄及控制接口观察；使用明确同步点。超时只限制等待，不以 sleep 推断时序。生产初始化没有改为 Task.Run，取消也没有转移线程；保留现有浏览器协作调度。
+
+| 最终命令 | 本轮结果 / 本地日志 |
+| --- | --- |
+| `dotnet test tests/StateMachineTest/StateMachineTest.csproj --nologo -p:NuGetAudit=false` | **231 通过，0 失败**；`.scratch/19-core-final.log` |
+| `dotnet test tests/FSMDemoApiTest/FSMDemoApiTest.csproj --nologo -p:NuGetAudit=false` | **39 通过，0 失败**；`.scratch/19-api-final-rerun.log` |
+| `dotnet test tests/FSMDemoWasmTest/FSMDemoWasmTest.csproj --nologo -p:NuGetAudit=false` | **27 通过，0 失败**，仅宿主 .NET；`.scratch/19-host-final.log` |
+| `bash tools/test-typed-context.sh` | 正例编译/执行及 **7 编译负例通过**；`.scratch/19-compile-final.log`，详细编译输出在脚本既有 `.scratch/ticket-18/compiler/` |
+| `dotnet run --project tests/FSMScriptAnalyzerTest/FSMScriptAnalyzerTest.csproj -p:NuGetAudit=false` | **生成消费者编译、查询及真实 Module 执行通过**；`.scratch/19-consumer-final.log` |
+| `dotnet build AnotherFSM.sln -c Release --nologo -p:NuGetAudit=false` | **0 错误、61 警告**；`.scratch/19-release-final.log` |
+| `git diff --check` | 通过；仅 Git 的既有 LF/CRLF 转换提示 |
+
+API 首次与宿主并行构建时竞争同一 analyzer nupkg，出现文件占用错误（`.scratch/19-api-final.log`），已改串行重跑通过，不隐去该失败。生成消费者及 Release 构建使用 `JAVA_HOME=C:/Users/Naoki/.jre/jdk-11.0.26+4-jre`。日志为本地忽略产物。
+
+剩余验证边界：本轮没有真实 Release WASM 浏览器运行；宿主 .NET 测试/Release 编译不代替它。同步用户初始化/取消回调本身若不返回，仍保持本轮占用并等待，框架不强行终止用户代码。未 push、未关闭 issue。

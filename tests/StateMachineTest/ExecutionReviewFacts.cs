@@ -228,12 +228,161 @@ public class ExecutionReviewFacts
         }
     }
 
+    [Theory]
+    [InlineData(0, false)]
+    [InlineData(1, false)]
+    [InlineData(2, false)]
+    [InlineData(3, false)]
+    [InlineData(0, true)]
+    [InlineData(1, true)]
+    [InlineData(2, true)]
+    [InlineData(3, true)]
+    public async Task StopDuringEveryRestartInitializationWaitsAndPreventsNodeExecution(int overload, bool dispose)
+    {
+        var node = new Initializing();
+        var engine = Engine(("Start", node));
+        using var executor = new FSMExecutor(node, engine.GetEvent("Done"));
+        var starting = Task.Run(() => overload switch
+        {
+            0 => executor.RestartAsync(),
+            1 => executor.RestartAsync(new object()),
+            2 => executor.RestartAsync((IFSMNode)node),
+            _ => executor.RestartAsync((IFSMNode)node, new object())
+        });
+        await node.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        Task? stopping = null;
+        try
+        {
+            if (dispose) executor.Dispose();
+            stopping = executor.StopAsync();
+            stopping.IsCompleted.Should().BeFalse("initialization has not returned");
+            executor.ExecutorTask.Should().NotBeNull();
+            executor.Execution.Completion.IsCompleted.Should().BeFalse();
+            Action prepare = () => engine.BindContext<Input>("Start", "Done").Prepare(new Input());
+            prepare.Should().Throw<FSMException>();
+        }
+        finally
+        {
+            node.Release.Set();
+            await starting.WaitAsync(TimeSpan.FromSeconds(5));
+            await (stopping ?? executor.StopAsync()).WaitAsync(TimeSpan.FromSeconds(5));
+        }
+        node.Runs.Should().Be(0);
+        executor.State.Should().Be(FSMState.Stoped);
+        using var next = engine.BindContext<Input>("Start", "Done").Prepare(new Input());
+    }
+
+    [Theory]
+    [InlineData(-1)] // Typed Start.
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    public async Task InitializationFailureNeverRunsNodesAndReleasesOnlyTheFailedRound(int overload)
+    {
+        var node = new Initializing { Fail = true };
+        var engine = Engine(("Start", node));
+        var flow = engine.BindContext<Input>("Start", "Done");
+        using var executor = new FSMExecutor(node, engine.GetEvent("Done"));
+        var starting = Task.Run(async () =>
+        {
+            if (overload == -1) await flow.Prepare(new Input()).StartAsync();
+            else await (overload switch
+            {
+                0 => executor.RestartAsync(),
+                1 => executor.RestartAsync(new object()),
+                2 => executor.RestartAsync((IFSMNode)node),
+                _ => executor.RestartAsync((IFSMNode)node, new object())
+            });
+        });
+        await node.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        try
+        {
+            starting.IsCompleted.Should().BeFalse();
+            Func<Task> prepare = () => Task.Run(() => flow.Prepare(new Input())).WaitAsync(TimeSpan.FromSeconds(5));
+            await prepare.Should().ThrowAsync<FSMException>();
+            if (overload != -1) executor.Execution.Completion.IsCompleted.Should().BeFalse();
+        }
+        finally { node.Release.Set(); }
+        Func<Task> failure = () => starting.WaitAsync(TimeSpan.FromSeconds(5));
+        await failure.Should().ThrowAsync<InvalidOperationException>().WithMessage("initialization failure");
+        if (overload != -1)
+        {
+            Func<Task> completion = () => executor.Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
+            await completion.Should().ThrowAsync<InvalidOperationException>();
+        }
+        node.Runs.Should().Be(0);
+        node.Fail = false;
+        using var next = await flow.Prepare(new Input()).StartAsync();
+        await next.StopAsync();
+    }
+
+    private sealed class InlineCancellation(bool fail) : BaseFSMNode
+    {
+        private readonly TaskCompletionSource release = new(); // Deliberately allow inline node exit.
+        public TaskCompletionSource Held { get; } = Signal();
+        public ManualResetEventSlim Return { get; } = new();
+        private int runs;
+        protected override async Task ExecuteAsync()
+        {
+            if (Interlocked.Increment(ref runs) != 1) return;
+            using var registration = Control.Token.Register(() =>
+            {
+                release.SetResult();
+                Held.TrySetResult();
+                Return.Wait();
+                if (fail) throw new InvalidOperationException("inline cancellation failure");
+            });
+            await release.Task.ConfigureAwait(false);
+        }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task CancellationCallbackMustReturnAndReportErrorsBeforeCompletionOrEngineReuse(bool fail)
+    {
+        var node = new InlineCancellation(fail);
+        var engine = Engine(("Start", node));
+        var flow = engine.BindContext<Input>("Start", "Done");
+        using var first = await Task.Run(() => flow.Prepare(new Input()).StartAsync());
+        await State(first, FSMState.Running);
+        var original = ((IFSMNode)node).Context;
+        var stopping = Task.Run(first.Execution.Stop);
+        await node.Held.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        try
+        {
+            first.Execution.Completion.IsCompleted.Should().BeFalse("the cancellation callback still owns this round");
+            (await Task.Run(first.Execution.Continue).WaitAsync(TimeSpan.FromSeconds(5))).Should().BeFalse();
+            Func<Task> competing = () => Task.Run(() => flow.Prepare(new Input())).WaitAsync(TimeSpan.FromSeconds(5));
+            await competing.Should().ThrowAsync<FSMException>();
+            ((IFSMNode)node).Context.Should().BeSameAs(original);
+        }
+        finally { node.Return.Set(); await stopping.WaitAsync(TimeSpan.FromSeconds(5)); }
+        if (fail)
+        {
+            Func<Task> completion = () => first.Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
+            await completion.Should().ThrowAsync<AggregateException>();
+            first.StopException.Should().BeOfType<AggregateException>();
+        }
+        else await first.Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
+        using var next = await flow.Prepare(new Input()).StartAsync();
+        await next.StopAsync();
+    }
+
     private sealed class Initializing : BaseFSMNode
     {
         public TaskCompletionSource Entered { get; } = Signal();
         public ManualResetEventSlim Release { get; } = new();
-        public override void InitBeforeStart() { Entered.TrySetResult(); Release.Wait(); }
-        protected override Task ExecuteAsync() => Task.CompletedTask;
+        public int Runs;
+        public bool Fail;
+        public override void InitBeforeStart()
+        {
+            Entered.TrySetResult();
+            Release.Wait();
+            if (Fail) throw new InvalidOperationException("initialization failure");
+        }
+        protected override Task ExecuteAsync() { Interlocked.Increment(ref Runs); return Task.CompletedTask; }
     }
 
     [Fact]

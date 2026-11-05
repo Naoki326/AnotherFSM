@@ -190,17 +190,20 @@ namespace StateMachine
             }
             // User initialization must not hold the preparation lock: a competing
             // start observes the consumed handle immediately, even if Init blocks.
+            FSMExecutor? executor = null;
             try
             {
                 validateGraph();
-                var executor = new FSMExecutor(engine.GetNode(startNode), engine.GetEvent(endEvent));
+                executor = new FSMExecutor(engine.GetNode(startNode), engine.GetEvent(endEvent));
                 executor.StartContext(nodes, values, isLongRunning, owner, () => engine.ReleaseExecution(owner));
                 return Task.FromResult(executor);
             }
             catch
             {
                 lock (sync) released = true;
-                engine.ReleaseExecution(owner);
+                // Once published, even a failed initialization owns its cleanup
+                // and exit barrier. Do not release it ahead of that cleanup.
+                if (executor?.ExecutorTask == null) engine.ReleaseExecution(owner);
                 throw;
             }
         }

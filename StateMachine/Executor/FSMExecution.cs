@@ -22,7 +22,7 @@ namespace StateMachine
         public void Pause() => executor.ForExecution(this, () => { executor.Pause(); return true; });
         public Task<bool> PauseAsync() => executor.ForExecution(this, executor.PauseAsync);
         public bool Continue() => executor.ForExecution(this, executor.Continue);
-        public void Stop() => executor.ForExecution(this, () => { executor.Stop(); return true; });
-        public Task<bool> StopAsync() => executor.ForExecution(this, executor.StopAsync);
+        public void Stop() => executor.Stop(this);
+        public Task<bool> StopAsync() => executor.StopAsync(this);
     }
 }

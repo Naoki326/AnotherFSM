@@ -417,27 +417,44 @@ namespace StateMachine
         private readonly object controlSync = new object();
         public Exception? StopException { get; private set; }
 
-        public void Stop()
+        private TaskCompletionSource<bool>? stopCallbacks;
+
+        public void Stop() => RequestStop(null);
+        internal void Stop(FSMExecution execution) => RequestStop(execution);
+
+        private Task? RequestStop(FSMExecution? execution)
         {
+            FSMNodeContext? context;
+            TaskCompletionSource<bool> callbacks;
+            Task task;
             lock (controlSync)
             {
-                if (ExecutorTask == null || ExecutorTask.IsCompleted) return;
-                if (State == FSMState.Stopping || State == FSMState.Stoped) return;
+                if (execution != null && (!ReferenceEquals(Execution, execution) || execution.Completion.IsCompleted))
+                    throw new FSMException($"Execution is stale or exited; cannot stop executor in state {State}.");
+                task = ExecutorTask;
+                if (task == null || task.IsCompleted) return task;
+                if (State == FSMState.Stopping || State == FSMState.Stoped) return task;
+                // Cancel can inline the entire node/consumer exit on this thread.
+                // Publish its barrier before any notification can reenter exit.
+                stopCallbacks = callbacks = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                context = currentNode?.Context;
                 State = FSMState.Stopping;
                 Interlocked.Exchange(ref pendingPause, 0);
                 eventConsumer.Writer.TryComplete();
                 resumeSignal?.TrySetResult(true);
-                try { currentNode?.Context.Pause(); }
-                catch (Exception ex) { StopException = ex; }
             }
+            // Cancellation callbacks are user code, not part of the control lock.
+            try { context?.Pause(); }
+            catch (Exception ex) { lock (controlSync) StopException = ex; }
+            finally { callbacks.TrySetResult(true); }
+            return task;
         }
 
-        public async Task<bool> StopAsync()
+        public Task<bool> StopAsync() => StopAsync(null);
+        internal async Task<bool> StopAsync(FSMExecution? execution)
         {
-            Stop();
-            var task = ExecutorTask;
+            var task = RequestStop(execution);
             if (task != null) await task;
-            if (StopException != null) throw new FSMException("Execution cancellation callback failed after exit.", StopException);
             return true;
         }
 
@@ -450,7 +467,6 @@ namespace StateMachine
             executionNodes = nodes;
             foreach (var node in nodes) node.Context = new FSMNodeContext();
             foreach (var binding in values) ((IFSMContextBindingTarget)binding.Node).BindContext(binding.Value);
-            foreach (var node in nodes) node.InitBeforeStart();
             currentNode = start;
             eventConsumer = Channel.CreateUnbounded<FSMEvent>();
             StartOwned(isLongRunning, owner, release);
@@ -458,39 +474,69 @@ namespace StateMachine
 
         private void StartOwned(bool isLongRunning, object owner, Action release)
         {
-            StopException = null;
-            Interlocked.Exchange(ref resumePending, 0);
-            resumeSignal = null;
-            Execution = new FSMExecution(this);
-            ExecutorTask = Execution.Completion;
-            var round = Execution;
-            engine.DescribeExecution(owner, () => round.State.ToString());
-            State = FSMState.Initialized;
+            FSMExecution round;
+            lock (controlSync)
+            {
+                StopException = null;
+                Interlocked.Exchange(ref resumePending, 0);
+                resumeSignal = null;
+                stopCallbacks = null;
+                Execution = round = new FSMExecution(this);
+                ExecutorTask = round.Completion;
+                engine.DescribeExecution(owner, () => round.State.ToString());
+                State = FSMState.Initialized;
+            }
+            if (disposedValue) Stop();
+            // Publish this round's exit barrier before entering synchronous user
+            // initialization. Stop/Dispose during Init must survive node release.
+            try { InitNodes(); }
+            catch (Exception ex)
+            {
+                lock (controlSync) State = FSMState.Stopping;
+                _ = RunOwnedAsync(round, isLongRunning, release, ex);
+                throw;
+            }
             _ = RunOwnedAsync(round, isLongRunning, release);
         }
 
-        private async Task RunOwnedAsync(FSMExecution execution, bool isLongRunning, Action release)
+        private async Task RunOwnedAsync(FSMExecution execution, bool isLongRunning, Action release, Exception? initializationError = null)
         {
-            Exception? error = null;
-            try { await ConsumerTask(isLongRunning); }
+            Exception? error = initializationError;
+            try { if (initializationError == null) await ConsumerTask(isLongRunning); }
             catch (Exception ex) { error = ex; }
             finally
             {
+                Task? callbacks;
+                lock (controlSync) callbacks = stopCallbacks?.Task;
+                if (callbacks != null) await callbacks;
                 foreach (var node in executionNodes.OfType<AbstractFSMNode>())
                 {
                     try { await node.CleanupExecutionAsync(); }
                     catch (Exception ex) { error = error == null ? ex : new AggregateException(error, ex); }
                 }
-                lock (controlSync)
-                lock (engine.ExecutionSync)
+                while (true)
                 {
-                    eventConsumer.Writer.TryComplete();
-                    while (eventConsumer.Reader.TryRead(out _)) { }
-                    if (State == FSMState.Stopping) State = FSMState.Stoped;
-                    try { if (disposedValue) CompleteObservers(); }
-                    catch (Exception ex) { error = error ?? ex; }
-                    execution.Complete(State, error ?? StopException);
-                    release();
+                    lock (controlSync)
+                    {
+                        callbacks = stopCallbacks?.Task;
+                        if (callbacks == null || callbacks.IsCompleted)
+                        {
+                            lock (engine.ExecutionSync)
+                            {
+                                eventConsumer.Writer.TryComplete();
+                                while (eventConsumer.Reader.TryRead(out _)) { }
+                                if (State == FSMState.Stopping) State = FSMState.Stoped;
+                                try { if (disposedValue) CompleteObservers(); }
+                                catch (Exception ex) { error = error ?? ex; }
+                                execution.Complete(State, error ?? StopException);
+                                release();
+                            }
+                            break;
+                        }
+                    }
+                    // A Stop racing cleanup must also finish collecting callback
+                    // errors before completion and engine ownership are released.
+                    await callbacks;
                 }
             }
         }
@@ -531,6 +577,7 @@ namespace StateMachine
             await StopAsync();
             var owner = new object();
             engine.AcquireExecution(owner);
+            var owned = false;
             try
             {
                 engine.ClaimNode(node, node.Name);
@@ -542,11 +589,11 @@ namespace StateMachine
                 foreach (var child in executionNodes) child.Context = new FSMNodeContext();
                 node.Context = contextFactory();
                 eventConsumer = Channel.CreateUnbounded<FSMEvent>();
-                InitNodes();
+                owned = true;
                 StartOwned(isLongRunning, owner, () => engine.ReleaseExecution(owner));
                 return true;
             }
-            catch { engine.ReleaseExecution(owner); throw; }
+            catch { if (!owned) engine.ReleaseExecution(owner); throw; }
         }
 
         private TaskCompletionSource<bool>? resumeSignal;
@@ -690,8 +737,10 @@ namespace StateMachine
             {
                 if (disposedValue) return;
                 disposedValue = true;
-                Stop();
-                // Disposal requests exit, but never touches nodes of a later round.
+            }
+            Stop();
+            lock (controlSync)
+            {
                 // Active-round observer cleanup belongs inside the completion barrier.
                 if (ExecutorTask == null || ExecutorTask.IsCompleted) CompleteObservers();
             }
