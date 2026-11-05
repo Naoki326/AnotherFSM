@@ -41,7 +41,7 @@ Run from this worktree. Every issued bash tool call had a 15–120 second timeou
 
 | Command | Result |
 | --- | --- |
-| `dotnet build AnotherFSM.sln --nologo -p:NuGetAudit=false` | PASS; final incremental build 0 warnings/0 errors (`solution-build.log`) |
+| `dotnet build AnotherFSM.sln --nologo -p:NuGetAudit=false` | PASS; that final incremental invocation reported 0 warnings/0 errors (`solution-build.log`), not a claim that a full repository rebuild is warning-free |
 | `dotnet test AnotherFSM.sln --nologo -p:NuGetAudit=false` | PASS: core 110, API/shared editor 39, host .NET browser session 23 (`all-dotnet-tests.log`) |
 | `bash tools/test-removed-composition.sh` | PASS: supported EngineBackendNode consumer compiles/runs and receives its engine; 9 negative real builds (six types, hook, FSMDescribe, BaseGroupNode), CS0246/CS1061 (`compile-final.log`, `compile/*.log`) |
 | `dotnet run --project tests/FSMScriptAnalyzerTest` | PASS: generated consumers compile/query; Inline, Embedded and migrated ATest Module flows really execute (`generator.log`) |
@@ -90,3 +90,12 @@ Unmet AC: none identified by implementation checks; independent review remains r
 - API for manual comparison: `dotnet demos/FSMDemo.API/bin/Debug/net10.0/FSMDemo.API.dll --urls http://127.0.0.1:5079`.
 - Scenarios: six legacy keys/direct create/template import/bracket descriptions and raw groupdefs rejection; existing graph preserved; real Module Branch publishers/qualified events/edit/export round trip; Module execution to Finished; palette absence; normal start/pause/continue/stop and notification cleanup. Automated versions are `test/browser/runtime.spec.ts` and `editor.spec.ts`.
 - Before handoff, integration tip was rechecked at `7f45eee`; it is already an ancestor, so no merge commit is necessary. No push/close/next-ticket claim performed.
+
+## Main-agent verification and documentation correction
+
+- Read the main agent's `.scratch/ticket-17/main-verification.log`: the non-incremental recompilation and tests passed (core 110, API 39, host .NET browser session 23). The log includes nullable/override-nullability warnings (for example CS8764, CS8618, CS8602), unused variable/event warnings and a package warning. The earlier incremental invocation's zero-warning output applies only to that invocation; it does **not** establish a warning-free repository. No warning cleanup was attempted in this documentation-only follow-up.
+- Read `.scratch/ticket-17/main-compile-verification.log`: all 9 real compiler-negative cases passed again.
+- As reported by the main agent, five manual real Release WASM checks completed evidence audit: initialization, no composition entries in the palette, ordinary Module Demo, rejected legacy Group import with non-equivalence/source-position diagnostics, and preservation of the original graph after that failed import. These are main-agent browser observations, separate from the host .NET test results; this follow-up did not repeat browser verification.
+- At this update, the independent Spec review has no findings and Standards review is still running; this is not a claim that both reviews are complete.
+- Corrected `demos/FSMDemo.Frontend/README.md`: removed the stale Group/Parallel template-editing claim, documented explicit rejection and non-equivalent Module migration, and clarified failed-import graph preservation. Checked the actual `src/runtime/types.ts`: 27 EditorRuntime methods = 3 lifecycle + 24 editing/execution operations, not 25 operations. No implementation changes.
+- Integration worktree tip is now `9730a4dfc0363f099b93bdc6df995221f2e6e5be`; merge-base/ancestor checks confirm this branch already contains it. No merge commit, original-worktree edits, push or issue closure are needed for this correction.
