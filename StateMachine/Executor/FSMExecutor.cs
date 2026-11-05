@@ -109,14 +109,14 @@ namespace StateMachine
             FSMEventSharing.Publish(round.Member, round, notification);
         }
 
-        internal void ReceiveShared(FSMExecution round, FSMEvent value)
+        internal void ReceiveShared(FSMExecution round, FSMEvent value, bool localPublication)
         {
             lock (controlSync)
             {
                 if (!ReferenceEquals(Execution, round) || !AcceptsBusinessEvents) return;
                 // Event IDs are graph-local. Full ordinal names authorize both ordinary and end events.
                 var local = engine.TryGetEvent(value.EventName, out var found) ? found
-                    : endEvents.FirstOrDefault(e => string.Equals(e.EventName, value.EventName, StringComparison.Ordinal));
+                    : localPublication ? value : null;
                 if (local == null) return;
                 var notification = (FSMEvent)local.Clone();
                 notification.EventContext = value.EventContext;
@@ -495,9 +495,10 @@ namespace StateMachine
         private object preparedOwner = null!;
         private Action preparedRelease = null!;
         private FSMEventSharing.Member? preparedMember;
+        private Action? receiverCleanup;
 
         internal void PrepareContext(IFSMNode[] nodes, IReadOnlyList<(IFSMNode Node, object Value)> values,
-            object owner, Action release, FSMEventSharing.Member member)
+            object owner, Action release, FSMEventSharing.Member member, Action cleanup)
         {
             hasBoundContext = true;
             executionNodes = nodes;
@@ -508,6 +509,7 @@ namespace StateMachine
             preparedOwner = owner;
             preparedRelease = release;
             preparedMember = member;
+            receiverCleanup = cleanup;
         }
 
         internal void CommitPreparedContext() => BeginOwned(preparedOwner);
@@ -568,6 +570,8 @@ namespace StateMachine
                     try { await node.CleanupExecutionAsync(); }
                     catch (Exception ex) { error = error == null ? ex : new AggregateException(error, ex); }
                 }
+                try { receiverCleanup?.Invoke(); }
+                catch (Exception ex) { error = error == null ? ex : new AggregateException(error, ex); }
                 while (true)
                 {
                     lock (controlSync)

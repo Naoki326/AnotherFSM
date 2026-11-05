@@ -192,17 +192,26 @@ namespace StateMachine
 
         public Task<FSMExecutor> StartAsync(string startNode, string endEvent, bool isLongRunning = false)
         {
-            lock (sync)
-            {
-                ValidateStart();
-                selectedEntry = (startNode, endEvent);
-            }
+            WithEntry(startNode, endEvent);
             return Task.FromResult(FSMEventSharing.Start(new[] { this }, isLongRunning)[0]);
         }
 
-        internal void ValidateStart()
+        /// <summary>Select an entry without starting; useful for coordinated preparations from an unconfigured flow.</summary>
+        public FSMContextPreparation WithEntry(string startNode, string endEvent)
         {
-            if (started || released || Member.Starting) throw new FSMException("This execution preparation is already started, starting or released.");
+            lock (sync)
+            {
+                if (started || released || Member.Starting) throw new FSMException("This execution preparation is already started, starting or released.");
+                if (!engine.ContainsNode(startNode) || !engine.ContainsEvent(endEvent))
+                    throw new FSMException($"Entry {startNode} / end event {endEvent} does not exist.");
+                selectedEntry = (startNode, endEvent);
+                return this;
+            }
+        }
+
+        internal void ValidateStart(bool reserved = false)
+        {
+            if (started || released || Member.Starting && !reserved) throw new FSMException("This execution preparation is already started, starting or released.");
             validateGraph();
             var configured = selectedEntry ?? entry ?? throw new FSMException("No assembled entry; configure startNode/endEvent before coordinated Start.");
             if (!engine.ContainsNode(configured.Start) || !engine.ContainsEvent(configured.End))
@@ -218,13 +227,7 @@ namespace StateMachine
         internal void PrepareReceiver(FSMExecutor executor, bool isLongRunning)
         {
             receiverResource = ReceiverPreparation?.Invoke();
-            executor.PrepareContext(nodes, values, owner, () =>
-            {
-                receiverResource?.Dispose();
-                receiverResource = null;
-                FSMEventSharing.Exit(Member);
-                engine.ReleaseExecution(owner);
-            }, Member);
+            executor.PrepareContext(nodes, values, owner, () => engine.ReleaseExecution(owner), Member, RollbackReceiver);
         }
 
         internal void Commit(FSMExecutor executor)
@@ -237,8 +240,9 @@ namespace StateMachine
 
         internal void RollbackReceiver()
         {
-            receiverResource?.Dispose();
+            var resource = receiverResource;
             receiverResource = null;
+            resource?.Dispose();
         }
     }
 }

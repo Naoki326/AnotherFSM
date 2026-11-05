@@ -76,15 +76,26 @@ namespace StateMachine
                 for (var i = 0; i < pending.Length; i++) pending[i].PrepareReceiver(executors[i], isLongRunning);
                 lock (Sync)
                 {
+                    foreach (var preparation in pending) preparation.ValidateStart(reserved: true);
                     for (var i = 0; i < pending.Length; i++) pending[i].Commit(executors[i]);
                 }
             }
-            catch
+            catch (Exception failure)
             {
-                foreach (var preparation in pending) preparation.RollbackReceiver();
+                var errors = new List<Exception> { failure };
+                foreach (var preparation in pending)
+                {
+                    try { preparation.RollbackReceiver(); }
+                    catch (Exception cleanup) { errors.Add(cleanup); }
+                }
+                foreach (var executor in executors)
+                {
+                    try { executor.Dispose(); }
+                    catch (Exception cleanup) { errors.Add(cleanup); }
+                }
                 lock (Sync) foreach (var preparation in pending) preparation.Member.Starting = false;
-                foreach (var executor in executors) executor.Dispose();
-                throw;
+                throw new FSMException("Receiver preparation failed; no nodes were released. Valid preparations retain ownership for retry or disposal.",
+                    errors.Count == 1 ? failure : new AggregateException(errors));
             }
             lock (Sync) foreach (var preparation in pending) preparation.Member.Starting = false;
             // User initialization remains outside the range lock and shares #19's exit barrier.
@@ -118,7 +129,7 @@ namespace StateMachine
                 targets = source.Group.Where(m => !m.Exited && m.Executor != null && m.Round != null)
                     .Select(m => (m.Executor!, m.Round!)).ToArray();
             }
-            foreach (var target in targets) target.Executor.ReceiveShared(target.Round, value);
+            foreach (var target in targets) target.Executor.ReceiveShared(target.Round, value, ReferenceEquals(target.Round, round));
         }
     }
 }
