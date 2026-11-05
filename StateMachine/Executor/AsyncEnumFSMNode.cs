@@ -86,6 +86,13 @@ namespace StateMachine
                 executor.DisposeAsync().ConfigureAwait(false);
             base.Dispose(disposing);
         }
+
+        internal override async Task CleanupExecutionAsync()
+        {
+            var previous = executor;
+            executor = null;
+            if (previous != null) await previous.DisposeAsync();
+        }
     }
 
     [DebuggerNonUserCode]
@@ -171,6 +178,13 @@ namespace StateMachine
             if (executor != null)
                 executor.DisposeAsync().ConfigureAwait(false);
             base.Dispose(disposing);
+        }
+
+        internal override async Task CleanupExecutionAsync()
+        {
+            var previous = executor;
+            executor = null;
+            if (previous != null) await previous.DisposeAsync();
         }
     }
 

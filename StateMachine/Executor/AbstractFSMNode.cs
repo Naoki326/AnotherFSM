@@ -196,14 +196,35 @@ namespace StateMachine
             }
         }
 
+        private object? preparedInvocation;
+        private int runPrepared;
+        private int createPrepared;
+        internal void BeginInvocation(object invocation, bool isCreateNew)
+        {
+            preparedInvocation = invocation;
+            Interlocked.Exchange(ref runPrepared, 0);
+            Interlocked.Exchange(ref createPrepared, isCreateNew ? 1 : 0);
+        }
+
+        internal void PrepareRun(object invocation)
+        {
+            preparedInvocation = invocation;
+            Control.SetTokenSource(new CancellationTokenSource());
+            Interlocked.Exchange(ref runPrepared, 1);
+        }
+
         async Task<bool> IFSMNode.RunAsync()
         {
+            if (preparedInvocation == null || !ReferenceEquals(preparedInvocation, FSMNodeEventScope.Invocation)
+                || Interlocked.Exchange(ref runPrepared, 0) == 0)
+                throw new FSMException($"Node {Name} RunAsync requires its owning executor's current invocation.");
             TaskCompletionSource<bool> tcs = new();
             waitCurrentTask = tcs.Task;
             try
             {
-                Control.SetTokenSource(new CancellationTokenSource());
-                Control.SetPause(false);
+                // The executor installs this token under its control lock. A Stop
+                // racing before invocation must not be lost by replacing that token.
+                Control.CheckPause();
                 await ExecuteMethodAsync();
                 tcs.TrySetResult(true);
                 continueWith?.Invoke(this);
@@ -237,7 +258,7 @@ namespace StateMachine
         // pause针对一个具体的FSMExecute，所以需要用raisePause绑定到对应的FSMExecute
         protected void Pause()
         {
-            raisePause?.Invoke();
+            FSMNodeEventScope.Pause();
         }
 
         Task waitCurrentTask = Task.FromResult(true);
@@ -263,12 +284,18 @@ namespace StateMachine
                 .ToList();
         }
 
-        async Task IFSMNode.CreateNewAsync() { await RestartAsync(); }
+        async Task IFSMNode.CreateNewAsync()
+        {
+            if (preparedInvocation == null || !ReferenceEquals(preparedInvocation, FSMNodeEventScope.Invocation)
+                || Interlocked.Exchange(ref createPrepared, 0) == 0)
+                throw new FSMException($"Node {Name} CreateNewAsync requires its owning executor's current invocation.");
+            await RestartAsync();
+        }
 
         protected void PublishEvent(int index)
         {
             if (branchDict.TryGetValue(index, out FSMEvent value))
-            { FSMEventAggregator.EventAggregator?.Publish(value); }
+            { FSMNodeEventScope.Publish((FSMEvent)value.Clone()); }
         }
 
         protected void PublishEvent<T>(int index, T eventContext)
@@ -277,7 +304,7 @@ namespace StateMachine
                 && value.Clone() is FSMEvent eventValue)
             {
                 eventValue.EventContext = eventContext!;
-                FSMEventAggregator.EventAggregator?.Publish(eventValue);
+                FSMNodeEventScope.Publish(eventValue);
             }
         }
 
@@ -327,6 +354,8 @@ namespace StateMachine
         /// <summary>
         /// 状态机Restart的时候调用一次，用于初始化一些服务实例
         /// </summary>
+        internal virtual Task CleanupExecutionAsync() => Task.CompletedTask;
+
         public virtual void InitBeforeStart()
         {
         }

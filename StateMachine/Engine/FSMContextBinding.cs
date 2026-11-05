@@ -25,6 +25,7 @@ namespace StateMachine
             this.entry = entry;
             if (entry.HasValue && (!engine.ContainsNode(entry.Value.Start) || !engine.ContainsEvent(entry.Value.End)))
                 throw new FSMException($"Configured entry {entry.Value.Start} / end event {entry.Value.End} does not exist.");
+            engine.ValidateExecutionNodes();
             engine.ValidateContextNodes();
             nodes = engine.GetNodeNames().Select(name => (name, engine.GetNode(name))).ToArray();
             var configuration = new FSMContextBindings<TInput>();
@@ -94,6 +95,7 @@ namespace StateMachine
         {
             if (engine.GetNodeNames().Count() != nodes.Length || nodes.Any(n => !engine.TryGetNode(n.Name, out var actual) || !ReferenceEquals(n.Node, actual)))
                 throw new FSMException($"Engine nodes changed ({string.Join(", ", engine.GetNodeNames())}); call BindContext again to validate the complete engine.");
+            engine.ValidateExecutionNodes();
         }
 
         private string Describe((IFSMNode Node, ContextSource Source) binding)
@@ -109,46 +111,68 @@ namespace StateMachine
         public FSMContextPreparation Prepare(TInput input)
         {
             if (input == null) return PrepareDynamic(input);
-            ValidateGraph();
-            var resolved = new Dictionary<ContextSource, object>();
-            var values = new List<(IFSMNode Node, object Value)>();
-            foreach (var binding in bindings)
+            var owner = new object();
+            engine.AcquireExecution(owner);
+            try
             {
-                if (!resolved.TryGetValue(binding.Source, out var value))
+                ValidateGraph();
+                var resolved = new Dictionary<ContextSource, object>();
+                var values = new List<(IFSMNode Node, object Value)>();
+                foreach (var binding in bindings)
                 {
-                    try { value = binding.Source.Resolve(input); }
-                    catch (Exception ex)
+                    if (!resolved.TryGetValue(binding.Source, out var value))
                     {
-                        throw new FSMException($"{Describe(binding)}, actual unavailable: source getter failed: {ex.GetBaseException().Message}", ex);
+                        try { value = binding.Source.Resolve(input); }
+                        catch (Exception ex)
+                        {
+                            throw new FSMException($"{Describe(binding)}, actual unavailable: source getter failed: {ex.GetBaseException().Message}", ex);
+                        }
+                        if (value == null)
+                            throw new FSMException($"{Describe(binding)}, actual null: necessary source is null; no candidate fallback.");
+                        resolved.Add(binding.Source, value);
                     }
-                    if (value == null)
-                        throw new FSMException($"{Describe(binding)}, actual null: necessary source is null; no candidate fallback.");
-                    resolved.Add(binding.Source, value);
+                    var requirement = ((IFSMContextNode)binding.Node).ContextType!;
+                    if (!requirement.IsInstanceOfType(value))
+                        throw new FSMException($"{Describe(binding)}, actual {value.GetType()}: incompatible source type.");
+                    values.Add((binding.Node, value));
                 }
-                var requirement = ((IFSMContextNode)binding.Node).ContextType!;
-                if (!requirement.IsInstanceOfType(value))
-                    throw new FSMException($"{Describe(binding)}, actual {value.GetType()}: incompatible source type.");
-                values.Add((binding.Node, value));
+                return new FSMContextPreparation(engine, nodes.Select(n => n.Node).ToArray(), values, ValidateGraph, entry, owner);
             }
-            return new FSMContextPreparation(engine, nodes.Select(n => n.Node).ToArray(), values, ValidateGraph, entry);
+            catch { engine.ReleaseExecution(owner); throw; }
         }
     }
 
-    /// <summary>Fixed references for one execution. Data preparation only; engine occupancy is a separate lifecycle responsibility.</summary>
-    public sealed class FSMContextPreparation
+    /// <summary>Fixed references and exclusive engine ownership for one execution. Dispose an abandoned preparation explicitly.</summary>
+    public sealed class FSMContextPreparation : IDisposable
     {
         private readonly FSMEngine engine;
         private readonly IFSMNode[] nodes;
         private readonly IReadOnlyList<(IFSMNode Node, object Value)> values;
         private readonly Action validateGraph;
         private readonly (string Start, string End)? entry;
-        internal FSMContextPreparation(FSMEngine engine, IFSMNode[] nodes, IReadOnlyList<(IFSMNode Node, object Value)> values, Action validateGraph, (string Start, string End)? entry)
+        private readonly object owner;
+        internal FSMContextPreparation(FSMEngine engine, IFSMNode[] nodes, IReadOnlyList<(IFSMNode Node, object Value)> values, Action validateGraph, (string Start, string End)? entry, object owner)
         {
             this.engine = engine;
             this.nodes = nodes;
             this.values = values;
             this.validateGraph = validateGraph;
             this.entry = entry;
+            this.owner = owner;
+        }
+
+        private readonly object sync = new object();
+        private bool started;
+        private bool released;
+
+        public void Dispose()
+        {
+            lock (sync)
+            {
+                if (started || released) return;
+                released = true;
+                engine.ReleaseExecution(owner);
+            }
         }
 
         public Task<FSMExecutor> StartAsync(bool isLongRunning = false)
@@ -157,12 +181,26 @@ namespace StateMachine
             return StartAsync(entry.Value.Start, entry.Value.End, isLongRunning);
         }
 
-        public async Task<FSMExecutor> StartAsync(string startNode, string endEvent, bool isLongRunning = false)
+        public Task<FSMExecutor> StartAsync(string startNode, string endEvent, bool isLongRunning = false)
         {
-            validateGraph();
-            var executor = new FSMExecutor(engine.GetNode(startNode), engine.GetEvent(endEvent));
-            await executor.StartContextAsync(nodes, values, isLongRunning);
-            return executor;
+            lock (sync)
+            {
+                if (started || released) throw new FSMException("This execution preparation is already started or released.");
+                validateGraph();
+                var executor = new FSMExecutor(engine.GetNode(startNode), engine.GetEvent(endEvent));
+                started = true;
+                try
+                {
+                    executor.StartContext(nodes, values, isLongRunning, owner, () => engine.ReleaseExecution(owner));
+                    return Task.FromResult(executor);
+                }
+                catch
+                {
+                    released = true;
+                    engine.ReleaseExecution(owner);
+                    throw;
+                }
+            }
         }
     }
 }

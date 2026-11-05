@@ -1,6 +1,7 @@
 using System.Reflection;
 using Microsoft.Extensions.Logging;
 using StateMachine;
+using StateMachine.Interface;
 
 namespace FSMDemo.Runtime;
 
@@ -65,17 +66,27 @@ public partial class EngineManager : IAsyncDisposable
         public void Install(EditingEngine staged)
         {
             foreach (var ev in staged.eventDict.Values) TryAddEvent(ev);
-            foreach (var node in staged.nodeDict.Values)
+            // Staging is another engine: install definitions, never its Node instances.
+            foreach (var source in staged.nodeDict.Values)
             {
-                var transitions = node.GetFSMTransitions().ToList();
-                node.ClearTransition();
-                node.UpdateEventDescriptions();
-                foreach (var branch in node.EventDescriptions.ToList())
-                    node.SetBranchEvent(branch.Index, GetEvent(branch.Description));
-                foreach (var transition in transitions)
-                    node.AddTransition(GetEvent(transition.Trigger.EventName), transition.Target);
-                nodeDict.Add(node.Name, node);
+                CreateNode(source.ClassType, source.Name);
+                var target = GetNode(source.Name);
+                target.NamePrefix = source.NamePrefix;
+                target.PosX = source.PosX;
+                target.PosY = source.PosY;
+                target.Color = source.Color;
+                target.FlowID = source.FlowID;
+                foreach (var property in source.GetType().GetProperties()
+                    .Where(p => p.CanRead && p.CanWrite && p.GetIndexParameters().Length == 0
+                        && p.GetCustomAttribute<FSMPropertyAttribute>() != null))
+                    property.SetValue(target, property.GetValue(source));
+                source.UpdateEventDescriptions();
+                foreach (var branch in source.EventDescriptions)
+                    target.SetBranchEvent(branch.Index, GetEvent(branch.Description));
             }
+            foreach (var source in staged.nodeDict.Values)
+                foreach (var transition in source.GetFSMTransitions())
+                    GetNode(source.Name).AddTransition(GetEvent(transition.Trigger.EventName), GetNode(transition.Target.Name));
             foreach (var pair in staged.ModuleInstances) AddModuleInstance(pair.Key, pair.Value);
         }
 
@@ -613,20 +624,20 @@ public partial class EngineManager : IAsyncDisposable
     public async Task<bool> PauseExecution()
     {
         FSMExecutor? executor;
-        Task<bool>? paused;
-        lock (_executionSync)
-        {
-            executor = _executor;
-            paused = executor?.PauseAsync();
-        }
-        if (paused == null) return false;
-        var result = await paused;
+        lock (_executionSync) executor = _executor;
+        if (executor == null) return false;
+        // Core notifications may synchronously read host status; never invert the locks.
+        var result = await executor.PauseAsync();
         lock (_executionSync) return result && ReferenceEquals(_executor, executor);
     }
 
     public bool ContinueExecution()
     {
-        lock (_executionSync) return _executor?.Continue() ?? false;
+        FSMExecutor? executor;
+        lock (_executionSync) executor = _executor;
+        if (executor == null) return false;
+        var result = executor.Continue();
+        lock (_executionSync) return result && ReferenceEquals(_executor, executor);
     }
 
     // Called only under _executionSync. Detach first: even callbacks already queued by
@@ -651,6 +662,9 @@ public partial class EngineManager : IAsyncDisposable
 
     private async Task CleanupExecutorAsync(Task previous, FSMExecutor old)
     {
+        // RetireExecution creates this task under the host lock. Leave that lock's
+        // synchronous call stack before requesting core control (also on WASM).
+        await Task.Yield();
         await previous;
         try { await old.StopAsync(); }
         catch (Exception ex) { _logger.LogWarning(ex, "Failed to stop retired executor"); }

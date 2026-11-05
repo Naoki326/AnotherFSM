@@ -86,6 +86,14 @@ namespace StateMachine
             (executor as IEnumerator<object>)?.Dispose();
             base.Dispose(disposing);
         }
+
+        internal override Task CleanupExecutionAsync()
+        {
+            var previous = executor;
+            executor = null;
+            (previous as IDisposable)?.Dispose();
+            return Task.CompletedTask;
+        }
     }
 
     [DebuggerNonUserCode]
@@ -168,6 +176,14 @@ namespace StateMachine
         {
             (executor as IEnumerator<object>)?.Dispose();
             base.Dispose(disposing);
+        }
+
+        internal override Task CleanupExecutionAsync()
+        {
+            var previous = executor;
+            executor = null;
+            (previous as IDisposable)?.Dispose();
+            return Task.CompletedTask;
         }
     }
 
