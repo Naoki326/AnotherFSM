@@ -33,7 +33,7 @@ AnotherFSM 当前是单文件扁平状态机模型：所有 Node 和 Event 存�
 | 重用 | 同一模块可多次实例化（不同前缀） | 仅单例引入 |
 
 **放弃独立引擎方案的原因**：
-- 现有的 `FSMExecutor`、`GroupNode`、`ParallelNode` 都依赖"所有 Node 在同一 `FSMEngine`"的假设
+- 原决策时的 `FSMExecutor`、`GroupNode`、`ParallelNode` 都依赖"所有 Node 在同一 `FSMEngine`"的假设
 - 独立引擎需要桥接机制，引入 `FSMExecutor` 间通信的复杂性
 - 用户的核心需求是拆分复杂度，而非运行时隔离
 
