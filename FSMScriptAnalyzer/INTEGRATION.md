@@ -51,6 +51,22 @@ old module `def` instances, instance-body event mappings, `terminal`, or module
 instances used as placeholder source nodes. Use `use Module as Instance;` and
 `Instance.Output -> Target;` instead. Ordinary scripts need no migration.
 
+## Explicit execution input / 显式执行输入
+
+Generated classes declare graph accessors, not business bindings. Pair the generated engine with the host aggregate and provide an instance for every execution:
+
+```csharp
+var flow = BusinessModules.Create(factory);
+using var prepared = flow.Engine.BindContext<DemoNodes.DemoBusinessInput>()
+    .Prepare(new DemoNodes.DemoBusinessInput());
+using var executor = await prepared.StartAsync(flow.Begin.Name, "Work.Done");
+await executor.Execution.Completion;
+```
+
+A wholly dependency-free generated engine instead uses `flow.Engine.Prepare()`; do not manufacture empty business objects. Public executor construction/Restart and Context.Data wrappers are deleted, not renamed compatibility APIs. A new round explicitly prepares input after true exit. Runtime composition is unsupported; ordinary Modules preserve only compile-time definition reuse.
+
+生成类只提供图及访问器；宿主明确配对聚合类型，每轮显式提供实例。全引擎无业务依赖时直接 `flow.Engine.Prepare()`，不造空业务对象。旧构造/Restart/Data 包装已删除，先等真退出再准备下一轮；普通 Module 不等价替代父子生命周期或并行汇合。最终分层证据见 [#22](../docs/implementation/22-final-acceptance.md)。
+
 ## Integration validation
 
 `tests/FSMScriptAnalyzerTest` is a real analyzer consumer, not a generated-text

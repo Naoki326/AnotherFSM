@@ -622,31 +622,13 @@ public partial class EngineManager : IAsyncDisposable
                 }
             }
             var ends = ResolveExecutionEndEvents(graph, endEvent);
-            bool result;
-            if (_context != null && graph.OfType<IFSMContextNode>().Any(node => node.ContextType != null))
-            {
-                using var prepared = _context.Prepare(graph);
-                executor = await prepared.StartAsync(startNodeName, ends, Observe);
-                result = true;
-            }
-            else
-            {
-                executor = new FSMExecutor(graph[startNodeName], ends);
-                Observe(executor);
-                result = await executor.RestartAsync();
-            }
-            lock (_executionSync) return result && version == _executionVersion && ReferenceEquals(_executor, executor);
+            using var prepared = _context != null && graph.OfType<IFSMContextNode>().Any(node => node.ContextType != null)
+                ? _context.Prepare(graph) : graph.Prepare();
+            executor = await prepared.StartAsync(startNodeName, ends, Observe);
+            lock (_executionSync) return version == _executionVersion && ReferenceEquals(_executor, executor);
         }
         catch (StartRetiredException) { return false; }
         catch (FSMException ex) when (ex.GetBaseException() is StartRetiredException) { return false; }
-        catch (ObjectDisposedException ex) when (ex.ObjectName == nameof(FSMExecutor) && executor is { ExecutorTask: null })
-        {
-            // Retirement can dispose the observed legacy executor before its first
-            // RestartAsync enters core. Only that retired start is abandoned.
-            lock (_executionSync)
-                if (version != _executionVersion) return false;
-            throw;
-        }
         finally
         {
             lock (_executionSync)

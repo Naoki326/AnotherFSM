@@ -18,7 +18,6 @@ public class StartupRetirementFacts
             => Task.Run(host.GetExecutionStatus).WaitAsync(TimeSpan.FromSeconds(2)).GetAwaiter().GetResult();
         public Exception? InitializationError;
         public bool BlockBeforeRound;
-        public Func<bool>? LegacyEntryIsObserved;
         public TaskCompletionSource BeforeRound { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public TaskCompletionSource PublishRound { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public void AssignContext()
@@ -40,11 +39,8 @@ public class StartupRetirementFacts
 
     private sealed class InitNode(Probe probe) : BaseFSMNode, IFSMNode, IFSMContextNode
     {
-        Type? IFSMContextNode.ContextType
-        {
-            get { if (probe.LegacyEntryIsObserved?.Invoke() == true) probe.AssignContext(); return null; }
-        }
-        FSMNodeContext IFSMNode.Context { get => context; set { probe.AssignContext(); context = value; } }
+        Type? IFSMContextNode.ContextType => null;
+        FSMExecutionControl IFSMNode.Control { get { probe.AssignContext(); return Control; } }
         public override void InitBeforeStart() => probe.Initialize(Control);
         protected override Task ExecuteAsync() { ++probe.Runs; return Task.CompletedTask; }
         protected override void Dispose(bool disposing) { if (disposing) probe.Disposed = true; base.Dispose(disposing); }
@@ -52,7 +48,7 @@ public class StartupRetirementFacts
 
     private sealed class TypedInitNode(Probe probe) : BaseFSMNode<DemoNodes.IQueryBusiness>, IFSMNode
     {
-        FSMNodeContext IFSMNode.Context { get => context; set { probe.AssignContext(); context = value; } }
+        FSMExecutionControl IFSMNode.Control { get { probe.AssignContext(); return Control; } }
         public override void InitBeforeStart() => probe.Initialize(Control);
         protected override Task ExecuteAsync() { ++probe.Runs; return Task.CompletedTask; }
         protected override void Dispose(bool disposing) { if (disposing) probe.Disposed = true; base.Dispose(disposing); }
@@ -143,15 +139,13 @@ public class StartupRetirementFacts
     }
 
     [Theory]
-    [InlineData(false, false)]
-    [InlineData(true, false)]
-    [InlineData(false, true)]
-    public async Task RetirementBeforeRoundPublicationStillCancelsTheFutureRound(bool typed, bool beforeLegacyEntry)
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task RetirementBeforeRoundPublicationStillCancelsTheFutureRound(bool typed)
     {
         var probe = new Probe { BlockBeforeRound = true };
         await using var host = new EngineManager(NullLogger<EngineManager>.Instance, new Factory(probe, typed),
             context: typed ? HostContext.Create(() => new BorrowedInput()) : null);
-        if (beforeLegacyEntry) probe.LegacyEntryIsObserved = () => host.Executor != null;
         await host.ImportAsync("def Start(Init) {1->Done;}");
         var starting = Task.Run(() => host.StartExecution("Start", "Done"));
         await probe.BeforeRound.Task.WaitAsync(TimeSpan.FromSeconds(5));
@@ -171,11 +165,8 @@ public class StartupRetirementFacts
             stopping.IsCompleted.Should().BeFalse();
             probe.Disposed.Should().BeFalse();
             probe.PublishRound.TrySetResult();
-            if (!beforeLegacyEntry)
-            {
-                await probe.Cancelled.Task.WaitAsync(TimeSpan.FromSeconds(2));
-                old.Execution.Completion.IsCompleted.Should().BeFalse();
-            }
+            await probe.Cancelled.Task.WaitAsync(TimeSpan.FromSeconds(2));
+            old.Execution.Completion.IsCompleted.Should().BeFalse();
         }
         finally
         {
@@ -186,7 +177,7 @@ public class StartupRetirementFacts
         (await starting.WaitAsync(TimeSpan.FromSeconds(5))).Should().BeFalse();
         await stopping.WaitAsync(TimeSpan.FromSeconds(5));
         probe.Runs.Should().Be(0);
-        probe.Entered.Task.IsCompleted.Should().Be(!beforeLegacyEntry);
+        probe.Entered.Task.IsCompleted.Should().BeTrue();
         host.Engine.HasUnexitedExecution.Should().BeFalse();
     }
 

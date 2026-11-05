@@ -95,6 +95,47 @@ public class TypedConsumerFacts
         engine.GetEventNames().Should().NotContain("Done");
     }
 
+    public sealed class ChangingPair
+    {
+        public DemoJob Job { get; private set; } = new();
+        public DemoJob Other { get; private set; } = new() { Value = 100 };
+        public void Replace() { Job = new DemoJob { Value = 700 }; Other = new DemoJob { Value = 800 }; }
+        public static void Configure(FSMContextBindings<ChangingPair> bindings)
+        {
+            bindings.DefaultSource(x => x.Job);
+            bindings.Node<IProcessBusiness>("Area.B.Process", x => x.Other);
+        }
+    }
+
+    [Fact]
+    public async Task PreparedRealModulesKeepSharedViewsAndOverridesFixedThenUseExplicitNextInput()
+    {
+        var engine = new FSMEngine(new BrowserNodeFactory());
+        engine.CreateStateMachine(Script);
+        var plan = engine.BindContext<ChangingPair>(ChangingPair.Configure);
+        var input = new ChangingPair();
+        var fixedJob = input.Job;
+        var fixedOther = input.Other;
+        using var first = plan.Prepare(input);
+        input.Replace();
+        fixedOther.Value = 150; // Members remain live even though source references are fixed.
+        using (var executor = await first.StartAsync("Area.A.Query", "Area.B.Done"))
+            await executor.Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
+        fixedJob.Value.Should().Be(41);
+        fixedOther.Value.Should().Be(151);
+        input.Job.Value.Should().Be(700);
+        input.Other.Value.Should().Be(800);
+        using (var next = plan.Prepare(input)) // Explicitly resupply even the same aggregate.
+        using (var executor = await next.StartAsync("Area.A.Query", "Area.B.Done"))
+            await executor.Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
+        input.Job.Value.Should().Be(41);
+        input.Other.Value.Should().Be(801);
+        fixedOther.Value.Should().Be(151);
+        Action missingWholePlan = () => plan.Prepare(null!);
+        missingWholePlan.Should().Throw<FSMException>().WithMessage("*ChangingPair*Area.B.Process*Other*");
+        engine.HasUnexitedExecution.Should().BeFalse();
+    }
+
     [Fact]
     public void RealModuleLocalEntryStillRequiresTheFullPlanAndReportsItsQualifiedSource()
     {

@@ -45,8 +45,7 @@ public class EngineWiringFacts
             engine = new FSMEngine(factory);
             engine.CreateStateMachine(module + "use Work as A; def Finish(Backend) { 1->Finished; } A.Done -> Finish;");
         }
-        using var executor = new FSMExecutor(engine.GetNode("A.Entry"), engine.GetEvent("Finished"));
-        (await executor.RestartAsync(true)).Should().BeTrue();
+        using var executor = await engine.Prepare().StartAsync("A.Entry", "Finished", true);
         await executor.ExecutorTask.WaitAsync(TimeSpan.FromSeconds(5));
         executor.State.Should().Be(FSMState.Finished);
         visits.Select(visit => visit.Name).Should().Equal("A.Entry", "Finish");

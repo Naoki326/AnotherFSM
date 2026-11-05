@@ -4,6 +4,35 @@ namespace StateMachine
 {
     public partial class FSMEngine
     {
+        /// <summary>Prepare a wholly dependency-free engine without manufacturing business input.</summary>
+        public FSMContextPreparation Prepare()
+        {
+            void Validate()
+            {
+                ValidateExecutionNodes();
+                ValidateContextNodes();
+                foreach (var name in GetNodeNames())
+                    if (GetNode(name) is not IFSMContextNode { ContextType: null })
+                        throw new FSMException($"Node {name}, requirement {(GetNode(name) as IFSMContextNode)?.ContextType}: use BindContext<TInput>().Prepare(input) to supply necessary business sources.");
+            }
+            var owner = new object();
+            AcquireExecution(owner);
+            try
+            {
+                Validate();
+                var nodes = GetNodeNames().Select(name => (Name: name, Node: GetNode(name))).ToArray();
+                void ValidateGraph()
+                {
+                    Validate();
+                    if (GetNodeNames().Count() != nodes.Length || nodes.Any(n => !TryGetNode(n.Name, out var actual) || !ReferenceEquals(n.Node, actual)))
+                        throw new FSMException("Engine nodes changed; prepare the complete engine again.");
+                }
+                return new FSMContextPreparation(this, nodes.Select(n => n.Node).ToArray(),
+                    Array.Empty<(IFSMNode Node, object Value)>(), ValidateGraph, null, owner);
+            }
+            catch { ReleaseExecution(owner); throw; }
+        }
+
         public FSMContextFlow<TInput> BindContext<TInput>(Action<FSMContextBindings<TInput>>? configure = null) where TInput : class
             => new FSMContextFlow<TInput>(this, configure);
 

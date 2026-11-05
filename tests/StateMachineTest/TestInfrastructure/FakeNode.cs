@@ -54,7 +54,8 @@ public sealed class FakeNode : IFSMNode, IFSMEngineInjectable, IFSMContextNode
     public FSMTransition GetFSMTransition(string inputNodeName) => null!;
 
     // ---------- IFSMNode ----------
-    public FSMNodeContext Context { get; set; } = null!;
+    public FSMExecutionControl Control { get; } = new();
+    public FSMEvent? TriggerEvent { get; set; }
     public IExecuterContext ExecuterContext { get; set; } = null!;
     public void InitBeforeStart() { }
     public void SetBranchEvent(int index, FSMEvent @event) { }

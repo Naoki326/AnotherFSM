@@ -23,6 +23,13 @@ public class ExecutionReviewFacts
         return engine;
     }
     private static TaskCompletionSource Signal() => new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private static Task<FSMExecutor> Start(FSMEngine engine, int shape, Action<FSMExecutor>? observe = null)
+    {
+        using var prepared = engine.Prepare();
+        return shape % 2 == 0
+            ? prepared.StartAsync("Start", new[] { "Done" }, observe, shape >= 2)
+            : prepared.StartAsync("Start", new[] { engine.GetEvent("Done") }, observe, shape >= 2);
+    }
     private static async Task State(FSMExecutor executor, FSMState expected)
     {
         var reached = Signal();
@@ -41,38 +48,30 @@ public class ExecutionReviewFacts
     [InlineData(1)]
     [InlineData(2)]
     [InlineData(3)]
-    public async Task EveryRestartRejectsForeignDescendantsAddedAfterConstructionBeforeRebinding(int overload)
+    public async Task EveryPreparationStartShapeRejectsForeignDescendantsBeforeRebinding(int overload)
     {
         var entered = Signal();
         var release = Signal();
         var calls = 0;
         var foreign = new Probe(async () => { Interlocked.Increment(ref calls); entered.TrySetResult(); await release.Task; });
         var b = Engine(("Borrowed", foreign));
-        using var activeB = new FSMExecutor(foreign, b.GetEvent("Done"));
-        await activeB.RestartAsync();
+        using var activeB = await b.Prepare().StartAsync("Borrowed", "Done");
         await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
-        var originalB = ((IFSMNode)foreign).Context;
-        var a = Engine(("Start", new Probe()));
-        using var executor = new FSMExecutor(a.GetNode("Start"), a.GetEvent("Done"));
-        var originalA = a.GetNode("Start").Context;
-        IFSMNode replacement = overload < 2 ? a.GetNode("Start") : new Probe { Name = "Replacement" };
+        var originalB = foreign.Control.Token;
+        var a = Engine(("Start", new Probe()), ("Replacement", new Probe()));
+        var originalA = a.GetNode("Start").Control.Token;
+        IFSMNode replacement = overload < 2 ? a.GetNode("Start") : a.GetNode("Replacement");
         replacement.AddTransition(new FSMEvent("Go"), foreign);
         try
         {
-            Func<Task> restart = () => overload switch
-            {
-                0 => executor.RestartAsync(),
-                1 => executor.RestartAsync(new object()),
-                2 => executor.RestartAsync(replacement),
-                _ => executor.RestartAsync(replacement, new object())
-            };
-            await restart.Should().ThrowAsync<FSMException>().WithMessage("*Borrowed*owner*engine*requested engine*");
-            ((IFSMNode)foreign).Context.Should().BeSameAs(originalB);
-            a.GetNode("Start").Context.Should().BeSameAs(originalA);
+            Func<Task> restart = () => Start(a, overload);
+            await restart.Should().ThrowAsync<FSMException>().WithMessage("*Borrowed*owner*requested engine*");
+            foreign.Control.Token.Should().Be(originalB);
+            a.GetNode("Start").Control.Token.Should().Be(originalA);
             calls.Should().Be(1);
             activeB.Execution.Completion.IsCompleted.Should().BeFalse();
         }
-        finally { release.TrySetResult(); await Task.WhenAll(activeB.StopAsync(), executor.StopAsync()); }
+        finally { release.TrySetResult(); await activeB.StopAsync(); }
     }
 
     private sealed class RequiredBusiness { }
@@ -86,25 +85,18 @@ public class ExecutionReviewFacts
     [InlineData(1)]
     [InlineData(2)]
     [InlineData(3)]
-    public async Task EveryLegacyRestartValidatesRequirementsAddedAfterConstruction(int overload)
+    public async Task EveryPreparationStartShapeRejectsUnassembledDependentDescendants(int overload)
     {
         var visits = 0;
         var engine = Engine(("Start", new Probe(() => { visits++; return Task.CompletedTask; })));
-        using var executor = new FSMExecutor(engine.GetNode("Start"), engine.GetEvent("Done"));
-        IFSMNode root = overload < 2 ? engine.GetNode("Start") : new Probe { Name = "Replacement" };
+        IFSMNode root = engine.GetNode("Start");
         IFSMNode required = new RequiresBusiness { Name = "Required" };
         root.AddTransition(new FSMEvent("Go"), required);
-        var original = required.Context;
-        Func<Task> restart = () => overload switch
-        {
-            0 => executor.RestartAsync(),
-            1 => executor.RestartAsync(new object()),
-            2 => executor.RestartAsync(root),
-            _ => executor.RestartAsync(root, new object())
-        };
-        await restart.Should().ThrowAsync<FSMException>().WithMessage("*Typed execution*");
+        var original = required.Control.Token;
+        Func<Task> restart = () => Start(engine, overload);
+        await restart.Should().ThrowAsync<FSMException>().WithMessage("*Required*owner*");
         visits.Should().Be(0);
-        required.Context.Should().BeSameAs(original);
+        required.Control.Token.Should().Be(original);
     }
 
     [Theory]
@@ -112,32 +104,24 @@ public class ExecutionReviewFacts
     [InlineData(1)]
     [InlineData(2)]
     [InlineData(3)]
-    public async Task ResumeAcceptedAtNodeExitCannotLeakIntoAnyRestartOverload(int overload)
+    public async Task ResumeAcceptedAtNodeExitCannotLeakIntoAnyPreparationStartShape(int overload)
     {
         var runs = 0;
         var targetEntered = Signal();
         var start = new Probe(() => { Interlocked.Increment(ref runs); return Task.CompletedTask; });
         var engine = Engine(("Start", start), ("Target", new Probe(() => { targetEntered.TrySetResult(); return Task.CompletedTask; })));
         engine.ConnectNode("Go", "Start", "Target");
-        using var executor = new FSMExecutor(start, engine.GetEvent("Done"));
         var firstExit = true;
-        executor.NodeExitChanged += (_, _) =>
+        using var first = await Start(engine, overload, value => value.NodeExitChanged += (_, _) =>
         {
             if (!firstExit) return;
             firstExit = false;
-            executor.Pause();
-            executor.Continue().Should().BeTrue();
-            executor.Stop();
-        };
-        await executor.RestartAsync();
-        await executor.Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
-        await (overload switch
-        {
-            0 => executor.RestartAsync(),
-            1 => executor.RestartAsync(new object()),
-            2 => executor.RestartAsync((IFSMNode)start),
-            _ => executor.RestartAsync((IFSMNode)start, new object())
+            value.Pause();
+            value.Continue().Should().BeTrue();
+            value.Stop();
         });
+        await first.Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
+        using var executor = await Start(engine, overload);
         await State(executor, FSMState.Running);
         try
         {
@@ -237,18 +221,12 @@ public class ExecutionReviewFacts
     [InlineData(1, true)]
     [InlineData(2, true)]
     [InlineData(3, true)]
-    public async Task StopDuringEveryRestartInitializationWaitsAndPreventsNodeExecution(int overload, bool dispose)
+    public async Task StopDuringEveryPreparationStartShapeInitializationWaitsAndPreventsNodeExecution(int overload, bool dispose)
     {
         var node = new Initializing();
         var engine = Engine(("Start", node));
-        using var executor = new FSMExecutor(node, engine.GetEvent("Done"));
-        var starting = Task.Run(() => overload switch
-        {
-            0 => executor.RestartAsync(),
-            1 => executor.RestartAsync(new object()),
-            2 => executor.RestartAsync((IFSMNode)node),
-            _ => executor.RestartAsync((IFSMNode)node, new object())
-        });
+        FSMExecutor executor = null!;
+        var starting = Task.Run(() => Start(engine, overload, value => executor = value));
         await node.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
         Task? stopping = null;
         try
@@ -283,17 +261,11 @@ public class ExecutionReviewFacts
         var node = new Initializing { Fail = true };
         var engine = Engine(("Start", node));
         var flow = engine.BindContext<Input>("Start", "Done");
-        using var executor = new FSMExecutor(node, engine.GetEvent("Done"));
+        FSMExecutor executor = null!;
         var starting = Task.Run(async () =>
         {
-            if (overload == -1) await flow.Prepare(new Input()).StartAsync();
-            else await (overload switch
-            {
-                0 => executor.RestartAsync(),
-                1 => executor.RestartAsync(new object()),
-                2 => executor.RestartAsync((IFSMNode)node),
-                _ => executor.RestartAsync((IFSMNode)node, new object())
-            });
+            if (overload == -1) await flow.Prepare(new Input()).StartAsync("Start", new[] { "Done" }, value => executor = value);
+            else await Start(engine, overload, value => executor = value);
         });
         await node.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
         try
@@ -301,16 +273,14 @@ public class ExecutionReviewFacts
             starting.IsCompleted.Should().BeFalse();
             Func<Task> prepare = () => Task.Run(() => flow.Prepare(new Input())).WaitAsync(TimeSpan.FromSeconds(5));
             await prepare.Should().ThrowAsync<FSMException>();
-            if (overload != -1) executor.Execution.Completion.IsCompleted.Should().BeFalse();
+            executor.Execution.Completion.IsCompleted.Should().BeFalse();
         }
         finally { node.Release.Set(); }
         Func<Task> failure = () => starting.WaitAsync(TimeSpan.FromSeconds(5));
         await failure.Should().ThrowAsync<InvalidOperationException>().WithMessage("initialization failure");
-        if (overload != -1)
-        {
-            Func<Task> completion = () => executor.Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
-            await completion.Should().ThrowAsync<InvalidOperationException>();
-        }
+        Func<Task> completion = () => executor.Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
+        await completion.Should().ThrowAsync<InvalidOperationException>();
+        executor.Dispose();
         node.Runs.Should().Be(0);
         node.Fail = false;
         using var next = await flow.Prepare(new Input()).StartAsync();
@@ -347,7 +317,7 @@ public class ExecutionReviewFacts
         var flow = engine.BindContext<Input>("Start", "Done");
         using var first = await Task.Run(() => flow.Prepare(new Input()).StartAsync());
         await State(first, FSMState.Running);
-        var original = ((IFSMNode)node).Context;
+        var original = node.Control.Token;
         var stopping = Task.Run(first.Execution.Stop);
         await node.Held.Task.WaitAsync(TimeSpan.FromSeconds(5));
         try
@@ -356,7 +326,7 @@ public class ExecutionReviewFacts
             (await Task.Run(first.Execution.Continue).WaitAsync(TimeSpan.FromSeconds(5))).Should().BeFalse();
             Func<Task> competing = () => Task.Run(() => flow.Prepare(new Input())).WaitAsync(TimeSpan.FromSeconds(5));
             await competing.Should().ThrowAsync<FSMException>();
-            ((IFSMNode)node).Context.Should().BeSameAs(original);
+            node.Control.Token.Should().Be(original);
         }
         finally { node.Return.Set(); await stopping.WaitAsync(TimeSpan.FromSeconds(5)); }
         if (fail)
@@ -409,16 +379,16 @@ public class ExecutionReviewFacts
     [Theory]
     [InlineData("Go")]
     [InlineData("Done")]
-    public async Task UnscopedHandleCallbacksCannotDeliverIntoALaterExecution(string eventName)
+    public async Task SavedReceiverCallbacksCannotDeliverIntoALaterExecution(string eventName)
     {
         var engine = Engine(("Start", new Probe()), ("Target", new Probe()));
         engine.ConnectNode("Go", "Start", "Target");
-        using var executor = new FSMExecutor(engine.GetNode("Start"), engine.GetEvent("Done"));
-        await executor.RestartAsync();
-        await State(executor, FSMState.Running);
-        Action<FSMEvent> oldReceiver = ((IHandle<FSMEvent>)executor).Handle;
-        await executor.Execution.StopAsync();
-        await executor.RestartAsync();
+        using var first = await engine.Prepare().StartAsync("Start", "Done");
+        await State(first, FSMState.Running);
+        var old = first.Execution;
+        Action<FSMEvent> oldReceiver = value => old.PublishEvent(value.EventName, value.EventContext);
+        await old.StopAsync();
+        using var executor = await engine.Prepare().StartAsync("Start", "Done");
         await State(executor, FSMState.Running);
         try
         {

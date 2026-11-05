@@ -11,8 +11,14 @@ public class ExecutionLifecycleFacts
     }
     private sealed class Factory(Func<IFSMNode>? create = null, Type? declared = null) : IFSMNodeFactory
     {
-        public IFSMNode CreateNode(string key) => create?.Invoke() ?? new Idle();
-        public Type GetNodeType(string key) => declared ?? typeof(Idle);
+        private readonly Dictionary<string, Type> types = new();
+        public IFSMNode CreateNode(string key)
+        {
+            var node = create?.Invoke() ?? new Idle();
+            types[key] = node.GetType();
+            return node;
+        }
+        public Type GetNodeType(string key) => declared ?? types[key];
         public string GetNodeFeatureName(Type type) => "Idle";
     }
     private static FSMEngine Engine()
@@ -161,17 +167,17 @@ public class ExecutionLifecycleFacts
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task LateNodeNotificationKeepsItsOriginalRoundAcrossLegacyRestart(bool pause)
+    public async Task LateNodeNotificationKeepsItsOriginalRoundAcrossFreshPreparation(bool pause)
     {
         var scenario = new LateScenario { PauseOnly = pause };
         var node = new LateNode(scenario);
         var engine = new FSMEngine(new Factory(() => node));
         engine.CreateNode("Idle", "Start");
         engine.AttachEvent("Start", "Done", 1);
-        using var executor = new FSMExecutor(node, engine.GetEvent("Done"));
-        await executor.RestartAsync();
-        await WaitForState(executor, FSMState.Running);
-        await executor.RestartAsync();
+        using var first = await engine.Prepare().StartAsync("Start", "Done");
+        await WaitForState(first, FSMState.Running);
+        await first.StopAsync();
+        using var executor = await engine.Prepare().StartAsync("Start", "Done");
         await WaitForState(executor, FSMState.Running);
         try
         {
@@ -244,11 +250,12 @@ public class ExecutionLifecycleFacts
         public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public TaskCompletionSource Canceled { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        public FSMNodeContext? Original;
-        public FSMNodeContext? AtExit;
+        public RestartProbe? Original;
+        public RestartProbe? AtExit;
         public int Calls;
     }
-    private sealed class LegacyWait(RestartProbe probe) : BaseFSMNode
+    private sealed class ProbeInput { public RestartProbe Probe { get; init; } = new(); }
+    private sealed class LegacyWait(RestartProbe probe) : BaseFSMNode<RestartProbe>
     {
         protected override async Task ExecuteAsync()
         {
@@ -266,86 +273,84 @@ public class ExecutionLifecycleFacts
     [InlineData(1)]
     [InlineData(2)]
     [InlineData(3)]
-    public async Task EveryRetainedRestartWaitsBeforeChangingContextAndNeverImplicitlyInheritsData(int overload)
+    public async Task EveryPreparationEntryRejectsRebindingUntilTheOldExecutionTrulyExits(int overload)
     {
         var probe = new RestartProbe();
         var engine = new FSMEngine(new Factory(() => new LegacyWait(probe), typeof(LegacyWait)));
         engine.CreateNode("Wait", "Start");
         engine.CreateNode("Wait", "Other");
         engine.AddEvent(new FSMEvent("Done"));
-        using var executor = new FSMExecutor(engine.GetNode("Start"), engine.GetEvent("Done"));
-        var firstData = new object();
-        var nextData = new object();
-        await executor.RestartAsync(firstData);
+        var flow = engine.BindContext<ProbeInput>();
+        using var first = await flow.Prepare(new ProbeInput { Probe = probe }).StartAsync("Start", "Done");
         await probe.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
-        var restarting = overload switch
-        {
-            0 => executor.RestartAsync(),
-            1 => executor.RestartAsync(nextData),
-            2 => executor.RestartAsync(engine.GetNode("Other")),
-            _ => executor.RestartAsync(engine.GetNode("Other"), nextData)
-        };
+        var stopping = first.Execution.StopAsync();
         await probe.Canceled.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var nextData = new RestartProbe();
         try
         {
-            restarting.IsCompleted.Should().BeFalse();
-            engine.GetNode("Start").Context.Should().BeSameAs(probe.Original);
-            probe.Original!.Data.Should().BeSameAs(firstData);
-            Action conflict = () => engine.BindContext<Input>().Prepare(new Input());
+            stopping.IsCompleted.Should().BeFalse();
+            ((LegacyWait)engine.GetNode("Start")).Context.Should().BeSameAs(probe.Original);
+            probe.Original.Should().BeSameAs(probe);
+            Action conflict = () => flow.Prepare(new ProbeInput { Probe = nextData });
             conflict.Should().Throw<FSMException>();
         }
         finally { probe.Release.TrySetResult(); }
-        (await restarting.WaitAsync(TimeSpan.FromSeconds(5))).Should().BeTrue();
-        await WaitForState(executor, FSMState.Running);
+        await stopping.WaitAsync(TimeSpan.FromSeconds(5));
         probe.AtExit.Should().BeSameAs(probe.Original);
-        var target = engine.GetNode(overload < 2 ? "Start" : "Other");
-        target.Context.Data.Should().BeSameAs(overload % 2 == 1 ? nextData : null);
-        target.Context.TriggerEvent.Should().BeNull();
+        using var prepared = flow.Prepare(new ProbeInput { Probe = nextData });
+        var entry = overload < 2 ? "Start" : "Other";
+        using var executor = overload % 2 == 0
+            ? await prepared.StartAsync(entry, "Done")
+            : await prepared.WithEntry(entry, "Done").StartAsync();
+        await WaitForState(executor, FSMState.Running);
+        var target = (LegacyWait)engine.GetNode(entry);
+        target.Context.Should().BeSameAs(nextData);
+        target.TriggerEvent.Should().BeNull();
         await executor.StopAsync();
     }
 
     [Fact]
-    public async Task CompetingLegacyStartsOnlyLetOneExecutionBorrowTheEngine()
+    public async Task CompetingPreparationsOnlyLetOneExecutionBorrowTheEngine()
     {
         var probe = new RestartProbe();
         var engine = new FSMEngine(new Factory(() => new LegacyWait(probe), typeof(LegacyWait)));
         engine.CreateNode("Wait", "Start");
         engine.AddEvent(new FSMEvent("Done"));
-        using var first = new FSMExecutor(engine.GetNode("Start"), engine.GetEvent("Done"));
-        using var second = new FSMExecutor(engine.GetNode("Start"), engine.GetEvent("Done"));
+        var flow = engine.BindContext<ProbeInput>();
         var go = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        async Task<bool> Attempt(FSMExecutor executor, object data)
+        async Task<FSMExecutor?> Attempt()
         {
             await go.Task;
-            try { return await executor.RestartAsync(data); }
-            catch (FSMException) { return false; }
+            try { return await flow.Prepare(new ProbeInput { Probe = probe }).StartAsync("Start", "Done"); }
+            catch (FSMException) { return null; }
         }
-        var a = Task.Run(() => Attempt(first, new object()));
-        var b = Task.Run(() => Attempt(second, new object()));
+        var a = Task.Run(Attempt);
+        var b = Task.Run(Attempt);
         go.TrySetResult();
         var results = await Task.WhenAll(a, b).WaitAsync(TimeSpan.FromSeconds(5));
         try
         {
-            results.Count(success => success).Should().Be(1);
+            results.Count(executor => executor != null).Should().Be(1);
             await probe.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
             probe.Calls.Should().Be(1);
-            engine.GetNode("Start").Context.Should().BeSameAs(probe.Original);
+            ((LegacyWait)engine.GetNode("Start")).Context.Should().BeSameAs(probe.Original);
         }
         finally
         {
             probe.Release.TrySetResult();
-            if (results[0]) await first.StopAsync();
-            if (results[1]) await second.StopAsync();
+            foreach (var executor in results.OfType<FSMExecutor>()) { await executor.StopAsync(); executor.Dispose(); }
         }
     }
 
     private sealed class CountVisits(Action visit) : BaseFSMNode
     {
+        public Action? Initialize;
+        public override void InitBeforeStart() => Initialize?.Invoke();
         protected override Task ExecuteAsync() { visit(); return Task.CompletedTask; }
     }
 
     [Fact]
-    public async Task AContinueInterruptedByStopCannotResumeTheNextLegacyRound()
+    public async Task AContinueInterruptedByStopCannotResumeTheNextPreparedRound()
     {
         var visits = 0;
         var hits = new List<string>();
@@ -355,14 +360,15 @@ public class ExecutionLifecycleFacts
         engine.CreateNode("End", "Target");
         engine.AttachEvent("Target", "Done", 1);
         engine.ConnectNode("Go", "Start", "Target");
-        using var executor = new FSMExecutor(engine.GetNode("Start"), engine.GetEvent("Done"));
-        await executor.RestartAsync();
+        using var first = await engine.Prepare().StartAsync("Start", "Done");
+        var executor = first;
         await WaitForState(executor, FSMState.Running);
         await executor.PauseAsync();
         executor.FSMStateChanged += (_, state, _) => { if (state == FSMState.Proceeding) executor.Stop(); };
         executor.Continue().Should().BeTrue();
         await executor.Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
-        await executor.RestartAsync();
+        using var second = await engine.Prepare().StartAsync("Start", "Done");
+        executor = second;
         await WaitForState(executor, FSMState.Running);
         executor.Execution.PublishEvent("Go");
         await executor.Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
@@ -418,37 +424,36 @@ public class ExecutionLifecycleFacts
     }
 
     [Fact]
-    public async Task StopAtTheNewLegacyInitializedNotificationTargetsTheNewRound()
+    public async Task StopDuringNewPreparationInitializationTargetsTheNewRound()
     {
         var visits = 0;
         var engine = new FSMEngine(new Factory(() => new CountVisits(() => visits++), typeof(CountVisits)));
         engine.CreateNode("Counter", "Start");
         engine.AddEvent(new FSMEvent("Done"));
-        using var executor = new FSMExecutor(engine.GetNode("Start"), engine.GetEvent("Done"));
-        await executor.RestartAsync();
-        await WaitForState(executor, FSMState.Running);
-        await executor.StopAsync();
-        executor.FSMStateChanged += (_, state, _) => { if (state == FSMState.Initialized) executor.Stop(); };
-        await executor.RestartAsync();
+        using var first = await engine.Prepare().StartAsync("Start", "Done");
+        await WaitForState(first, FSMState.Running);
+        await first.StopAsync();
+        using var executor = await engine.Prepare().StartAsync("Start", new[] { "Done" }, value =>
+            ((CountVisits)engine.GetNode("Start")).Initialize = value.Stop);
         try { executor.State.Should().BeOneOf(FSMState.Stopping, FSMState.Stoped); }
         finally { await executor.StopAsync(); }
         visits.Should().Be(1);
     }
 
     [Fact]
-    public async Task LegacyLoopInitializesNodePrivateStateOncePerNewExecution()
+    public async Task PreparationInitializesNodePrivateStateOncePerNewExecution()
     {
         var node = new InitializingIdle();
         var engine = new FSMEngine(new Factory(() => node, typeof(InitializingIdle)));
         engine.CreateNode("Idle", "Start");
         engine.ConnectNode("Again", "Start", "Start");
         engine.AddEvent(new FSMEvent("Done"));
-        using var executor = new FSMExecutor(node, engine.GetEvent("Done"));
-        await executor.RestartAsync();
+        using var first = await engine.Prepare().StartAsync("Start", "Done");
         node.Initializations.Should().Be(1);
-        await executor.RestartAsync();
+        await first.StopAsync();
+        using var second = await engine.Prepare().StartAsync("Start", "Done");
         node.Initializations.Should().Be(2);
-        await executor.StopAsync();
+        await second.StopAsync();
     }
 
     private sealed class ImmediateEnd : BaseFSMNode
@@ -509,29 +514,28 @@ public class ExecutionLifecycleFacts
     }
 
     [Fact]
-    public async Task ExitedExecutorLegacyEventAndPauseEntriesRejectActiveCalls()
+    public async Task ExitedExecutionEventAndPauseEntriesRejectActiveCalls()
     {
         var engine = Engine();
         using var executor = await engine.BindContext<Input>("Start", "Done").Prepare(new Input()).StartAsync();
         await WaitForState(executor, FSMState.Running);
         executor.Execution.PublishEvent("Done");
         await executor.Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
-        Action publish = () => executor.Handle(engine.GetEvent("Done"));
+        Action publish = () => executor.Execution.PublishEvent("Done");
         Action pause = executor.Pause;
         publish.Should().Throw<FSMException>();
         pause.Should().Throw<FSMException>();
     }
 
     [Fact]
-    public async Task ConcreteHandleCannotOperateTheNextLegacyExecution()
+    public async Task ConcreteHandleCannotOperateTheNextPreparedExecution()
     {
         var engine = Engine();
-        using var executor = new FSMExecutor(engine.GetNode("Start"), engine.GetEvent("Done"));
-        await executor.RestartAsync();
-        await WaitForState(executor, FSMState.Running);
-        var old = executor.Execution;
+        using var first = await engine.Prepare().StartAsync("Start", "Done");
+        await WaitForState(first, FSMState.Running);
+        var old = first.Execution;
         await old.StopAsync();
-        await executor.RestartAsync();
+        using var executor = await engine.Prepare().StartAsync("Start", "Done");
         await WaitForState(executor, FSMState.Running);
         Action publish = () => old.PublishEvent("Done");
         Action stop = () => old.Stop();
@@ -600,7 +604,7 @@ public class ExecutionLifecycleFacts
         try
         {
             execution.Continue().Should().BeFalse();
-            Action lateExternalEnd = () => execution.Handle(engine.GetEvent("Done"));
+            Action lateExternalEnd = () => execution.Execution.PublishEvent("Done");
             lateExternalEnd.Should().Throw<FSMException>();
             execution.State.Should().Be(FSMState.Stopping);
         }
@@ -667,6 +671,9 @@ public class ExecutionLifecycleFacts
         using var a = await GateEngine().BindContext<GateInput>("Start", "Done").Prepare(aInput).StartAsync();
         using var b = await GateEngine().BindContext<GateInput>("Start", "Done").Prepare(bInput).StartAsync();
         await Task.WhenAll(aInput.Gate.Entered.Task, bInput.Gate.Entered.Task).WaitAsync(TimeSpan.FromSeconds(5));
+        // Execute's synchronous prefix can signal Entered before the executor
+        // announces Running. Await both public state boundaries, not scheduler luck.
+        await Task.WhenAll(WaitForState(a, FSMState.Running), WaitForState(b, FSMState.Running));
         try
         {
             a.Execution.Pause();
@@ -729,17 +736,16 @@ public class ExecutionLifecycleFacts
     }
 
     [Fact]
-    public async Task QueuedBusinessEventsAreNotCarriedAcrossAStoppedLegacyRound()
+    public async Task QueuedBusinessEventsAreNotCarriedAcrossAStoppedPreparedRound()
     {
         var hits = new List<string>();
         var engine = RoutedEngine(new FSMEvent("Go"), hits);
-        using var executor = new FSMExecutor(engine.GetNode("Start"), engine.GetEvent("Done"));
-        await executor.RestartAsync();
-        await WaitForState(executor, FSMState.Running);
-        await executor.Execution.PauseAsync();
-        executor.Execution.PublishEvent("Go");
-        await executor.Execution.StopAsync();
-        await executor.RestartAsync();
+        using var first = await engine.Prepare().StartAsync("Start", "Done");
+        await WaitForState(first, FSMState.Running);
+        await first.Execution.PauseAsync();
+        first.Execution.PublishEvent("Go");
+        await first.Execution.StopAsync();
+        using var executor = await engine.Prepare().StartAsync("Start", "Done");
         await WaitForState(executor, FSMState.Running);
         executor.Execution.PublishEvent("Mark");
         await executor.Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
@@ -751,8 +757,7 @@ public class ExecutionLifecycleFacts
     {
         var hits = new List<string>();
         var engine = RoutedEngine(new FSMEvent("Go"), hits);
-        using var executor = new FSMExecutor(engine.GetNode("Start"), engine.GetEvent("Done"));
-        await executor.RestartAsync();
+        using var executor = await engine.Prepare().StartAsync("Start", "Done");
         await WaitForState(executor, FSMState.Running);
         (await executor.Execution.PauseAsync()).Should().BeTrue();
         executor.Execution.PublishEvent("Go", "queued payload");
@@ -775,9 +780,8 @@ public class ExecutionLifecycleFacts
         var bHits = new List<string>();
         var aEngine = RoutedEngine(go, aHits);
         var bEngine = RoutedEngine((FSMEvent)go.Clone(), bHits);
-        using var a = new FSMExecutor(aEngine.GetNode("Start"), aEngine.GetEvent("Done"));
-        using var b = new FSMExecutor(bEngine.GetNode("Start"), bEngine.GetEvent("Done"));
-        await Task.WhenAll(a.RestartAsync(), b.RestartAsync());
+        using var a = await aEngine.Prepare().StartAsync("Start", "Done");
+        using var b = await bEngine.Prepare().StartAsync("Start", "Done");
         await Task.WhenAll(WaitForState(a, FSMState.Running), WaitForState(b, FSMState.Running));
         a.Execution.PublishEvent("Go");
         await a.Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
@@ -799,30 +803,28 @@ public class ExecutionLifecycleFacts
     }
 
     [Fact]
-    public async Task LegacyAlternateGraphCannotRebindANodeBorrowedByAnotherEngine()
+    public async Task PreparingAnAlternateGraphCannotRebindANodeBorrowedByAnotherEngine()
     {
         var probe = new RestartProbe();
         var owner = new FSMEngine(new Factory(() => new LegacyWait(probe), typeof(LegacyWait)));
         owner.CreateNode("Wait", "Borrowed");
         owner.AddEvent(new FSMEvent("Done"));
-        using var active = new FSMExecutor(owner.GetNode("Borrowed"), owner.GetEvent("Done"));
-        await active.RestartAsync(new object());
+        using var active = await owner.BindContext<ProbeInput>().Prepare(new ProbeInput { Probe = probe }).StartAsync("Borrowed", "Done");
         await probe.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
         var engine = Engine();
         engine.CreateNode("Idle", "Alternate");
-        using var conflicting = new FSMExecutor(engine.GetNode("Start"), engine.GetEvent("Done"));
         engine.GetNode("Alternate").AddTransition(new FSMEvent("Go"), owner.GetNode("Borrowed"));
         try
         {
-            Func<Task> restart = async () => await conflicting.RestartAsync(engine.GetNode("Alternate"));
-            await restart.Should().ThrowAsync<FSMException>().WithMessage("*Borrowed*owner*");
-            owner.GetNode("Borrowed").Context.Should().BeSameAs(probe.Original);
+            Action prepare = () => engine.Prepare();
+            prepare.Should().Throw<FSMException>().WithMessage("*Borrowed*owner*");
+            ((LegacyWait)owner.GetNode("Borrowed")).Context.Should().BeSameAs(probe.Original);
         }
         finally { probe.Release.TrySetResult(); await active.StopAsync(); }
     }
 
     [Fact]
-    public async Task LegacyAlternateEntryCannotBypassARequiredBusinessBinding()
+    public void DependencyFreeEntryCannotBypassARequiredBusinessBinding()
     {
         var node = new Gated();
         var idle = new Idle();
@@ -830,19 +832,17 @@ public class ExecutionLifecycleFacts
         var engine = new FSMEngine(new Factory(() => nodes.Dequeue()));
         engine.CreateNode("Idle", "Start");
         engine.CreateNode("Gated", "Typed");
-        using var legacy = new FSMExecutor(idle, new FSMEvent("Done"));
-        Func<Task> bypass = async () => await legacy.RestartAsync((IFSMNode)node);
-        await bypass.Should().ThrowAsync<FSMException>().WithMessage("*Typed execution*");
+        Action bypass = () => engine.Prepare();
+        bypass.Should().Throw<FSMException>().WithMessage("*Typed*Gate*BindContext*");
     }
 
     [Fact]
-    public async Task LegacyStartCannotBypassPreparedEngineOwnership()
+    public async Task DependencyFreePreparationCannotBypassPreparedEngineOwnership()
     {
         var engine = Engine();
         using var prepared = engine.BindContext<Input>("Start", "Done").Prepare(new Input());
-        using var legacy = new FSMExecutor(engine.GetNode("Start"), engine.GetEvent("Done"));
-        Func<Task> start = async () => await legacy.RestartAsync();
-        await start.Should().ThrowAsync<FSMException>();
+        Action start = () => engine.Prepare();
+        start.Should().Throw<FSMException>();
         using var execution = await prepared.StartAsync();
         await execution.StopAsync();
     }
@@ -855,7 +855,7 @@ public class ExecutionLifecycleFacts
     }
 
     [Fact]
-    public void StandaloneLegacyGraphsCheckSharedNodesByReferenceNotBusinessEquality()
+    public void PreparedGraphsCheckSharedNodesByReferenceNotBusinessEquality()
     {
         IFSMNode first = new EqualIdle { Name = "First" };
         IFSMNode second = new EqualIdle { Name = "Second" };
@@ -863,9 +863,14 @@ public class ExecutionLifecycleFacts
         var go = new FSMEvent("Go");
         first.AddTransition(go, shared);
         second.AddTransition(go, shared);
-        var done = new FSMEvent("Done");
-        using var owner = new FSMExecutor(first, done);
-        Action conflict = () => { using var invalid = new FSMExecutor(second, done); };
+        var nodes = new Queue<IFSMNode>(new[] { first, shared });
+        var firstEngine = new FSMEngine(new Factory(() => nodes.Dequeue(), typeof(EqualIdle)));
+        firstEngine.CreateNode("Idle", "First");
+        firstEngine.CreateNode("Idle", "Shared");
+        using var owner = firstEngine.Prepare();
+        var secondEngine = new FSMEngine(new Factory(() => second, typeof(EqualIdle)));
+        secondEngine.CreateNode("Idle", "Second");
+        Action conflict = () => secondEngine.Prepare();
         conflict.Should().Throw<FSMException>().WithMessage("*Shared*owner*");
     }
 

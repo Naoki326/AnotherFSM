@@ -70,9 +70,9 @@
 
     public interface IFSMNode : ITransitionContainer, IVisualNode, IDisposable
     {
-        // Transitional legacy control/Data bridge. Typed nodes expose their local business
-        // interface through IFSMContextNode<T>.Context; typed execution never resolves from Data.
-        FSMNodeContext Context { get; set; }
+        // Execution control and incoming notification are independent of business Context.
+        FSMExecutionControl Control { get; }
+        FSMEvent? TriggerEvent { get; set; }
 
         //当前流程的数据结构
         IExecuterContext ExecuterContext { get; set; }

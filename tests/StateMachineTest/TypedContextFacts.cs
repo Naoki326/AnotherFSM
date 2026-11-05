@@ -269,12 +269,13 @@ public class TypedContextFacts
     }
 
     [Fact]
-    public async Task TypedExecutionCannotBeRestartedThroughAnImplicitLegacyDataEntry()
+    public async Task TypedExecutionRequiresFreshPreparationRatherThanReusingAStartedHandle()
     {
         var flow = Engine([]).BindContext<Input>();
-        using var executor = await flow.Prepare(new Input()).StartAsync("Query", "Done");
+        using var prepared = flow.Prepare(new Input());
+        using var executor = await prepared.StartAsync("Query", "Done");
         await executor.ExecutorTask.WaitAsync(TimeSpan.FromSeconds(5));
-        Func<Task> restart = async () => await executor.RestartAsync();
+        Func<Task> restart = async () => await prepared.StartAsync("Query", "Done");
         await restart.Should().ThrowAsync<FSMException>();
     }
 
@@ -343,13 +344,12 @@ public class TypedContextFacts
     }
 
     [Fact]
-    public async Task LegacyDataCannotSupplyATypedNodesBusinessDependency()
+    public void DependencyFreePreparationCannotSupplyATypedNodesBusinessDependency()
     {
         var results = new List<string?>();
         var engine = Engine(results);
-        using var executor = new FSMExecutor(engine.GetNode("Query"), engine.GetEvent("Done"));
-        Func<Task> start = async () => await executor.RestartAsync(new Job());
-        await start.Should().ThrowAsync<FSMException>();
+        Action start = () => engine.Prepare();
+        start.Should().Throw<FSMException>().WithMessage("*Query*IQuery*BindContext*");
         results.Should().BeEmpty();
     }
 

@@ -23,7 +23,7 @@ await runningB.StopAsync();
 
 `Prepare` 固定本轮业务引用并占用引擎；未启动的 preparation 必须显式 Dispose。已启动后 Dispose preparation 不替代执行的 Stop/Completion。业务对象仍归调用方所有。
 
-没有在 BindContext 配置入口时，可以先 `preparation.WithEntry("Start", "Done")` 再批量启动。已有 `preparation.StartAsync()`、`StartAsync(startNode, endEvent, isLongRunning)` 仍有效，但也走相同集合屏障：不能逐个启动已连接的待启动范围。
+整个引擎无业务依赖时直接 `engine.Prepare().WithEntry("Start", "Done")`，不制造聚合对象；与业务 preparation 可同批连接/启动。没有在 BindContext 配置入口时，可以先 `preparation.WithEntry("Start", "Done")` 再批量启动。已有 `preparation.StartAsync()`、`StartAsync(startNode, endEvent, isLongRunning)` 仍有效，但也走相同集合屏障：不能逐个启动已连接的待启动范围。
 
 ## 范围、通知与名称
 
@@ -38,7 +38,7 @@ await runningB.StopAsync();
 
 Start 的参数只列本次待启动成员，但必须覆盖所涉及范围的**全部 pending**。重复 preparation（同引擎）、失效/已启动句柄、缺少入口、图变化或遗漏成员都会拒绝，不隐式替换运行执行。多个独立范围可以在同次 Start 中启动，不因此互相连接。
 
-全部成员先检查，再完成可回退的接收准备；提交全部接收与成员可见性后，才放行任何本次节点。初始节点立即发出的通知可进入其他就绪接收队列；不承诺物理时间同时起跑。Start 返回启动结果，不是业务全体完成汇合。
+全部成员先检查，再完成可回退的接收准备；提交全部接收与成员可见性后，才放行任何本次节点。初始节点立即发出的通知可进入其他就绪接收队列；不承诺物理时间同时起跑，也不要求目标初始业务先执行。业务 end 早于目标初始 Run 时可正常 Finished、零业务执行并完成真退出。Start 返回启动结果，不是业务全体完成汇合。
 
 检查/接收准备失败时零节点放行，撤销临时接收资源，保留有效 Prepare 和引擎占用。调用方可修正并用同一组句柄重试，也可显式 Dispose 放弃。诊断标识失败阶段，遗漏诊断包含入口和引擎；根因通过 InnerException 保留。放行后的初始化/业务异常遵守各自 #19 生命周期，不承诺全体事务回滚。同步用户初始化、取消回调或不合作节点不返回时，Completion 仍等待真正退出。
 
@@ -54,4 +54,4 @@ Connect 合并已有活动成员的范围立即生效；新 pending 成员只有
 
 暂停成员仍接收本轮队列，包括业务结束事件；Continue 后处理。停止中/退出后拒收，停止一方不停止其他成员。接收资源和成员清理纳入 Completion 真退出屏障；Finished、Stop 或 Dispose 返回不授权提前复用引擎。旧句柄主动操作可观察地失败；捕获的旧节点路由、旧队列以及在途通知不能改投新轮次。
 
-API 和验证证据见 [#20 实施记录](implementation/20-event-sharing.md)。不提供父子执行、ParallelModule、完成汇合、消息持久化或前端通信面板。
+API 历史交付见 [#20 实施记录](implementation/20-event-sharing.md)，收缩后全族真实结果见[最终验收](implementation/22-final-acceptance.md)。不提供父子执行、ParallelModule、完成汇合、消息持久化或前端通信面板。

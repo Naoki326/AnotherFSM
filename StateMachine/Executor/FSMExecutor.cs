@@ -21,18 +21,13 @@ namespace StateMachine
     }
 
     [DebuggerNonUserCode]
-    public partial class FSMExecutor : IHandle<FSMEvent>, IEnumerable<IFSMNode>
+    public partial class FSMExecutor : IEnumerable<IFSMNode>
     {
 
-        public FSMExecutor(IFSMNode start, FSMEvent endEvent, bool isAsyncObserver)
-            : this(start, new[] { endEvent }, isAsyncObserver)
-        {
-        }
-
-        public FSMExecutor(IFSMNode start, IEnumerable<FSMEvent> endEvents, bool isAsyncObserver)
+        internal FSMExecutor(IFSMNode start, IEnumerable<FSMEvent> endEvents, bool isAsyncObserver = false)
         {
             this.start = start ?? throw new FSMException("Start 节点不能为空！");
-            engine = FSMEngine.OwnerOf(start) ?? new FSMEngine(null!);
+            engine = FSMEngine.OwnerOf(start) ?? throw new FSMException("Start node must belong to its prepared engine.");
 
             var distinctEndEvents = (endEvents ?? throw new FSMException("结束事件不能为空！"))
                 .Where(e => e != null)
@@ -52,14 +47,6 @@ namespace StateMachine
             InitObserver(isAsyncObserver);
 
             foreach (var node in this.Distinct(FSMNodeIdentityComparer.Instance)) engine.ClaimNode(node, node.Name);
-        }
-
-        public FSMExecutor(IFSMNode start, FSMEvent endEvent) : this(start, endEvent, false)
-        {
-        }
-
-        public FSMExecutor(IFSMNode start, IEnumerable<FSMEvent> endEvents) : this(start, endEvents, false)
-        {
         }
 
         private readonly FSMEngine engine;
@@ -264,7 +251,7 @@ namespace StateMachine
                 {
                     isExit = true;
                 }
-                if (currentNode.Context.IsPaused)
+                if (currentNode.Control.IsPaused)
                 {
                     pausing = false;
                 }
@@ -352,9 +339,7 @@ namespace StateMachine
                                             if (State == FSMState.Stopping || State == FSMState.Stoped || State == FSMState.Finished) return;
                                             if (State == FSMState.Pausing || State == FSMState.Paused) continue;
                                             IFSMNode nextNode = currentNode.TargetState(@event);
-                                            if (!hasBoundContext)
-                                                nextNode.Context = currentNode.Context;
-                                            nextNode.Context.TriggerEvent = @event;
+                                            nextNode.TriggerEvent = @event;
                                             SolverContext.LastNodeName = currentNode.Name;
                                             SolverContext.CurrentNodeName = nextNode.Name;
 
@@ -445,7 +430,7 @@ namespace StateMachine
 
         private Task? RequestStop(FSMExecution? execution)
         {
-            FSMNodeContext? context;
+            FSMExecutionControl? control;
             TaskCompletionSource<bool> callbacks;
             Task task;
             lock (controlSync)
@@ -458,14 +443,14 @@ namespace StateMachine
                 // Cancel can inline the entire node/consumer exit on this thread.
                 // Publish its barrier before any notification can reenter exit.
                 stopCallbacks = callbacks = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-                context = currentNode?.Context;
+                control = currentNode?.Control;
                 State = FSMState.Stopping;
                 Interlocked.Exchange(ref pendingPause, 0);
                 eventConsumer.Writer.TryComplete();
                 resumeSignal?.TrySetResult(true);
             }
             // Cancellation callbacks are user code, not part of the control lock.
-            try { context?.Pause(); }
+            try { control?.Pause(); }
             catch (Exception ex) { lock (controlSync) StopException = ex; }
             finally { callbacks.TrySetResult(true); }
             return task;
@@ -479,7 +464,6 @@ namespace StateMachine
             return true;
         }
 
-        private bool hasBoundContext;
         private IFSMNode[] executionNodes = Array.Empty<IFSMNode>();
 
         private object preparedOwner = null!;
@@ -490,9 +474,12 @@ namespace StateMachine
         internal void PrepareContext(IFSMNode[] nodes, IReadOnlyList<(IFSMNode Node, object Value)> values,
             object owner, Action release, FSMEventSharing.Member member, Action cleanup)
         {
-            hasBoundContext = true;
             executionNodes = nodes;
-            foreach (var node in nodes) node.Context = new FSMNodeContext();
+            foreach (var node in nodes)
+            {
+                node.Control.SetTokenSource(new CancellationTokenSource());
+                node.TriggerEvent = null;
+            }
             foreach (var binding in values) ((IFSMContextBindingTarget)binding.Node).BindContext(binding.Value);
             currentNode = start;
             eventConsumer = Channel.CreateUnbounded<FSMEvent>();
@@ -520,12 +507,6 @@ namespace StateMachine
                 engine.DescribeExecution(owner, () => round.State.ToString());
                 State = FSMState.Initialized;
             }
-        }
-
-        private void StartOwned(bool isLongRunning, object owner, Action release)
-        {
-            BeginOwned(owner);
-            RunPreparedContext(isLongRunning, release);
         }
 
         internal void RunPreparedContext(bool isLongRunning, Action? release = null)
@@ -596,55 +577,6 @@ namespace StateMachine
         }
 
 
-        private void RejectBoundRestart(IFSMNode next)
-        {
-            if (hasBoundContext || engine.Concat(this).Concat(new[] { next }).Concat(Traversal(next, new ConcurrentBag<IFSMNode>()))
-                .Any(n => n is IFSMContextNode contextual && contextual.ContextType != null))
-                throw new FSMException("Typed execution requires a fresh flow.Prepare(input); legacy RestartAsync/Data cannot supply, reuse or replace its bindings.");
-        }
-
-        public Task<bool> RestartAsync(bool isLongRunning = false)
-            => RestartLegacyAsync(start, () => new FSMNodeContext(), isLongRunning);
-
-        public Task<bool> RestartAsync<T>(T data, bool isLongRunning = false) where T : class
-            => RestartLegacyAsync(start, () => new FSMNodeContext<T> { Data = data }, isLongRunning);
-
-        public Task<bool> RestartAsync(IFSMNode node, bool isLongRunning = false)
-            => RestartLegacyAsync(node, () => new FSMNodeContext(), isLongRunning);
-
-        public Task<bool> RestartAsync<T>(IFSMNode node, T data, bool isLongRunning = false) where T : class
-            => RestartLegacyAsync(node, () => new FSMNodeContext<T> { Data = data }, isLongRunning);
-
-        private async Task<bool> RestartLegacyAsync(IFSMNode node, Func<FSMNodeContext> contextFactory, bool isLongRunning)
-        {
-            if (node == null) throw new FSMException("开始节点不能为空！");
-            RejectBoundRestart(node);
-            if (disposedValue) throw new ObjectDisposedException(nameof(FSMExecutor));
-            var nodes = engine.Concat(new[] { node }).Concat(Traversal(node, new ConcurrentBag<IFSMNode>()))
-                .Distinct(FSMNodeIdentityComparer.Instance).ToArray();
-            foreach (var candidate in nodes) engine.ClaimNode(candidate, candidate.Name);
-            await StopAsync();
-            var owner = new object();
-            engine.AcquireExecution(owner);
-            var owned = false;
-            try
-            {
-                engine.ClaimNode(node, node.Name);
-                start = node;
-                currentNode = node;
-                Interlocked.Exchange(ref pendingPause, 0);
-                pausing = false;
-                executionNodes = nodes;
-                foreach (var child in executionNodes) child.Context = new FSMNodeContext();
-                node.Context = contextFactory();
-                eventConsumer = Channel.CreateUnbounded<FSMEvent>();
-                owned = true;
-                StartOwned(isLongRunning, owner, () => engine.ReleaseExecution(owner));
-                return true;
-            }
-            catch { if (!owned) engine.ReleaseExecution(owner); throw; }
-        }
-
         private TaskCompletionSource<bool>? resumeSignal;
         private Task WaitForResumeAsync()
         {
@@ -684,7 +616,7 @@ namespace StateMachine
             }
             // An initial node can raise Pause synchronously inside RunAsync, after
             // its token is installed but before Running is announced externally.
-            if (currentNode.Context.IsPaused || pausing || (State != FSMState.Running && State != FSMState.Proceeding
+            if (currentNode.Control.IsPaused || pausing || (State != FSMState.Running && State != FSMState.Proceeding
                 && !(nodeRequested && State == FSMState.Initialized)))
             { return; }
             lock (controlSync)
@@ -693,7 +625,7 @@ namespace StateMachine
                 resumeSignal = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
                 State = FSMState.Pausing;
                 pausing = true;
-                try { currentNode.Context.Pause(); }
+                try { currentNode.Control.Pause(); }
                 finally
                 {
                     pausing = false;
@@ -705,7 +637,7 @@ namespace StateMachine
         public async Task<bool> PauseAsync()
         {
             TrackCallname();
-            if (ExecutorTask == null || ExecutorTask.IsCompleted || currentNode.Context.IsPaused || pausing
+            if (ExecutorTask == null || ExecutorTask.IsCompleted || currentNode.Control.IsPaused || pausing
                 || (State != FSMState.Running && State != FSMState.Proceeding))
             { return false; }
 
@@ -732,10 +664,6 @@ namespace StateMachine
                 return true;
             }
         }
-
-        [DebuggerHidden]
-        public void Handle(FSMEvent @event)
-            => throw new FSMException("Execution identity is required; publish through the concrete FSMExecution handle.");
 
         // Only round-validated external calls and captured node routes reach here.
         private void ReceiveEvent(FSMEvent @event)
