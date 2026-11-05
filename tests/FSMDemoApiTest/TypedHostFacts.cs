@@ -52,13 +52,16 @@ public class TypedHostFacts
     [Fact]
     public async Task ExternallyPreparedEngineRejectsStartBeforeChangingGraphOrHostInput()
     {
-        await using var host = new EngineManager(NullLogger<EngineManager>.Instance, new BrowserNodeFactory(), true, DemoBusinessHost.Create());
+        var inputRequests = 0;
+        var context = HostContext.Create(() => { ++inputRequests; return new DemoNodes.DemoBusinessInput(); });
+        await using var host = new EngineManager(NullLogger<EngineManager>.Instance, new BrowserNodeFactory(), true, context);
         await host.ImportAsync("def Query(BusinessQuery) {1->Done;}");
         using var external = host.Engine.BindContext<DemoNodes.DemoBusinessInput>().Prepare(new DemoNodes.DemoBusinessInput());
         var before = host.Engine.GetEventNames().ToArray();
         Func<Task> conflict = () => host.StartExecution("Query", "NewEnd");
         await conflict.Should().ThrowAsync<FSMException>();
         host.Engine.GetEventNames().Should().Equal(before);
+        inputRequests.Should().Be(0);
         host.GetExecutionStatus().BusinessRun.Should().BeNull();
         host.CurrentState.Should().Be(ExecutionState.Idle);
     }

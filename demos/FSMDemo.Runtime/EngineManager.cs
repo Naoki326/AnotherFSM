@@ -590,7 +590,7 @@ public partial class EngineManager : IAsyncDisposable
         lock (_executionSync)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
-            if (_startPending || !_retirement.IsCompleted || (_executor?.ExecutorTask is { IsCompleted: false }))
+            if (_startPending || !_retirement.IsCompleted || Engine.HasUnexitedExecution || (_executor?.ExecutorTask is { IsCompleted: false }))
                 throw new FSMException("Engine has an unexited execution; conflicting start rejected. Stop and await exit first.");
             graph = Engine;
             if (!graph.ContainsNode(startNodeName))
