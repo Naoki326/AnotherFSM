@@ -182,6 +182,10 @@ namespace StateMachine
         }
 
         public Task<FSMExecutor> StartAsync(string startNode, string endEvent, bool isLongRunning = false)
+            => StartAsync(startNode, new[] { endEvent }, null, isLongRunning);
+
+        /// <summary>Install observers before any node runs; all end events belong to this execution.</summary>
+        public Task<FSMExecutor> StartAsync(string startNode, IEnumerable<string> endEvents, Action<FSMExecutor>? beforeStart = null, bool isLongRunning = false)
         {
             lock (sync)
             {
@@ -194,7 +198,8 @@ namespace StateMachine
             try
             {
                 validateGraph();
-                executor = new FSMExecutor(engine.GetNode(startNode), engine.GetEvent(endEvent));
+                executor = new FSMExecutor(engine.GetNode(startNode), endEvents.Select(engine.GetEvent));
+                beforeStart?.Invoke(executor);
                 executor.StartContext(nodes, values, isLongRunning, owner, () => engine.ReleaseExecution(owner));
                 return Task.FromResult(executor);
             }
