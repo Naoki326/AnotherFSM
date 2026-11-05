@@ -71,19 +71,27 @@ public class StartupRetirementFacts
     }
 
     [Theory]
-    [InlineData(false, "stop")]
-    [InlineData(true, "stop")]
-    [InlineData(false, "import")]
-    [InlineData(true, "import")]
-    [InlineData(false, "dispose")]
-    [InlineData(true, "dispose")]
-    public async Task RetirementCancelsInitializationBeforeWaitingForStartupAndTrueExit(bool typed, string operation)
+    [InlineData(false, "stop", false)]
+    [InlineData(true, "stop", false)]
+    [InlineData(false, "import", false)]
+    [InlineData(true, "import", false)]
+    [InlineData(false, "dispose", false)]
+    [InlineData(true, "dispose", false)]
+    [InlineData(false, "stop", true)]
+    [InlineData(true, "stop", true)]
+    [InlineData(false, "import", true)]
+    [InlineData(true, "import", true)]
+    [InlineData(false, "dispose", true)]
+    [InlineData(true, "dispose", true)]
+    public async Task RetirementCancelsInitializationBeforeWaitingForStartupAndTrueExit(bool typed, string operation, bool nonStart)
     {
         var probe = new Probe();
         var input = new BorrowedInput();
         await using var host = new EngineManager(NullLogger<EngineManager>.Instance, new Factory(probe, typed),
             context: typed ? HostContext.Create(() => input) : null);
-        await host.ImportAsync("def Start(Init) {1->Done;}");
+        await host.ImportAsync(nonStart
+            ? "def Start(End) {1->Go;} def Next(Init) {1->Done;} Go -> Start to Next;"
+            : "def Start(Init) {1->Done;}");
         var graph = host.Engine;
         var starting = Task.Run(() => host.StartExecution("Start", "Done"));
         await probe.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
@@ -141,7 +149,7 @@ public class StartupRetirementFacts
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task RetirementBeforeRoundPublicationStillCancelsTheFutureRound(bool typed)
+    public async Task RetirementBeforeRoundPublicationPreventsFutureInitialization(bool typed)
     {
         var probe = new Probe { BlockBeforeRound = true };
         await using var host = new EngineManager(NullLogger<EngineManager>.Instance, new Factory(probe, typed),
@@ -165,8 +173,8 @@ public class StartupRetirementFacts
             stopping.IsCompleted.Should().BeFalse();
             probe.Disposed.Should().BeFalse();
             probe.PublishRound.TrySetResult();
-            await probe.Cancelled.Task.WaitAsync(TimeSpan.FromSeconds(2));
-            old.Execution.Completion.IsCompleted.Should().BeFalse();
+            (await starting.WaitAsync(TimeSpan.FromSeconds(5))).Should().BeFalse();
+            await old.Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
         }
         finally
         {
@@ -177,7 +185,7 @@ public class StartupRetirementFacts
         (await starting.WaitAsync(TimeSpan.FromSeconds(5))).Should().BeFalse();
         await stopping.WaitAsync(TimeSpan.FromSeconds(5));
         probe.Runs.Should().Be(0);
-        probe.Entered.Task.IsCompleted.Should().BeTrue();
+        probe.Entered.Task.IsCompleted.Should().BeFalse("retirement closed admission before initialization began");
         host.Engine.HasUnexitedExecution.Should().BeFalse();
     }
 
