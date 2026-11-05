@@ -63,4 +63,27 @@
 | 13：公共接缝、真实节点/同步点 | 上述共 29 新增用例；接收故障仅使用实例级 internal 窄接缝，不以节点业务异常替代。业务结果通过真实节点公开执行观察 |
 | 14：说明与范围 | 独立双语说明；无宿主迁移、父子执行、持久化、可靠消息或前端功能 |
 
-最终合入集成 tip、完整回归结果和日志保存信息见下一节（交付前补齐）。
+## 最终集成与完整回归
+
+实际分支：`pi-web-agent-2e3d7d93-a946-45bd-884b-4d8d7d47ff52`。隔离 worktree：`C:/Work/AnotherFSM-worktrees/pi-web-agent-2e3d7d93-a946-45bd-884b-4d8d7d47ff52`。
+
+验证代码提交：`1712a3f8c26ca085696176a06faaadd6c0690f75`（其后仅补本文最终证据）。实施前 HEAD、merge-base 和集成 tip 均为 `4063178bca93749ce966988920d349852e80108f`，工作树干净；实施后及完整回归后均执行 `git merge implement/context-lifecycle`，最新 tip 仍为该 SHA，Already up to date，无冲突、无 reset、未修改对方分支。阶段提交保留为 `f7e5fb6`、`d7325a4`、`1712a3f`。
+
+所有 bash 显式超时 15–120 秒，构建串行，设置 `JAVA_HOME=C:/Users/Naoki/.jre/jdk-11.0.26+4-jre`。下表是最终生产代码上的实际运行，不沿用中间结果冒充最终回归。
+
+| 最终命令 | 实际结果 | 原始日志 |
+| --- | --- | --- |
+| `dotnet test tests/StateMachineTest/StateMachineTest.csproj --nologo -p:NuGetAudit=false` | **260 通过，0 失败**（原核心 231 + 本票 29） | `final-core.log` |
+| `dotnet test tests/FSMDemoApiTest/FSMDemoApiTest.csproj --nologo -p:NuGetAudit=false` | **39 通过，0 失败** | `final-api.log` |
+| `dotnet test tests/FSMDemoWasmTest/FSMDemoWasmTest.csproj --nologo -p:NuGetAudit=false` | **27 通过，0 失败**，仅宿主 .NET | `final-host.log` |
+| `bash tools/test-typed-context.sh` | 正例编译/执行及 **7 真实编译负例通过** | `final-compile.log`；`compiler/*.txt` 保留各编译器原始诊断 |
+| `dotnet run --project tests/FSMScriptAnalyzerTest/FSMScriptAnalyzerTest.csproj -p:NuGetAudit=false` | 生成消费者编译、查询、真实 Module 执行通过 | `final-consumer.log` |
+| `dotnet build AnotherFSM.sln -c Release --nologo -p:NuGetAudit=false` | **0 错误，65 警告** | `final-release.log` |
+| `git diff --check` | 通过 | `final-diff.log` |
+| `git merge implement/context-lifecycle`（两次） | Already up to date；merge-base 为 `4063178` | `final-integration-merge.log`、`final-integration-recheck.log` |
+
+原始红/绿、中间失败、最终测试与编译诊断在返回前复制到 **`C:/work/anotherfsm-context-19/evidence-20/`**，不依赖可能自动移除的 worktree。没有复制 bin/obj。`handoff.txt` 记录最终分支/SHA及 worktree，`SHA256SUMS.txt` 校验保存日志。
+
+已知验证边界：未运行真实 Release WASM 浏览器合同，本票没有修改宿主/前端，不以宿主 .NET 或 Release 构建冒充浏览器证据；该迁移属于并行 #21。65 警告包含既有警告与 3 个有意的 xUnit1031（仅 Task.Run 中接收准备/公开状态通知的确定性阻塞屏障，均由 finally 释放；不以延时证明时序）。无已知未满足 #20 AC。
+
+全程自行 read/edit/write/bash/test/commit，未委派、未调用 pi/claude/模型 CLI、未启动隐藏代理、未执行独立审查流程、未 sleep 轮询；未 push、关闭票、合主 worktree 或继续后票。
