@@ -143,7 +143,7 @@ namespace StateMachine
     }
 
     /// <summary>Fixed references and exclusive engine ownership for one execution. Dispose an abandoned preparation explicitly.</summary>
-    public sealed class FSMContextPreparation : IDisposable
+    public sealed class FSMContextPreparation : IDisposable, IFSMEventSharingExecution
     {
         private readonly FSMEngine engine;
         private readonly IFSMNode[] nodes;
@@ -159,9 +159,17 @@ namespace StateMachine
             this.validateGraph = validateGraph;
             this.entry = entry;
             this.owner = owner;
+            Member.Preparation = this;
         }
 
-        private readonly object sync = new object();
+        internal FSMEventSharing.Member Member { get; } = new FSMEventSharing.Member();
+        internal string Description => $"entry {(selectedEntry ?? entry)?.Start ?? "<unset>"}, engine {System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(engine)}";
+        private (string Start, string End)? selectedEntry;
+        private IDisposable? receiverResource;
+        // Narrow execution-receiver preparation seam, not a public messaging extension point.
+        internal Func<IDisposable>? ReceiverPreparation { get; set; }
+
+        private readonly object sync = FSMEventSharing.Sync;
         private bool started;
         private bool released;
 
@@ -170,42 +178,72 @@ namespace StateMachine
             lock (sync)
             {
                 if (started || released) return;
+                if (Member.Starting) throw new FSMException("Execution is being started; retry release after startup completes.");
                 released = true;
+                FSMEventSharing.Exit(Member);
                 engine.ReleaseExecution(owner);
             }
         }
 
         public Task<FSMExecutor> StartAsync(bool isLongRunning = false)
         {
-            if (!entry.HasValue) throw new FSMException("No assembled entry; supply startNode/endEvent or configure them in BindContext.");
-            return StartAsync(entry.Value.Start, entry.Value.End, isLongRunning);
+            if (!(selectedEntry ?? entry).HasValue) throw new FSMException("No assembled entry; supply startNode/endEvent or configure them in BindContext.");
+            return Task.FromResult(FSMEventSharing.Start(new[] { this }, isLongRunning)[0]);
         }
 
         public Task<FSMExecutor> StartAsync(string startNode, string endEvent, bool isLongRunning = false)
         {
+            WithEntry(startNode, endEvent);
+            return Task.FromResult(FSMEventSharing.Start(new[] { this }, isLongRunning)[0]);
+        }
+
+        /// <summary>Select an entry without starting; useful for coordinated preparations from an unconfigured flow.</summary>
+        public FSMContextPreparation WithEntry(string startNode, string endEvent)
+        {
             lock (sync)
             {
-                if (started || released) throw new FSMException("This execution preparation is already started or released.");
-                started = true;
+                if (started || released || Member.Starting) throw new FSMException("This execution preparation is already started, starting or released.");
+                if (!engine.ContainsNode(startNode) || !engine.ContainsEvent(endEvent))
+                    throw new FSMException($"Entry {startNode} / end event {endEvent} does not exist.");
+                selectedEntry = (startNode, endEvent);
+                return this;
             }
-            // User initialization must not hold the preparation lock: a competing
-            // start observes the consumed handle immediately, even if Init blocks.
-            FSMExecutor? executor = null;
-            try
-            {
-                validateGraph();
-                executor = new FSMExecutor(engine.GetNode(startNode), engine.GetEvent(endEvent));
-                executor.StartContext(nodes, values, isLongRunning, owner, () => engine.ReleaseExecution(owner));
-                return Task.FromResult(executor);
-            }
-            catch
-            {
-                lock (sync) released = true;
-                // Once published, even a failed initialization owns its cleanup
-                // and exit barrier. Do not release it ahead of that cleanup.
-                if (executor?.ExecutorTask == null) engine.ReleaseExecution(owner);
-                throw;
-            }
+        }
+
+        internal void ValidateStart(bool reserved = false)
+        {
+            if (started || released || Member.Starting && !reserved) throw new FSMException($"This execution preparation ({Description}) is already started, starting or released.");
+            validateGraph();
+            var configured = selectedEntry ?? entry ?? throw new FSMException("No assembled entry; configure startNode/endEvent before coordinated Start.");
+            if (!engine.ContainsNode(configured.Start) || !engine.ContainsEvent(configured.End))
+                throw new FSMException($"Entry {configured.Start} / end event {configured.End} does not exist.");
+        }
+
+        internal FSMExecutor CreateExecutor()
+        {
+            var configured = (selectedEntry ?? entry)!.Value;
+            return new FSMExecutor(engine.GetNode(configured.Start), engine.GetEvent(configured.End));
+        }
+
+        internal void PrepareReceiver(FSMExecutor executor, bool isLongRunning)
+        {
+            receiverResource = ReceiverPreparation?.Invoke();
+            executor.PrepareContext(nodes, values, owner, () => engine.ReleaseExecution(owner), Member, RollbackReceiver);
+        }
+
+        internal void Commit(FSMExecutor executor)
+        {
+            executor.CommitPreparedContext();
+            started = true;
+            Member.Executor = executor;
+            Member.Round = executor.Execution;
+        }
+
+        internal void RollbackReceiver()
+        {
+            var resource = receiverResource;
+            receiverResource = null;
+            resource?.Dispose();
         }
     }
 }
