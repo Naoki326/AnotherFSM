@@ -16,6 +16,16 @@ internal static class Program
             {
                 Assembly.GetExecutingAssembly(), typeof(StartNode).Assembly, typeof(IFSMNode).Assembly
             });
+            var business = BusinessModules.Create(factory);
+            AssertRealAccessors(business, business.Engine);
+#if BAD_GENERATED_INPUT
+            business.Engine.BindContext<DemoNodes.DemoBusinessInput>().Prepare(new object());
+#endif
+            var input = new DemoNodes.DemoBusinessInput();
+            using (var prepared = business.Engine.BindContext<DemoNodes.DemoBusinessInput>().Prepare(input))
+            using (var execution = await prepared.StartAsync("Work.Query", "Work.Done"))
+                await execution.Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
+            Check(input.Job.Value == 42, "generated Module consumer uses explicitly paired typed business input");
             SameFileModules(factory);
             PlainScriptScopes(factory);
             ExistingMigratedFixture(factory);

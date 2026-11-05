@@ -23,7 +23,7 @@ namespace StateMachine
             yield return Yield.None;
             try
             {
-                await Task.Delay(500, Context.Token);
+                await Task.Delay(500, Control.Token);
             }
             catch (OperationCanceledException)
             { }

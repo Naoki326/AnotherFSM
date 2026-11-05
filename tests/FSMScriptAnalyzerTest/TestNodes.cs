@@ -34,7 +34,7 @@ namespace FSMScriptAnalyzerTest
         protected override async IAsyncEnumerable<IYieldAction> ExecuteEnumerable()
         {
             yield return Yield.None;
-            try { await Task.Delay(100, Context.Token); }
+            try { await Task.Delay(100, Control.Token); }
             catch (OperationCanceledException) { }
             yield return Yield.Next;
             PublishEvent(FSMEnum.Next);

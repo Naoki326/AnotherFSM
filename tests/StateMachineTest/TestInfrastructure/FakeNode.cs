@@ -18,8 +18,9 @@ namespace StateMachineTest.TestInfrastructure;
 /// <see cref="ReceivedEngine"/>，供接线相关的特征化测试观察。
 /// </para>
 /// </remarks>
-public sealed class FakeNode : IFSMNode, IFSMEngineInjectable
+public sealed class FakeNode : IFSMNode, IFSMEngineInjectable, IFSMContextNode
 {
+    public Type? ContextType => null; // Graph-only fixture: explicitly no business dependency.
     // ---------- IVisualNode ----------
     public string NamePrefix { get; set; } = "";
     public string Name { get; set; } = "";

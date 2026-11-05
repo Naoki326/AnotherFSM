@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <AdditionalFiles Include="ATest.FSMScript" />
+    <AdditionalFiles Include="BusinessModules.FSMScript" />
     <AdditionalFiles Include="InlineModules.FSMScript" />
     <AdditionalFiles Include="PlainScopes.FSMScript" />
     <AdditionalFiles Include="EmbeddedModules.FSMScript" />
