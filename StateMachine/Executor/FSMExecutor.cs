@@ -32,9 +32,11 @@ namespace StateMachine
         public FSMExecutor(IFSMNode start, IEnumerable<FSMEvent> endEvents, bool isAsyncObserver)
         {
             this.start = start ?? throw new FSMException("Start 节点不能为空！");
+            engine = FSMEngine.OwnerOf(start) ?? new FSMEngine(null!);
 
             var distinctEndEvents = (endEvents ?? throw new FSMException("结束事件不能为空！"))
                 .Where(e => e != null)
+                .Select(e => engine.TryGetEvent(e.EventName, out var local) ? local : e)
                 .GroupBy(e => e.EventID)
                 .Select(g => g.First())
                 .ToList();
@@ -49,7 +51,6 @@ namespace StateMachine
 
             InitObserver(isAsyncObserver);
 
-            engine = FSMEngine.OwnerOf(start) ?? new FSMEngine(null!);
             foreach (var node in this.Distinct(FSMNodeIdentityComparer.Instance)) engine.ClaimNode(node, node.Name);
         }
 

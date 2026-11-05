@@ -21,4 +21,46 @@
 - 首次完整核心回归发现已有无装配入口的 `StartAsync(start,end)` 被提前校验误拒绝，11 失败（`core-mid.log`）；修正并新增 `WithEntry(start,end)` 允许无放行配置批量入口后 **239/239**（`core-mid-green.log`）。原 #19 调用形状保持有效。
 - 真实反例：接收图未注册克隆事件，但 legacy 结束配置持有该外图克隆时，远程名称从结束配置 fallback 导致越过本地注册规则（`07-red.log`，ordinary 通过/end 失败）；远程只查本地图，保留单执行 legacy 本地事件路径后共享族 **10/10**（`07-green.log`）。
 
-后续完整名称/Module、暂停/停止/旧轮次与逐 AC 结果在最终交付前补齐。
+## 阶段 3：完整名称、通知身份与生命周期
+
+阶段 2 提交：`d7325a4`。
+
+- 真实 DSL Module 展开执行 8 个完整名称场景：`CheckA.OK` 精确普通/结束匹配，`CheckB.OK`、`checka.OK`、裸名 `OK` 不匹配。首次均已绿。新增 foreign end 配置同名不同 ID 的公开反例失败（`08-red.log`，8 通过/1 失败），构造时按目标本地完整名规范化结束配置后 **19/19**（`08-green.log`）。
+- 主动业务响应再发布同名为新通知；暂停普通/结束排队；不合作节点停止仍占用且不接收/外发；新轮显式连接、旧节点路由不追新轮，增量首次均绿（`09-control-rounds.log`，23/23）。
+- 新 `WithEntry` 后单执行无参 Start 被原始 entry 检查误拒绝（`10-red.log`），统一使用选定入口后通过（`10-green.log`）。
+- 初始接收准备阻塞时全部节点零运行，失败后显式释放可重新 Prepare（`11-initial-barrier.log`）；批量 Start 不重读来源，跨图载荷不换绑、不改 canonical event（`12-fixed-bindings.log`）；公开 Finished 通知屏障挂起在途 fan-out，旧接收执行退出、新轮显式加入后仍不改投（`13-inflight-round.log`）；以上首次已绿。
+- 遗漏成员诊断缺少具体身份（`14-red.log`），加入 pending 入口与 engine 身份后共享族 **28/28**（`14-green.log`）。共享暂停旧队列经 Stop/重连不带入新轮首次已绿（`15-old-queue.log`）。
+- 独立中英使用说明：`docs/event-sharing.md`、`docs/event-sharing.EN.md`，未修改 #21 README/宿主说明。
+
+## 公共 API
+
+- `IFSMEventSharingExecution`：只用于 Connect 的具体 preparation/round 成员类型，不是可扩展消息平台；null 或自定义实现被拒绝。
+- `FSMEventSharing.Connect(params IFSMEventSharingExecution[] executions) : void`。
+- `FSMEventSharing.StartAsync(params FSMContextPreparation[] preparations) : Task<IReadOnlyList<FSMExecutor>>`，输入顺序对应返回顺序，不等待业务完成。
+- `FSMContextPreparation.WithEntry(string startNode, string endEvent) : FSMContextPreparation`，无放行选择入口。
+- #19 原有 Prepare、两个 preparation StartAsync 重载、Execution、Completion 和控制调用形状不变。单执行 Start 也遵守范围完整性屏障。
+
+空 Connect/Start 拒绝，单成员合法；Connect 重复句柄幂等，Start 重复句柄拒绝。同批多个独立范围启动不隐式连接。已运行成员无需/不得重复 Start。活动范围在 Connect 合并；pending 在全体接收准备成功提交后正式加入。准备中的范围拒绝并发关系/重复启动/放弃变更，调用者可稍后重试。没有新 FSMState、父子执行或通用总线。
+
+## 逐 AC 导航
+
+以下名称均在 `tests/StateMachineTest/EventSharingFacts.cs`，除另注外均为本票新增公共装配/执行测试。负断言使用发布完成、队列后置 Fence、明确暂停/准备/退出屏障；超时只限制等待，不用 sleep 或内部字典证明时序。
+
+| #20 AC | 实现与测试 |
+| --- | --- |
+| 1：具体执行、void、框架持有、双向、仅业务 | `OverlapIsIdempotentBidirectionalAndSurvivesAnIntermediateExitWithoutSharingContextOrControl`；`CoordinatedStartReusesFixedSourcesAndSharedPayloadsNeverReplaceTargetBindingsOrCanonicalEvents` |
+| 2：集合合并、幂等、参数原子、默认隔离 | `Overlap...`；`FailedConnectCannotMergeRangesAndClonedEventIdsDoNotGrantMembership` |
+| 3：成员退出不拆散、不继承 | `Overlap...`；`RestartedMembersNeedExplicitConnectionAndOldNodeRoutesCannotPublishIntoTheNewRound` |
+| 4：完整名、普通/结束一致、非 ID 授权 | `ForeignClonedIdsCannotBypassTargetLocalNameRegistrationForOrdinaryOrEndEvents`（2）；`ARegisteredLocalEndNameDoesNotDependOnTheConfiguredForeignEventId`；Module 8 例；原 #19 `SameEventIdentityDoesNotAuthorizeBusinessTransitionsInAnUnconnectedEngine`、`ConcurrentEnginesWithTheSameEventIdentityDoNotFinishEachOther`（默认隔离） |
+| 5：未知忽略、当前转移/结束、本地绑定、Module 不剥前缀 | `RealModuleOutputsKeepTheirFullCaseSensitiveLocalIdentityForOrdinaryAndEndEvents`（8）；`CoordinatedStartReuses...` |
+| 6：同通知至多一次、主动新通知 | `Overlap...` 的自转移 Ping/Fence、重复声明和重复发布；`AnActiveBusinessResponseRepublishesTheSameNameAsANewNotification` |
+| 7：全 pending 校验、不重复运行 | `StartRejectsInvalidOrIncompleteSelectionsWithoutConsumingValidPreparations`；`MissingSelectionDiagnosticsIdentifyThePendingEntryAndEngine`；`RunningRangeKeepsWorkingDuringFailedJoinAndNeverReplaysPreJoinNotifications`；同引擎两个有效 Prepare 已被 #19 占用入口拒绝，不伪造私有句柄 |
+| 8：全体接收就绪才放行、首节点即时发布 | `AllReceiversAreReadyBeforeInitialNodesPublishAcrossIndependentLocalEventIds`；`InitialReceiverBarrierReleasesZeroNodesAndFailedPreparationsCanBeExplicitlyAbandoned` |
+| 9：准备失败零放行/资源撤销/保留占用/重试或释放 | `ReceiverPreparationFailureReleasesAllTemporaryResourcesAndRetainsRetryableOwnership`；`AGraphInvalidatedDuringReceiverPreparationCannotReleaseAnyNode`；`InitialReceiverBarrier...`；`ReceiverCleanupErrorsAreInsideTheTrueExitBarrierAndCannotLeakEngineOwnership` |
+| 10：运行中登记 pending、屏障加入、不重启旧成员 | `RunningRangeKeepsWorkingDuringFailedJoinAndNeverReplaysPreJoinNotifications` |
+| 11：无加入前补发、失败保留旧共享、旧在途不改投 | `RunningRange...`；`ANotificationAlreadyInFlightCannotRetargetAReplacementThatJoinsBeforeDeliveryReturns`；`RestartedMembers...` |
+| 12：暂停排队/结束不越过、停止拒收、真退出占用 | `PausedMembersQueueOrdinaryAndBusinessEndEventsWithoutControllingOtherMembers`；`StoppingRejectsNewEventsButKeepsEngineOwnershipUntilTheNonCooperativeNodeActuallyReturns`；`SharedEventsQueuedInAPausedOldRoundCannotSurviveStopAndExplicitReconnection`；原 #19 初始化/取消回调屏障完整回归 |
+| 13：公共接缝、真实节点/同步点 | 上述共 29 新增用例；接收故障仅使用实例级 internal 窄接缝，不以节点业务异常替代。业务结果通过真实节点公开执行观察 |
+| 14：说明与范围 | 独立双语说明；无宿主迁移、父子执行、持久化、可靠消息或前端功能 |
+
+最终合入集成 tip、完整回归结果和日志保存信息见下一节（交付前补齐）。

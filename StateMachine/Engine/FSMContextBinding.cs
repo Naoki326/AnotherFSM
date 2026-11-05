@@ -163,6 +163,7 @@ namespace StateMachine
         }
 
         internal FSMEventSharing.Member Member { get; } = new FSMEventSharing.Member();
+        internal string Description => $"entry {(selectedEntry ?? entry)?.Start ?? "<unset>"}, engine {System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(engine)}";
         private (string Start, string End)? selectedEntry;
         private IDisposable? receiverResource;
         // Narrow execution-receiver preparation seam, not a public messaging extension point.
@@ -186,7 +187,7 @@ namespace StateMachine
 
         public Task<FSMExecutor> StartAsync(bool isLongRunning = false)
         {
-            if (!entry.HasValue) throw new FSMException("No assembled entry; supply startNode/endEvent or configure them in BindContext.");
+            if (!(selectedEntry ?? entry).HasValue) throw new FSMException("No assembled entry; supply startNode/endEvent or configure them in BindContext.");
             return Task.FromResult(FSMEventSharing.Start(new[] { this }, isLongRunning)[0]);
         }
 
@@ -211,7 +212,7 @@ namespace StateMachine
 
         internal void ValidateStart(bool reserved = false)
         {
-            if (started || released || Member.Starting && !reserved) throw new FSMException("This execution preparation is already started, starting or released.");
+            if (started || released || Member.Starting && !reserved) throw new FSMException($"This execution preparation ({Description}) is already started, starting or released.");
             validateGraph();
             var configured = selectedEntry ?? entry ?? throw new FSMException("No assembled entry; configure startNode/endEvent before coordinated Start.");
             if (!engine.ContainsNode(configured.Start) || !engine.ContainsEvent(configured.End))

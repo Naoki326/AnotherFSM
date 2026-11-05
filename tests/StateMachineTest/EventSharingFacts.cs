@@ -8,18 +8,48 @@ public class EventSharingFacts
     public sealed class Probe
     {
         public Channel<string> Visits { get; } = Channel.CreateUnbounded<string>();
+        public Channel<object?> Payloads { get; } = Channel.CreateUnbounded<object?>();
         public bool PublishInitially { get; init; }
         public int Starts;
+        public TaskCompletionSource InitialPublished { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public bool EchoOnce { get; init; }
+        public int Echoes;
+        public TaskCompletionSource EchoPublished { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource? ReturnGate { get; init; }
+        public bool PublishAfterGate { get; init; }
+        public LatePublish? Late { get; init; }
+    }
+    public sealed class LatePublish
+    {
+        public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource Sent { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
     }
     public sealed class Input { public Probe Probe { get; init; } = new(); }
     private sealed class Node : BaseFSMNode<Probe>
     {
-        protected override Task ExecuteAsync()
+        protected override async Task ExecuteAsync()
         {
             Context.Visits.Writer.TryWrite(TriggerEvent?.EventName ?? "start");
-            if (TriggerEvent == null && Interlocked.Increment(ref Context.Starts) == 1 && Context.PublishInitially)
+            Context.Payloads.Writer.TryWrite(TriggerEvent?.EventContext);
+            if (TriggerEvent == null && Interlocked.Increment(ref Context.Starts) == 1)
+            {
+                if (Context.Late != null) _ = SendLate(Context.Late);
+                if (Context.PublishInitially) PublishEvent(1);
+            }
+            if (TriggerEvent == null) Context.InitialPublished.TrySetResult();
+            if (Context.ReturnGate != null) await Context.ReturnGate.Task;
+            if (Context.PublishAfterGate) PublishEvent(1);
+            if (TriggerEvent?.EventName == "Ping" && Context.EchoOnce && Interlocked.Increment(ref Context.Echoes) == 1)
+            {
                 PublishEvent(1);
-            return Task.CompletedTask;
+                Context.EchoPublished.TrySetResult();
+            }
+        }
+        private async Task SendLate(LatePublish late)
+        {
+            await late.Release.Task;
+            PublishEvent(1);
+            late.Sent.TrySetResult();
         }
     }
     private sealed class Factory : IFSMNodeFactory
@@ -292,6 +322,431 @@ public class EventSharingFacts
             b.State.Should().Be(FSMState.Running);
         }
         finally { await a.StopAsync(); await b.StopAsync(); }
+    }
+
+    [Theory]
+    [InlineData("CheckA", false)]
+    [InlineData("CheckB", false)]
+    [InlineData("checka", false)]
+    [InlineData("bare", false)]
+    [InlineData("CheckA", true)]
+    [InlineData("CheckB", true)]
+    [InlineData("checka", true)]
+    [InlineData("bare", true)]
+    public async Task RealModuleOutputsKeepTheirFullCaseSensitiveLocalIdentityForOrdinaryAndEndEvents(string instance, bool end)
+    {
+        const string module = "module Work { input Entry; output OK; def Entry(Probe) { 1->OK; } }";
+        var source = new FSMEngine(new Factory());
+        source.CreateStateMachine(module + "use Work as CheckA;");
+        source.AddEvent(new FSMEvent("Done"));
+        source.AddEvent(new FSMEvent("Fence"));
+        source.ConnectNode("Fence", "CheckA.Entry", "CheckA.Entry");
+        var target = new FSMEngine(new Factory());
+        var targetName = instance == "bare" ? "OK" : instance + ".OK";
+        var targetNode = instance == "bare" ? "Start" : instance + ".Entry";
+        target.CreateStateMachine(instance == "bare" ? "def Start(Probe) { 1->OK; }" : module + $"use Work as {instance};");
+        target.AddEvent(new FSMEvent("Done"));
+        target.AddEvent(new FSMEvent("Fence"));
+        target.ConnectNode("Fence", targetNode, targetNode);
+        target.ConnectNode(targetName, targetNode, targetNode);
+        var aInput = new Input { Probe = new Probe { PublishInitially = true } };
+        var bInput = new Input();
+        using var pa = source.BindContext<Input>("CheckA.Entry", "Done").Prepare(aInput);
+        using var pb = target.BindContext<Input>(targetNode, end ? targetName : "Done").Prepare(bInput);
+        FSMEventSharing.Connect(pa, pb);
+        var executors = await FSMEventSharing.StartAsync(pa, pb);
+        try
+        {
+            await aInput.Probe.InitialPublished.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            (await Next(bInput.Probe)).Should().Be("start");
+            if (instance == "CheckA" && end)
+            {
+                await executors[1].Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
+                executors[1].State.Should().Be(FSMState.Finished);
+            }
+            else
+            {
+                executors[0].Execution.PublishEvent("Fence");
+                if (instance == "CheckA") (await Next(bInput.Probe)).Should().Be("CheckA.OK");
+                (await Next(bInput.Probe)).Should().Be("Fence");
+                executors[1].State.Should().Be(FSMState.Running);
+            }
+            source.GetEventNames().Should().NotContain("OK");
+            aInput.Probe.Starts.Should().Be(1);
+            bInput.Probe.Starts.Should().Be(1);
+        }
+        finally { foreach (var executor in executors) await executor.StopAsync(); }
+    }
+
+    [Fact]
+    public async Task ARegisteredLocalEndNameDoesNotDependOnTheConfiguredForeignEventId()
+    {
+        var aInput = new Input();
+        using var pa = Engine().BindContext<Input>("Start", "Done").Prepare(aInput);
+        using var a = await pa.StartAsync();
+        var probe = new Probe();
+        var target = new FSMEngine(new BareFactory(probe));
+        target.CreateNode("Bare", "Start");
+        target.AddEvent(new FSMEvent("Done"));
+        using var b = new FSMExecutor(target.GetNode("Start"), new FSMEvent("Done"));
+        await b.RestartAsync();
+        try
+        {
+            (await Next(probe)).Should().Be("start");
+            FSMEventSharing.Connect(a.Execution, b.Execution);
+            a.Execution.PublishEvent("Done");
+            await b.Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
+            b.State.Should().Be(FSMState.Finished);
+        }
+        finally { await a.StopAsync(); await b.StopAsync(); }
+    }
+
+    [Fact]
+    public async Task AnActiveBusinessResponseRepublishesTheSameNameAsANewNotification()
+    {
+        var a = new Input();
+        var b = new Input { Probe = new Probe { EchoOnce = true } };
+        using var pa = Engine().BindContext<Input>("Start", "Done").Prepare(a);
+        using var pb = Engine().BindContext<Input>("Start", "Done").Prepare(b);
+        FSMEventSharing.Connect(pa, pb);
+        var executors = await FSMEventSharing.StartAsync(pa, pb);
+        try
+        {
+            (await Next(a.Probe)).Should().Be("start");
+            (await Next(b.Probe)).Should().Be("start");
+            executors[0].Execution.PublishEvent("Ping");
+            await b.Probe.EchoPublished.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            executors[0].Execution.PublishEvent("Fence");
+            foreach (var probe in new[] { a.Probe, b.Probe })
+            {
+                (await Next(probe)).Should().Be("Ping");
+                (await Next(probe)).Should().Be("Ping");
+                (await Next(probe)).Should().Be("Fence");
+            }
+        }
+        finally { foreach (var executor in executors) await executor.StopAsync(); }
+    }
+
+    [Fact]
+    public async Task PausedMembersQueueOrdinaryAndBusinessEndEventsWithoutControllingOtherMembers()
+    {
+        var a = new Input();
+        var b = new Input();
+        using var pa = Engine().BindContext<Input>("Start", "Done").Prepare(a);
+        using var pb = Engine().BindContext<Input>("Start", "Done").Prepare(b);
+        FSMEventSharing.Connect(pa, pb);
+        var executors = await FSMEventSharing.StartAsync(pa, pb);
+        try
+        {
+            (await Next(a.Probe)).Should().Be("start");
+            (await Next(b.Probe)).Should().Be("start");
+            executors[1].Execution.Pause();
+            executors[1].State.Should().Be(FSMState.Paused);
+            executors[0].State.Should().Be(FSMState.Running);
+            executors[0].Execution.PublishEvent("Ping");
+            (await Next(a.Probe)).Should().Be("Ping");
+            executors[0].Execution.PublishEvent("Done");
+            await executors[0].Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
+            executors[1].State.Should().Be(FSMState.Paused);
+            b.Probe.Visits.Reader.TryRead(out _).Should().BeFalse();
+            executors[1].Execution.Continue().Should().BeTrue();
+            await executors[1].Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
+            (await Next(b.Probe)).Should().Be("start"); // resume retains the original trigger
+            (await Next(b.Probe)).Should().Be("Ping");
+            executors[1].State.Should().Be(FSMState.Finished);
+        }
+        finally { foreach (var executor in executors) await executor.StopAsync(); }
+    }
+
+    [Fact]
+    public async Task StoppingRejectsNewEventsButKeepsEngineOwnershipUntilTheNonCooperativeNodeActuallyReturns()
+    {
+        var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var a = new Input();
+        var b = new Input { Probe = new Probe { ReturnGate = gate, PublishAfterGate = true } };
+        var engine = Engine();
+        var flow = engine.BindContext<Input>("Start", "Done");
+        using var pa = Engine().BindContext<Input>("Start", "Done").Prepare(a);
+        using var pb = flow.Prepare(b);
+        FSMEventSharing.Connect(pa, pb);
+        var executors = await FSMEventSharing.StartAsync(pa, pb);
+        try
+        {
+            (await Next(a.Probe)).Should().Be("start");
+            (await Next(b.Probe)).Should().Be("start");
+            var stopped = executors[1].Execution.StopAsync();
+            executors[1].State.Should().Be(FSMState.Stopping);
+            stopped.IsCompleted.Should().BeFalse();
+            Action replace = () => flow.Prepare(new Input());
+            replace.Should().Throw<FSMException>();
+            executors[0].Execution.PublishEvent("Ping");
+            (await Next(a.Probe)).Should().Be("Ping");
+            executors[0].State.Should().Be(FSMState.Running);
+            Action publishStopped = () => executors[1].Execution.PublishEvent("Ping");
+            publishStopped.Should().Throw<FSMException>();
+            gate.TrySetResult();
+            await stopped.WaitAsync(TimeSpan.FromSeconds(5));
+            executors[0].Execution.PublishEvent("Fence");
+            (await Next(a.Probe)).Should().Be("Fence"); // late node publication did not escape stopping
+            b.Probe.Visits.Reader.TryRead(out _).Should().BeFalse();
+            using var next = flow.Prepare(new Input());
+        }
+        finally { gate.TrySetResult(); foreach (var executor in executors) await executor.StopAsync(); }
+    }
+
+    [Fact]
+    public async Task RestartedMembersNeedExplicitConnectionAndOldNodeRoutesCannotPublishIntoTheNewRound()
+    {
+        var late = new LatePublish();
+        var a = new Input();
+        var oldInput = new Input { Probe = new Probe { Late = late } };
+        var engine = Engine();
+        var flow = engine.BindContext<Input>("Start", "Done");
+        using var pa = Engine().BindContext<Input>("Start", "Done").Prepare(a);
+        using var pb = flow.Prepare(oldInput);
+        FSMEventSharing.Connect(pa, pb);
+        var executors = await FSMEventSharing.StartAsync(pa, pb);
+        FSMExecutor? replacement = null;
+        try
+        {
+            (await Next(a.Probe)).Should().Be("start");
+            (await Next(oldInput.Probe)).Should().Be("start");
+            var oldRound = executors[1].Execution;
+            await oldRound.StopAsync();
+            var nextInput = new Input();
+            using var next = flow.Prepare(nextInput);
+            replacement = await next.StartAsync();
+            (await Next(nextInput.Probe)).Should().Be("start");
+            late.Release.TrySetResult();
+            await late.Sent.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            Action stale = () => oldRound.PublishEvent("Ping");
+            stale.Should().Throw<FSMException>();
+            Action staleConnect = () => FSMEventSharing.Connect(executors[0].Execution, oldRound);
+            staleConnect.Should().Throw<FSMException>();
+            executors[0].Execution.PublishEvent("Ping");
+            executors[0].Execution.PublishEvent("Fence");
+            (await Next(a.Probe)).Should().Be("Ping");
+            (await Next(a.Probe)).Should().Be("Fence");
+            replacement.Execution.PublishEvent("Fence");
+            (await Next(nextInput.Probe)).Should().Be("Fence");
+            FSMEventSharing.Connect(executors[0].Execution, replacement.Execution);
+            executors[0].Execution.PublishEvent("Ping");
+            (await Next(a.Probe)).Should().Be("Ping");
+            (await Next(nextInput.Probe)).Should().Be("Ping");
+        }
+        finally
+        {
+            late.Release.TrySetResult();
+            if (replacement != null) await replacement.StopAsync();
+            foreach (var executor in executors) await executor.StopAsync();
+        }
+    }
+
+    [Fact]
+    public async Task ExplicitEntrySelectionWorksForTheSingleExecutionPathAsWellAsCoordinatedStartup()
+    {
+        var input = new Input();
+        using var preparation = Engine().BindContext<Input>().Prepare(input).WithEntry("Start", "Done");
+        using var executor = await preparation.StartAsync();
+        try { (await Next(input.Probe)).Should().Be("start"); }
+        finally { await executor.StopAsync(); }
+    }
+
+    [Fact]
+    public async Task InitialReceiverBarrierReleasesZeroNodesAndFailedPreparationsCanBeExplicitlyAbandoned()
+    {
+        var aEngine = Engine();
+        var bEngine = Engine();
+        var a = new Input { Probe = new Probe { PublishInitially = true } };
+        var b = new Input();
+        using var pa = aEngine.BindContext<Input>("Start", "Done").Prepare(a);
+        using var pb = bEngine.BindContext<Input>("Start", "Done").Prepare(b);
+        var ready = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var lease = new ReceiverLease();
+        pa.ReceiverPreparation = () => lease;
+        pb.ReceiverPreparation = () =>
+        {
+            ready.TrySetResult();
+            release.Task.GetAwaiter().GetResult();
+            throw new InvalidOperationException("initial receiver failure");
+        };
+        FSMEventSharing.Connect(pa, pb);
+        var attempt = Task.Run(() => FSMEventSharing.StartAsync(pa, pb));
+        try
+        {
+            await ready.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            a.Probe.Starts.Should().Be(0);
+            b.Probe.Starts.Should().Be(0);
+            a.Probe.Visits.Reader.TryRead(out _).Should().BeFalse();
+            b.Probe.Visits.Reader.TryRead(out _).Should().BeFalse();
+        }
+        finally { release.TrySetResult(); }
+        Func<Task> failed = async () => await attempt.WaitAsync(TimeSpan.FromSeconds(5));
+        await failed.Should().ThrowAsync<FSMException>();
+        lease.Disposed.Should().BeTrue();
+        pa.Dispose();
+        pb.Dispose();
+        using var nextA = aEngine.BindContext<Input>("Start", "Done").Prepare(new Input());
+        using var nextB = bEngine.BindContext<Input>("Start", "Done").Prepare(new Input());
+    }
+
+    public sealed class SwitchableInput
+    {
+        private Probe value = new();
+        public int Reads;
+        public Probe Probe { get { Interlocked.Increment(ref Reads); return value; } }
+        public void Replace(Probe replacement) => value = replacement;
+    }
+
+    [Fact]
+    public async Task CoordinatedStartReusesFixedSourcesAndSharedPayloadsNeverReplaceTargetBindingsOrCanonicalEvents()
+    {
+        var a = new SwitchableInput();
+        var b = new SwitchableInput();
+        var aProbe = a.Probe;
+        var bProbe = b.Probe;
+        var aEngine = Engine();
+        var bEngine = Engine();
+        using var pa = aEngine.BindContext<SwitchableInput>().Prepare(a);
+        using var pb = bEngine.BindContext<SwitchableInput>().Prepare(b);
+        var readsA = a.Reads;
+        var readsB = b.Reads;
+        var replacementA = new Probe();
+        var replacementB = new Probe();
+        a.Replace(replacementA);
+        b.Replace(replacementB);
+        pa.WithEntry("Start", "Done");
+        pb.WithEntry("Start", "Done");
+        FSMEventSharing.Connect(pa, pb);
+        var executors = await FSMEventSharing.StartAsync(pa, pb);
+        try
+        {
+            foreach (var probe in new[] { aProbe, bProbe })
+            {
+                (await Next(probe)).Should().Be("start");
+                (await probe.Payloads.Reader.ReadAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(5))).Should().BeNull();
+            }
+            var payload = new object();
+            executors[0].Execution.PublishEvent("Ping", payload);
+            foreach (var probe in new[] { aProbe, bProbe })
+            {
+                (await Next(probe)).Should().Be("Ping");
+                (await probe.Payloads.Reader.ReadAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(5))).Should().BeSameAs(payload);
+            }
+            a.Reads.Should().Be(readsA);
+            b.Reads.Should().Be(readsB);
+            replacementA.Starts.Should().Be(0);
+            replacementB.Starts.Should().Be(0);
+            aEngine.GetEvent("Ping").EventContext.Should().BeNull();
+            bEngine.GetEvent("Ping").EventContext.Should().BeNull();
+        }
+        finally { foreach (var executor in executors) await executor.StopAsync(); }
+    }
+
+    [Fact]
+    public async Task ANotificationAlreadyInFlightCannotRetargetAReplacementThatJoinsBeforeDeliveryReturns()
+    {
+        var aInput = new Input();
+        var bInput = new Input();
+        var cInput = new Input();
+        var bEngine = Engine();
+        var cEngine = Engine();
+        foreach (var engine in new[] { bEngine, cEngine })
+        {
+            engine.AddEvent(new FSMEvent("Never"));
+            engine.ConnectNode("Done", "Start", "Start");
+        }
+        var bFlow = bEngine.BindContext<Input>("Start", "Never");
+        using var pa = Engine().BindContext<Input>("Start", "Done").Prepare(aInput);
+        using var pb = bFlow.Prepare(bInput);
+        using var pc = cEngine.BindContext<Input>("Start", "Never").Prepare(cInput);
+        FSMEventSharing.Connect(pa, pb, pc);
+        var executors = await FSMEventSharing.StartAsync(pa, pb, pc);
+        var publishing = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        executors[0].FSMStateChanged += (_, state, _) =>
+        {
+            if (state != FSMState.Finished) return;
+            publishing.TrySetResult();
+            release.Task.GetAwaiter().GetResult();
+        };
+        FSMExecutor? replacement = null;
+        Task? publication = null;
+        try
+        {
+            foreach (var input in new[] { aInput, bInput, cInput }) (await Next(input.Probe)).Should().Be("start");
+            publication = Task.Run(() => executors[0].Execution.PublishEvent("Done"));
+            await publishing.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            executors[0].Execution.Completion.IsCompleted.Should().BeFalse();
+            await executors[1].StopAsync();
+            var nextInput = new Input();
+            using var next = bFlow.Prepare(nextInput);
+            FSMEventSharing.Connect(executors[2].Execution, next);
+            replacement = (await FSMEventSharing.StartAsync(next))[0];
+            (await Next(nextInput.Probe)).Should().Be("start");
+            release.TrySetResult();
+            await publication.WaitAsync(TimeSpan.FromSeconds(5));
+            replacement.Execution.PublishEvent("Fence");
+            (await Next(nextInput.Probe)).Should().Be("Fence");
+            nextInput.Probe.Starts.Should().Be(1);
+        }
+        finally
+        {
+            release.TrySetResult();
+            if (publication != null) await publication.WaitAsync(TimeSpan.FromSeconds(5));
+            if (replacement != null) await replacement.StopAsync();
+            foreach (var executor in executors) await executor.StopAsync();
+        }
+    }
+
+    [Fact]
+    public async Task MissingSelectionDiagnosticsIdentifyThePendingEntryAndEngine()
+    {
+        var receiver = Engine();
+        receiver.CreateNode("Probe", "Receiver");
+        using var pa = Engine().BindContext<Input>("Start", "Done").Prepare(new Input());
+        using var pb = receiver.BindContext<Input>("Receiver", "Done").Prepare(new Input());
+        FSMEventSharing.Connect(pa, pb);
+        Func<Task> incomplete = async () => await FSMEventSharing.StartAsync(pa);
+        await incomplete.Should().ThrowAsync<FSMException>().WithMessage("*pending*Receiver*engine*");
+    }
+
+    [Fact]
+    public async Task SharedEventsQueuedInAPausedOldRoundCannotSurviveStopAndExplicitReconnection()
+    {
+        var a = new Input();
+        var b = new Input();
+        var engine = Engine();
+        var flow = engine.BindContext<Input>("Start", "Done");
+        using var pa = Engine().BindContext<Input>("Start", "Done").Prepare(a);
+        using var pb = flow.Prepare(b);
+        FSMEventSharing.Connect(pa, pb);
+        var executors = await FSMEventSharing.StartAsync(pa, pb);
+        FSMExecutor? replacement = null;
+        try
+        {
+            (await Next(a.Probe)).Should().Be("start");
+            (await Next(b.Probe)).Should().Be("start");
+            executors[1].Execution.Pause();
+            executors[0].Execution.PublishEvent("Ping");
+            (await Next(a.Probe)).Should().Be("Ping");
+            executors[1].State.Should().Be(FSMState.Paused);
+            await executors[1].Execution.StopAsync();
+            var nextInput = new Input();
+            using var next = flow.Prepare(nextInput);
+            FSMEventSharing.Connect(executors[0].Execution, next);
+            replacement = (await FSMEventSharing.StartAsync(next))[0];
+            (await Next(nextInput.Probe)).Should().Be("start");
+            executors[0].Execution.PublishEvent("Fence");
+            (await Next(nextInput.Probe)).Should().Be("Fence");
+            b.Probe.Visits.Reader.TryRead(out _).Should().BeFalse();
+        }
+        finally
+        {
+            if (replacement != null) await replacement.StopAsync();
+            foreach (var executor in executors) await executor.StopAsync();
+        }
     }
 
     private sealed class ReceiverLease(bool throwOnDispose = false) : IDisposable

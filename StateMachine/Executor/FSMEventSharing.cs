@@ -30,7 +30,7 @@ namespace StateMachine
         private static void Validate(Member member)
         {
             if (member.Exited || member.Executor != null && !member.Executor.AcceptsBusinessEvents)
-                throw new FSMException("Sharing member is released, stopping or exited.");
+                throw new FSMException($"Sharing member {member.Preparation?.Description ?? "execution"} is released, stopping or exited.");
             if (member.Group.Any(m => m.Starting))
                 throw new FSMException("Sharing range is being started; retry after startup completes.");
         }
@@ -65,8 +65,10 @@ namespace StateMachine
                     preparation.ValidateStart();
                 }
                 var selected = new HashSet<Member>(pending.Select(p => p.Member));
-                if (selected.Any(m => m.Group.Any(other => other.Executor == null && !other.Exited && !selected.Contains(other))))
-                    throw new FSMException("Start must include every pending execution in each sharing range.");
+                var missing = selected.SelectMany(m => m.Group).Distinct()
+                    .Where(other => other.Executor == null && !other.Exited && !selected.Contains(other)).ToArray();
+                if (missing.Length != 0)
+                    throw new FSMException($"Start must include every pending execution; missing {string.Join("; ", missing.Select(m => m.Preparation?.Description))}.");
                 executors = pending.Select(p => p.CreateExecutor()).ToArray();
                 foreach (var preparation in pending) preparation.Member.Starting = true;
             }
