@@ -607,7 +607,7 @@ public partial class EngineManager : IAsyncDisposable
             try
             {
                 ValidateHostContext(Engine);
-                if (!Engine.TryGetEvent(endEventName, out var endEvent)) Engine.AddEvent(endEvent = new FSMEvent(endEventName));
+                if (!Engine.TryGetEvent(endEventName, out var endEvent)) endEvent = new FSMEvent(endEventName);
                 Engine.ReinitGroupNode();
                 void Observe(FSMExecutor value)
                 {
@@ -620,7 +620,7 @@ public partial class EngineManager : IAsyncDisposable
                 if (_context != null && Engine.OfType<IFSMContextNode>().Any(node => node.ContextType != null))
                 {
                     using var prepared = _context.Prepare(Engine);
-                    executor = prepared.StartAsync(startNodeName, ends.Select(e => e.EventName), Observe).GetAwaiter().GetResult();
+                    executor = prepared.StartAsync(startNodeName, ends, Observe).GetAwaiter().GetResult();
                     started = Task.FromResult(true);
                 }
                 else
