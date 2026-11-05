@@ -33,7 +33,7 @@ export function ExecutionToolbar() {
   const canStart = !busy && (state === 'Idle' || state === 'Finished');
   const canPause = !busy && state === 'Running';
   const canContinue = !busy && state === 'Paused';
-  const canStop = !busy && (state === 'Running' || state === 'Paused');
+  const canStop = !busy && (state === 'Running' || state === 'Paused' || state === 'Finished');
   const recentExecutionLog = executionLog.slice(-10);
 
   const handleStart = useCallback(async () => {

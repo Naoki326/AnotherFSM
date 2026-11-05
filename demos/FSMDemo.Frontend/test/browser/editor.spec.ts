@@ -117,6 +117,8 @@ test('wasm: rejected start keeps the existing execution log and shows the host e
   await importScript(page, 'def Start(End) {1->EndEvent; Pos:(20,20); }');
   await page.getByRole('button', { name: 'play-circle Start', exact: true }).click();
   await expect(page.getByRole('banner')).toContainText('Finished');
+  // Finished is not a true-exit proof; the user must still be able to request Stop.
+  await expect(page.getByRole('button', { name: 'stop Stop', exact: true })).toBeEnabled();
   await expect(page.getByRole('banner')).toContainText('Enter Start');
   await page.locator('.react-flow__node[data-id="Start"]').click();
   page.once('dialog', dialog => dialog.accept('Other'));
