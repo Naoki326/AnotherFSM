@@ -14,22 +14,31 @@ jobs:
     - uses: actions/checkout@v4
     - uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 10.0.x
+        dotnet-version: |
+          8.0.x
+          10.0.x
     - uses: actions/setup-node@v4
       with:
         node-version: 24
         cache: npm
-        cache-dependency-path: demos/FSMDemo.Frontend/package-lock.json
+        cache-dependency-path: |
+          demos/FSMDemo.Frontend/package-lock.json
+          tools/package-lock.json
     - uses: actions/setup-java@v4
       with:
         distribution: temurin
         java-version: 17
     - name: Install frontend dependencies
       run: npm ci --prefix demos/FSMDemo.Frontend
+    - name: Install repository tool dependencies
+      run: npm ci --prefix tools --ignore-scripts
+    - name: Lint frontend
+      run: npm run lint --prefix demos/FSMDemo.Frontend
     - name: Test shared behavior and graph projection
       run: |
         dotnet test AnotherFSM.sln --nologo -p:NuGetAudit=false
         npm test --prefix demos/FSMDemo.Frontend
+        node --test tools/test/*.test.mjs
     - name: Build and verify real Release WASM at project subpath
       run: |
         cd demos/FSMDemo.Frontend

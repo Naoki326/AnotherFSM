@@ -53,3 +53,6 @@
   作为该工作会话的首次写操作。
 - 完成后评论结论、关闭工单，并向地图的 Decisions-so-far
   添加摘要与链接。
+- **收尾回读**：使用 `tools/verify-wayfinder.mjs` 验证正文、关闭状态、
+  地图索引及原生关系，成功时只输出检查摘要，不重复展开全文。
+  调用方式及预期清单见 [Wayfinder 回读校验](wayfinder-verification.md)。

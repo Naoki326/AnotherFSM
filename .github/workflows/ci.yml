@@ -1,0 +1,59 @@
+name: Checks
+
+on:
+  pull_request:
+  # Validate a branch before opening a PR, without duplicating runs on every push.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dotnet:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        persist-credentials: false
+    - uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: |
+          8.0.x
+          10.0.x
+    - uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: 17
+    - name: Test .NET solution
+      run: dotnet test AnotherFSM.sln --nologo -p:NuGetAudit=false
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        persist-credentials: false
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 24
+        cache: npm
+        cache-dependency-path: |
+          demos/FSMDemo.Frontend/package-lock.json
+          tools/package-lock.json
+    - name: Install frontend dependencies
+      run: npm ci --prefix demos/FSMDemo.Frontend
+    - name: Lint
+      run: npm run lint --prefix demos/FSMDemo.Frontend
+    - name: Typecheck
+      run: npm run typecheck --prefix demos/FSMDemo.Frontend
+    - name: Test graph projection and runtime behavior
+      run: npm test --prefix demos/FSMDemo.Frontend
+    - name: Install repository tool dependencies
+      run: npm ci --prefix tools --ignore-scripts
+    - name: Test tracker verification tools (offline)
+      run: node --test tools/test/*.test.mjs
+    # Release WASM browser checks remain in the master deploy workflow.
