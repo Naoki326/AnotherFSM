@@ -78,6 +78,28 @@ public class TypedHostFacts
         error.InnerException.Should().NotBeNull();
     }
 
+    public sealed class QueryOnlyInput { public DemoNodes.DemoJob Job { get; } = new(); }
+
+    [Fact]
+    public async Task InvalidCandidateBusinessAssemblyDoesNotRetirePausedExecution()
+    {
+        await using var host = new EngineManager(NullLogger<EngineManager>.Instance, new BrowserNodeFactory(), true,
+            HostContext.Create(() => new QueryOnlyInput()));
+        await host.ImportAsync("def Wait(Idle) {1->Done;}");
+        var running = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        host.StateChanged += (s, _) => { if (s == ExecutionState.Running) running.TrySetResult(); };
+        await host.StartExecution("Wait", "Done");
+        await running.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await host.PauseExecution();
+        var old = host.Executor;
+        var graph = host.Engine;
+        Func<Task> import = () => host.ImportAsync("module M {input Approval; def Approval(BusinessApproval) {1->Done;}} use M as A;");
+        (await import.Should().ThrowAsync<FSMException>()).Which.Message.Should().Contain("A.Approval").And.Contain("IApprovalBusiness").And.Contain("source");
+        host.Engine.Should().BeSameAs(graph);
+        host.Executor.Should().BeSameAs(old);
+        host.CurrentState.Should().Be(ExecutionState.Paused);
+    }
+
     [Fact]
     public async Task MissingNecessarySourceFailsBeforeNodesAndCandidateAssemblyPreservesOldExecution()
     {

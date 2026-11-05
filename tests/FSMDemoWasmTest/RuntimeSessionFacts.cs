@@ -131,6 +131,37 @@ public class RuntimeSessionFacts
         notifications.Should().BeEmpty();
     }
 
+    [Fact]
+    public async Task SessionStartDoesNotQueueBehindAnOccupiedHostPreparation()
+    {
+        using var release = new ManualResetEventSlim();
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var context = HostContext.Create(() =>
+        {
+            entered.TrySetResult();
+            release.Wait();
+            return new DemoNodes.DemoBusinessInput();
+        });
+        await using var session = new RuntimeSession(new BrowserNodeFactory(), _ => { }, context: context);
+        await Value(session, "importScript", new { script = "def Query(BusinessQuery) {1->Done;}" });
+        const string payload = "{\"startNodeName\":\"Query\",\"endEventName\":\"Done\"}";
+        var first = Task.Run(() => session.InvokeAsync("startExecution", payload));
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var second = Task.Run(() => session.InvokeAsync("startExecution", payload));
+        try
+        {
+            using var rejected = JsonDocument.Parse(await second.WaitAsync(TimeSpan.FromSeconds(1)));
+            rejected.RootElement.GetProperty("error").GetString().Should().Contain("unexited");
+            var stopping = Value(session, "stopExecution");
+            stopping.IsCompleted.Should().BeFalse();
+            release.Set();
+            await stopping.WaitAsync(TimeSpan.FromSeconds(5));
+            using var abandoned = JsonDocument.Parse(await first);
+            abandoned.RootElement.GetProperty("error").GetString().Should().NotBeNullOrEmpty();
+        }
+        finally { release.Set(); await Task.WhenAll(first, second); }
+    }
+
     private sealed class ExitProbe
     {
         public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
