@@ -1,6 +1,0 @@
-warning: in the working copy of '.scratch/ticket-18/implementation.md', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'StateMachine/Engine/FSMContextBinding.cs', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'StateMachine/Engine/FSMContextBindings.cs', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'docs/typed-context.EN.md', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'docs/typed-context.md', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'tests/StateMachineTest/TypedContextFacts.cs', LF will be replaced by CRLF the next time Git touches it

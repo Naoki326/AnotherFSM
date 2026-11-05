@@ -1,4 +1,0 @@
-C:\Work\anotherfsm-ticket-18\tests\FSMDemoApiTest\bin\Release\net10.0\FSMDemoApiTest.dll (.NETCoreApp,Version=v10.0)的测试运行
-总共 1 个测试文件与指定模式相匹配。
-
-已通过! - 失败:     0，通过:    39，已跳过:     0，总计:    39，持续时间: 308 ms - FSMDemoApiTest.dll (net10.0)

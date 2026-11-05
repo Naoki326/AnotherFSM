@@ -84,4 +84,4 @@ await executor.ExecutorTask;       // 本票沿用执行器；退出/占用保�
 
 `IFSMNode.Context`、非泛型基类的旧 `Context`、`FSMNodeContext[<T>]`、旧 `FSMExecutor` 构造/RestartAsync 仍暂存，以保持既有无业务依赖宿主、Demo 和生成消费者构建。新路径不读旧 Data。它们不是最终兼容承诺；旧样例不适用于类型化业务 Context。
 
-真实执行/装配测试：`tests/StateMachineTest/TypedContextFacts.cs`、`TypedExecutionFacts.cs`。真实编译正负例：`bash tools/test-typed-context.sh`。红绿日志与范围说明：`.scratch/ticket-18/implementation.md`。宿主 .NET 回归不等于真实 Release WASM 验收。
+真实执行/装配测试：`tests/StateMachineTest/TypedContextFacts.cs`、`TypedExecutionFacts.cs`。真实编译正负例：`bash tools/test-typed-context.sh`。红绿日志与范围说明见 [#18 历史验收记录](https://github.com/Naoki326/AnotherFSM/blob/0d80339f91b1063649d5880980bd04374ec1d097/.scratch/ticket-18/implementation.md)。宿主 .NET 回归不等于真实 Release WASM 验收。

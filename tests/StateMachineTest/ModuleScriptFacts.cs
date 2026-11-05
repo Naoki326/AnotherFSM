@@ -3,7 +3,7 @@ using StateMachineTest.TestInfrastructure;
 
 namespace StateMachineTest;
 
-// 从原有未跟踪夹具迁移：保留真实发布者、隔离、入口和非法映射不变量；原文留在 .scratch/t1-module-dsl/originals。
+// 从原有夹具迁移：保留真实发布者、隔离、入口和非法映射不变量。
 public class ModuleScriptFacts
 {
     private const string CheckerModule = """

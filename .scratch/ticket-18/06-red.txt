@@ -1,4 +1,0 @@
-  StateMachine -> C:\Work\anotherfsm-ticket-18\StateMachine\bin\Debug\netstandard2.0\AnotherFSM.dll
-C:\Work\anotherfsm-ticket-18\tests\StateMachineTest\TypedContextFacts.cs(152,44): error CS1061: “FSMContextFlow<TypedContextFacts.Input>”未包含“PrepareDynamic”的定义，并且找不到可接受第一个“FSMContextFlow<TypedContextFacts.Input>”类型参数的可访问扩展方法“PrepareDynamic”(是否缺少 using 指令或程序集引用?) [C:\Work\anotherfsm-ticket-18\tests\StateMachineTest\StateMachineTest.csproj]
-C:\Work\anotherfsm-ticket-18\tests\StateMachineTest\TestInfrastructure\FakeNode.cs(65,26): warning CS0067: 从不使用事件“FakeNode.RaisePause” [C:\Work\anotherfsm-ticket-18\tests\StateMachineTest\StateMachineTest.csproj]
-C:\Work\anotherfsm-ticket-18\tests\StateMachineTest\TestInfrastructure\FakeNode.cs(62,36): warning CS0067: 从不使用事件“FakeNode.ContinueWith” [C:\Work\anotherfsm-ticket-18\tests\StateMachineTest\StateMachineTest.csproj]
