@@ -35,12 +35,12 @@ All commands below were independently rerun after `3846f5a` in `C:/Work/anotherf
 
 | Command | Result | Output |
 | --- | --- | --- |
-| `dotnet test tests/StateMachineTest/StateMachineTest.csproj --no-restore --nologo` | **160 passed** | [core](main-agent/final-core.log) |
-| `dotnet test tests/FSMDemoApiTest/FSMDemoApiTest.csproj --no-restore --nologo` | **39 passed** | [API](main-agent/final-api.log) |
-| `dotnet test tests/FSMDemoWasmTest/FSMDemoWasmTest.csproj --no-restore --nologo` | **23 passed**, host .NET only | [host](main-agent/final-host.log) |
-| `dotnet build AnotherFSM.sln --configuration Release --no-restore --nologo` | **0 errors, 64 warnings** in this run | [solution](main-agent/final-solution.log) |
-| `dotnet run --project tests/FSMScriptAnalyzerTest/FSMScriptAnalyzerTest.csproj --no-restore` | Generated consumers queried and real Module flows executed | [generated](main-agent/final-generated.log) |
-| `bash tools/test-typed-context.sh` | Positive build/run and all **7 expected real compiler negatives** passed | [compiler](main-agent/final-compiler.log), [case outputs](compiler/) |
+| `dotnet test tests/StateMachineTest/StateMachineTest.csproj --no-restore --nologo` | **160 passed** | [core](main-agent/final-core.txt) |
+| `dotnet test tests/FSMDemoApiTest/FSMDemoApiTest.csproj --no-restore --nologo` | **39 passed** | [API](main-agent/final-api.txt) |
+| `dotnet test tests/FSMDemoWasmTest/FSMDemoWasmTest.csproj --no-restore --nologo` | **23 passed**, host .NET only | [host](main-agent/final-host.txt) |
+| `dotnet build AnotherFSM.sln --configuration Release --no-restore --nologo` | **0 errors, 64 warnings** in this run | [solution](main-agent/final-solution.txt) |
+| `dotnet run --project tests/FSMScriptAnalyzerTest/FSMScriptAnalyzerTest.csproj --no-restore` | Generated consumers queried and real Module flows executed | [generated](main-agent/final-generated.txt) |
+| `bash tools/test-typed-context.sh` | Positive build/run and all **7 expected real compiler negatives** passed | [compiler](main-agent/final-compiler.txt), [case outputs](compiler/) |
 | Public source-identity probe, identical before/after source | Failure before; success after | red/green above |
 | `git diff --check` | Passed | no output |
 
