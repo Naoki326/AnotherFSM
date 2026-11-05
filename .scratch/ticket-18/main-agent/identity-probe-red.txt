@@ -1,0 +1,3 @@
+REFLECTION: Input.Source: ProcessData
+REFLECTION: BaseInput.Source: QueryData
+PREPARE: Node Work.Process, requirement IProcess, source Source (declared ProcessData), actual QueryData: incompatible source type.
