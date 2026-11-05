@@ -90,16 +90,38 @@ namespace StateMachine
             }
         }
 
-        internal void PublishToExecution(string name, object? payload)
+        internal bool AcceptsBusinessEvents => !disposedValue && ExecutorTask != null && !ExecutorTask.IsCompleted
+            && State != FSMState.Stopping && State != FSMState.Stoped && State != FSMState.Finished;
+
+        internal void PublishToExecution(FSMExecution round, string name, object? payload)
         {
-            if (State == FSMState.Stopping || State == FSMState.Stoped || State == FSMState.Finished)
-                throw new FSMException($"Execution in state {State} cannot accept business event {name}.");
-            var value = engine.TryGetEvent(name, out var local) ? local
-                : endEvents.FirstOrDefault(e => e.EventName == name)
-                ?? throw new FSMException($"Event {name} does not exist in this execution.");
-            var notification = (FSMEvent)value.Clone();
-            notification.EventContext = payload!;
-            ReceiveEvent(notification);
+            FSMEvent notification;
+            lock (controlSync)
+            {
+                ForExecution(round, () => true);
+                if (!AcceptsBusinessEvents) throw new FSMException($"Execution in state {State} cannot publish business event {name}.");
+                var value = engine.TryGetEvent(name, out var local) ? local
+                    : endEvents.FirstOrDefault(e => e.EventName == name)
+                    ?? throw new FSMException($"Event {name} does not exist in this execution.");
+                notification = (FSMEvent)value.Clone();
+                notification.EventContext = payload;
+            }
+            FSMEventSharing.Publish(round.Member, round, notification);
+        }
+
+        internal void ReceiveShared(FSMExecution round, FSMEvent value)
+        {
+            lock (controlSync)
+            {
+                if (!ReferenceEquals(Execution, round) || !AcceptsBusinessEvents) return;
+                // Event IDs are graph-local. Full ordinal names authorize both ordinary and end events.
+                var local = engine.TryGetEvent(value.EventName, out var found) ? found
+                    : endEvents.FirstOrDefault(e => string.Equals(e.EventName, value.EventName, StringComparison.Ordinal));
+                if (local == null) return;
+                var notification = (FSMEvent)local.Clone();
+                notification.EventContext = value.EventContext;
+                ReceiveEvent(notification);
+            }
         }
         public Task CurrentNodeTask => currentNode.WaitCurrentTask;
 
@@ -186,9 +208,7 @@ namespace StateMachine
             var invocation = new object();
             using (FSMNodeEventScope.Enter(engine, invocation, value =>
             {
-                lock (controlSync)
-                    if (ReferenceEquals(Execution, round) && !round.Completion.IsCompleted
-                        && State != FSMState.Stopping && State != FSMState.Stoped && State != FSMState.Finished) ReceiveEvent(value);
+                FSMEventSharing.Publish(round.Member, round, value);
             }, () =>
             {
                 lock (controlSync)
@@ -472,7 +492,27 @@ namespace StateMachine
             StartOwned(isLongRunning, owner, release);
         }
 
-        private void StartOwned(bool isLongRunning, object owner, Action release)
+        private object preparedOwner = null!;
+        private Action preparedRelease = null!;
+        private FSMEventSharing.Member? preparedMember;
+
+        internal void PrepareContext(IFSMNode[] nodes, IReadOnlyList<(IFSMNode Node, object Value)> values,
+            object owner, Action release, FSMEventSharing.Member member)
+        {
+            hasBoundContext = true;
+            executionNodes = nodes;
+            foreach (var node in nodes) node.Context = new FSMNodeContext();
+            foreach (var binding in values) ((IFSMContextBindingTarget)binding.Node).BindContext(binding.Value);
+            currentNode = start;
+            eventConsumer = Channel.CreateUnbounded<FSMEvent>();
+            preparedOwner = owner;
+            preparedRelease = release;
+            preparedMember = member;
+        }
+
+        internal void CommitPreparedContext() => BeginOwned(preparedOwner);
+
+        private void BeginOwned(object owner)
         {
             FSMExecution round;
             lock (controlSync)
@@ -481,11 +521,25 @@ namespace StateMachine
                 Interlocked.Exchange(ref resumePending, 0);
                 resumeSignal = null;
                 stopCallbacks = null;
-                Execution = round = new FSMExecution(this);
+                Execution = round = new FSMExecution(this, preparedMember ?? new FSMEventSharing.Member());
+                round.Member.Executor = this;
+                round.Member.Round = round;
                 ExecutorTask = round.Completion;
                 engine.DescribeExecution(owner, () => round.State.ToString());
                 State = FSMState.Initialized;
             }
+        }
+
+        private void StartOwned(bool isLongRunning, object owner, Action release)
+        {
+            BeginOwned(owner);
+            RunPreparedContext(isLongRunning, release);
+        }
+
+        internal void RunPreparedContext(bool isLongRunning, Action? release = null)
+        {
+            var round = Execution;
+            release = release ?? preparedRelease;
             if (disposedValue) Stop();
             // Publish this round's exit barrier before entering synchronous user
             // initialization. Stop/Dispose during Init must survive node release.
@@ -528,6 +582,7 @@ namespace StateMachine
                                 if (State == FSMState.Stopping) State = FSMState.Stoped;
                                 try { if (disposedValue) CompleteObservers(); }
                                 catch (Exception ex) { error = error ?? ex; }
+                                FSMEventSharing.Exit(execution.Member);
                                 execution.Complete(State, error ?? StopException);
                                 release();
                             }
