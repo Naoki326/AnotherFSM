@@ -19,6 +19,18 @@ public class TypedHostFacts
         A.Done -> End;
         """;
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void RealBrowserFactoryWrongKeyPreservesNodeIdentityAndRootCause(bool dsl)
+    {
+        var engine = new FSMEngine(new BrowserNodeFactory());
+        Action assemble = () => { if (dsl) engine.CreateStateMachine("def Area.Broken(NoSuchKey) {}"); else engine.CreateNode("NoSuchKey", "Area.Broken"); };
+        var error = assemble.Should().Throw<Exception>().Which;
+        error.Message.Should().Contain("Area.Broken").And.Contain("NoSuchKey").And.Contain("not available");
+        error.InnerException.Should().NotBeNull();
+    }
+
     [Fact]
     public async Task MissingNecessarySourceFailsBeforeNodesAndCandidateAssemblyPreservesOldExecution()
     {
