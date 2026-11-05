@@ -188,6 +188,30 @@ public class RuntimeSessionFacts
     }
 
     [Fact]
+    public async Task FinishedBeforeTrueExitStillRejectsOrdinaryStartWithoutResettingStatus()
+    {
+        var probe = new ExitProbe();
+        await using var manager = new EngineManager(Microsoft.Extensions.Logging.Abstractions.NullLogger<EngineManager>.Instance, new ExitFactory(probe), true);
+        await manager.ImportAsync("def Old(Exit) {1->Done;}");
+        await manager.StartExecution("Old", "Done");
+        await probe.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var old = manager.Executor!;
+        old.Execution.PublishEvent("Done");
+        try
+        {
+            await probe.Cleaning.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            old.Execution.Completion.IsCompleted.Should().BeFalse();
+            manager.CurrentState.Should().Be(ExecutionState.Finished);
+            Func<Task> conflicting = () => manager.StartExecution("Old", "Done");
+            await conflicting.Should().ThrowAsync<FSMException>();
+            manager.CurrentState.Should().Be(ExecutionState.Finished);
+            manager.Executor.Should().BeSameAs(old);
+        }
+        finally { probe.Released.TrySetResult(); }
+        await old.Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
+    }
+
+    [Fact]
     public async Task ExplicitImportWaitsForActualNodeCleanupBeforeDisposalAndNewExecution()
     {
         var probe = new ExitProbe();
