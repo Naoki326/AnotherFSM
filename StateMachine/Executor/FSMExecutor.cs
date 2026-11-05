@@ -443,7 +443,7 @@ namespace StateMachine
                 // Cancel can inline the entire node/consumer exit on this thread.
                 // Publish its barrier before any notification can reenter exit.
                 stopCallbacks = callbacks = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-                control = currentNode?.Control;
+                control = (initializingNode ?? currentNode)?.Control;
                 State = FSMState.Stopping;
                 Interlocked.Exchange(ref pendingPause, 0);
                 eventConsumer.Writer.TryComplete();
@@ -571,9 +571,25 @@ namespace StateMachine
             }
         }
 
+        // Published under controlSync so Stop either cancels this initializer or
+        // closes admission before the next one. User code always runs outside it.
+        private IFSMNode? initializingNode;
+
         private void InitNodes()
         {
-            foreach (var node in executionNodes) node.InitBeforeStart();
+            foreach (var node in executionNodes)
+            {
+                lock (controlSync)
+                {
+                    if (State == FSMState.Stopping || State == FSMState.Stoped || State == FSMState.Finished) return;
+                    initializingNode = node;
+                }
+                try { node.InitBeforeStart(); }
+                finally
+                {
+                    lock (controlSync) initializingNode = null;
+                }
+            }
         }
 
 

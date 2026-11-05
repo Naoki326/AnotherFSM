@@ -340,6 +340,143 @@ public class ExecutionReviewFacts
         await next.StopAsync();
     }
 
+    private sealed class CooperativeInitialization
+    {
+        public TaskCompletionSource Entered { get; } = Signal();
+        public TaskCompletionSource Cancelled { get; } = Signal();
+        public ManualResetEventSlim CancellationOrRelease { get; } = new();
+        public ManualResetEventSlim Return { get; } = new();
+        public int Runs;
+        public Action? OnCancel;
+        public void Initialize(FSMExecutionControl control)
+        {
+            using var registration = control.Token.Register(() =>
+            {
+                Cancelled.TrySetResult();
+                CancellationOrRelease.Set();
+                OnCancel?.Invoke();
+            });
+            Entered.TrySetResult();
+            CancellationOrRelease.Wait();
+            Return.Wait();
+        }
+        public void Release() { CancellationOrRelease.Set(); Return.Set(); }
+    }
+    private sealed class CooperativeInitializer(CooperativeInitialization probe) : BaseFSMNode
+    {
+        public override void InitBeforeStart() => probe.Initialize(Control);
+        protected override Task ExecuteAsync() { Interlocked.Increment(ref probe.Runs); return Task.CompletedTask; }
+    }
+    private sealed class InitializationInput { public Input Business { get; } = new(); }
+    private sealed class TypedCooperativeInitializer(CooperativeInitialization probe) : BaseFSMNode<Input>
+    {
+        public override void InitBeforeStart() => probe.Initialize(Control);
+        protected override Task ExecuteAsync() { Interlocked.Increment(ref probe.Runs); return Task.CompletedTask; }
+    }
+    private sealed class InitializationCounter(Action initialize, Action run) : BaseFSMNode
+    {
+        public override void InitBeforeStart() => initialize();
+        protected override Task ExecuteAsync() { run(); return Task.CompletedTask; }
+    }
+
+    [Theory]
+    [InlineData(false, false, false)]
+    [InlineData(false, false, true)]
+    [InlineData(false, true, false)]
+    [InlineData(false, true, true)]
+    [InlineData(true, false, false)]
+    [InlineData(true, false, true)]
+    [InlineData(true, true, false)]
+    [InlineData(true, true, true)]
+    public async Task StopCancelsTheNonStartInitializerAndDoesNotReleaseLaterNodes(bool typed, bool unreachable, bool dispose)
+    {
+        var probe = new CooperativeInitialization();
+        var runs = 0;
+        var laterInitializations = 0;
+        IFSMNode initializer = typed ? new TypedCooperativeInitializer(probe) : new CooperativeInitializer(probe);
+        var engine = Engine(("Start", new Probe(() => { runs++; return Task.CompletedTask; })),
+            ("Next", initializer), ("Later", new InitializationCounter(() => laterInitializations++, () => runs++)));
+        if (!unreachable) engine.ConnectNode("Go", "Start", "Next");
+        using var preparation = typed ? engine.BindContext<InitializationInput>("Start", "Done").Prepare(new InitializationInput()) : engine.Prepare();
+        FSMExecutor executor = null!;
+        var starting = Task.Run(() => preparation.StartAsync("Start", new[] { "Done" }, value => executor = value));
+        await probe.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        probe.OnCancel = () => Task.Run(executor.Execution.Continue).WaitAsync(TimeSpan.FromSeconds(2)).GetAwaiter().GetResult().Should().BeFalse();
+        try
+        {
+            if (dispose) executor.Dispose();
+            else executor.Execution.Stop();
+            initializer.Control.Token.IsCancellationRequested.Should().BeTrue("Stop must reach the node currently initializing, even outside the start node's reachable graph");
+            probe.Cancelled.Task.IsCompleted.Should().BeTrue();
+            executor.Execution.Completion.IsCompleted.Should().BeFalse("the initializer has not returned");
+            engine.HasUnexitedExecution.Should().BeTrue();
+            executor.Execution.Continue().Should().BeFalse();
+            Action conflict = () => engine.Prepare();
+            conflict.Should().Throw<FSMException>();
+        }
+        finally { probe.Release(); }
+        using var finished = await starting.WaitAsync(TimeSpan.FromSeconds(5));
+        await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5));
+        probe.Runs.Should().Be(0);
+        runs.Should().Be(0);
+        laterInitializations.Should().Be(0, "stopping must not admit another initializer");
+        executor.StopException.Should().BeNull("cancellation callbacks can use public controls without waiting on the control lock");
+        engine.HasUnexitedExecution.Should().BeFalse();
+        using var next = typed ? engine.BindContext<InitializationInput>("Start", "Done").Prepare(new InitializationInput()) : engine.Prepare();
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task SharedStartCancelsItsActiveInitializerAndStopBeforeAdmissionSkipsTheOtherInitializers(bool typed, bool dispose)
+    {
+        var probe = new CooperativeInitialization();
+        var runs = 0;
+        var laterInitializations = 0;
+        IFSMNode initializer = typed ? new TypedCooperativeInitializer(probe) : new CooperativeInitializer(probe);
+        var a = Engine(("Start", new Probe(() => { runs++; return Task.CompletedTask; })), ("Next", initializer));
+        var b = Engine(("Start", new InitializationCounter(() => laterInitializations++, () => runs++)));
+        using var pa = (typed ? a.BindContext<InitializationInput>("Start", "Done").Prepare(new InitializationInput()) : a.Prepare()).WithEntry("Start", "Done");
+        using var pb = b.Prepare().WithEntry("Start", "Done");
+        FSMEventSharing.Connect(pa, pb);
+        FSMExecutor first = null!, second = null!;
+        // Incomplete selection must keep the preparations retryable, including observers.
+        Func<Task> selectA = () => pa.StartAsync("Start", new[] { "Done" }, value => first = value);
+        await selectA.Should().ThrowAsync<FSMException>().WithMessage("*pending*");
+        Func<Task> selectB = () => pb.StartAsync("Start", new[] { "Done" }, value => second = value);
+        await selectB.Should().ThrowAsync<FSMException>().WithMessage("*pending*");
+        var starting = Task.Run(() => FSMEventSharing.StartAsync(pa, pb));
+        await probe.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        try
+        {
+            second.Execution.Completion.IsCompleted.Should().BeFalse("every receiver and round is ready before initialization is released");
+            if (dispose) first.Dispose();
+            else first.Execution.Stop();
+            probe.Cancelled.Task.IsCompleted.Should().BeTrue();
+            second.Execution.State.Should().Be(FSMState.Initialized, "control is not shared");
+            b.GetNode("Start").Control.Token.IsCancellationRequested.Should().BeFalse();
+            second.Execution.Stop(); // Stop before this engine's initializer is admitted.
+            first.Execution.Completion.IsCompleted.Should().BeFalse();
+            second.Execution.Completion.IsCompleted.Should().BeFalse();
+            a.HasUnexitedExecution.Should().BeTrue();
+            b.HasUnexitedExecution.Should().BeTrue();
+        }
+        finally { probe.Release(); }
+        var executors = await starting.WaitAsync(TimeSpan.FromSeconds(5));
+        foreach (var executor in executors)
+        {
+            await executor.Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
+            executor.Dispose();
+        }
+        probe.Runs.Should().Be(0);
+        runs.Should().Be(0);
+        laterInitializations.Should().Be(0);
+        a.HasUnexitedExecution.Should().BeFalse();
+        b.HasUnexitedExecution.Should().BeFalse();
+    }
+
     private sealed class Initializing : BaseFSMNode
     {
         public TaskCompletionSource Entered { get; } = Signal();

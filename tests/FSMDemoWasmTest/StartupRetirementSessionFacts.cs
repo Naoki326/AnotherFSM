@@ -43,13 +43,19 @@ public class StartupRetirementSessionFacts
     }
 
     [Theory]
-    [InlineData(false, "stopExecution")]
-    [InlineData(true, "stopExecution")]
-    [InlineData(false, "importScript")]
-    [InlineData(true, "importScript")]
-    [InlineData(false, "dispose")]
-    [InlineData(true, "dispose")]
-    public async Task JsonRetirementCancelsInitializationAndWaitsForItsExit(bool typed, string operation)
+    [InlineData(false, "stopExecution", false)]
+    [InlineData(true, "stopExecution", false)]
+    [InlineData(false, "importScript", false)]
+    [InlineData(true, "importScript", false)]
+    [InlineData(false, "dispose", false)]
+    [InlineData(true, "dispose", false)]
+    [InlineData(false, "stopExecution", true)]
+    [InlineData(true, "stopExecution", true)]
+    [InlineData(false, "importScript", true)]
+    [InlineData(true, "importScript", true)]
+    [InlineData(false, "dispose", true)]
+    [InlineData(true, "dispose", true)]
+    public async Task JsonRetirementCancelsInitializationAndWaitsForItsExit(bool typed, string operation, bool nonStart)
     {
         var probe = new Probe();
         var activated = 0;
@@ -58,7 +64,8 @@ public class StartupRetirementSessionFacts
             using var notification = JsonDocument.Parse(json);
             if (notification.RootElement.GetProperty("type").GetString() == "NodeActivated") Interlocked.Increment(ref activated);
         }, context: typed ? HostContext.Create(() => new DemoNodes.DemoBusinessInput()) : null);
-        using var imported = JsonDocument.Parse(await session.InvokeAsync("importScript", "{\"script\":\"def Start(Init) {1->Done;}\"}"));
+        var script = nonStart ? "def Start(End) {1->Go;} def Next(Init) {1->Done;} Go -> Start to Next;" : "def Start(Init) {1->Done;}";
+        using var imported = JsonDocument.Parse(await session.InvokeAsync("importScript", JsonSerializer.Serialize(new { script })));
         imported.RootElement.TryGetProperty("error", out _).Should().BeFalse();
         const string start = "{\"startNodeName\":\"Start\",\"endEventName\":\"Done\"}";
         var starting = Task.Run(() => session.InvokeAsync("startExecution", start));
