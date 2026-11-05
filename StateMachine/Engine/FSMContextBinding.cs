@@ -230,9 +230,20 @@ namespace StateMachine
 
         /// <summary>Install observers before any node runs; all end events belong to this execution.</summary>
         public Task<FSMExecutor> StartAsync(string startNode, IEnumerable<string> endEvents, Action<FSMExecutor>? beforeStart = null, bool isLongRunning = false)
-            => StartAsync(startNode, endEvents.Select(engine.GetEvent), beforeStart, isLongRunning);
+            => WithEntry(startNode, endEvents, beforeStart).StartAsync(isLongRunning);
 
         public Task<FSMExecutor> StartAsync(string startNode, IEnumerable<FSMEvent> endEvents, Action<FSMExecutor>? beforeStart = null, bool isLongRunning = false)
+            => WithEntry(startNode, endEvents, beforeStart).StartAsync(isLongRunning);
+
+        /// <summary>Replace the complete startup configuration without starting. Names resolve in this engine.</summary>
+        public FSMContextPreparation WithEntry(string startNode, IEnumerable<string> endEvents, Action<FSMExecutor>? beforeStart = null)
+            => WithEntry(startNode, (endEvents ?? throw new FSMException("End events are required.")).Select(engine.GetEvent), beforeStart);
+
+        /// <summary>Replace the complete startup configuration without starting; accepts host-owned end events.</summary>
+        /// <remarks>The collection is copied outside the sharing lock; event objects are borrowed, not cloned.
+        /// The observer runs only during receiver preparation, before any node initializes. Failed configuration
+        /// preserves the previous selection; preflight or receiver-preparation failure retains it for retry.</remarks>
+        public FSMContextPreparation WithEntry(string startNode, IEnumerable<FSMEvent> endEvents, Action<FSMExecutor>? beforeStart = null)
         {
             var ends = (endEvents ?? throw new FSMException("End events are required.")).ToArray();
             lock (sync)
@@ -243,8 +254,8 @@ namespace StateMachine
                 selectedEntry = (startNode, ends[0].EventName);
                 selectedEndEvents = ends;
                 this.beforeStart = beforeStart;
+                return this;
             }
-            return Task.FromResult(FSMEventSharing.Start(new[] { this }, isLongRunning)[0]);
         }
 
         /// <summary>Select an entry without starting; useful for coordinated preparations from an unconfigured flow.</summary>

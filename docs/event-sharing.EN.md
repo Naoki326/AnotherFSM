@@ -24,6 +24,28 @@ Prepare fixes this round's business references and reserves the engine. Explicit
 
 Wholly dependency-free engines use `engine.Prepare().WithEntry("Start", "Done")`, without aggregate objects; these can share/start alongside business preparations. For flows without an assembled entry, call `preparation.WithEntry("Start", "Done")` before batch startup. Existing `preparation.StartAsync()` and `StartAsync(startNode, endEvent, isLongRunning)` remain supported, but use the same range barrier: individual starts cannot bypass a connected pending range.
 
+### Configure multiple end events and observers before startup
+
+When coordinated startup needs multiple end events or observers installed before the first node, configure each preparation, then start the complete set. A deliberately failed `StartAsync` is unnecessary:
+
+```csharp
+using var a = flowA.Prepare(inputA);
+using var b = flowB.Prepare(inputB);
+// Named events must already exist in their respective engines.
+a.WithEntry("Start", new[] { "Done", "Error" },
+    executor => executor.NodeStateChanged += (_, name) => Console.WriteLine(name));
+b.WithEntry("Start", new[] { "Done" });
+FSMEventSharing.Connect(a, b);
+var started = await FSMEventSharing.StartAsync(a, b);
+```
+
+- `WithEntry` returns the same preparation and only stores configuration. It does not create an Executor, invoke observers, initialize or run nodes. Observers still run during receiver preparation, before any node in this batch initializes.
+- Each call replaces the entire entry, end-event selection and observer. Events and observers are not accumulated; omitting the observer clears it. Existing `WithEntry(startNode, endEvent)` also clears the previous multi-end selection and observer.
+- Collections must be non-empty and contain no null events. Names resolve in this engine. The `IEnumerable<FSMEvent>` overload accepts host-owned unregistered end events; startup still prefers same-name local events, without granting new cross-graph event permissions.
+- Collections are enumerated and copied outside the sharing lock at configuration time. Later collection edits do not affect the selection; event objects are borrowed, not deep-copied. A lazy enumerable executes caller code and may throw during this step.
+- Validation, enumeration or state-check failure preserves the previous valid selection. Starting, started and released preparations reject changes. Successful configuration does not guarantee startup: the complete graph and all pending members are checked again when starting.
+- Ordinary single executions still use `StartAsync(...)` directly, sharing configuration logic with `WithEntry`. Legacy preflight/receiver-preparation failures retain configuration for retry, but normal configuration no longer needs a failed call. Failures after node release retain the existing lifecycle and do not promise retrying the same preparation.
+
 ## Ranges, notifications and names
 
 - `Connect(params IFSMEventSharingExecution[])` accepts preparations or concrete `FSMExecution` rounds and returns void. No engine-current aliases, retained links, connection using blocks or per-event mappings.

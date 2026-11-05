@@ -25,6 +25,28 @@ await runningB.StopAsync();
 
 整个引擎无业务依赖时直接 `engine.Prepare().WithEntry("Start", "Done")`，不制造聚合对象；与业务 preparation 可同批连接/启动。没有在 BindContext 配置入口时，可以先 `preparation.WithEntry("Start", "Done")` 再批量启动。已有 `preparation.StartAsync()`、`StartAsync(startNode, endEvent, isLongRunning)` 仍有效，但也走相同集合屏障：不能逐个启动已连接的待启动范围。
 
+### 提前配置多个结束事件与观察
+
+协调启动需要多个结束事件或首节点前的观察时，先配置各 preparation，再启动全集；不必用一次失败的 `StartAsync` 留下配置：
+
+```csharp
+using var a = flowA.Prepare(inputA);
+using var b = flowB.Prepare(inputB);
+// 名称重载要求事件已经存在于各自引擎中。
+a.WithEntry("Start", new[] { "Done", "Error" },
+    executor => executor.NodeStateChanged += (_, name) => Console.WriteLine(name));
+b.WithEntry("Start", new[] { "Done" });
+FSMEventSharing.Connect(a, b);
+var started = await FSMEventSharing.StartAsync(a, b);
+```
+
+- `WithEntry` 返回原 preparation，只保存配置；不创建 Executor、不调用 observer、不初始化或运行节点。observer 仍在接收准备阶段、任何本次节点初始化之前安装。
+- 每次完整替换入口、结束事件和 observer；不合并事件或累加观察，省略 observer 即清除旧值。原有 `WithEntry(startNode, endEvent)` 同样清除旧的多结束事件和 observer。
+- 集合不能为空且不能含 null 事件。名称通过本引擎解析；`IEnumerable<FSMEvent>` 重载允许宿主提供未注册的结束事件，执行时仍沿用已有的本地同名事件优先规则，不新增跨图事件授权。
+- 集合在配置时锁外枚举并复制，后续增删原集合不影响配置；事件对象借用原引用、不深拷贝。惰性枚举器属于调用方代码，可能在此阶段运行或抛错。
+- 校验、枚举或状态检查失败，不改变上一份有效配置。启动中、已启动、已释放时拒绝修改；配置成功不保证稍后能启动，启动仍复核完整图和全部 pending。
+- 常见单执行继续直接使用 `StartAsync(...)`；它与 `WithEntry` 共用配置逻辑。保留旧的预检查/接收准备失败后配置可重试语义，但正常配置不再借助失败调用。放行后的失败仍遵守既有生命周期，不承诺重试原 preparation。
+
 ## 范围、通知与名称
 
 - `Connect(params IFSMEventSharingExecution[])` 接受 preparation 或具体 `FSMExecution`，返回 void；不接受 engine/current 别名，也不要求 link、using 连接或逐事件映射。

@@ -40,8 +40,10 @@ public class ConsumerPreparationFacts
         engine.HasUnexitedExecution.Should().BeFalse();
     }
 
-    [Fact]
-    public async Task HostMultiEndStartCannotBypassTheCompletePendingReceiverSet()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task CoordinatedHostMultiEndStartSupportsExplicitConfigurationAndLegacyRetry(bool explicitConfiguration)
     {
         var first = new FSMEngine(new Factory());
         var second = new FSMEngine(new Factory());
@@ -53,8 +55,14 @@ public class ConsumerPreparationFacts
         using var other = second.BindContext<Input>("Work", "Error").Prepare(otherInput);
         FSMEventSharing.Connect(prepared, other);
         var observerInstalled = false;
-        Action incomplete = () => prepared.StartAsync("Work", new[] { "Done", "Error" }, _ => observerInstalled = true);
-        incomplete.Should().Throw<FSMException>().WithMessage("*every pending*");
+        if (explicitConfiguration)
+            prepared.WithEntry("Work", new[] { "Done", "Error" }, _ => observerInstalled = true);
+        else
+        {
+            // Compatibility: an incomplete legacy Start retains its configuration for retry.
+            Action incomplete = () => prepared.StartAsync("Work", new[] { "Done", "Error" }, _ => observerInstalled = true);
+            incomplete.Should().Throw<FSMException>().WithMessage("*every pending*");
+        }
         input.Job.Count.Should().Be(0);
         otherInput.Job.Count.Should().Be(0);
         observerInstalled.Should().BeFalse();

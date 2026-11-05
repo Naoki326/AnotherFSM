@@ -442,11 +442,8 @@ public class ExecutionReviewFacts
         using var pb = b.Prepare().WithEntry("Start", "Done");
         FSMEventSharing.Connect(pa, pb);
         FSMExecutor first = null!, second = null!;
-        // Incomplete selection must keep the preparations retryable, including observers.
-        Func<Task> selectA = () => pa.StartAsync("Start", new[] { "Done" }, value => first = value);
-        await selectA.Should().ThrowAsync<FSMException>().WithMessage("*pending*");
-        Func<Task> selectB = () => pb.StartAsync("Start", new[] { "Done" }, value => second = value);
-        await selectB.Should().ThrowAsync<FSMException>().WithMessage("*pending*");
+        pa.WithEntry("Start", new[] { "Done" }, value => first = value);
+        pb.WithEntry("Start", new[] { "Done" }, value => second = value);
         var starting = Task.Run(() => FSMEventSharing.StartAsync(pa, pb));
         await probe.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
         try
