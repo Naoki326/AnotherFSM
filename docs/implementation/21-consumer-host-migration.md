@@ -1,13 +1,13 @@
 # #21 消费者与宿主迁移 / Consumer-host migration
 
-## 范围与基线
+## 首次实施范围与基线（后续 P1 修复见末节）
 
 分支 `pi-web-agent-d1937fe7-ef0e-48d3-a545-869d89c81b2f`；唯一工作树 `C:/Work/AnotherFSM-worktrees/pi-web-agent-d1937fe7-ef0e-48d3-a545-869d89c81b2f`。
 开工 status 干净；HEAD 与 merge-base 都为 `4063178bca93749ce966988920d349852e80108f`。
 仅实施 #21，不委派、不启动模型 CLI/代理、不建第二工作树、不改变 #20 分支、不 push/关闭票。
 
 生产配置及双语使用说明：[中文](../consumer-host.md) / [English](../consumer-host.EN.md)。
-原始日志已另存 `C:/work/anotherfsm-context-19/evidence-21/`，不依赖此隔离工作树生命周期。最终受测代码提交为 `103980b33feefc13ded2e65bcb43ec62ccf02831`；其后只补本文与交付元数据。最新集成 tip 为 `6f43cf9bcb793ba899713cf59e9b7f4d3e6fe14d`，已合入本分支；最终 merge-base 为该 tip。
+原始日志已另存 `C:/work/anotherfsm-context-19/evidence-21/`，不依赖此隔离工作树生命周期。首次交付受测代码提交为 `103980b33feefc13ded2e65bcb43ec62ccf02831`；后续 P1 生产修复与重新验收见末节。最新集成 tip 为 `6f43cf9bcb793ba899713cf59e9b7f4d3e6fe14d`，已合入本分支；最终 merge-base 为该 tip。
 
 ## 阶段提交（按验收族）
 
@@ -107,4 +107,62 @@
 
 `evidence-21/raw/` 保存关键 red/green、所有最终各层日志、合并前失败浏览器 trace 和合并后 browser-results JSON；`evidence-21/compiler/` 保存真实编译器正负例；`handoff.txt` 记录最终分支/SHA/集成 tip，`SHA256SUMS.txt` 校验这些原件。不复制 node_modules/bin/obj/release 二进制。
 
-没有已知未满足的 #21 AC 或本票阻塞。npm 既有 18 个 audit 风险与历史编译/裁剪警告未越票整治；业务自行脱离节点生命周期的任务、非协作同步代码永久不返回仍由原契约保持占用，不提供强制终止。最终收缩旧公共入口由 #22 承担。未自行组织独立审查；主会话可按最终分支重建 review 工作树。
+以上为首次交付时的结论；后续可见独立审查发现的初始化取消阻塞及修复见下节，不能用首次全绿结果否定该缺陷。npm 既有 18 个 audit 风险与历史编译/裁剪警告未越票整治；业务自行脱离节点生命周期的任务、非协作同步代码永久不返回仍由原契约保持占用，不提供强制终止。最终收缩旧公共入口由 #22 承担。未自行组织独立审查。
+
+## 可见审查 P1 修复：初始化期间先取消、后等待 / Startup retirement fix
+
+### 基线、证据与责任
+
+本次仅使用 `C:/Work/AnotherFSM-worktrees/review-21`，原分支不变；起点 HEAD `9db04b18ccd2500c02219d6606d8bcc040b10161`，已包含集成 `6f43cf9bcb793ba899713cf59e9b7f4d3e6fe14d`。未触碰主工作树、未委派/启动代理、未自行审查，也未推进 #22。
+
+Standards 可见审查将此问题定为 **P1**；Spec 审查同根因标为 P2，没有新增独立问题（缺失/范围蔓延/推测均为 0）。主代理已亲自回读并复现：
+
+- `review-21-standards-repro/StartupStop.cs`、`StartupStopTyped.cs`：无业务/类型化两路均无法在初始化释放前收到宿主取消。
+- `main-21-retirement-repro/run.log`：Git Bash 可执行工程输出 plain/typed **False**，直接核心 **True**。
+- `review-21-spec-repro/Program.cs`、`init-stop-core-comparison.log`：初始化明确协作等待取消，宿主失败而核心正常。
+- 本次只读取 C# 与日志，没有运行原目录 `.ps1`。上述原始文件的副本及本次日志保存在 `C:/work/anotherfsm-context-19/evidence-21-fixes/`。
+
+根因在 `EngineManager.RetireExecution`：先把 `_starting.Task` 并入退休屏障，而 `CleanupExecutorAsync` 在请求 `StopAsync` 前等待该屏障。初始化协作等待 `Control.Token` 时，形成“取消等启动，启动等取消”的循环。原来的运行期/准备期测试未覆盖这一交错。
+
+### 最小生产处置
+
+仅修改 `demos/FSMDemo.Runtime/EngineManager.cs`，不修改 #19/#20 核心算法、不引入通用生命周期框架或新公共 API：
+
+1. 先在宿主锁内摘除旧执行器/通知并保留启动与退休屏障；原先的 `Task.Yield` 仍保证不在持有宿主锁的同步栈上进入核心/用户取消回调。
+2. 锁外先调用旧执行器现有的 `Dispose()`，立即请求取消；该操作不 Dispose 节点、输入或来源，也不释放引擎占用。
+3. 复用核心已有的 disposed 标记：Observe 已安装但 round 尚未发布时，后续 `RunPreparedContext` 仍会取消新发布的 round，避免一次普通 Stop 被空 round 忽略。
+4. 然后等待原启动屏障，再 `await old.StopAsync()` 等真正退出，最后才允许旧图节点释放。尚未创建执行器的输入工厂/Prepare 阶段继续等待原启动屏障；普通 start 继续立即拒绝冲突，不恢复隐式抢占。
+5. 无业务路径若退休恰好发生在第一次 RestartAsync 的 disposed 检查前，仅将“本宿主已退休且执行器尚未发布 round”的 ObjectDisposedException 转成本次未启动；初始化自身抛出的异常（包括同名 ObjectDisposedException）仍向调用方及 Completion 暴露。取消回调失败仍由核心 Completion/StopException 及退休日志观察。
+
+### 真实 red → green 与同步点回归
+
+接缝沿用用户已确认的公开 `EngineManager` / `RuntimeSession` / 节点控制入口，不使用反射、私有字段或内部 mock；超时只限制等待，不靠延时碰撞：
+
+- 首个单行为 `StopCancelsInitializationBeforeWaitingForStartupAndTrueExit` 在修改生产代码前运行：`init-stop-red.log` **1 失败/0 通过**，在等待初始化取消处真实超时。初始化等待 Cancelled 后仍等待 Release，失败时 finally 只为清理释放测试节点。
+- 同一测试最小修复后：`init-stop-green.log` **1/1 通过**。随后将该行为参数化，不把后加覆盖伪称为额外生产红灯。
+- `tests/FSMDemoApiTest/StartupRetirementFacts.cs`：**21/21 通过**（`init-retirement-final.log`）。覆盖无业务/类型化 × Stop/Import/Dispose；取消后初始化仍未返回时，退休/Completion 保持 pending、占用不释放、节点与借用来源不 Dispose、普通 start 被拒绝、节点运行次数为 0。
+- 同一测试族还覆盖 Observe 后、legacy 入口前以及 round 发布前的交错；使用公开节点 Context setter/需求入口与可控 SynchronizationContext 排程，先运行退休的首个 yield，再发布 round，证明取消不会丢失。输入工厂和 Prepare 来源 getter 两阶段分别覆盖三种退休入口；取消回调跨线程读取宿主状态不被宿主锁阻塞；初始化和取消异常仍可观察并等待真退出。
+- `tests/FSMDemoWasmTest/StartupRetirementSessionFacts.cs`：**6/6 通过**（`init-session-green.log`），同一 JSON 协议验证两类节点的 Stop/Import/Dispose：取消在启动完成前送达，退休等待初始化退出，旧节点不运行、不产生 NodeActivated。
+- 扩展测试初版曾误用桌面异步观察者完成通知证明 Dispose 已执行；该通知受既有 scheduler 释放影响，2 个用例超时（`init-retirement-expanded.log`，10 过/2 失败）。改用明确排程的同步点后 18/18，再增加 legacy 入口与同名异常覆盖得到最终 21/21；这属于测试接缝构造修正，不记为第二个生产缺陷或伪造 red→green。
+
+### 修复后完整分层验收
+
+均在本次唯一工作树执行；长命令由 Git Bash 后台运行到持久日志，没有后台代理或 sleep 轮询。所有 bash 调用显式 timeout 15–120 秒，npm 显式 Git Bash runner，JRE 沿用上文。日志相对 `evidence-21-fixes/`：
+
+| 命令 | 修复后结果 | 原始日志 |
+| --- | --- | --- |
+| `dotnet test AnotherFSM.sln --nologo -p:NuGetAudit=false` | **核心 264 / API 77 / 宿主 .NET 36，全过，0 失败/0 跳过** | `solution-test.log` |
+| `dotnet test tests/StateMachineTest/StateMachineTest.csproj --no-build --no-restore --nologo --filter FullyQualifiedName~EventSharingFacts` | **#20 原族 30/30** | `sharing30.log` |
+| `dotnet build AnotherFSM.sln -c Release --nologo -p:NuGetAudit=false` | **0 错误，5 个既有测试警告** | `release-build.log` |
+| `bash tools/test-typed-context.sh` | 正例编译/执行、**8 个真实编译负例**均满足预期 | `compiler.log`、`compiler/*.txt` |
+| `dotnet run --project tests/FSMScriptAnalyzerTest/FSMScriptAnalyzerTest.csproj -p:NuGetAudit=false` | 生成消费者真实编译、类型化访问器查询、Module 业务执行成功 | `generated.log` |
+| `npm --script-shell='C:/Program Files/Git/bin/bash.exe' test --prefix demos/FSMDemo.Frontend` | **12/12** | `frontend-test.log` |
+| 同 npm 参数 `run typecheck` / `run lint` | 均退出 0 | `frontend-typecheck.log` / `frontend-lint.log` |
+| `RUNTIME_CONTRACT=true bash tools/build-browser.sh` | **真实 Release .NET WASM publish + React 构建成功** | `browser-build.log` |
+| `PORT=5180 node tools/run-browser-tests.mjs` | 真实 Chrome **WASM 12/12 + API 7/7**；两份 JSON **0 skipped / 0 unexpected / 0 flaky** | `browser-runner.log`、`browser/{wasm,api}-results.json` |
+| 解析 JSON stats、连接检查 5079/5180 | 计数符合预期；**两端口均 closed**，仅 runner 自有服务已清理 | `browser-summary.log` |
+| `git merge implement/context-lifecycle` / `git diff --check` | 最新本地集成 tip 仍为 `6f43cf9`，已包含、无冲突；格式检查通过 | `integration.log`、`handoff.txt` |
+
+真实浏览器使用本次修复后重新 publish 的 Release 产物，不是修复前产物或 .NET session 替代。离线 WASM 先于 API 运行；同一 EditorRuntime 的业务绑定、重复启动拒绝、停止后新输入、显式替换、Module/编辑往返及无远程回退合同全部通过。`regression-progress.log` 和各 `.exit` 记录所有命令明确退出 0；没有把工具超时或缺失结果当成功。
+
+**本次已知 P1 已修复，没有新增未解决的本票阻塞。** 残余限制仍为既有 npm audit、nullable/打包/裁剪及 Vite 警告；本次未做依赖升级或通用异常/观察者排空整治。非协作同步初始化永久不返回仍保持占用，不承诺强制终止。未 push、关票、合主树或继续 #22。最终提交/SHA、受测源文件校验与证据校验见同目录 `handoff.txt` / `SHA256SUMS.txt`。
