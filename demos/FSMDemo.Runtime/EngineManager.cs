@@ -638,6 +638,7 @@ public partial class EngineManager : IAsyncDisposable
             lock (_executionSync) return result && version == _executionVersion && ReferenceEquals(_executor, executor);
         }
         catch (StartRetiredException) { return false; }
+        catch (FSMException ex) when (ex.GetBaseException() is StartRetiredException) { return false; }
         finally
         {
             lock (_executionSync)
