@@ -18,12 +18,15 @@ internal static class Program
             });
             var business = BusinessModules.Create(factory);
             AssertRealAccessors(business, business.Engine);
+            DemoNodes.BusinessQueryNode begin = business.Begin;
+            Same(begin, business.Engine.GetNode("Begin"), "generated typed business accessor");
+            Same(business.Launch, business.Engine.GetEvent("Launch"), "generated business event accessor");
 #if BAD_GENERATED_INPUT
             business.Engine.BindContext<DemoNodes.DemoBusinessInput>().Prepare(new object());
 #endif
             var input = new DemoNodes.DemoBusinessInput();
             using (var prepared = business.Engine.BindContext<DemoNodes.DemoBusinessInput>().Prepare(input))
-            using (var execution = await prepared.StartAsync("Work.Query", "Work.Done"))
+            using (var execution = await prepared.StartAsync(begin.Name, "Work.Done"))
                 await execution.Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
             Check(input.Job.Value == 42, "generated Module consumer uses explicitly paired typed business input");
             SameFileModules(factory);

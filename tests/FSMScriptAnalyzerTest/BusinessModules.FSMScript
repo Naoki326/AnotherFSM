@@ -5,3 +5,5 @@ module Business {
     Next -> Query to Process;
 }
 use Business as Work;
+def Begin(BusinessQuery) {1->Launch;}
+Launch -> Begin to Work;
