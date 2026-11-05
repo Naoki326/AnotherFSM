@@ -482,17 +482,6 @@ namespace StateMachine
         private bool hasBoundContext;
         private IFSMNode[] executionNodes = Array.Empty<IFSMNode>();
 
-        internal void StartContext(IFSMNode[] nodes, IReadOnlyList<(IFSMNode Node, object Value)> values, bool isLongRunning, object owner, Action release)
-        {
-            hasBoundContext = true;
-            executionNodes = nodes;
-            foreach (var node in nodes) node.Context = new FSMNodeContext();
-            foreach (var binding in values) ((IFSMContextBindingTarget)binding.Node).BindContext(binding.Value);
-            currentNode = start;
-            eventConsumer = Channel.CreateUnbounded<FSMEvent>();
-            StartOwned(isLongRunning, owner, release);
-        }
-
         private object preparedOwner = null!;
         private Action preparedRelease = null!;
         private FSMEventSharing.Member? preparedMember;

@@ -1,5 +1,7 @@
 # #20 业务事件共享与协调启动
 
+> 后续验证更正：原“最终回归”是当时单次通过的历史记录，未证明 Module 身份测试无时序假设。主代理首次重构建发现 259 通过 / 1 失败；本轮确定性复现、修复和最新验证见文末“正式审查后的测试修复”。
+
 基线：`4063178bca93749ce966988920d349852e80108f`（#19 已验收）。测试接缝沿用父规格确认的核心公共装配/执行；真实节点、固定业务对象、队列观察和可控屏障，不使用随机 delay 推断时序。本票不承担 #21 宿主迁移，不新增消息平台或 FSMState。
 
 ## 阶段 1：接收先就绪、初始发布
@@ -87,3 +89,36 @@
 已知验证边界：未运行真实 Release WASM 浏览器合同，本票没有修改宿主/前端，不以宿主 .NET 或 Release 构建冒充浏览器证据；该迁移属于并行 #21。65 警告包含既有警告与 3 个有意的 xUnit1031（仅 Task.Run 中接收准备/公开状态通知的确定性阻塞屏障，均由 finally 释放；不以延时证明时序）。无已知未满足 #20 AC。
 
 全程自行 read/edit/write/bash/test/commit，未委派、未调用 pi/claude/模型 CLI、未启动隐藏代理、未执行独立审查流程、未 sleep 轮询；未 push、关闭票、合主 worktree 或继续后票。
+
+## 正式审查后的测试修复
+
+本轮仅使用 `C:/Work/AnotherFSM-worktrees/review-20`，沿用分支 `pi-web-agent-2e3d7d93-a946-45bd-884b-4d8d7d47ff52`，起点 `13d4ae0b06e4b7bb907bc9ed0898f1c281f8df6c`。用户转交正式审查：Standards 硬违规/新增正确性问题为 0，仅有一项低优先重复入口维护意见；Spec 除已确认测试问题外，无明确缺失、范围蔓延或实现错误。本轮不自建审查、不等待后续通知。
+
+### 已核实失败与根因
+
+- 主代理首次重构建核心 **259 通过、1 失败**：`RealModuleOutputsKeepTheirFullCaseSensitiveLocalIdentityForOrdinaryAndEndEvents("CheckA", true)` 等目标初始 `start` 超时（原 `.scratch/main-20/core.log`）。同用例单独三次均 8/8，不能以重跑绿覆盖首次失败。
+- 主代理的公开真实 Module 复现（`main-module-20-repro/Program.cs`、`run.log`）：目标 `InitBeforeStart` 等源初始发布完成；源发布成功，目标 Finished、初始 Execute 次数 0、Completion RanToCompletion。事件没有丢失；AC8 只保证全体接收先就绪，不保证目标初始业务先执行。已经 Finished 的执行不必再跑初始业务。
+- 本轮先将同一交错固定进原身份用例：目标公共 `InitBeforeStart` 等源发布，Start 放到 `Task.Run` 避免阻塞测试上下文。原断言确定性红：**7 通过、1 失败**，仍是目标 `start` 超时（`01-fixed-interleaving-red.log`）。这是测试的无序假设，不是生产事件投递故障。
+
+### 最小修复与规范正例
+
+- 身份用例仍保留完整 8 场景及原有身份/次数断言，只将其源业务发布显式门控到目标已进入初始 Execute；不再借调度顺序验证身份。
+- 新增 `ARealModuleEndReceivedBeforeTheInitialRunFinishesWithoutExecutingAndReleasesOwnership`：真实 DSL Module、真实绑定和公开 `InitBeforeStart` 同步点固定 end 早于目标初始 Run。断言源发布完成、目标 **零 Execute/无业务访问、Finished、Completion 成功**；未先 Stop/Dispose 旧轮次就能重新 Prepare 同一引擎/绑定节点，新轮真实执行并通过本地出口完成，源执行仍 Running，证明退出后占用/绑定可复用且完成不控制其他成员。
+- 原立即发布与全体接收屏障专项测试保留不动，包括 `AllReceiversAreReadyBeforeInitialNodesPublishAcrossIndependentLocalEventIds`、`InitialReceiverBarrierReleasesZeroNodesAndFailedPreparationsCanBeExplicitlyAbandoned`。不放宽断言、不删测试、不改生产强制运行已 Finished 节点。
+- 红后首绿：Module 族 **9/9**（`02-module-green.log`）；新增早到 end 是原失败交错的规范正例，不冒称另发现生产红例。
+- 采纳 Standards 维护意见：全仓 C# 搜索确认 internal `FSMExecutor.StartContext` 仅有定义、没有调用；#20 全部走 `PrepareContext`。仅删除该重复未使用方法，不新增抽象、不删公共过渡 API、不改 #22。删除前后引用证据在 `context-entry-references-before.log`、`context-entry-references.log`。
+
+### 本轮最终验证与集成
+
+所有命令显式 timeout 15–120 秒，构建串行，`JAVA_HOME=C:/Users/Naoki/.jre/jdk-11.0.26+4-jre`。已执行 `git merge 4063178bca93749ce966988920d349852e80108f`，Already up to date；集成分支 `implement/context-lifecycle` tip 和 merge-base 均为 `4063178`（`integration.log`）。未改主工作树、未建额外 worktree。
+
+| 命令/范围 | 结果 | 日志 |
+| --- | --- | --- |
+| `dotnet test tests/StateMachineTest/StateMachineTest.csproj --nologo -p:NuGetAudit=false` | **261/261**（原 231 + #20 30） | `03-core.log` |
+| 同核心 `--no-build --no-restore`，固定重复 3 次 | 每次 **261/261** | `05-core-repeat-{1..3}.log` |
+| 核心 `--no-build --no-restore --filter FullyQualifiedName~EventSharingFacts`，固定重复 10 次 | 每次 **30/30**，含 Module 9 例及既有立即发布测试 | `04-sharing-repeat-{1..10}.log` |
+| `dotnet test tests/FSMDemoApiTest/FSMDemoApiTest.csproj --nologo -p:NuGetAudit=false` | **39/39** | `06-api.log` |
+| `dotnet test tests/FSMDemoWasmTest/FSMDemoWasmTest.csproj --nologo -p:NuGetAudit=false` | **27/27**，仅宿主 .NET | `07-host.log` |
+| `git diff --check` | 通过 | `final-diff.log` |
+
+本轮日志及主代理首次失败/复现原件复制到 `C:/work/anotherfsm-context-19/evidence-20-fixes/`，包含 `handoff.txt` 和 SHA256 清单。没有重跑真实 WASM 浏览器合同；不以宿主 .NET 测试冒充浏览器证据。既有警告保留，本轮没有新增已知生产缺陷。未 push、关票、合主树或继续其他票。

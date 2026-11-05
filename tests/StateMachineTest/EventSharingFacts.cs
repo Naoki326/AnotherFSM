@@ -10,6 +10,8 @@ public class EventSharingFacts
         public Channel<string> Visits { get; } = Channel.CreateUnbounded<string>();
         public Channel<object?> Payloads { get; } = Channel.CreateUnbounded<object?>();
         public bool PublishInitially { get; init; }
+        public Task? InitializationGate { get; init; }
+        public Task? PublicationGate { get; init; }
         public int Starts;
         public TaskCompletionSource InitialPublished { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public bool EchoOnce { get; init; }
@@ -27,6 +29,10 @@ public class EventSharingFacts
     public sealed class Input { public Probe Probe { get; init; } = new(); }
     private sealed class Node : BaseFSMNode<Probe>
     {
+        // Public synchronous initialization hook: hold the target before its first Run.
+        public override void InitBeforeStart()
+            => Context.InitializationGate?.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
+
         protected override async Task ExecuteAsync()
         {
             Context.Visits.Writer.TryWrite(TriggerEvent?.EventName ?? "start");
@@ -34,7 +40,11 @@ public class EventSharingFacts
             if (TriggerEvent == null && Interlocked.Increment(ref Context.Starts) == 1)
             {
                 if (Context.Late != null) _ = SendLate(Context.Late);
-                if (Context.PublishInitially) PublishEvent(1);
+                if (Context.PublishInitially)
+                {
+                    if (Context.PublicationGate != null) await Context.PublicationGate.WaitAsync(TimeSpan.FromSeconds(5));
+                    PublishEvent(1);
+                }
             }
             if (TriggerEvent == null) Context.InitialPublished.TrySetResult();
             if (Context.ReturnGate != null) await Context.ReturnGate.Task;
@@ -349,12 +359,16 @@ public class EventSharingFacts
         target.AddEvent(new FSMEvent("Fence"));
         target.ConnectNode("Fence", targetNode, targetNode);
         target.ConnectNode(targetName, targetNode, targetNode);
-        var aInput = new Input { Probe = new Probe { PublishInitially = true } };
         var bInput = new Input();
+        // Identity, not initial scheduling, is under test: publish only after target entry.
+        var aInput = new Input
+        {
+            Probe = new Probe { PublishInitially = true, PublicationGate = bInput.Probe.InitialPublished.Task }
+        };
         using var pa = source.BindContext<Input>("CheckA.Entry", "Done").Prepare(aInput);
         using var pb = target.BindContext<Input>(targetNode, end ? targetName : "Done").Prepare(bInput);
         FSMEventSharing.Connect(pa, pb);
-        var executors = await FSMEventSharing.StartAsync(pa, pb);
+        var executors = await Task.Run(() => FSMEventSharing.StartAsync(pa, pb));
         try
         {
             await aInput.Probe.InitialPublished.Task.WaitAsync(TimeSpan.FromSeconds(5));
@@ -374,6 +388,54 @@ public class EventSharingFacts
             source.GetEventNames().Should().NotContain("OK");
             aInput.Probe.Starts.Should().Be(1);
             bInput.Probe.Starts.Should().Be(1);
+        }
+        finally { foreach (var executor in executors) await executor.StopAsync(); }
+    }
+
+    [Fact]
+    public async Task ARealModuleEndReceivedBeforeTheInitialRunFinishesWithoutExecutingAndReleasesOwnership()
+    {
+        const string module = "module Work { input Entry; output OK; def Entry(Probe) { 1->OK; } } use Work as CheckA;";
+        var source = new FSMEngine(new Factory());
+        source.CreateStateMachine(module);
+        source.AddEvent(new FSMEvent("Done"));
+        var target = new FSMEngine(new Factory());
+        target.CreateStateMachine(module);
+        var aInput = new Input { Probe = new Probe { PublishInitially = true } };
+        var bInput = new Input
+        {
+            Probe = new Probe { InitializationGate = aInput.Probe.InitialPublished.Task }
+        };
+        var targetFlow = target.BindContext<Input>("CheckA.Entry", "CheckA.OK");
+        using var pa = source.BindContext<Input>("CheckA.Entry", "Done").Prepare(aInput);
+        using var pb = targetFlow.Prepare(bInput);
+        FSMEventSharing.Connect(pa, pb);
+        // InitBeforeStart is synchronous; run the coordinated start off the test context.
+        var executors = await Task.Run(() => FSMEventSharing.StartAsync(pa, pb));
+        try
+        {
+            await executors[1].Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
+            aInput.Probe.InitialPublished.Task.IsCompletedSuccessfully.Should().BeTrue();
+            executors[1].State.Should().Be(FSMState.Finished);
+            executors[1].Execution.Completion.IsCompletedSuccessfully.Should().BeTrue();
+            bInput.Probe.Starts.Should().Be(0);
+            bInput.Probe.Visits.Reader.TryRead(out _).Should().BeFalse();
+
+            // Completion, without Stop/Dispose of the old round, releases the engine and
+            // bound node for a real new round.
+            var nextInput = new Input();
+            using var nextPreparation = targetFlow.Prepare(nextInput);
+            using var next = await nextPreparation.StartAsync();
+            try
+            {
+                (await Next(nextInput.Probe)).Should().Be("start");
+                nextInput.Probe.Starts.Should().Be(1);
+                next.Execution.PublishEvent("CheckA.OK");
+                await next.Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
+                next.State.Should().Be(FSMState.Finished);
+                executors[0].State.Should().Be(FSMState.Running);
+            }
+            finally { await next.StopAsync(); }
         }
         finally { foreach (var executor in executors) await executor.StopAsync(); }
     }
