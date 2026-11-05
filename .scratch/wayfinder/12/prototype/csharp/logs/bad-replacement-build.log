@@ -1,0 +1,13 @@
+  正在确定要还原的项目…
+  所有项目均是最新的，无法还原。
+C:\work\anotherfsm\.scratch\wayfinder\12\prototype\csharp\Program.cs(71,1): error CS8852: 只能在对象初始值设定项中或在实例构造函数或 "init" 访问器中的 "this" 或 "base" 上分配 init-only 属性或索引器 "TwoJobs.Job"。 [C:\work\anotherfsm\.scratch\wayfinder\12\prototype\csharp\Probe.csproj]
+C:\work\anotherfsm\.scratch\wayfinder\12\prototype\csharp\Program.cs(72,1): error CS0272: 属性或索引器“SingleJob.Job”不能用在此上下文中，因为 set 访问器不可访问 [C:\work\anotherfsm\.scratch\wayfinder\12\prototype\csharp\Probe.csproj]
+
+生成失败。
+
+C:\work\anotherfsm\.scratch\wayfinder\12\prototype\csharp\Program.cs(71,1): error CS8852: 只能在对象初始值设定项中或在实例构造函数或 "init" 访问器中的 "this" 或 "base" 上分配 init-only 属性或索引器 "TwoJobs.Job"。 [C:\work\anotherfsm\.scratch\wayfinder\12\prototype\csharp\Probe.csproj]
+C:\work\anotherfsm\.scratch\wayfinder\12\prototype\csharp\Program.cs(72,1): error CS0272: 属性或索引器“SingleJob.Job”不能用在此上下文中，因为 set 访问器不可访问 [C:\work\anotherfsm\.scratch\wayfinder\12\prototype\csharp\Probe.csproj]
+    0 个警告
+    2 个错误
+
+已用时间 00:00:02.15

@@ -1,0 +1,5 @@
+dotnet --version => exit 0
+dotnet build Probe.csproj --nologo -p:DefineConstants=BAD_BINDING => exit 1
+dotnet build Probe.csproj --nologo -p:DefineConstants=BAD_REPLACEMENT => exit 1
+dotnet build Probe.csproj --nologo => exit 0
+dotnet run --project Probe.csproj --no-build => exit 0

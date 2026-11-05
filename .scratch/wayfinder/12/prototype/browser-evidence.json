@@ -1,0 +1,154 @@
+{
+  "initialized": true,
+  "ready": true,
+  "pending": [],
+  "requirements": [
+    {
+      "id": "shared-start",
+      "description": "A-B、B-C 连接后统一启动，三个接收端均就绪且各收到三条启动通知。",
+      "status": "proven",
+      "evidence": "A-B 与 B-C 已连接，A/B/C 均 Running、接收端就绪、各收到 3 条启动通知。只证明同步行为原型。",
+      "proofStep": 25,
+      "proofUrl": "http://127.0.0.1:8766/context-prototype.html"
+    },
+    {
+      "id": "transitive",
+      "description": "A 再发一条业务事件，A/B/C 各增加一次接收。",
+      "status": "proven",
+      "evidence": "连接仍为 A-B、B-C，三者最后通知均为 A 业务事件 E，各自计数由 3 变成 4。",
+      "proofStep": 27,
+      "proofUrl": "http://127.0.0.1:8766/context-prototype.html"
+    },
+    {
+      "id": "isolated",
+      "description": "只连接 A-B 时 C 不接收 A 业务事件。",
+      "status": "proven",
+      "evidence": "只有 A-B 连接，A/B 计数为 3、最后通知为 A 事件；C 计数仍为 1、最后通知只是自己的启动事件。",
+      "proofStep": 29,
+      "proofUrl": "http://127.0.0.1:8766/context-prototype.html"
+    },
+    {
+      "id": "control",
+      "description": "停止 B 时 A 仍运行，停止控制不共享。",
+      "status": "proven",
+      "evidence": "B 为 Stopping，A 与 C 仍 Running；页面明确说明控制不共享且 B 未退出。",
+      "proofStep": 31,
+      "proofUrl": "http://127.0.0.1:8766/context-prototype.html"
+    },
+    {
+      "id": "readonly",
+      "description": "外部替换 Job 被提示拒绝，内部替换不改变已启动节点固定引用。",
+      "status": "proven",
+      "evidence": "提示外部重新赋值被模拟拒绝；聚合 Job 已为乙，Query/Process 固定引用仍为甲，且读取甲的新任务列表，例外节点为乙。",
+      "proofStep": 33,
+      "proofUrl": "http://127.0.0.1:8766/context-prototype.html"
+    }
+  ],
+  "currentChecklist": {
+    "name": "用户反馈修订：业务事件共享与协调启动",
+    "audited": true,
+    "ready": true,
+    "pending": [],
+    "requirements": [
+      {
+        "id": "shared-start",
+        "description": "A-B、B-C 连接后统一启动，三个接收端均就绪且各收到三条启动通知。",
+        "status": "proven",
+        "evidence": "A-B 与 B-C 已连接，A/B/C 均 Running、接收端就绪、各收到 3 条启动通知。只证明同步行为原型。",
+        "proofStep": 25,
+        "proofUrl": "http://127.0.0.1:8766/context-prototype.html"
+      },
+      {
+        "id": "transitive",
+        "description": "A 再发一条业务事件，A/B/C 各增加一次接收。",
+        "status": "proven",
+        "evidence": "连接仍为 A-B、B-C，三者最后通知均为 A 业务事件 E，各自计数由 3 变成 4。",
+        "proofStep": 27,
+        "proofUrl": "http://127.0.0.1:8766/context-prototype.html"
+      },
+      {
+        "id": "isolated",
+        "description": "只连接 A-B 时 C 不接收 A 业务事件。",
+        "status": "proven",
+        "evidence": "只有 A-B 连接，A/B 计数为 3、最后通知为 A 事件；C 计数仍为 1、最后通知只是自己的启动事件。",
+        "proofStep": 29,
+        "proofUrl": "http://127.0.0.1:8766/context-prototype.html"
+      },
+      {
+        "id": "control",
+        "description": "停止 B 时 A 仍运行，停止控制不共享。",
+        "status": "proven",
+        "evidence": "B 为 Stopping，A 与 C 仍 Running；页面明确说明控制不共享且 B 未退出。",
+        "proofStep": 31,
+        "proofUrl": "http://127.0.0.1:8766/context-prototype.html"
+      },
+      {
+        "id": "readonly",
+        "description": "外部替换 Job 被提示拒绝，内部替换不改变已启动节点固定引用。",
+        "status": "proven",
+        "evidence": "提示外部重新赋值被模拟拒绝；聚合 Job 已为乙，Query/Process 固定引用仍为甲，且读取甲的新任务列表，例外节点为乙。",
+        "proofStep": 33,
+        "proofUrl": "http://127.0.0.1:8766/context-prototype.html"
+      }
+    ]
+  },
+  "archivedChecklists": [
+    {
+      "name": "上下文解耦原型交互检查",
+      "audited": true,
+      "ready": true,
+      "pending": [],
+      "requirements": [
+        {
+          "id": "fixed",
+          "description": "共享与替换场景显示旧执行绑定甲，新执行绑定乙。",
+          "status": "proven",
+          "evidence": "可见当前执行 2 的 Query / Process 都绑定乙；上一执行 1 的固定引用为甲，甲.Tasks 保留查询更新。仅为 JS 原型状态。",
+          "proofStep": 9,
+          "proofUrl": "http://127.0.0.1:8766/context-prototype.html"
+        },
+        {
+          "id": "override",
+          "description": "节点例外场景显示默认节点绑定甲，CheckB.Query 绑定乙。",
+          "status": "proven",
+          "evidence": "当前状态显示默认 Job，Query 和 Process 都绑定甲；CheckB.Query 显式绑定乙。仅证明交互原型。",
+          "proofStep": 11,
+          "proofUrl": "http://127.0.0.1:8766/context-prototype.html"
+        },
+        {
+          "id": "reject",
+          "description": "必要 Job 为 null 时启动被拒绝且未启动执行。",
+          "status": "proven",
+          "evidence": "Job 为 null，提示启动前拒绝，A 执行显示尚未启动。",
+          "proofStep": 15,
+          "proofUrl": "http://127.0.0.1:8766/context-prototype.html"
+        },
+        {
+          "id": "isolation",
+          "description": "未建立连接时 A 事件不增加 B 的接收数。",
+          "status": "proven",
+          "evidence": "A 已发 Done；提示未建立连接，B 执行 2 的接收数为 0，连接为无。",
+          "proofStep": 17,
+          "proofUrl": "http://127.0.0.1:8766/context-prototype.html"
+        },
+        {
+          "id": "restart",
+          "description": "B 重启后旧连接不投递给新执行。",
+          "status": "proven",
+          "evidence": "B 当前执行 3 接收数 0；连接仍指向 B 执行 2，状态提示旧连接失效、不转投新执行。",
+          "proofStep": 19,
+          "proofUrl": "http://127.0.0.1:8766/context-prototype.html"
+        },
+        {
+          "id": "reconnect",
+          "description": "重建连接后新 B 接收事件。",
+          "status": "proven",
+          "evidence": "连接已指向 B 执行 3，B 当前接收数为 1，并提示收到目标 Wake 通知。",
+          "proofStep": 21,
+          "proofUrl": "http://127.0.0.1:8766/context-prototype.html"
+        }
+      ]
+    }
+  ],
+  "instruction": "All requirements have proof frames. Re-read the task and provide the exact final deliverable."
+}

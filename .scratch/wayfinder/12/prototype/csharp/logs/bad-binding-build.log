@@ -1,0 +1,17 @@
+  正在确定要还原的项目…
+  所有项目均是最新的，无法还原。
+C:\work\anotherfsm\.scratch\wayfinder\12\prototype\csharp\Program.cs(66,33): error CS0029: 无法将类型“string”隐式转换为“Throwaway.IQueryContext” [C:\work\anotherfsm\.scratch\wayfinder\12\prototype\csharp\Probe.csproj]
+C:\work\anotherfsm\.scratch\wayfinder\12\prototype\csharp\Program.cs(66,33): error CS1662: 无法将 lambda 表达式 转换为预期委托类型，因为块中的某些返回类型不可隐式转换为委托返回类型 [C:\work\anotherfsm\.scratch\wayfinder\12\prototype\csharp\Probe.csproj]
+C:\work\anotherfsm\.scratch\wayfinder\12\prototype\csharp\Program.cs(67,46): error CS0029: 无法将类型“string”隐式转换为“Throwaway.IQueryContext” [C:\work\anotherfsm\.scratch\wayfinder\12\prototype\csharp\Probe.csproj]
+C:\work\anotherfsm\.scratch\wayfinder\12\prototype\csharp\Program.cs(67,46): error CS1662: 无法将 lambda 表达式 转换为预期委托类型，因为块中的某些返回类型不可隐式转换为委托返回类型 [C:\work\anotherfsm\.scratch\wayfinder\12\prototype\csharp\Probe.csproj]
+
+生成失败。
+
+C:\work\anotherfsm\.scratch\wayfinder\12\prototype\csharp\Program.cs(66,33): error CS0029: 无法将类型“string”隐式转换为“Throwaway.IQueryContext” [C:\work\anotherfsm\.scratch\wayfinder\12\prototype\csharp\Probe.csproj]
+C:\work\anotherfsm\.scratch\wayfinder\12\prototype\csharp\Program.cs(66,33): error CS1662: 无法将 lambda 表达式 转换为预期委托类型，因为块中的某些返回类型不可隐式转换为委托返回类型 [C:\work\anotherfsm\.scratch\wayfinder\12\prototype\csharp\Probe.csproj]
+C:\work\anotherfsm\.scratch\wayfinder\12\prototype\csharp\Program.cs(67,46): error CS0029: 无法将类型“string”隐式转换为“Throwaway.IQueryContext” [C:\work\anotherfsm\.scratch\wayfinder\12\prototype\csharp\Probe.csproj]
+C:\work\anotherfsm\.scratch\wayfinder\12\prototype\csharp\Program.cs(67,46): error CS1662: 无法将 lambda 表达式 转换为预期委托类型，因为块中的某些返回类型不可隐式转换为委托返回类型 [C:\work\anotherfsm\.scratch\wayfinder\12\prototype\csharp\Probe.csproj]
+    0 个警告
+    4 个错误
+
+已用时间 00:00:05.16

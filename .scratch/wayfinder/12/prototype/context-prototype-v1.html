@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>上下文绑定与执行连接 · 可抛弃原型</title>
+<style>
+*{box-sizing:border-box}body{font:16px/1.6 system-ui,sans-serif;color:#243044;background:#f4f6fa;max-width:1100px;margin:auto;padding:28px}h1{font-size:27px}h2{font-size:20px}h3{font-size:16px}section{background:white;border:1px solid #dae1eb;border-radius:10px;padding:20px;margin:18px 0}button{font:inherit;padding:8px 12px;margin:4px;border:1px solid #b8c6db;border-radius:6px;background:white;color:#244e88;cursor:pointer}button[aria-selected=true],button.primary{background:#244e88;color:white}button:disabled{opacity:.45;cursor:default}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:16px}.badge{color:#244e88;font-weight:700}pre{background:#f0f3f8;padding:14px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px}dl{margin:0}dt{font-weight:600}dd{margin:0 0 10px}#notice{padding:12px;border-left:4px solid #244e88;background:#edf3fc}small,.muted{color:#536477}ol{padding-left:24px}a{color:#244e88}
+</style>
+<h1>节点只看自己的 Context，宿主负责一次绑定</h1>
+<p class="badge">可抛弃的行为演示 · 非 AnotherFSM 实现 · 等待用户反馈</p>
+<p>要检验的问题：不同 Node 通过局部接口共享业务对象时，默认来源、节点例外、按次固定绑定是否易用？独立引擎重启后，显式重建连接的负担是否可接受？</p>
+<p class="muted">此页用 JavaScript 模拟引用与执行归属。它不证明 C# 类型安全、真实 DSL 编译、并发正确性或异步退出保障。执行轮次只为观察显示，调用方不需自行管理。按钮“节点完成退出”手动模拟真实退出屏障，不是产品 API。</p>
+<section aria-label="当前状态"><h2>当前状态</h2><div id="notice" role="status"></div><div id="state" class="grid"></div></section>
+<section><h2>自由操作</h2><p class="muted">任何顺序都可尝试；被拒绝的动作保留原绑定。两引擎同名事件默认互不影响。</p><div id="actions"></div></section>
+<section><h2>引导场景</h2><div id="tabs" role="tablist" aria-label="引导场景"></div><h3 id="scenario-title"></h3><p id="scenario-description"></p><div id="steps"></div><h3>对应的拟议调用形状</h3><p class="muted">下列 C# 是设计草图，名称未定，未编译；不是现有 API。聚合绑定另有独立 C# 编译探针。</p><pre id="code"></pre></section>
+<section><h2>反馈重点</h2><ol><li>默认共享 Job，只有例外节点声明来源，是否足够直观？</li><li>修改 Job.Tasks 立即可见，但替换聚合 Job 仅影响下次执行，是否容易误用？</li><li>停止等待退出、启动新执行、重新连接，是否需要一个显式的便捷操作？</li><li>若节点启动即发事件，“先 Start 再 Connect”存在漏接窗口。本页由人手点击发事件，不能证明已消除该窗口。是否需要先取得本次执行句柄、连接好后再启动？</li></ol><p>普通 Module 仍编译期展平；此页 CheckB.Query 只是展平后的节点名，不包含 Module 编译器。不制作 GroupNode、ParallelNode 或 ParallelModule。</p></section>
+<script>
+// Pure model: no DOM, timers, IO or production runtime. References use explicit object identities.
+const initial=()=>({job:'甲',other:'乙',jobs:{'甲':['原任务'],'乙':['替代任务']},a:null,b:null,previousA:null,next:0,link:null,override:false,note:'请选择场景，或直接操作。尚未启动任何节点。'});
+const active=r=>r&&!r.exited;
+function transition(previous,action){
+ const s=structuredClone(previous);const say=t=>{s.note=t;return s};
+ switch(action){
+ case 'startA':
+  if(active(s.a))return say('拒绝：引擎 A 的旧执行尚未退出；未修改其业务绑定。');
+  if(!s.job)return say('启动前拒绝：Job 为 null；Query / Process 未启动。');
+  if(s.a)s.previousA={id:s.a.id,query:s.a.query,process:s.a.process};
+  s.a={id:++s.next,status:'Running',exited:false,query:s.job,process:s.job,exception:s.override?s.other:s.job,received:0};
+  return say('A 启动：Query / Process 使用不同接口，固定借用同一个 '+s.job+' 对象。');
+ case 'startB':
+  if(active(s.b))return say('拒绝：引擎 B 的旧执行尚未退出。');
+  s.b={id:++s.next,status:'Running',exited:false,received:0};return say('B 启动：独立节点实例、独立执行。没有自动继承旧连接。');
+ case 'update':
+  if(!active(s.a)||s.a.status!=='Running')return say('拒绝：A 没有正在运行的执行。');
+  s.jobs[s.a.query]=['查询得到的新任务'];return say('Query 替换 Context.Tasks；Process 通过自己的接口看到同一对象中的新列表。');
+ case 'replace':s.job='乙';return say('聚合属性 Job 改为乙；已固定的节点引用不变，下次执行才读取乙。');
+ case 'null':s.job=null;return say('聚合属性 Job 设为 null；已有执行仍借用原对象，下一次启动将失败。');
+ case 'override':
+  if(active(s.a))return say('拒绝：绑定方案在装配阶段确定，不能执行中配置覆盖。');
+  s.override=true;return say('装配方案：DefaultSource(Job)，CheckB.Query 显式使用 OtherJob。未新增运行时引擎。');
+ case 'missing':return say('模拟装配拒绝：CheckB.Query 要求 IQueryContext，但聚合类型没有兼容来源。不会得到可启动方案；本页原方案未变。');
+ case 'ambiguous':return say('模拟装配拒绝：Job / OtherJob 同时满足 IQueryContext，且没有默认来源。需 DefaultSource(Job) 消歧；本页原方案未变。');
+ case 'stopA':case 'stopB':{
+  const r=action==='stopA'?s.a:s.b;if(!active(r))return say('拒绝：目标执行不存在或已退出。');
+  r.status='Stopping';return say('仅发出停止请求；节点尚未退出，仍占用引擎与原业务引用。');}
+ case 'exitA':case 'exitB':{
+  const r=action==='exitA'?s.a:s.b;if(!active(r)||r.status!=='Stopping')return say('本演示需先请求停止，再模拟节点返回及清理完成。');
+  r.status='Stoped';r.exited=true;return say('模拟：节点返回及框架清理完成，完成任务已兑现；现在可重新启动。');}
+ case 'connect':
+  if(!active(s.a)||!active(s.b)||s.a.status!=='Running'||s.b.status!=='Running')return say('连接前请启动 A 和 B。');
+  s.link={source:s.a.id,target:s.b.id};return say('宿主显式连接 A 本次 Done → B 本次 Wake；绑定具体执行。');
+ case 'emit':
+  if(!active(s.a)||s.a.status!=='Running')return say('拒绝：A 无有效运行中的执行。');
+  if(!s.link)return say('A 发出 Done；没有连接，B 不接收，即使事件同名也不例外。');
+  if(s.link.source!==s.a.id||!active(s.b)||s.link.target!==s.b.id||s.b.status!=='Running')return say('旧连接已失效：不会将通知转投新执行；请显式重建连接。');
+  s.b.received++;return say('B 本次执行收到 Wake；通过目标事件入口通知，不使用来源 EventID 匹配。');
+ case 'stale':return say('模拟迟到旧句柄投递：拒绝失效执行；当前执行与接收计数不变。');
+ default:return say('未知动作。');
+ }
+}
+const actions={startA:'启动 A',update:'查询并替换任务列表',replace:'聚合 Job 改为乙',null:'聚合 Job 设为 null',override:'装配节点例外',missing:'尝试缺失来源装配',ambiguous:'尝试歧义装配',stopA:'请求停止 A',exitA:'A 节点完成退出',startB:'启动 B',connect:'连接 A → B',emit:'A 发出事件',stopB:'请求停止 B',exitB:'B 节点完成退出',stale:'尝试旧句柄投递'};
+const scenarios=[
+ {title:'共享与替换',description:'两个局部接口借用同一对象。先更新内部任务，再替换聚合属性，对比节点看到的对象；旧执行退出后才使用新对象。',steps:['startA','update','replace','stopA','startA','exitA','startA'],code:`class FlowContext { public JobData Job { get; set; } }
+// JobData 同时实现 IQueryContext / IProcessContext。
+// QueryNode 仅依赖 IQueryContext；ProcessNode 仅依赖 IProcessContext。
+var flow = Build<FlowContext>(dsl);
+var input = new FlowContext { Job = jobA };
+var run = flow.Start(input);
+input.Job = jobB;             // 不重绑正在执行的 Node
+await run.StopAsync();        // 等待真正退出；不是只发请求
+var next = flow.Start(new FlowContext { Job = jobB });`},
+ {title:'默认与节点例外',description:'当两个属性都兼容时，默认来源一次消歧；只为展平后的 CheckB.Query 配置例外。Query / Process 仍共享甲，CheckB.Query 使用乙。',steps:['ambiguous','override','startA','update'],code:`class FlowContext {
+  public JobData Job { get; init; }
+  public JobData OtherJob { get; init; }
+  public static void Configure(Bindings<FlowContext> bindings) {
+    bindings.DefaultSource(x => x.Job);
+    bindings.Node<IQueryContext>("CheckB.Query", x => x.OtherJob);
+  }
+}
+// CheckB 是普通 Module 实例；宿主按展平后的限定名定位节点。`},
+ {title:'提前拒绝',description:'缺失绑定是装配错误，null 是启动错误；不是等节点运行后才发现。本页不模拟 C# 编译器，静态类型反例见 C# 探针。',steps:['missing','null','startA'],code:`// C# 编译期应拒绝：
+bindings.Default<IQueryContext>(x => x.NotAQueryContext);
+// 装配时拒绝：没有兼容来源 / 歧义 / 未知节点。
+var flow = Build<FlowContext>(dsl);
+// 启动前拒绝：不会执行任何 Node。
+flow.Start(new FlowContext { Job = null });`},
+ {title:'独立引擎与重启连接',description:'未连接时 A 不推进 B。显式连接后接收；B 停止并真正退出、重新启动后，旧连接不跟随。宿主必须重建连接。',steps:['startA','startB','emit','connect','emit','stopB','startB','exitB','startB','emit','connect','emit','stale'],code:`var a = engineA.Start(inputA);
+var b = engineB.Start(inputB);
+using var link = Connect(a.Event("Done"), b.Event("Wake"));
+// 待反馈：Start 到 Connect 之间的事件不会缓存；启动即发事件可能漏接。
+// 若要求不漏接，应讨论先取得执行句柄并连接、再启动的调用形状。
+await b.StopAsync();           // 先退出
+var nextB = engineB.Start(nextInputB);
+// link 仍绑定旧 b，不跟随 nextB；调用方不用手动管理执行编号。
+using var nextLink = Connect(a.Event("Done"), nextB.Event("Wake"));
+// 宿主应在旧连接不用时 Dispose；无缓存、重放或可靠消息承诺。`}
+];
+let model=initial(),selected=0,step=0;
+const esc=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fields=items=>'<dl>'+items.map(([k,v])=>'<dt>'+esc(k)+'</dt><dd>'+esc(v)+'</dd>').join('')+'</dl>';
+function render(){
+ document.querySelector('#notice').textContent=model.note;
+ const a=model.a,b=model.b;
+ document.querySelector('#state').innerHTML=
+ '<div><h3>调用方持有的业务对象</h3>'+fields([['聚合 Job 指向',model.job??'null'],['甲.Tasks',model.jobs['甲'].join('、')],['乙.Tasks',model.jobs['乙'].join('、')],['装配方案',model.override?'默认 Job；CheckB.Query → OtherJob':'唯一来源 Job（默认示例）']])+'</div>'+
+ '<div><h3>引擎 A 的固定绑定</h3>'+fields(a?[['执行 / 状态',a.id+' / '+a.status],['退出屏障',a.exited?'已完成':'未完成（占用引擎）'],['Query / IQueryContext',a.query],['Process / IProcessContext',a.process],['Process 读取 Tasks',model.jobs[a.process].join('、')],['CheckB.Query / IQueryContext',a.exception],['上一执行（已退出）',model.previousA?'执行 '+model.previousA.id+'：Query / Process → '+model.previousA.query:'无']]:[['执行','尚未启动']])+'</div>'+
+ '<div><h3>引擎 B 与连接</h3>'+fields([['B 执行 / 状态',b?b.id+' / '+b.status:'尚未启动'],['B 退出屏障',b?(b.exited?'已完成':'未完成'):'无'],['B 本次接收数',b?.received??0],['连接',model.link?'A 执行 '+model.link.source+' → B 执行 '+model.link.target:'无']])+'</div>';
+ document.querySelector('#tabs').innerHTML=scenarios.map((x,i)=>'<button role="tab" aria-selected="'+(i===selected)+'" data-tab="'+i+'">'+esc(x.title)+'</button>').join('');
+ const sc=scenarios[selected];document.querySelector('#scenario-title').textContent=sc.title;document.querySelector('#scenario-description').textContent=sc.description;document.querySelector('#code').textContent=sc.code;
+ document.querySelector('#steps').innerHTML=sc.steps.map((a,i)=>'<button data-step="'+i+'" '+(i!==step?'disabled':'class="primary"')+'>'+(i<step?'✓ ':String(i+1)+'. ')+esc(actions[a])+'</button>').join('')+(step===sc.steps.length?'<p>场景走完了。请反馈哪里与你的预期不同；这不代表真实库已通过验收。</p>':'');
+}
+document.querySelector('#actions').innerHTML='<button data-reset="1">重置当前场景</button>'+Object.entries(actions).map(([k,v])=>'<button data-action="'+k+'">'+esc(v)+'</button>').join('');
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.tab!==undefined){selected=Number(b.dataset.tab);step=0;model=initial()}else if(b.dataset.reset){model=initial();step=0}else if(b.dataset.action){model=transition(model,b.dataset.action)}else if(b.dataset.step!==undefined){model=transition(model,scenarios[selected].steps[step]);step++}render()});render();
+</script></html>

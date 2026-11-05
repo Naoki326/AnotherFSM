@@ -1,0 +1,66 @@
+THROWAWAY C# binding probe; names CheckA/CheckB are SIMULATED Module flattening.
+
+1. Unique direct property; shared interfaces; freeze per execution
+PLAN CheckA.Process / IProcessContext <- Job
+PLAN CheckA.Query / IQueryContext <- Job
+NODE CheckA.Process IProcessContext: A Tasks=[queued,processed]
+OBSERVED Process holds expected JobData identity
+ACTION class-internal private-set replacement -> B Tasks=[]
+NODE CheckA.Query IQueryContext: A Tasks=[queued,processed]
+OBSERVED Query holds same JobData despite aggregate replacement
+OBSERVED Tasks mutation is visible through IQueryContext
+OBSERVED replacement B was not bound mid-execution
+
+2. Next execution re-reads the aggregate: B, then a new aggregate with C
+NODE CheckA.Process IProcessContext: B Tasks=[processed]
+OBSERVED Process holds expected JobData identity
+ACTION class-internal private-set replacement -> B Tasks=[processed]
+NODE CheckA.Query IQueryContext: B Tasks=[processed]
+OBSERVED Query holds same JobData despite aggregate replacement
+OBSERVED Tasks mutation is visible through IQueryContext
+NODE CheckA.Process IProcessContext: C Tasks=[processed]
+OBSERVED Process holds expected JobData identity
+ACTION class-internal private-set replacement -> B Tasks=[processed]
+NODE CheckA.Query IQueryContext: C Tasks=[processed]
+OBSERVED Query holds same JobData despite aggregate replacement
+OBSERVED Tasks mutation is visible through IQueryContext
+
+3. Multiple candidates reject; DefaultSource resolves; CheckB.Query overrides
+EXPECTED REJECTION: ASSEMBLY TwoJobs / CheckA.Query / IQueryContext: ambiguous sources; Job:JobData, OtherJob:JobData
+OBSERVED ASSEMBLY rejection: nodes run=0
+PLAN Start / none <- (no binding)
+PLAN CheckA.Process / IProcessContext <- Job
+PLAN CheckA.Query / IQueryContext <- Job
+PLAN CheckB.Query / IQueryContext <- OtherJob
+NODE Start: no business binding
+NODE CheckA.Process IProcessContext: default Tasks=[processed]
+OBSERVED DefaultSource selected Job for Process
+NODE CheckA.Query IQueryContext: default Tasks=[processed]
+OBSERVED default Query shares mutated Job
+NODE CheckB.Query IQueryContext: override Tasks=[]
+OBSERVED qualified override selects untouched OtherJob
+
+4. Typed Default<IQueryContext> positive example
+PLAN Query / IQueryContext <- Job
+NODE Query IQueryContext: default Tasks=[processed]
+OBSERVED typed Default selects Job
+
+5. Missing binding rejects assembly; no-business node needs no source
+EXPECTED REJECTION: ASSEMBLY NoData / Missing.Query / IQueryContext: no compatible source; 
+OBSERVED ASSEMBLY rejection: nodes run=0
+PLAN OnlyControl / none <- (no binding)
+NODE OnlyControl: no business binding
+
+6. Null startup rejects before ANY node (including Start)
+EXPECTED REJECTION: START TwoJobs: aggregate is null
+OBSERVED START rejection: nodes run=0
+EXPECTED REJECTION: START TwoJobs: OtherJob:JobData is null; affected=CheckB.Query/IQueryContext
+OBSERVED START rejection: nodes run=0
+EXPECTED REJECTION: START TwoJobs: Job:JobData is null; affected=CheckA.Process/IProcessContext, CheckA.Query/IQueryContext
+OBSERVED START rejection: nodes run=0
+
+7. Selected source with ordinary public set rejects assembly
+EXPECTED REJECTION: ASSEMBLY PublicSetJob / PublicSet.Query / IQueryContext: source Job:JobData has ordinary public set; use init/private set/getter-only
+OBSERVED ASSEMBLY rejection: nodes run=0
+
+DONE: guided observations held; total node calls=12. No DSL/runtime claims.

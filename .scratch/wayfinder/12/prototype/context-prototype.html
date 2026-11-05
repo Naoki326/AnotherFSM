@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>上下文与业务事件共享 · 反馈修订原型</title>
+<style>
+*{box-sizing:border-box}body{font:16px/1.55 system-ui,sans-serif;color:#243044;background:#f4f6fa;max-width:1180px;margin:auto;padding:24px}h1{font-size:26px}h2{font-size:20px}h3{font-size:16px}section{background:white;border:1px solid #dae1eb;border-radius:10px;padding:18px;margin:16px 0}button{font:inherit;padding:7px 11px;margin:4px;border:1px solid #b8c6db;border-radius:6px;background:white;color:#244e88;cursor:pointer}button[aria-selected=true],button.primary{background:#244e88;color:white}button:disabled{opacity:.45;cursor:default}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}.badge{color:#244e88;font-weight:700}pre{background:#f0f3f8;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px}dl{margin:0}dt{font-weight:600}dd{margin:0 0 6px}#notice{padding:10px;border-left:4px solid #244e88;background:#edf3fc}.muted{color:#536477}a{color:#244e88}
+</style>
+<h1>默认绑定 + 双向传递共享 + 协调启动</h1>
+<p class="badge">可抛弃原型 · 根据用户反馈修订 · 不是 AnotherFSM 实现</p>
+<p>问题：聚合类只读来源是否易用？无返回值的 Connect(a, b) 让业务事件双向、传递共享，Start(a, b, c) 先准备所有接收端，再放行节点，是否符合预期？</p>
+<p class="muted">这是同步 JavaScript 示意：不证明 C# 编译、真实 DSL、线程竞争或退出屏障。Prepared 是演示阶段，不是新增 FSMState。事件身份、批量启动失败、准备期占用、共享范围拆分仍待后续决策。页面中的“模拟退出”不是产品 API。</p>
+<section aria-label="当前状态"><h2>当前状态</h2><p id="notice" role="status"></p><div id="state" class="grid"></div></section>
+<section><h2>自由操作</h2><div id="actions"></div></section>
+<section><h2>引导场景</h2><div id="tabs" role="tablist" aria-label="引导场景"></div><p id="description"></p><div id="steps"></div><h3>拟议 C# 形状（未编译，名称未定）</h3><pre id="code"></pre></section>
+<section><h2>证据与边界</h2><p>可编译的来源绑定探针：<a href="csharp/Program.cs">Program.cs</a> · <a href="csharp/README.md">说明</a> · <a href="csharp/logs/normal-run.log">运行日志</a>。本页仅模拟 C# 对外部赋值的拒绝，实际编译反例以探针日志为准。</p><p>Connect 不连接图内 Transition，不隐式共享业务 Context，也不共享暂停/停止控制。已建好的不同流程图可以使用同一业务事件。事件 E 的身份策略尚未选择，不能将演示中的 E 字样理解为按名字匹配的决策。</p><p>同一通知只到每个执行一次；业务节点因收到通知而产生新的通知，是新的业务行为，不承诺自动消除业务反馈循环。Module 仍编译期展平，CheckB.Query 仅为模拟限定名；没有 GroupNode / ParallelNode / ParallelModule 或父子执行。</p><p>本页 Start 自动产生一条启动事件，以展示接收端先就绪。未实现队列、消息重放、持久订阅、异常回滚或真实取消。退出移除连接边只是简单演示，不锁定共享范围拆分方案。</p></section>
+<script>
+// Pure, deterministic, throwaway model: UI is a thin shell. No real FSM runtime.
+const initial=()=>({job:'甲',other:'乙',jobs:{'甲':['原任务'],'乙':['替代任务']},override:false,run:{A:null,B:null,C:null},next:0,edges:[],note:'先准备本次执行，连接业务事件，再统一启动。所有流程图视为已构建。'});
+const live=r=>r&&!r.exited;
+const component=(s,id)=>{const seen=new Set([id]),todo=[id];while(todo.length){const n=todo.pop();for(const [a,b]of s.edges){const other=a===n?b:b===n?a:null;if(other!==null&&!seen.has(other)){seen.add(other);todo.push(other)}}}return seen};
+function publish(s,source,label){const ids=component(s,source.id);for(const r of Object.values(s.run))if(r&&ids.has(r.id)&&r.phase==='Running'){r.received++;r.last=label}}
+function transition(previous,action){
+ const s=structuredClone(previous),say=t=>{s.note=t;return s};
+ if(action.startsWith('prepare')){const k=action.slice(-1);if(live(s.run[k]))return say('拒绝：'+k+' 已有未退出的准备/执行句柄（准备期占用的正式规则待后续决定）。');s.run[k]={id:++s.next,phase:'Prepared',exited:false,ready:false,received:0,last:'无',binding:null};return say(k+' 的本次执行已准备；没有节点运行，没有启动事件。')}
+ if(action==='connectAB'||action==='connectBC'){const keys=action==='connectAB'?['A','B']:['B','C'];const [a,b]=keys.map(k=>s.run[k]);if(!a||!b||a.phase!=='Prepared'||b.phase!=='Prepared')return say('请先准备这两个执行；本演示只展示启动前连接。');if(!s.edges.some(e=>e.includes(a.id)&&e.includes(b.id)))s.edges.push([a.id,b.id]);return say('void Connect('+keys.join(', ')+')：内部持有连接，无 link / using；业务事件双向共享，且具有传递性。')}
+ if(action==='start'){
+  const pending=Object.entries(s.run).filter(([,r])=>r?.phase==='Prepared');if(!pending.length)return say('没有等待启动的执行。');
+  // Illustrative happy-path barrier only; no promise of atomic failure semantics.
+  for(const [k,r]of pending){r.ready=true;r.phase='Running';if(k==='A')r.binding={query:s.job,process:s.job,exception:s.override?s.other:s.job}}
+  for(const [k,r]of pending)publish(s,r,k+' 启动事件 E');
+  return say('先让全部待启动执行的接收端就绪，再统一放行；随后每个执行各产生一条启动事件 E。')
+ }
+ if(action==='emitA'){const r=s.run.A;if(r?.phase!=='Running')return say('拒绝：A 尚未运行。');publish(s,r,'A 业务事件 E');return say('A 的一条业务事件 E 已送达共享范围内各执行一次；不需逐事件映射。')}
+ if(action==='stopB'){const r=s.run.B;if(r?.phase!=='Running')return say('拒绝：B 未运行。');r.phase='Stopping';return say('仅 B 进入 Stopping；A、C 状态不变。控制信号不共享，B 尚未真正退出。')}
+ if(action==='exitB'){const r=s.run.B;if(r?.phase!=='Stopping')return say('请先请求停止 B。');r.phase='Stoped';r.exited=true;r.ready=false;s.edges=s.edges.filter(e=>!e.includes(r.id));return say('模拟 B 节点返回及清理完成，移除涉及旧 B 句柄的连接；新 B 不自动继承。共享范围拆分策略仍待后续决策。')}
+ if(action==='externalReplace')return say('模拟 C# 编译拒绝：外部不能重新赋值 init / private set 来源属性。业务对象内部 Tasks 仍可修改。');
+ if(action==='internalReplace'){s.job='乙';return say('反例：聚合类内部通过 private set 将 Job 改为乙。正在执行的节点仍固定借用旧对象；不是推荐提供公开换绑方法。')}
+ if(action==='update'){const r=s.run.A;if(r?.phase!=='Running')return say('请先启动 A。');s.jobs[r.binding.query]=['查询得到的新任务'];return say('只修改共享业务对象内部 Tasks；Process 通过自己的接口看到新列表。')}
+ if(action==='override'){if(live(s.run.A))return say('请在准备执行前配置来源。');s.override=true;return say('装配：默认 Job；仅 CheckB.Query 指向 OtherJob，Node 不依赖聚合类。')}
+ return say('未知操作。')
+}
+const actions={prepareA:'准备 A',prepareB:'准备 B',prepareC:'准备 C',connectAB:'连接 A 与 B',connectBC:'连接 B 与 C',start:'统一启动待启动执行',emitA:'A 发业务事件',stopB:'请求停止 B',exitB:'模拟 B 完整退出',override:'配置节点例外',externalReplace:'尝试外部替换 Job',internalReplace:'模拟类内部替换 Job',update:'更新共享任务列表'};
+const scenarios=[
+ {title:'只读来源与局部视图',description:'默认节点共享甲，CheckB.Query 使用乙；外部不能替换 Job。private set 的类内部替换仍不改变本次固定引用。',steps:['override','prepareA','start','externalReplace','update','internalReplace'],code:`class FlowContext {
+  public JobData Job { get; init; } // 或 public get / private set
+  public JobData OtherJob { get; init; }
+  public static void Configure(Bindings<FlowContext> b) {
+    b.DefaultSource(x => x.Job);
+    b.Node<IQueryContext>("CheckB.Query", x => x.OtherJob);
+  }
+}
+var a = engineA.Prepare(new FlowContext { Job = jobA, OtherJob = jobB });
+Start(a);
+// 外部 a 的业务聚合 Job 不可重新赋值；Job.Tasks 可以由业务修改。
+// 装配拒绝来源属性的普通 public set。Node 仍只依赖自己的局部接口。`},
+ {title:'传递共享与同时就绪',description:'A 与 B、B 与 C 连接，形成共同共享范围。统一启动时，三个执行都已能接收第一条事件；每条事件只投递一次。',steps:['prepareA','prepareB','prepareC','connectAB','connectBC','start','emitA'],code:`// 流程图在此前已经构建完成。
+var a = engineA.Prepare(inputA);
+var b = engineB.Prepare(inputB);
+var c = engineC.Prepare(inputC);
+Connect(a, b); // void，双向共享全部业务事件
+Connect(b, c); // 传递共享；A 的事件也到达 C
+Start(a, b, c); // 先接收端全部就绪，再放行节点
+// 无 using / link，不是 ParallelNode；没有完成汇合。
+// 事件身份与启动失败语义尚待决策，本页只展示成功路径。`},
+ {title:'未连接仍隔离',description:'只连接 A 与 B，C 独立启动但不接收 A/B 的业务事件。同一符号 E 不意味着全局广播授权。',steps:['prepareA','prepareB','prepareC','connectAB','start','emitA'],code:`Connect(a, b);
+Start(a, b, c);
+// C 没有加入共享范围；它只接收自己的启动事件。
+// a、b、c 仍是独立执行，各自决定如何响应业务事件。`},
+ {title:'控制独立与旧连接失效',description:'停止 B 不停止 A。B 真正退出后，新执行不继承旧连接；A 的事件不转投新 B。重新连接需要新一轮准备，本页不演示运行中改拓扑。',steps:['prepareA','prepareB','connectAB','start','stopB','emitA','exitB','prepareB','start','emitA'],code:`Connect(a, b);
+Start(a, b);
+await b.StopAsync(); // 仅停止 B，并等待真正退出
+var nextB = engineB.Prepare(nextInputB);
+Start(nextB);
+// 旧连接不跟随 nextB；新的共享关系须显式建立。
+// 运行中的执行能否加入新的连接，由后续边界决策定义。`}
+];
+let model=initial(),selected=0,step=0;
+const esc=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fields=items=>'<dl>'+items.map(([k,v])=>'<dt>'+esc(k)+'</dt><dd>'+esc(v)+'</dd>').join('')+'</dl>';
+function render(){document.querySelector('#notice').textContent=model.note;document.querySelector('#state').innerHTML='<div><h3>业务对象与来源</h3>'+fields([['聚合 Job',model.job],['甲.Tasks',model.jobs['甲'].join('、')],['乙.Tasks',model.jobs['乙'].join('、')],['例外来源',model.override?'CheckB.Query → 乙':'无'],['连接（执行身份）',model.edges.map(e=>e.join(' ↔ ')).join('；')||'无']])+'</div>'+Object.entries(model.run).map(([k,r])=>'<div><h3>独立引擎 '+k+'</h3>'+fields(r?[['执行 / 阶段',r.id+' / '+r.phase],['接收端',r.ready?'就绪':'未就绪'],['本次业务事件接收数',r.received],['最后通知',r.last],...(r.binding?[['Query / Process',r.binding.query+' / '+r.binding.process],['CheckB.Query',r.binding.exception],['Process 读取 Tasks',model.jobs[r.binding.process].join('、')]]:[])]:[['执行','未准备']])+'</div>').join('');document.querySelector('#tabs').innerHTML=scenarios.map((s,i)=>'<button role="tab" aria-selected="'+(i===selected)+'" data-tab="'+i+'">'+esc(s.title)+'</button>').join('');const sc=scenarios[selected];document.querySelector('#description').textContent=sc.description;document.querySelector('#code').textContent=sc.code;document.querySelector('#steps').innerHTML=sc.steps.map((a,i)=>'<button data-step="'+i+'" '+(i!==step?'disabled':'class="primary"')+'>'+(i<step?'✓ ':String(i+1)+'. ')+esc(actions[a])+'</button>').join('')+(step===sc.steps.length?'<p>场景结束。这是行为示意，不是生产验收结果。</p>':'')}
+document.querySelector('#actions').innerHTML='<button data-reset="1">重置当前场景</button>'+Object.entries(actions).map(([k,v])=>'<button data-action="'+k+'">'+esc(v)+'</button>').join('');document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.tab!==undefined){selected=Number(b.dataset.tab);step=0;model=initial()}else if(b.dataset.reset){model=initial();step=0}else if(b.dataset.action){model=transition(model,b.dataset.action)}else if(b.dataset.step!==undefined){model=transition(model,scenarios[selected].steps[step]);step++}render()});render();
+</script></html>

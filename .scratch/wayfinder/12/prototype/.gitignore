@@ -1,0 +1,7 @@
+csharp/bin/
+csharp/obj/
+csharp/.dotnet-home/
+csharp/.dotnet/
+csharp/.cli-home/
+csharp/.packages/
+csharp/.nuget/
