@@ -40,7 +40,7 @@ public class StartupRetirementFacts
     private sealed class InitNode(Probe probe) : BaseFSMNode, IFSMNode, IFSMContextNode
     {
         Type? IFSMContextNode.ContextType => null;
-        FSMNodeContext IFSMNode.Context { get => context; set { probe.AssignContext(); context = value; } }
+        FSMExecutionControl IFSMNode.Control { get { probe.AssignContext(); return Control; } }
         public override void InitBeforeStart() => probe.Initialize(Control);
         protected override Task ExecuteAsync() { ++probe.Runs; return Task.CompletedTask; }
         protected override void Dispose(bool disposing) { if (disposing) probe.Disposed = true; base.Dispose(disposing); }
@@ -48,7 +48,7 @@ public class StartupRetirementFacts
 
     private sealed class TypedInitNode(Probe probe) : BaseFSMNode<DemoNodes.IQueryBusiness>, IFSMNode
     {
-        FSMNodeContext IFSMNode.Context { get => context; set { probe.AssignContext(); context = value; } }
+        FSMExecutionControl IFSMNode.Control { get { probe.AssignContext(); return Control; } }
         public override void InitBeforeStart() => probe.Initialize(Control);
         protected override Task ExecuteAsync() { ++probe.Runs; return Task.CompletedTask; }
         protected override void Dispose(bool disposing) { if (disposing) probe.Disposed = true; base.Dispose(disposing); }

@@ -64,7 +64,19 @@ _ = new FSMNodeContext<Business>();
 #if OLD_HANDLE
 ((FSMExecutor)null!).Handle(new FSMEvent("Done"));
 #endif
-Console.WriteLine("Typed source selections and initialization compile.");
+var engine = new FSMEngine(new PositiveFactory());
+engine.CreateNode("Read", "Read");
+engine.AttachEvent("Read", "Done", 1);
+using (var prepared = engine.BindContext<FlowInput>(b => b.Default<IView>(x => x.Init)).Prepare(input))
+using (var executor = await prepared.StartAsync("Read", "Done"))
+    await executor.Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
+var plain = new FSMEngine(new PositiveFactory());
+plain.CreateNode("Plain", "Start");
+plain.AttachEvent("Start", "Done", 1);
+using (var prepared = plain.Prepare())
+using (var executor = await prepared.StartAsync("Start", "Done"))
+    await executor.Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
+Console.WriteLine("Typed source selections, explicit aggregate execution and dependency-free preparation compile and run.");
 
 interface IView { string? Value { get; } }
 sealed class Business : IView { public string? Value => null; }
@@ -76,6 +88,16 @@ sealed class FlowInput
     public object Incompatible { get; } = new();
 }
 sealed class WrongInput { }
+sealed class PlainNode : BaseFSMNode
+{
+    protected override Task ExecuteAsync() { Control.CheckPause(); PublishEvent(1); return Task.CompletedTask; }
+}
+sealed class PositiveFactory : IFSMNodeFactory
+{
+    public IFSMNode CreateNode(string key) => key == "Read" ? new ReadNode() : new PlainNode();
+    public Type GetNodeType(string key) => key == "Read" ? typeof(ReadNode) : typeof(PlainNode);
+    public string GetNodeFeatureName(Type type) => type.Name;
+}
 sealed class ReadNode : BaseFSMNode<IView>
 {
     protected override Task ExecuteAsync()
@@ -83,6 +105,7 @@ sealed class ReadNode : BaseFSMNode<IView>
         _ = Context.Value;
         _ = Control.Token;
         _ = TriggerEvent;
+        PublishEvent(1);
         return Task.CompletedTask;
     }
 }

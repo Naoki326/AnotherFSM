@@ -7,9 +7,11 @@
 
 简体中文 | [English](./README.EN.md)
 
-### 类型化 Context（迁移中）
+### 类型化 Context 与具体执行
 
-新增核心用法见 [类型化局部 Context](docs/typed-context.md)：节点直接使用局部业务接口，聚合绑定在执行前固定，控制与触发分离。旧 Context/Data/Restart 示例是暂存迁移入口，不是新业务绑定用法。#19 已提供 Prepare 占用、具体执行句柄与真正退出保障；无轮次公共 Handle 投递明确拒绝。DSL/Fluent/Module、生成消费者、三种实际工厂及 API/Release WASM 宿主已接入，见 [C# 宿主配置](docs/consumer-host.md)。普通 start 拒绝未退出执行；只有显式导入允许等待退出后替换。共享/协调启动归 #20，过渡入口删除归 #22。
+节点直接读取局部业务 `Context`，控制与触发信息分别使用 `Control` / `TriggerEvent`。业务流程用 `engine.BindContext<TInput>().Prepare(input)`；整个引擎无业务依赖时直接 `engine.Prepare()`，不创建空业务对象。准备占用并固定引用，`StartAsync` 返回本轮执行器，以 `executor.Execution.Completion` 判断真正退出。
+
+旧 Context.Data/FSMNodeContext、公开执行器构造、四个 Restart 和无轮次 Handle 已删除，没有兼容包装或动态回退。完整用法见 [核心契约](docs/typed-context.md)、[C# 宿主配置](docs/consumer-host.md)、[共享与协调启动](docs/event-sharing.md)；[最终分层验收与父规格追溯](docs/implementation/22-final-acceptance.md)。普通 start 不抢占，显式 Import 等旧执行真退出后替换。
 
 ### Demo
 
@@ -80,7 +82,7 @@ just test-browser # API/真实 WASM 的浏览器合同及 UI 回归
 
 ### 简单使用教程（仅 StateMachine 项目）
 
-这里有一个简单的例子：[上手项目](https://github.com/Naoki326/AnoterFSM.Demo)
+仓库内目标 API 示例：[业务脚本](demos/BusinessContext.fsm)、[节点及聚合类](demos/DemoNodes/BusinessFlow.cs)、[宿主配置](docs/consumer-host.md)。仓库外的[早期上手项目](https://github.com/Naoki326/AnoterFSM.Demo)不作为当前契约指南。
 
 本工程设计的状态机，其运行基于两个重要类：FSMEngine、FSMExecutor
 
@@ -90,7 +92,7 @@ just test-browser # API/真实 WASM 的浏览器合同及 UI 回归
 
 - ***FSMExecutor***
 
-每个 FSMExecutor 实例管理一个执行状态机的对象，该对象对应一个状态机的执行线程，可以控制、监控状态机的执行
+每个 FSMExecutor 实例管理一个执行状态机的对象，由准备句柄启动后取得，可以控制、监控这一轮状态机执行；不要求独立物理线程
 
 - ***自定义节点***
 
@@ -226,7 +228,8 @@ var engine = FSMEngineBuilder.Create()
 | 函数 | 描述 |
 | --- | --- |
 | BindContext / Prepare / StartAsync | 业务流程：装配全引擎关系、显式输入并独占准备、启动取得具体 Execution |
-| FSMExecutor / RestartAsync | 暂存的无业务依赖入口；不能启动类型化业务节点，不能作为宿主普通 start 隐式抢占 |
+| engine.Prepare / StartAsync | 无业务依赖图：不需要聚合对象；同样遵守占用、接收与真退出屏障 |
+| Execution.Completion | 本轮节点返回和框架清理完成；退出后才能准备下一轮 |
 | PauseAsync | 暂停（等待当前执行节点正确暂停） |
 | Continue | 继续（从暂停位置恢复，同步方法） |
 | StopAsync | 停止（等待当前节点阻塞操作完成） |
@@ -242,7 +245,7 @@ var engine = FSMEngineBuilder.Create()
 | NodeExitChanged | 事件 | 节点退出事件 |
 | NodeExceptionEvent | 事件 | 节点抛出异常事件 |
 | TrackStateEvent | 事件 | 传递 IObservable 接口发出的所有事件 |
-| TrackCallEvent | 事件 | 流程控制方法调用时发出（RestartAsync、PauseAsync、Continue、StopAsync） |
+| TrackCallEvent | 事件 | 流程控制方法调用时发出（PauseAsync、Continue、StopAsync） |
 
 #### 4. 节点基类
 
@@ -251,7 +254,7 @@ var engine = FSMEngineBuilder.Create()
 | 类 | 描述 |
 | --- | --- |
 | AbstractFSMNode | 节点的初始抽象类，继承该类的任意类型都可以作为节点使用 |
-| SimpleFSMNode | 最基础的节点类型，只需实现 ExecuteMethodAsync 方法 |
+| BaseFSMNode | 最基础的节点类型，实现 ExecuteAsync 方法 |
 | EnumFSMNode | 基于 C# yield 机制实现了局部暂停继续的节点，需实现 ExecuteEnumerable 返回 IEnumerable\<object\> |
 | AsyncEnumFSMNode | 同 EnumFSMNode，增加异步执行环境（IAsyncEnumerable\<object\>） |
 
@@ -295,7 +298,7 @@ var engine = FSMEngineBuilder.Create()
 
 `GroupNode` / `ParallelNode` 的非泛型、单泛型、双泛型类型以及专属描述、子执行器、钩子、控制联动和包装出口已删除，旧 C# 源码需迁移，不能继续编译。旧类型键（含 `GroupT`/`GroupTU`/`ParallelT`/`ParallelTU`）、`[StartNode->EndEvent];`（包括 Module 模板内）在装配/导入阶段明确报错。API/WASM 拒绝旧创建与 `updateGroupDefs` 请求；React 不再提供组合编辑入口。
 
-纯定义封装使用下文普通 Module 的 Input/Output 和真实 Branch；这不是等价迁移：父子生命周期、观察通知、暂停传播、Next/Cancel/Error 包装出口不会自动转换。Parallel 没有内置替代、ParallelModule 或隐含汇合，也不会静默串行化；独立并发由宿主组织不同 FSMEngine。核心新业务绑定与生命周期隔离见上述 #18/#19 指南；宿主迁移见 [#21 C# 配置指南](docs/consumer-host.md)；共享事件与协调启动由 #20 承接。
+纯定义封装使用下文普通 Module 的 Input/Output 和真实 Branch；这不是等价迁移：父子生命周期、观察通知、暂停传播、Next/Cancel/Error 包装出口不会自动转换。Parallel 没有内置替代、ParallelModule 或隐含汇合，也不会静默串行化；独立并发由宿主组织不同 FSMEngine。业务绑定与生命周期隔离见[核心指南](docs/typed-context.md)；宿主见 [C# 配置指南](docs/consumer-host.md)；独立引擎的显式共享与启动见[事件共享指南](docs/event-sharing.md)。共享业务资源仍由调用方持有、同步和释放，框架不复制、回滚或 Dispose。
 
 #### 7. 自定义 DSL 规则
 

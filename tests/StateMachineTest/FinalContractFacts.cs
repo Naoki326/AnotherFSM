@@ -21,6 +21,26 @@ public class FinalContractFacts
     }
 
     [Fact]
+    public async Task EnginePublishingIsNodeScopedNotAnAliasForTheCurrentExecution()
+    {
+        var engine = new FSMEngine(new Factory());
+        engine.CreateNode("Idle", "Start");
+        engine.AddEvent(new FSMEvent("Done"));
+        Action unscoped = () => engine.PublishEvent("Done");
+        Action unscopedPayload = () => engine.PublishEvent("Done", "payload");
+        for (var round = 0; round < 2; round++)
+        {
+            using var prepared = engine.Prepare();
+            unscoped.Should().Throw<FSMException>().WithMessage("*concrete execution handle*");
+            using var executor = await prepared.StartAsync("Start", "Done");
+            unscopedPayload.Should().Throw<FSMException>().WithMessage("*concrete execution handle*");
+            executor.Execution.Completion.IsCompleted.Should().BeFalse();
+            executor.Execution.PublishEvent("Done");
+            await executor.Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
+        }
+    }
+
+    [Fact]
     public void DependencyFreePreparationNeverTreatsMissingBusinessAsExemption()
     {
         var engine = new FSMEngine(new Factory());

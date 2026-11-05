@@ -143,18 +143,12 @@ namespace StateMachine
         internal virtual Type? BusinessContextType => null;
         internal virtual void BindBusinessContext(object? value) { }
 
-        protected FSMNodeContext context = new FSMNodeContext();
-        /// <summary>Transitional legacy control/Data entry; new nodes use Control and TriggerEvent.</summary>
-        public FSMNodeContext Context
-        {
-            get => context;
-            set { context = value; }
-        }
-
         /// <summary>Cancellation and pause, independent of business Context.</summary>
-        public FSMExecutionControl Control => context;
+        public FSMExecutionControl Control { get; } = new();
+        private FSMEvent? triggerEvent;
+        FSMEvent? IFSMNode.TriggerEvent { get => triggerEvent; set => triggerEvent = value; }
         /// <summary>The incoming business event; null at the start of a new execution.</summary>
-        public FSMEvent? TriggerEvent => context.TriggerEvent;
+        public FSMEvent? TriggerEvent => triggerEvent;
 
         private Action? raisePause;
         // 暂停针对一个具体的FSMExecute，所以需要用raisePause绑定到对应的FSMExecute
@@ -367,7 +361,7 @@ namespace StateMachine
     public abstract class AbstractFSMNode<T> : AbstractFSMNode, IFSMContextNode<T> where T : class
     {
         private T businessContext = default!;
-        public new T Context => businessContext;
+        public T Context => businessContext;
         internal override Type? BusinessContextType => typeof(T);
         internal override void BindBusinessContext(object? value)
         {

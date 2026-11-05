@@ -57,7 +57,6 @@ public class TypedExecutionFacts
         finally { executor.FSMStateChanged -= Changed; }
     }
 
-    public sealed class EmptyInput { }
     private sealed class PlainBase(List<string> observations) : BaseFSMNode
     {
         protected override Task ExecuteAsync()
@@ -113,7 +112,7 @@ public class TypedExecutionFacts
         engine.AttachEvent("Async", "Done", 1);
         engine.ConnectNode("ToEnum", "Base", "Enum");
         engine.ConnectNode("ToAsync", "Enum", "Async");
-        using var executor = await engine.BindContext<EmptyInput>().Prepare(new EmptyInput()).StartAsync("Base", "Done");
+        using var executor = await engine.Prepare().StartAsync("Base", "Done");
         await WaitForState(executor, FSMState.Paused);
         try { await executor.CurrentNodeTask; } catch (OperationCanceledException) { }
         executor.Continue().Should().BeTrue();

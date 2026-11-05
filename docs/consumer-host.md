@@ -1,6 +1,6 @@
-# C# 消费者与宿主配置（#21）
+# C# 消费者与宿主配置
 
-[English](consumer-host.EN.md) · [核心契约](typed-context.md) · [验收证据](implementation/21-consumer-host-migration.md)
+[English](consumer-host.EN.md) · [核心契约](typed-context.md) · [最终验收证据](implementation/22-final-acceptance.md)
 
 ## 脚本与聚合由宿主显式配对
 
@@ -39,7 +39,7 @@ var manager = new EngineManager(logger, factory, context: pairing);
 // 或 new RuntimeSession(factory, publishJson, context: pairing)
 ```
 
-这是 C# 配置，不是通用依赖容器：不扫描聚合类、不推断文件名、不按本次运行时子类猜来源。`Prepare` 每轮重新装配实际完整图，然后借用本次输入。API `Program.cs` 与 Browser `Program.cs` 明确安装相同的 `DemoBusinessHost.Create()`，为这个可编辑 Demo 工作区选定 `DemoBusinessInput`；编辑脚本不会改变聚合类型。没有配置的有依赖图在候选装配阶段拒绝。无依赖节点不创建空业务对象，走明确无依赖执行路径。
+这是 C# 配置，不是通用依赖容器：不扫描聚合类、不推断文件名、不按本次运行时子类猜来源。`Prepare` 每轮重新装配实际完整图，然后借用本次输入。API `Program.cs` 与 Browser `Program.cs` 明确安装相同的 `DemoBusinessHost.Create()`，为这个可编辑 Demo 工作区选定 `DemoBusinessInput`；编辑脚本不会改变聚合类型。没有配置的有依赖图在候选装配阶段拒绝。整个引擎无依赖时使用 `engine.Prepare()`，不创建空业务对象；有依赖却无来源不会落入该路径。
 
 `DemoBusinessHost` 每轮创建新的 Job；`Approval` 默认缺失，使用 `BusinessApproval` 的图在准备前明确失败，零节点运行。`ExecutionStatus.businessResult/businessRun` 只是固定、安全的 Demo 结果投影；业务实例和 CLR Type 不过 JSInterop。前端只有原有 start/end 参数，没有依赖配置面板、任意 JSON 或 CLR 名称。
 
@@ -60,10 +60,14 @@ var manager = new EngineManager(logger, factory, context: pairing);
 
 Release WASM 保留 AnotherFSM/DemoNodes/FSMDemo.Runtime 反射元数据，同时裁剪平台库；真实 Chrome 验证 getter、局部接口、DSL、DTO 和 JSInterop。WASM 初始化失败只明确重试，绝不回退 API；测试先在后端离线时执行并监控零 REST/SignalR 业务请求。
 
-## 生成消费者与暂存入口
+## 生成消费者与最终支持边界
 
 `BusinessModules.FSMScript` 是实际 AdditionalFile。生成类只持有 Engine 与节点/事件访问器；宿主显式 `generated.Engine.BindContext<DemoBusinessInput>()`。现有生成器无需修改，更没有新增业务绑定生成器。`tools/test-typed-context.sh` 包括错误生成消费者输入的真实 CS1503 证据。
 
-供 #22 收缩的暂存清单：`IFSMNode.Context`、非泛型基类旧 Context、`FSMNodeContext`/泛型包装及 Data/As、`FSMExecutor` 构造/四个 Restart 重载、无轮次 Handle/engine.PublishEvent 旧入口（已拒绝不安全外部投递）、旧名 `ReinitGroupNode`（实为所有 injectable 节点服务，不能按名称删除）。Runtime 和既有生成无依赖图仍使用无 Data 的构造/Restart 驱动；新业务图只用 BindContext/Prepare/Execution。FakeNode 的旧 Context 属性仅满足暂存 IFSMNode 接口，不传播业务。Demo/生成节点不再读 Context.Token/Data 或调用者强转。
+`IFSMNode.Context`、非泛型旧 Context、`FSMNodeContext`/泛型包装及 Data/As、公开 `FSMExecutor` 构造、四个 Restart 和无轮次 Handle 已删除，不提供改名兼容包装。业务图统一 BindContext/Prepare/Execution；Runtime、Demo、生成无依赖图及执行测试统一 `engine.Prepare()`。测试替身显式声明需求并分离 Control / TriggerEvent，不传播业务。
 
-#20 的共享/协调启动不属于本票；不新增共享 UI、WPF/WebView2、AOT、Worker 或多线程部署要求。宿主 .NET 回归不是浏览器证据；逐层结果见验收记录。
+保留 `ReinitGroupNode` 的普通 IFSMEngineInjectable 接线职责；保留仅限节点作用域的 `engine.PublishEvent`，外部调用明确拒绝，外部发布必须使用具体 Execution。它们不恢复运行时组合或当前执行别名。旧组合六种 C# 类型编译失败，DSL/模板/导入/旧宿主操作明确拒绝，不自动转换或串行化。
+
+普通 Module 仅展平定义；Group 的父子生命周期、包装出口和并行汇合并非等价迁移。独立并发及[共享/协调启动](event-sharing.md)由宿主显式组织不同引擎，业务资源始终由调用方持有、同步和释放。框架不复制、回滚或 Dispose。历史原型不是推荐生产入口。
+
+不新增共享 UI、WPF/WebView2、AOT、Worker 或多线程部署要求。宿主 .NET 回归不是浏览器证据；逐层结果见最终验收记录。

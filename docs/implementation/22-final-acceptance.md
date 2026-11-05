@@ -11,6 +11,8 @@
 
 原四个重启入口通过四个真实编译负例拒绝；原安全族迁到新公开路径：同引擎竞争、真退出前重绑拒绝/新输入、四种 Start 形状的初始化停止与异常、引用身份、私有初始化、恢复标记、旧句柄/迟到回调、旧队列及外引擎实例归属。API 的单个“Observe 后第一次 legacy Restart 前”专属场景随该入口删除，保留无依赖/类型化的 Observe→round 发布窗口与初始化取消屏障，并由编译负例证明旧入口不可复活（API 77→76）。
 
+3. 包装/传播收缩：以上 `OLD_CONTEXT unexpectedly compiled` 是本 slice 的真实红灯。删除 FSMNodeContext 两种形态、非泛型 Context 与沿转移整包覆盖，IFSMNode 控制/触发独立；AsyncEnum/Yield 不再依赖旧包装。保留只读泛型局部 Context。`03-wrapper-contract.log` 核心267/API76/宿主.NET36 全过；`03-removal-compiler-green.log` 的 12 项全部得到实际预期 CS1729/CS1061/CS0246。`03-positive-execution.log` 真实编译并执行类型化与无输入准备正例。引擎注入旧名称职责保留；节点作用域 engine.PublishEvent 不作为外部入口，新增公开回归验证准备期、运行期与新轮的外部调用明确拒绝。
+
 ## 最终验收状态
 
 实施中；最终分层命令、全部 AC 及父验收族追溯将在后续 slice 完成后记录。当前不宣称父规格完成。

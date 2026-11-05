@@ -57,18 +57,17 @@ public class ExecutionReviewFacts
         var b = Engine(("Borrowed", foreign));
         using var activeB = await b.Prepare().StartAsync("Borrowed", "Done");
         await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
-        var originalB = ((IFSMNode)foreign).Context;
-        var a = Engine(("Start", new Probe()));
-        var originalA = a.GetNode("Start").Context;
-        if (overload >= 2) a.CreateNode("Start", "Replacement");
+        var originalB = foreign.Control.Token;
+        var a = Engine(("Start", new Probe()), ("Replacement", new Probe()));
+        var originalA = a.GetNode("Start").Control.Token;
         IFSMNode replacement = overload < 2 ? a.GetNode("Start") : a.GetNode("Replacement");
         replacement.AddTransition(new FSMEvent("Go"), foreign);
         try
         {
             Func<Task> restart = () => Start(a, overload);
             await restart.Should().ThrowAsync<FSMException>().WithMessage("*Borrowed*owner*requested engine*");
-            ((IFSMNode)foreign).Context.Should().BeSameAs(originalB);
-            a.GetNode("Start").Context.Should().BeSameAs(originalA);
+            foreign.Control.Token.Should().Be(originalB);
+            a.GetNode("Start").Control.Token.Should().Be(originalA);
             calls.Should().Be(1);
             activeB.Execution.Completion.IsCompleted.Should().BeFalse();
         }
@@ -93,11 +92,11 @@ public class ExecutionReviewFacts
         IFSMNode root = engine.GetNode("Start");
         IFSMNode required = new RequiresBusiness { Name = "Required" };
         root.AddTransition(new FSMEvent("Go"), required);
-        var original = required.Context;
+        var original = required.Control.Token;
         Func<Task> restart = () => Start(engine, overload);
         await restart.Should().ThrowAsync<FSMException>().WithMessage("*Required*owner*");
         visits.Should().Be(0);
-        required.Context.Should().BeSameAs(original);
+        required.Control.Token.Should().Be(original);
     }
 
     [Theory]
@@ -318,7 +317,7 @@ public class ExecutionReviewFacts
         var flow = engine.BindContext<Input>("Start", "Done");
         using var first = await Task.Run(() => flow.Prepare(new Input()).StartAsync());
         await State(first, FSMState.Running);
-        var original = ((IFSMNode)node).Context;
+        var original = node.Control.Token;
         var stopping = Task.Run(first.Execution.Stop);
         await node.Held.Task.WaitAsync(TimeSpan.FromSeconds(5));
         try
@@ -327,7 +326,7 @@ public class ExecutionReviewFacts
             (await Task.Run(first.Execution.Continue).WaitAsync(TimeSpan.FromSeconds(5))).Should().BeFalse();
             Func<Task> competing = () => Task.Run(() => flow.Prepare(new Input())).WaitAsync(TimeSpan.FromSeconds(5));
             await competing.Should().ThrowAsync<FSMException>();
-            ((IFSMNode)node).Context.Should().BeSameAs(original);
+            node.Control.Token.Should().Be(original);
         }
         finally { node.Return.Set(); await stopping.WaitAsync(TimeSpan.FromSeconds(5)); }
         if (fail)

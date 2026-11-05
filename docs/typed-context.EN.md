@@ -1,8 +1,8 @@
-# Typed local Context and execution lifecycle (#18 / #19)
+# Typed local Context and execution lifecycle
 
 [简体中文](typed-context.md)
 
-This is the new core C# entry point, not the final context-decoupling release. #21 connects real DSL/Fluent/Module/generated consumers, all three factories and API/WASM hosts to this entry point; see [host configuration](consumer-host.EN.md). #19 owns execution occupancy, true exit and round isolation; #20 owns event sharing/coordinated start; #22 removes transitional entries.
+This is the final production contract, shared by DSL/Fluent/Module/generated consumers, all three factories and API/WASM. See [host configuration](consumer-host.EN.md), [business event sharing](event-sharing.EN.md), and [layered acceptance/parent traceability](implementation/22-final-acceptance.md). Historical prototypes are discussion evidence, not production API guides.
 
 ## Nodes depend only on local business interfaces
 
@@ -64,7 +64,7 @@ With one compatible direct property, omit Configure: `engine.BindContext<SingleI
 
 A successful `FSMContextPreparation` exclusively owns the engine. Conflicting preparation/start throws `FSMException` immediately, without evaluating the conflicting input's sources, rebinding or implicitly stopping the previous execution. Failed preparation releases its temporary reservation. Explicitly `Dispose()` an abandoned, unstarted preparation. A preparation starts only once; a released one cannot start again. A duplicate start on the same preparation rejects immediately even while the first start is blocked in user InitBeforeStart; it does not wait for initialization. After startup, disposing the preparation does not replace the exit barrier.
 
-For sequential reuse, await the previous exit and explicitly call `flow.Prepare(nextInput)`. Reusing the same business object is allowed only by supplying it again; residual bindings are never implicit input. Legacy `RestartAsync`/`Data` cannot start business-dependent nodes or restart a typed execution. Re-run BindContext after changing the engine's node set.
+For sequential reuse, await the previous exit and explicitly call `flow.Prepare(nextInput)`. Reusing the same business object is allowed only by supplying it again; residual bindings are never implicit input. Public legacy constructors, all four `RestartAsync` entries and `FSMNodeContext`/Data wrappers are deleted: old source fails compilation, without compatibility entries. Re-run BindContext after changing the engine's node set.
 
 ## Concrete executions, isolation and true exit
 
@@ -77,16 +77,16 @@ await execution.Completion;                   // borrowed resources may now be r
 // Alternatively await execution.StopAsync(); // request and await true exit
 ```
 
-- `FSMExecution` is the stable round-specific handle: `PublishEvent`, `Pause/PauseAsync`, `Continue`, `Stop/StopAsync`, and `Completion`. Active operations on stale handles throw `FSMException`; internal late notifications are safely ignored. Do not substitute a mutable current-execution alias for a concrete handle. The retained public FSMExecutor.Handle(FSMEvent) / IHandle<FSMEvent>.Handle has no round identity and always throws; do not save its delegate as a receiver. Save that round's executor.Execution and call its PublishEvent instead.
-- Node publications and pause requests automatically capture their round, without global broadcast. Independent engines really run concurrently; identical names, shared event objects and cloned EventIDs do not authorize cross-engine delivery. Legacy `engine.PublishEvent` is limited to that engine's node execution scope; external callers migrate to `execution.PublishEvent`. Core-node `IFSMNode.CreateNewAsync/RunAsync` also requires the owning executor's current invocation; it cannot directly bypass preparation ownership or reset a canceled token.
+- `FSMExecution` is the stable round-specific handle: `PublishEvent`, `Pause/PauseAsync`, `Continue`, `Stop/StopAsync`, and `Completion`. Active operations on stale handles throw `FSMException`; internal late notifications are safely ignored. Do not substitute a mutable current-execution alias for a concrete handle. Unscoped FSMExecutor.Handle and its IHandle implementation are deleted. Save that round's executor.Execution and call its PublishEvent.
+- Node publications and pause requests automatically capture their round, without global broadcast. Independent engines really run concurrently; identical names, shared event objects and cloned EventIDs do not authorize cross-engine delivery. `engine.PublishEvent` is limited to that engine's node execution scope; external callers migrate to `execution.PublishEvent`. Core-node `IFSMNode.CreateNewAsync/RunAsync` also requires the owning executor's current invocation; it cannot directly bypass preparation ownership or reset a canceled token.
 - Node types, Module definitions and explicit business objects may be reused; Node instances cannot belong to different engines. Ownership uses reference identity, not custom `Equals`, with node and existing/requested owner diagnostics. Business-object synchronization remains the business's responsibility.
 - While paused, both ordinary and business-end events queue until Continue. Business data and the original trigger remain intact; arbitrary code-stack resumption is not promised. Stopping/exited executions reject external business events. Continue after stopping returns failure; stale round handles throw.
 - `Paused`, `Finished`, and returning from `Stop()` or `Dispose()` do not prove exit. Completion awaits RunAsync return, node callbacks, framework iterator cleanup (including asynchronous finally blocks), and event unsubscription. FSMState remains unchanged; no Prepared state is added.
 - Cancellation callback failures are retained immediately in `executor.StopException`; `Completion` / `StopAsync` report them only after actual exit. Non-cooperative nodes, unfinished cleanup and caller wait timeouts keep ownership. Never rebind or dispose borrowed resources merely because a wait timed out.
-- All four retained restart overloads revalidate ownership and business requirements across the complete reachable graph, including descendants added after construction or reached from an alternate entry. Ownership/requirement failures do not rebind a foreign engine's Context. They await the old exit before initializing control/triggers (including resume flags), binding explicit Data, and starting. No-Data overloads never inherit old Data. `FSMExecutor` is a transitional driver: reacquire its `Execution` after restart; saved `FSMExecution` handles never follow. Typed executions use explicit stop/wait followed by a fresh Prepare.
+- All flows start through Prepare: business flows provide this round's explicit input; wholly dependency-free engines use the input-free path below. There is no executor restart or implicit source reuse. Stop/await true exit, then prepare another round. Whole-graph ownership is rechecked before startup; failure preserves foreign bindings and control.
 - Initialize private node state through `InitBeforeStart` each round. The framework does not reflectively clear fields, roll back business mutations, or dispose caller objects. Business tasks detached from node lifetime gain no automatic reclamation guarantee.
 
-Host ordinary start rejects unexited executions; explicit Import validates the candidate and awaits old exit. See [#21 host configuration](consumer-host.EN.md). Shared sets/coordinated startup belong to #20; transitional entry removal belongs to #22.
+Host ordinary start rejects unexited executions; explicit Import validates the candidate and awaits old exit. See [host configuration](consumer-host.EN.md). Initialization/cancellation callbacks remain inside the true exit barrier. Hosts request cancellation outside their lock before awaiting startup and exit.
 
 ## Rules and failure stages
 
@@ -105,8 +105,16 @@ Use `Control.Token` / `Control.CheckPause()` for cancellation/pause and `Trigger
 
 Loops and pause/continue do not clear business objects. The framework does not copy, roll back or Dispose caller-owned resources. Callers hold/release them; nodes clean up their own temporary resources. Initialize private per-execution state explicitly through contracts such as `InitBeforeStart`; no reflective field clearing. Cross-execution accumulation must be explicitly caller-owned.
 
-## Transitional entries and evidence
+## Dependency-free execution and old-source rejection
 
-`IFSMNode.Context`, the non-generic base's legacy `Context`, `FSMNodeContext[<T>]` and old `FSMExecutor` constructors/RestartAsync remain temporarily; constructors/no-Data Restart still drive explicitly dependency-free flows. Demo/generated control code uses Control; business flows use BindContext/Prepare. The new path never reads legacy Data. These are not final compatibility promises; old samples are not the typed business Context API.
+```csharp
+using var prepared = engine.Prepare(); // Entire engine explicitly dependency-free; no empty input
+using var executor = await prepared.StartAsync("Start", "Done");
+await executor.Execution.Completion;
+```
 
-Real execution/assembly tests: `tests/StateMachineTest/TypedContextFacts.cs`, `TypedExecutionFacts.cs`, `ExecutionLifecycleFacts.cs`; affected editor regressions are in `tests/FSMDemoWasmTest/RuntimeSessionFacts.cs`. Real compiler positive/negative cases: `bash tools/test-typed-context.sh`. Red/green evidence and scope: [#18 historical acceptance record](https://github.com/Naoki326/AnotherFSM/blob/0d80339f91b1063649d5880980bd04374ec1d097/.scratch/ticket-18/implementation.md). Host .NET regressions are not real Release WASM acceptance.
+This uses the same ownership, receiver barrier, pause, cleanup and round isolation. Any necessary business dependency rejects this path and requires BindContext plus explicit input. IFSMNode provides independent Control / TriggerEvent, not business wrappers or whole-object propagation. Generic nodes retain getter-only local Context : T.
+
+`bash tools/test-final-contract.sh` verifies real compiler rejection of wrappers, constructors, all four restarts and unscoped Handle. `bash tools/test-removed-composition.sh` rejects all six composition forms. Retained ReinitGroupNode only injects ordinary engines; engine.PublishEvent only works inside the owning node scope, never as an external execution entry.
+
+Real execution/assembly tests: `tests/StateMachineTest/TypedContextFacts.cs`, `TypedExecutionFacts.cs`, `ExecutionLifecycleFacts.cs`; affected editor regressions are in `tests/FSMDemoWasmTest/RuntimeSessionFacts.cs`. Real compiler positive/negative cases: `bash tools/test-typed-context.sh`. Final commands, red/green logs, generated consumers and API/real Release WASM results: [final acceptance](implementation/22-final-acceptance.md). The [early #18 record](https://github.com/Naoki326/AnotherFSM/blob/0d80339f91b1063649d5880980bd04374ec1d097/.scratch/ticket-18/implementation.md) describes its historical stage only. Host .NET regressions are not real Release WASM acceptance.

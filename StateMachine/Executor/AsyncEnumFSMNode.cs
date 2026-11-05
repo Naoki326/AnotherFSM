@@ -74,7 +74,7 @@ namespace StateMachine
                     HandleException(e);
                     throw e;
                 }
-                context.CheckPause();
+                Control.CheckPause();
             }
         }
 
@@ -167,7 +167,7 @@ namespace StateMachine
                     HandleException(e);
                     throw e;
                 }
-                context.CheckPause();
+                Control.CheckPause();
             }
         }
 

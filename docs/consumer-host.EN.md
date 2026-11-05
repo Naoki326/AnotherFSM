@@ -1,6 +1,6 @@
-# C# consumers and host configuration (#21)
+# C# consumers and host configuration
 
-[中文](consumer-host.md) · [Core contract](typed-context.EN.md) · [Evidence](implementation/21-consumer-host-migration.md)
+[中文](consumer-host.md) · [Core contract](typed-context.EN.md) · [Final evidence](implementation/22-final-acceptance.md)
 
 ## Explicit script/aggregate pairing
 
@@ -38,7 +38,7 @@ var manager = new EngineManager(logger, factory, context: pairing);
 // Or new RuntimeSession(factory, publishJson, context: pairing)
 ```
 
-This is not a dependency container. It does not discover aggregate classes, infer filenames or inspect this run's subtypes. Each start reassembles the complete actual graph and borrows this run's input. API and Browser `Program.cs` explicitly install the same `DemoBusinessHost.Create()`, selecting `DemoBusinessInput` for their editable demo workspace. Editing the script cannot change the aggregate type. A dependent graph without a host pairing fails candidate assembly. Dependency-free nodes do not manufacture empty business objects.
+This is not a dependency container. It does not discover aggregate classes, infer filenames or inspect this run's subtypes. Each start reassembles the complete actual graph and borrows this run's input. API and Browser `Program.cs` explicitly install the same `DemoBusinessHost.Create()`, selecting `DemoBusinessInput` for their editable demo workspace. Editing the script cannot change the aggregate type. A dependent graph without a host pairing fails candidate assembly. Wholly dependency-free engines use `engine.Prepare()` without empty business objects; missing necessary sources cannot fall back to this path.
 
 The demo host creates a new Job per execution. Its optional Approval service is deliberately absent: a `BusinessApproval` node fails preparation before any node runs. `ExecutionStatus.businessResult/businessRun` is a fixed, safe demo projection, not a business-object payload. CLR types and mutable business instances never cross JSInterop. Frontend start/end parameters stay unchanged; there is no arbitrary JSON/CLR dependency configuration panel.
 
@@ -59,10 +59,14 @@ All three use the same core whole-engine validator. Diagnostics retain actual qu
 
 Release WASM roots reflection metadata in AnotherFSM/DemoNodes/FSMDemo.Runtime while trimming platform libraries. Real Chrome verifies getters, local interfaces, DSL, DTOs and JSInterop. Initialization failure offers explicit retry, never API fallback. Browser verification runs WASM first with the API offline and asserts zero REST/SignalR business requests.
 
-## Generated consumers and retained entries
+## Generated consumers and final support boundaries
 
 `BusinessModules.FSMScript` is a real AdditionalFile. Its generated class supplies Engine and accessors only; the host explicitly calls `generated.Engine.BindContext<DemoBusinessInput>()`. No generator change or new business-binding generator is needed. `tools/test-typed-context.sh` includes a real CS1503 negative compilation for a generated consumer's wrong aggregate input.
 
-Retained for #22: `IFSMNode.Context`, non-generic legacy Context, `FSMNodeContext`/generic wrappers and Data/As, `FSMExecutor` constructors/four Restart overloads, unscoped Handle/engine.PublishEvent (unsafe external delivery already rejected), and the old `ReinitGroupNode` name (still serves every injectable node, not runtime composition). Runtime and existing dependency-free generated flows retain the no-Data constructor/Restart driver. Business flows use BindContext/Prepare/Execution only. FakeNode's legacy Context property only satisfies the transitional interface; it does not propagate business data. Demo/generated nodes no longer read Context.Token/Data or use caller casts.
+`IFSMNode.Context`, non-generic legacy Context, `FSMNodeContext`/generic wrappers and Data/As, public executor constructors, all four Restart overloads and unscoped Handle are deleted, without renamed compatibility wrappers. Business graphs use BindContext/Prepare/Execution. Runtime, Demo, generated dependency-free graphs and execution tests use `engine.Prepare()`. Test doubles explicitly declare requirements and separate Control / TriggerEvent without business propagation.
 
-#20 sharing/coordinated startup is separate. This ticket adds no sharing UI, WPF/WebView2, AOT, Worker or multithreaded deployment requirement. Host .NET regression is never browser evidence; see the per-layer verification record.
+Retained `ReinitGroupNode` serves ordinary IFSMEngineInjectable wiring. Retained `engine.PublishEvent` is node-scoped, explicitly rejecting external calls; external publication requires a concrete Execution. Neither restores runtime composition or a current-execution alias. All six old composition types fail compilation; DSL/templates/imports/old host operations reject explicitly, without automatic conversion or serialization into sequential execution.
+
+Ordinary Modules only flatten definitions. Group child lifecycles, wrapper exits and parallel joins are not equivalent migrations. Hosts explicitly organize separate engines and [sharing/coordinated startup](event-sharing.EN.md). Callers retain business-resource ownership, synchronization and disposal; the framework does not copy, roll back or Dispose them. Historical prototypes are not recommended production entries.
+
+No sharing UI, WPF/WebView2, AOT, Worker or multithreaded deployment requirement is added. Host .NET regression is never browser evidence; see final per-layer acceptance.

@@ -7,9 +7,11 @@
 
 [简体中文](./README.md) | English
 
-### Typed Context (migration in progress)
+### Typed Context and concrete executions
 
-See [Typed local Context](docs/typed-context.EN.md) for the new core API: local business interfaces, aggregate bindings fixed before execution, separate control and triggers. Legacy Context/Data/Restart examples are transitional, not the new business binding API. #19 provides Prepare ownership, concrete execution handles and true exit barriers; unscoped public Handle delivery is explicitly rejected. DSL/Fluent/Module, generated consumers, all three production factories and API/Release WASM hosts are connected: see [C# host configuration](docs/consumer-host.EN.md). Ordinary start rejects unexited executions; only explicit import permits replacement after exit. Sharing/coordinated startup belongs to #20; transitional entry removal belongs to #22.
+Nodes read local business `Context`, with separate `Control` / `TriggerEvent`. Business flows use `engine.BindContext<TInput>().Prepare(input)`; wholly dependency-free engines use `engine.Prepare()`, without empty business objects. Preparation reserves the engine and fixes references. `StartAsync` returns this round's executor; await `executor.Execution.Completion` for true exit.
+
+Legacy Context.Data/FSMNodeContext, public executor constructors, all four Restart entries and unscoped Handle are removed, without compatibility wrappers or dynamic fallback. See [core contracts](docs/typed-context.EN.md), [C# hosts](docs/consumer-host.EN.md), [sharing/coordinated startup](docs/event-sharing.EN.md), and [final layered acceptance and parent traceability](docs/implementation/22-final-acceptance.md). Ordinary start never preempts; explicit Import waits for true exit before replacement.
 
 ### Demo
 
@@ -80,7 +82,7 @@ Prerequisites: .NET 10 SDK, Node.js 22.18+ (or 24+), npm, and a JDK for ANTLR ge
 
 ### Simple Usage Tutorial (StateMachine project only)
 
-Here's a simple project: [Getting Started](https://github.com/Naoki326/AnoterFSM.Demo)
+Current in-repository examples: [business script](demos/BusinessContext.fsm), [nodes/aggregate](demos/DemoNodes/BusinessFlow.cs), and [host configuration](docs/consumer-host.EN.md). The external [early getting-started project](https://github.com/Naoki326/AnoterFSM.Demo) is not a current contract guide.
 
 The state machine designed by this project is based on two crucial classes: FSMEngine and FSMExecutor.
 
@@ -90,7 +92,7 @@ This type is responsible for holding an overall state diagram structure. One FSM
 
 - ***FSMExecutor***
 
-Each FSMExecutor instance manages an object that executes the state machine, corresponding to an execution thread of a state machine, capable of controlling and monitoring its execution.
+Obtain an FSMExecutor by starting a preparation. It controls and monitors one execution round, without requiring a dedicated physical thread.
 
 - ***Custom Nodes***
 
@@ -226,7 +228,8 @@ Every FSMExecutor instance manages a state machine execution object that can con
 | Functions | Description |
 | --- | --- |
 | BindContext / Prepare / StartAsync | Business flows: validate the entire graph, exclusively prepare explicit input, start a concrete Execution |
-| FSMExecutor / RestartAsync | Transitional dependency-free entry; cannot start typed business nodes or authorize implicit host start replacement |
+| engine.Prepare / StartAsync | Dependency-free graph, without aggregate objects; same ownership, receiver and true-exit barriers |
+| Execution.Completion | Node return and framework cleanup; await before preparing the next round |
 | PauseAsync | Pauses (waits for current node to properly pause) |
 | Continue | Continues from paused position (synchronous) |
 | StopAsync | Stops (waits for blocking operations in current node) |
@@ -251,7 +254,7 @@ Custom node classes need to inherit from node base classes to execute correspond
 | Class | Description |
 | --- | --- |
 | AbstractFSMNode | Initial abstract class; any type inheriting this can be used as a node |
-| SimpleFSMNode | Most basic node type; only needs ExecuteMethodAsync implemented |
+| BaseFSMNode | Most basic node type; implement ExecuteAsync |
 | EnumFSMNode | Node based on C# yield mechanism for local pause/continuation |
 | AsyncEnumFSMNode | Like EnumFSMNode with async execution (IAsyncEnumerable) |
 
@@ -295,7 +298,7 @@ Used in EnumFSMNode and AsyncEnumFSMNode to insert pause checkpoints with `yield
 
 The non-generic, one-parameter and two-parameter `GroupNode` / `ParallelNode` types, dedicated descriptors, child executors, hooks, control propagation and wrapper exits have been removed. Old C# consumers must migrate and no longer compile. Legacy type keys (including `GroupT`/`GroupTU`/`ParallelT`/`ParallelTU`) and `[StartNode->EndEvent];` fail at assembly/import, including inside Module templates. API/WASM reject legacy creation and `updateGroupDefs` requests; React no longer offers composition editing.
 
-For definition reuse, use ordinary Module Input/Output and real Branch publishers as shown below. Migration is **not equivalent**: child lifecycles, observer notifications, pause propagation and Next/Cancel/Error wrapper exits are not automatically translated. There is no built-in parallel replacement, ParallelModule, implicit join or silent sequential fallback; hosts organize concurrency with separate FSMEngine instances. See the #18/#19 guide above for core business binding and execution isolation; host migration is documented in the [#21 C# configuration guide](docs/consumer-host.EN.md); event sharing and coordinated startup belong to #20.
+For definition reuse, use ordinary Module Input/Output and real Branch publishers as shown below. Migration is **not equivalent**: child lifecycles, observer notifications, pause propagation and Next/Cancel/Error wrapper exits are not automatically translated. There is no built-in parallel replacement, ParallelModule, implicit join or silent sequential fallback; hosts organize concurrency with separate FSMEngine instances. See [core contracts](docs/typed-context.EN.md), [C# host configuration](docs/consumer-host.EN.md), and [explicit sharing/coordinated startup](docs/event-sharing.EN.md). Callers still own, synchronize and release shared business resources; the framework does not copy, roll back or Dispose them.
 
 #### 7. Custom DSL Rules
 
