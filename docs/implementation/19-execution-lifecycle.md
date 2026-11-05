@@ -88,3 +88,27 @@ API 首次与宿主并行构建时竞争同一 analyzer nupkg，出现文件占�
 | Standards | 文档硬违规 0、基线 smell 0；另发现取消回调 inline 提前完成/释放，1 个 P1 | 原 P1 闭合，补丁新增实际缺陷 **0**，推测 **0**；独立运行 ExecutionReviewFacts **31/31** |
 
 主代理已逐条对照补丁复核：初始化前发布本轮完成任务，初始化在锁外且返回后不清除停止；初始化异常走本轮清理；取消前登记屏障，回调/错误采集完成后再提交 Completion 与释放；具体句柄停止及 Dispose 不额外持控制锁执行取消。所有本票已知发现均有处置，没有已知未满足的 #19 AC；这不代表 #20–#22 或父规格已完成。
+
+## 整分支 final review 补修：非起始节点初始化取消目标（#19）
+
+以上“无已知未满足”的结论是当时验证的历史事实，不覆盖本节新增反例。整分支 Standards 审查发现：`InitNodes` 初始化完整 `executionNodes`，但 `currentNode` 此时一直是起点；`RequestStop` 因而取消起点，而非正在协作等待自身 `Control.Token` 的 Next。主代理亲读公开复现并亲自运行得到 `start canceled=True; initializing Next canceled=False; Stop completed=False; engine occupied=True`，只有手工放行初始化才退出。该缺口属于本票的初始化取消/真正退出责任，主代理已重开 #19，并在 #22 留痕，不作为 #22 的新功能。随后 Spec 全父规格审查的 0 发现不抵消此已复现 P1。
+
+- 实施基线：`4f78933db1d6f6bfe5fc2a956347b9b79739a27b`（tree `68db688fb569f33fefbbe485058c489ff5eb276f`），唯一隔离 worktree 开工干净。
+- 修复提交：`9e228babeba30190ec9881c089ad0314c40a4276`，`fix(#19): cancel the active initializer before awaiting exit`。
+- 最小生产变更仅在 `StateMachine/Executor/FSMExecutor.cs`：在既有 `controlSync` 下发布/清除 `initializingNode`，Stop 捕获其 Control（没有初始化时仍使用 currentNode）；每次准入初始化前检查停止/结束。Stop 与切换使用同一把锁，所以要么取消已准入节点，要么拒绝后续初始化，不丢请求。不取消整组业务对象，不重建生命周期，不新增 FSMState，不恢复已删除 API。
+- `InitBeforeStart` 及取消回调仍在锁外；既有 inline 取消请求屏障、错误收集、真正退出与资源所有权保持。非协作初始化仍占用，协作初始化不再因取消错目标而互等。
+
+### 本次公开接缝回归与真实红绿
+
+| 接缝 / 场景 | 当前证据 |
+| --- | --- |
+| Prepare/Start/具体执行句柄：业务及无业务、可达 Next 及起点后不可达 Next、Stop/Dispose | `ExecutionReviewFacts.StopCancelsTheNonStartInitializerAndDoesNotReleaseLaterNodes`，8 例；初始化收到取消后仍在可控返回屏障内保持占用，竞争准备拒绝、Continue 不恢复、零业务执行、后续初始化不准入、退出后可重新 Prepare；取消回调可从另一线程调用公共控制，验证不持 control 锁 |
+| 共享 Start | `SharedStartCancelsItsActiveInitializerAndStopBeforeAdmissionSkipsTheOtherInitializers`，4 例；不完整选择仍失败保 Prepare，再协调启动；所有接收句柄已发布后取消第一个引擎的 Next，不传播控制到另一个引擎；另一个引擎在初始化准入前停止，零初始化/业务执行，双方真正退出才释放 |
+| 公共宿主 Stop/Import/Dispose | API `RetirementCancelsInitializationBeforeWaitingForStartupAndTrueExit` 从 6 扩至 12 例，新增非起始 Next × 业务/无业务 × 三种退休操作；锁外取消先于等待 starting，返回屏障内保持占用/借用资源，普通 start 拒绝冲突 |
+| JSON 宿主（仅宿主 .NET） | `StartupRetirementSessionFacts.JsonRetirementCancelsInitializationAndWaitsForItsExit` 同样从 6 扩至 12；零 NodeActivated/业务执行，取消后等真实返回，不冒充浏览器交错证据 |
+| 停止早于初始化准入 | 原 2 例迁为 `RetirementBeforeRoundPublicationPreventsFutureInitialization`，保留公开节点 Control 访问屏障与宿主 starting 屏障；现在明确不再调用尚未准入的初始化，未删除该交错 |
+| 非协作初始化与 inline 取消 | 原 `StopDuringEveryPreparationStartShapeInitializationWaitsAndPreventsNodeExecution`、`CancellationCallbackMustReturnAndReportErrorsBeforeCompletionOrEngineReuse` 及共享接收失败族继续包含在全量门禁 |
+
+先写测试再改生产：`01-non-start-init-red.log` 为 8 失败，其中 4 个业务用例最初因 fixture 未提供聚合来源而失败，另 4 个为真实取消错目标；修正 fixture 后 `02-non-start-init-red.log` **8/8 均为目标节点未取消的真实失败**。最小补丁后 `03-non-start-init-green.log` **8/8 通过**。共享/宿主为随后补充的受影响回归，不伪称它们另外经历生产红灯。首次完整 Debug 回归 `04-solution-debug-first.log` 为核心 **279** / API **83** / 宿主 .NET **42** 全过。
+
+原始日志、逐命令退出码、编译器诊断及浏览器 JSON 外置于 `C:/work/anotherfsm-context-19/evidence-final-fixes/`，不依赖 ignored 目录作唯一报告。完整最终门禁及浏览器分层结果见 [#22 本次追加追溯](22-final-acceptance.md)。实施者不运行独立审查、不 push/关票/合主树，最终复核及重关票由主代理负责。

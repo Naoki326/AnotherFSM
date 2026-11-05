@@ -96,3 +96,46 @@
 - 本票分支：`pi-web-agent-19d29c0a-d3ac-4961-aa99-638f8dbaa3a1`；唯一worktree：`C:/Work/AnotherFSM-worktrees/pi-web-agent-19d29c0a-d3ac-4961-aa99-638f8dbaa3a1`。受测实现提交、完整最终SHA及最新集成核验见外置 `environment.txt` / `handoff.txt` / `final-integration-after.log`。最终报告提交只改本文，不改变已验收实现。
 - 日志、实际编译器诊断、JSON、浏览器测试产物（含存在的traces）、首次失败与核验脚本均在返回前保存至 `C:/work/anotherfsm-context-19/evidence-22/`；`tested-source-SHA256SUMS.txt`核对受测源文件，`SHA256SUMS.txt`核对外置证据，`CHECKSUM-VERIFIED.txt`保存实际校验结果。不依赖dirty或ignored文件作为唯一交付。
 - 已再次合并最新本地集成tip并对照远端tip（均63308a7），无冲突；最终干净提交后停止。未push、关票、合用户主树、清他人worktree、委派、调用模型CLI或自行执行独立审查。主代理仍统一负责整分支双轴审查/后续调度；本票不宣称该独立审查已经完成。
+
+## Final review #19 补修后的追溯与重新验收
+
+前文“未发现前票缺陷”“#17–#21 均已交付”“无已知未满足项”均保留为当时的历史结论，不覆盖本节补验事实。主代理在最终整分支 Standards 审查亲读并亲自运行公开反例，确认 **#19 初始化取消目标错误 P1**：完整方案中的非起始 Next 正在 `InitBeforeStart` 协作等待自身 Token，但 Stop 只取消起点；Stop/start 因而互等且引擎不退出。主代理已重开原票 #19 并评论 #22；修复责任及真实红绿见 [#19 追加记录](19-execution-lifecycle.md)。后来完成的独立 Spec 全父规格审查为缺失/范围蔓延/实现错误/推测均 0（其独立267/API77/宿主36通过），但它不抵消本 P1，也不代替修复后的回归。本节不是新一轮自行审查或 #22 新功能实施。
+
+### 责任与验收族补链
+
+| 父规格验收族 / 原票责任 | 本次补充证据 |
+| --- | --- |
+| 引擎/节点归属及退出；数据/控制/所有权 → #19 | `ExecutionReviewFacts.StopCancelsTheNonStartInitializerAndDoesNotReleaseLaterNodes` 8 例，业务/无业务、可达/不可达 Next、Stop/Dispose；实际初始化被取消、未返回仍占用、普通准备拒绝、停止不准入后续初始化，业务不运行；原非协作及 inline 取消屏障全族保留 |
+| 启动与共享；停止及旧轮次 → #19 基础、#20 受影响回归 | `SharedStartCancelsItsActiveInitializerAndStopBeforeAdmissionSkipsTheOtherInitializers` 4 例，失败保 Prepare、全接收先就绪、不共享控制、停止早于后一个引擎准入时零初始化；原 EventSharingFacts 30 例全量重跑 |
+| API/真实 WASM合同 → #19 缺陷、#21 宿主受影响回归、#22 分层门禁 | API 及 RuntimeSession 两个 Retirement 族各新增非起始 Next × 业务/无业务 × Stop/Import/Dispose 6 例；保留锁外先取消再等 starting 和真正退出，不恢复普通启动抢占。同步初始化交错是核心/API/宿主.NET证据；实际 Chrome ReleaseWASM/API仍单列，不称新浏览器初始化探针 |
+| 最终收缩与仓库闭合 → #22 | 未恢复旧 Context/构造/Restart/Handle，不新增 FSMState、不重做系统、不自动取消所有业务对象或 Dispose 借用资源；最终编译负例与所有消费者、前端、真实浏览器门禁重新执行 |
+
+受测修复提交 **`9e228babeba30190ec9881c089ad0314c40a4276`**（`fix(#19): cancel the active initializer before awaiting exit`）；基线为主代理指定的 `4f78933db1d6f6bfe5fc2a956347b9b79739a27b` / tree `68db688fb569f33fefbbe485058c489ff5eb276f`。实现仅改 `FSMExecutor.cs`：既有锁内发布/清除活动初始化节点并关闭停止后的准入，锁外执行初始化及取消，保留已有退出和 inline 取消请求屏障。
+
+原始证据目录固定为 **`C:/work/anotherfsm-context-19/evidence-final-fixes/`**，含 `01` 首次fixture失败、`02` 修正后8个目标红灯、`03` 8个绿灯、`04` 首次全量Debug、`run-gates.sh`、逐命令日志/退出文件、编译器原始诊断、TRX、浏览器日志/JSON。最早的4个业务fixture错误没有抹除；之后8个红灯均明确为实际初始化节点未取消。其余共享/宿主补充用例只作为受影响回归，不伪称另外取得生产红灯。
+
+### 本次最终门禁（全部真实重跑）
+
+`run-gates.sh` 是 Git Bash 后台测试脚本，不是代理；所有命令已结束并逐个保存退出码 **0**，`runner.exit=0`。JRE 与 npm shell 均按任务指定。以下日志均在上述外置目录；受测生产/测试源码为 `9e228ba`，其后只追加本票及 #19 的版本化记录。
+
+| 层级 / 命令 | 本次结果 | 日志 |
+| --- | --- | --- |
+| 完整Debug构建：`dotnet build AnotherFSM.sln --no-incremental --nologo -p:NuGetAudit=false` | 0错误 / 66警告 | `final-debug-build.log` |
+| 完整Debug测试：`dotnet test AnotherFSM.sln --no-build --no-restore --nologo` | 核心 **279** / API **83** / 宿主.NET **42**，0失败/跳过 | `final-debug-test.log` |
+| 完整Release构建：同build加 `-c Release` | 0错误 / 66警告 | `final-release-build.log` |
+| 完整Release测试：同test加 `-c Release` | 核心 **279** / API **83** / 宿主.NET **42**，0失败/跳过 | `final-release-test.log` |
+| 真实类型编译：`bash tools/test-typed-context.sh` | 正例执行、生成消费者与8负例通过 | `final-typed-compiler.log`、`typed-compiler/` |
+| 最终删除编译：`EVIDENCE_DIR=... bash tools/test-final-contract.sh` | 正例及12负例通过 | `final-removed-compiler.log`、`removed-compiler/` |
+| 旧组合编译：`bash tools/test-removed-composition.sh` | 正例及9负例通过；共 **29** 个真实编译负例 | `final-composition-compiler.log`、`composition-compiler/` |
+| 生成消费者：`dotnet run --project tests/FSMScriptAnalyzerTest/FSMScriptAnalyzerTest.csproj -p:NuGetAudit=false` | 编译、查询及真实Module流程成功 | `final-generated.log` |
+| 原共享族：`dotnet test tests/StateMachineTest/StateMachineTest.csproj --no-build --no-restore --nologo --filter FullyQualifiedName~EventSharingFacts` | **30/30** | `final-sharing.log` |
+| 前端：npm显式 `--script-shell='C:/Program Files/Git/bin/bash.exe'` 的 `ci --include=dev` / `test` / `run typecheck` / `run lint`，均指定前端prefix | 安装0、测试 **12/12**、typecheck/lint均0 | `final-npm-ci.log`、`final-frontend-{test,typecheck,lint}.log` |
+| Release发布：`RUNTIME_CONTRACT=true bash tools/build-browser.sh` | 真实Release WASM publish及React生产构建成功 | `final-browser-build.log` |
+| 真实Chrome：`PORT=5180 node tools/run-browser-tests.mjs` | **WASM12/12、API7/7**；两JSON均0 skipped/unexpected/flaky | `final-browser-runner.log`、`browser/{wasm,api}-results.json` |
+| 证据校验：`node .../verify-results.mjs`，`git diff --check` | 均0；读取全部门禁退出文件、两配置三层计数、真实浏览器JSON；实连确认5079/5180均closed | `final-results-verified.log`、`verified-summary.json`、`final-diff-check.log` |
+
+相比前文267/77/36，增加12/6/6个本缺陷回归；另2个既有“Stop早于round发布”用例收紧为不再准入初始化，没有删除该交错。焦点Release TRX另记录核心73/API26/宿主.NET12全部通过（`focal-regressions.log`、`focal-trx/`）。已有完整solution测试之外，该TRX保留具体场景名称供主代理复核。
+
+已知限制不变：非协作初始化/节点/取消回调不返回仍保持占用；不强制中断或Dispose业务资源。完整构建66个警告包含既有nullable/打包/成员警告和确定性同步回归的xUnit1031（本次新增1个）；npm ci报告18 vulnerabilities（11 moderate、7 high），未升级依赖或改lock。Release保留反射/Reactive/Autofac裁剪及React chunk警告，浏览器真实结果不意味着无警告；同步初始化交错仍明确是.NET证据，非浏览器阻塞探针。
+
+交付分支 `pi-web-agent-fffc95fc-a9c1-4ca2-ac5d-84418023c187`，唯一worktree `C:/Work/AnotherFSM-worktrees/pi-web-agent-fffc95fc-a9c1-4ca2-ac5d-84418023c187`。最终提交SHA、与最新集成tip的merge核验、干净状态及证据校验和保存在外置 `handoff.txt` / `final-integration.log` / `SHA256SUMS.txt`。主代理负责复核、重新关闭 #19 及父规格最终处置；实施者未push/关票/合主树、未另建worktree或运行自建/隐藏审查。
