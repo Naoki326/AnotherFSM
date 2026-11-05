@@ -94,7 +94,7 @@ public class RuntimeSessionFacts
     }
 
     [Fact]
-    public async Task StopCanCancelARestartWhileThePreviousExecutorIsRetiring()
+    public async Task DuplicateStartFailsWithoutChangingTheRunningExecution()
     {
         var events = System.Threading.Channels.Channel.CreateUnbounded<JsonElement>();
         await using var session = new RuntimeSession(new BrowserNodeFactory(), json =>
@@ -105,9 +105,11 @@ public class RuntimeSessionFacts
         await Value(session, "importScript", new { script = "def Wait(Idle) {1->Done;}" });
         await Value(session, "startExecution", new { startNodeName = "Wait", endEventName = "Done" });
         await Until(events.Reader, e => e.TryGetProperty("state", out var s) && s.GetString() == "Running");
-        var restarting = session.InvokeAsync("startExecution", "{\"startNodeName\":\"Wait\",\"endEventName\":\"Done\"}");
+        var before = (await Value(session, "getExecutionStatus")).ToString();
+        using var rejected = JsonDocument.Parse(await session.InvokeAsync("startExecution", "{\"startNodeName\":\"Wait\",\"endEventName\":\"Done\"}"));
+        rejected.RootElement.GetProperty("error").GetString().Should().Contain("unexited");
+        (await Value(session, "getExecutionStatus")).ToString().Should().Be(before);
         await Value(session, "stopExecution").WaitAsync(TimeSpan.FromSeconds(1));
-        await restarting.WaitAsync(TimeSpan.FromSeconds(1));
         (await Value(session, "getExecutionStatus")).GetProperty("state").GetString().Should().Be("Idle");
     }
 

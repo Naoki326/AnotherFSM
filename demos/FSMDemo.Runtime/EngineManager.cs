@@ -582,7 +582,8 @@ public partial class EngineManager : IAsyncDisposable
                 _logger.LogWarning("Start node '{NodeName}' not found", startNodeName);
                 return false;
             }
-            RetireExecution();
+            if (_startPending || !_retirement.IsCompleted || (_executor?.ExecutorTask is { IsCompleted: false }))
+                throw new FSMException("Engine has an unexited execution; conflicting start rejected. Stop and await exit first.");
             _startPending = true;
             version = _executionVersion;
             retirement = _retirement;
