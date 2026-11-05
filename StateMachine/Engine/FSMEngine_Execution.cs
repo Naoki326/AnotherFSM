@@ -50,6 +50,12 @@ namespace StateMachine
                 return nodeOwners.TryGetValue(node, out var owner) ? owner.Engine : null;
         }
 
+        /// <summary>Diagnostic snapshot only; Prepare/start still acquire ownership atomically.</summary>
+        public bool HasUnexitedExecution
+        {
+            get { lock (ExecutionSync) return executionOwner != null; }
+        }
+
         internal object ExecutionSync { get; } = new object();
         private object? executionOwner;
         private Func<string>? executionState;
