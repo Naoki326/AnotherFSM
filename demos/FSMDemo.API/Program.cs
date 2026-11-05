@@ -11,7 +11,9 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 builder.Services.AddSignalR();
 builder.Services.AddOpenApi();
 builder.Services.AddSingleton<IFSMNodeFactory, AssemblyScanningNodeFactory>();
-builder.Services.AddSingleton<EngineManager>();
+builder.Services.AddSingleton<EngineManager>(services => new EngineManager(
+    services.GetRequiredService<ILogger<EngineManager>>(), services.GetRequiredService<IFSMNodeFactory>(),
+    context: DemoBusinessHost.Create()));
 
 builder.Services.AddCors(options =>
 {

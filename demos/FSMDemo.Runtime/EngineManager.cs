@@ -17,6 +17,7 @@ public partial class EngineManager : IAsyncDisposable
     private readonly ILogger<EngineManager> _logger;
     private readonly IFSMNodeFactory _nodeFactory;
     private readonly bool _browser;
+    private readonly HostContext? _context;
     // Snapshot the expanded template edges, independently of in-progress template edits.
     private readonly HashSet<SavedConnection> _templateEdges = [];
 
@@ -26,8 +27,8 @@ public partial class EngineManager : IAsyncDisposable
     public ExecutionState CurrentState { get; private set; } = ExecutionState.Idle;
     public string? CurrentNodeName { get; private set; }
 
-    public EngineManager(ILogger<EngineManager> logger, IFSMNodeFactory nodeFactory, bool browser = false)
-        => (_logger, _nodeFactory, _browser) = (logger, nodeFactory, browser);
+    public EngineManager(ILogger<EngineManager> logger, IFSMNodeFactory nodeFactory, bool browser = false, HostContext? context = null)
+        => (_logger, _nodeFactory, _browser, _context) = (logger, nodeFactory, browser, context);
 
     // Keep expansion in the core DSL builder. This adapter only installs the resulting
     // flat objects, canonicalizing events already used by external transitions.
@@ -110,6 +111,7 @@ public partial class EngineManager : IAsyncDisposable
     {
         var candidate = new EditingEngine(_nodeFactory) { AllowExternalModuleFiles = !_browser };
         candidate.CreateStateMachine(script);
+        ValidateHostContext(candidate);
         lock (_executionSync)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
@@ -570,6 +572,14 @@ public partial class EngineManager : IAsyncDisposable
         return true;
     }
 
+    private void ValidateHostContext(FSMEngine engine)
+    {
+        if (_context != null) { _context.Validate(engine); return; }
+        foreach (var name in engine.GetNodeNames())
+            if (engine.GetNode(name) is not IFSMContextNode { ContextType: null })
+                throw new FSMException($"Node {name}, requirement {(engine.GetNode(name) as IFSMContextNode)?.ContextType}: C# host aggregate/source pairing is missing.");
+    }
+
     public async Task<bool> StartExecution(string startNodeName, string endEventName)
     {
         long version;
@@ -594,15 +604,33 @@ public partial class EngineManager : IAsyncDisposable
         lock (_executionSync)
         {
             if (_disposed || version != _executionVersion) return false;
-            if (!Engine.TryGetEvent(endEventName, out var endEvent)) endEvent = new FSMEvent(endEventName);
-            Engine.ReinitGroupNode();
-            _startPending = false;
-            _executor = executor = new FSMExecutor(Engine[startNodeName], ResolveExecutionEndEvents(endEvent));
-            executor.FSMStateChanged += OnFSMStateChanged;
-            executor.NodeStateChanged += OnNodeStateChanged;
-            executor.NodeExitChanged += OnNodeExitChanged;
-            // Restart schedules cooperative async work on the host context, not a worker thread.
-            started = executor.RestartAsync();
+            try
+            {
+                ValidateHostContext(Engine);
+                if (!Engine.TryGetEvent(endEventName, out var endEvent)) Engine.AddEvent(endEvent = new FSMEvent(endEventName));
+                Engine.ReinitGroupNode();
+                void Observe(FSMExecutor value)
+                {
+                    _executor = value;
+                    value.FSMStateChanged += OnFSMStateChanged;
+                    value.NodeStateChanged += OnNodeStateChanged;
+                    value.NodeExitChanged += OnNodeExitChanged;
+                }
+                var ends = ResolveExecutionEndEvents(endEvent);
+                if (_context != null && Engine.OfType<IFSMContextNode>().Any(node => node.ContextType != null))
+                {
+                    using var prepared = _context.Prepare(Engine);
+                    executor = prepared.StartAsync(startNodeName, ends.Select(e => e.EventName), Observe).GetAwaiter().GetResult();
+                    started = Task.FromResult(true);
+                }
+                else
+                {
+                    executor = new FSMExecutor(Engine[startNodeName], ends);
+                    Observe(executor);
+                    started = executor.RestartAsync();
+                }
+            }
+            finally { _startPending = false; }
         }
         var result = await started;
         lock (_executionSync) return result && ReferenceEquals(_executor, executor);
@@ -712,7 +740,8 @@ public partial class EngineManager : IAsyncDisposable
 
     public ExecutionStatus GetExecutionStatus()
     {
-        lock (_executionSync) return new() { State = CurrentState, CurrentNodeName = CurrentNodeName };
+        lock (_executionSync) return new() { State = CurrentState, CurrentNodeName = CurrentNodeName,
+            BusinessResult = _context?.BusinessResult, BusinessRun = _context?.BusinessRun };
     }
 
     private void OnFSMStateChanged(FSMExecutor executor, FSMState newState, FSMState oldState)

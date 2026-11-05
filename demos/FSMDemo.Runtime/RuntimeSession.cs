@@ -14,9 +14,9 @@ public sealed class RuntimeSession : IAsyncDisposable
     private readonly object _publishSync = new();
     private volatile bool _disposed;
 
-    public RuntimeSession(IFSMNodeFactory factory, Action<string> publish, bool browser = true)
+    public RuntimeSession(IFSMNodeFactory factory, Action<string> publish, bool browser = true, HostContext? context = null)
     {
-        _manager = new EngineManager(NullLogger<EngineManager>.Instance, factory, browser);
+        _manager = new EngineManager(NullLogger<EngineManager>.Instance, factory, browser, context);
         _publish = publish;
         _manager.StateChanged += (state, node) => Publish(new RuntimeEvent("StateChanged", state.ToString(), node));
         _manager.NodeActivated += node => Publish(new RuntimeEvent("NodeActivated", NodeName: node));
