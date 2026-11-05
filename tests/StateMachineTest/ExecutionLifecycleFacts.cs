@@ -671,6 +671,9 @@ public class ExecutionLifecycleFacts
         using var a = await GateEngine().BindContext<GateInput>("Start", "Done").Prepare(aInput).StartAsync();
         using var b = await GateEngine().BindContext<GateInput>("Start", "Done").Prepare(bInput).StartAsync();
         await Task.WhenAll(aInput.Gate.Entered.Task, bInput.Gate.Entered.Task).WaitAsync(TimeSpan.FromSeconds(5));
+        // Execute's synchronous prefix can signal Entered before the executor
+        // announces Running. Await both public state boundaries, not scheduler luck.
+        await Task.WhenAll(WaitForState(a, FSMState.Running), WaitForState(b, FSMState.Running));
         try
         {
             a.Execution.Pause();

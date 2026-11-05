@@ -13,6 +13,9 @@
 
 3. 包装/传播收缩：以上 `OLD_CONTEXT unexpectedly compiled` 是本 slice 的真实红灯。删除 FSMNodeContext 两种形态、非泛型 Context 与沿转移整包覆盖，IFSMNode 控制/触发独立；AsyncEnum/Yield 不再依赖旧包装。保留只读泛型局部 Context。`03-wrapper-contract.log` 核心267/API76/宿主.NET36 全过；`03-removal-compiler-green.log` 的 12 项全部得到实际预期 CS1729/CS1061/CS0246。`03-positive-execution.log` 真实编译并执行类型化与无输入准备正例。引擎注入旧名称职责保留；节点作用域 engine.PublishEvent 不作为外部入口，新增公开回归验证准备期、运行期与新轮的外部调用明确拒绝。
 
+4. 组合证据加固（首次即绿，不伪称新增生产红灯）：真实 DSL 两个 Module 实例在 Prepare 后类内换来源、固定来源成员更新、共享局部视图与限定节点覆盖，然后显式输入下一轮；`04-module-fixed.log` 1/1。真实生成消费者执行同一组合，保留访问器/普通 Module/相对 imports/Namespace，`04-generated-fixed.log` 成功。
+5. 首次最终 solution 真实失败保留于 `first-final-attempt/`：核心266过/1失败，API77/宿主.NET36过。隔离测试的 Entered 发生于节点同步前缀，未保证执行器已公告 Running，读到 Initialized。只补两个公开 Running 状态屏障，保留所有隔离断言，不改生产语义；`05-state-barrier-green.log` 该行为 1/1。
+
 ## 最终验收状态
 
 实施中；最终分层命令、全部 AC 及父验收族追溯将在后续 slice 完成后记录。当前不宣称父规格完成。
