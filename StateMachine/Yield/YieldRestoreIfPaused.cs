@@ -13,7 +13,7 @@ namespace StateMachine
 
         bool isRestore = false;
 
-        public FSMNodeContext Context { set; get; }
+        public FSMExecutionControl Control { set; get; }
 
         public IExecuterContext SolveContext { set { } }
 
@@ -24,7 +24,7 @@ namespace StateMachine
 
         public Task AfterYieldAsync()
         {
-            restoreRegistration = Context.Token.Register(ChangeRestore);
+            restoreRegistration = Control.Token.Register(ChangeRestore);
             return Task.CompletedTask;
         }
 

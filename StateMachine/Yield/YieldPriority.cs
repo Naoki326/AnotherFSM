@@ -11,7 +11,7 @@ namespace StateMachine
         public bool IsMoveNext => true;
 
         private HashSet<long> contextPauseAnchors;
-        public FSMNodeContext Context { set {  } }
+        public FSMExecutionControl Control { set { } }
 
         public IExecuterContext SolveContext { set { contextPauseAnchors = value.PauseAnchors; } }
 

@@ -4,9 +4,10 @@ using System.Reactive.Linq;
 namespace StateMachine
 {
 
-    //流程上下文
+    // Transitional legacy control/Data wrapper, retained until consumer migration (#21/#22).
+    // Not the business Context of the typed binding path.
     [DebuggerNonUserCode]
-    public partial class FSMNodeContext
+    public partial class FSMNodeContext : FSMExecutionControl
     {
         public FSMNodeContext()
         {
@@ -26,40 +27,6 @@ namespace StateMachine
         ~FSMNodeContext()
         {
         }
-
-        internal void SetTokenSource(CancellationTokenSource tokenSource)
-        {
-            TokenSource = tokenSource;
-            IsPaused = false;
-        }
-
-        internal void SetPause(bool pause)
-        {
-            IsPaused = pause;
-        }
-
-        public CancellationToken Token => TokenSource.Token;
-
-        //在写流程的时候要通过这些东西来实现暂停的功能
-        internal CancellationTokenSource TokenSource { get; private set; }
-
-        public void Pause()
-        {
-            TokenSource?.Cancel();
-            IsPaused = true;
-        }
-
-        public void CheckPause()
-        {
-            TokenSource.Token.ThrowIfCancellationRequested();
-        }
-
-        public bool IsPauseRequested()
-        {
-            return TokenSource.Token.IsCancellationRequested;
-        }
-
-        public bool IsPaused { get; private set; } = false;
 
         public FSMEvent TriggerEvent { get; set; } = default!;
 

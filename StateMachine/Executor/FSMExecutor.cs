@@ -248,9 +248,10 @@ namespace StateMachine
                                 if (currentNode.HasTransition(@event))
                                 {
                                     //这里是正常执行节点的分支
-                                    currentNode.Context.TriggerEvent = @event;
                                     IFSMNode nextNode = currentNode.TargetState(@event);
-                                    nextNode.Context = currentNode.Context;
+                                    if (!hasBoundContext)
+                                        nextNode.Context = currentNode.Context;
+                                    nextNode.Context.TriggerEvent = @event;
                                     SolverContext.LastNodeName = currentNode.Name;
                                     SolverContext.CurrentNodeName = nextNode.Name;
 
@@ -379,6 +380,21 @@ namespace StateMachine
             return true;
         }
 
+        private bool hasBoundContext;
+
+        internal async Task StartContextAsync(IFSMNode[] nodes, IReadOnlyList<(IFSMNode Node, object Value)> values, bool isLongRunning)
+        {
+            await StopAsync();
+            hasBoundContext = true;
+            foreach (var node in nodes) node.Context = new FSMNodeContext();
+            foreach (var binding in values) ((IFSMContextBindingTarget)binding.Node).BindContext(binding.Value);
+            foreach (var node in nodes) node.InitBeforeStart();
+            currentNode = start;
+            eventConsumer = Channel.CreateUnbounded<FSMEvent>();
+            State = FSMState.Initialized;
+            ExecutorTask = ConsumerTask(isLongRunning);
+        }
+
         private void InitNodes()
         {
             start.InitBeforeStart();
@@ -389,8 +405,15 @@ namespace StateMachine
         }
 
 
+        private void RejectBoundRestart()
+        {
+            if (hasBoundContext || this.Any(n => n is IFSMContextNode contextual && contextual.ContextType != null))
+                throw new FSMException("Typed execution requires a fresh flow.Prepare(input); legacy RestartAsync/Data cannot supply, reuse or replace its bindings.");
+        }
+
         public async Task<bool> RestartAsync(bool isLongRunning = false)
         {
+            RejectBoundRestart();
             TrackCallname();
             if (!await StopAsync())
             { return false; }
@@ -413,12 +436,14 @@ namespace StateMachine
 
         public async Task<bool> RestartAsync<T>(T data, bool isLongRunning = false) where T : class
         {
+            RejectBoundRestart();
             start.Context = new FSMNodeContext<T>() { Data = data };
             return await RestartAsync(isLongRunning);
         }
 
         public async Task<bool> RestartAsync(IFSMNode node, bool isLongRunning = false)
         {
+            RejectBoundRestart();
             TrackCallname();
             if (!await StopAsync())
             { return false; }
@@ -441,6 +466,7 @@ namespace StateMachine
 
         public async Task<bool> RestartAsync<T>(IFSMNode node, T data, bool isLongRunning = false) where T : class
         {
+            RejectBoundRestart();
             node.Context = new FSMNodeContext<T>() { Data = data };
             return await RestartAsync(node, isLongRunning);
         }

@@ -10,7 +10,7 @@ namespace StateMachine
 
         public bool IsMoveNext => true;
 
-        public FSMNodeContext Context { set { } }
+        public FSMExecutionControl Control { set { } }
 
         public IExecuterContext SolveContext { set { } }
 

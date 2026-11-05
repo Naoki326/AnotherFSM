@@ -7,6 +7,10 @@
 
 [简体中文](./README.md) | English
 
+### Typed Context (migration in progress)
+
+See [Typed local Context](docs/typed-context.EN.md) for the new core API: local business interfaces, aggregate bindings fixed before execution, separate control and triggers. Legacy Context/Data/Restart examples are transitional, not the new business binding API. #19–#22 complete lifecycle guarantees and host/generated-consumer migration.
+
 ### Demo
 
 [Control, modify, and execute the demo process](https://naoki326.github.io/AnotherFSM)

@@ -117,7 +117,7 @@ namespace StateMachine
         }
     }
 
-    public abstract partial class AbstractFSMNode : IFSMNode, IFSMEngineInjectable
+    public abstract partial class AbstractFSMNode : IFSMNode, IFSMEngineInjectable, IFSMContextNode, IFSMContextBindingTarget
     {
 
         void IFSMEngineInjectable.SetEngine(FSMEngine e)
@@ -138,12 +138,23 @@ namespace StateMachine
             branchDict.Remove(index);
         }
 
-        protected FSMNodeContext context = default!;
+        Type? IFSMContextNode.ContextType => BusinessContextType;
+        void IFSMContextBindingTarget.BindContext(object? value) => BindBusinessContext(value);
+        internal virtual Type? BusinessContextType => null;
+        internal virtual void BindBusinessContext(object? value) { }
+
+        protected FSMNodeContext context = new FSMNodeContext();
+        /// <summary>Transitional legacy control/Data entry; new nodes use Control and TriggerEvent.</summary>
         public FSMNodeContext Context
         {
             get => context;
             set { context = value; }
         }
+
+        /// <summary>Cancellation and pause, independent of business Context.</summary>
+        public FSMExecutionControl Control => context;
+        /// <summary>The incoming business event; null at the start of a new execution.</summary>
+        public FSMEvent? TriggerEvent => context.TriggerEvent;
 
         private Action? raisePause;
         // 暂停针对一个具体的FSMExecute，所以需要用raisePause绑定到对应的FSMExecute
@@ -191,8 +202,8 @@ namespace StateMachine
             waitCurrentTask = tcs.Task;
             try
             {
-                Context.SetTokenSource(new CancellationTokenSource());
-                Context.SetPause(false);
+                Control.SetTokenSource(new CancellationTokenSource());
+                Control.SetPause(false);
                 await ExecuteMethodAsync();
                 tcs.TrySetResult(true);
                 continueWith?.Invoke(this);
@@ -201,15 +212,13 @@ namespace StateMachine
             catch (OperationCanceledException)
             {
                 tcs.TrySetCanceled();
-                if (Context != null)
-                { Context.SetPause(true); }
+                Control.SetPause(true);
                 return false;
             }
             catch (Exception ex) when (ex.InnerException is OperationCanceledException)
             {
                 tcs.TrySetCanceled();
-                if (Context != null)
-                { Context.SetPause(true); }
+                Control.SetPause(true);
                 return false;
             }
             catch (Exception ex)
@@ -326,13 +335,14 @@ namespace StateMachine
 
 
     [DebuggerNonUserCode]
-    public abstract class AbstractFSMNode<T> : AbstractFSMNode where T : class
+    public abstract class AbstractFSMNode<T> : AbstractFSMNode, IFSMContextNode<T> where T : class
     {
-        // 限制上下文的类型
-        public new FSMNodeContext<T> Context
+        private T businessContext = default!;
+        public new T Context => businessContext;
+        internal override Type? BusinessContextType => typeof(T);
+        internal override void BindBusinessContext(object? value)
         {
-            get { return base.Context.As<T>(); }
-            set { base.Context = value; }
+            businessContext = value as T ?? throw new FSMException($"Node {Name} requires {typeof(T)}; actual {value?.GetType().ToString() ?? "null"}.");
         }
     }
 

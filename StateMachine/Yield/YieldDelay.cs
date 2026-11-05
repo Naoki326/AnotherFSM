@@ -8,7 +8,7 @@ namespace StateMachine
         public YieldEnum Result => YieldEnum.None;
 
         private CancellationToken token = default;
-        public FSMNodeContext Context { set => token = value.Token; }
+        public FSMExecutionControl Control { set => token = value.Token; }
 
         public IExecuterContext SolveContext { set { } }
 

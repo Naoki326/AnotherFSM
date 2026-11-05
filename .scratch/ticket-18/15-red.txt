@@ -1,0 +1,24 @@
+  StateMachine -> C:\Work\anotherfsm-ticket-18\StateMachine\bin\Debug\netstandard2.0\AnotherFSM.dll
+C:\Work\anotherfsm-ticket-18\tests\StateMachineTest\TestInfrastructure\FakeNode.cs(65,26): warning CS0067: 从不使用事件“FakeNode.RaisePause” [C:\Work\anotherfsm-ticket-18\tests\StateMachineTest\StateMachineTest.csproj]
+C:\Work\anotherfsm-ticket-18\tests\StateMachineTest\TestInfrastructure\FakeNode.cs(62,36): warning CS0067: 从不使用事件“FakeNode.ContinueWith” [C:\Work\anotherfsm-ticket-18\tests\StateMachineTest\StateMachineTest.csproj]
+  StateMachineTest -> C:\Work\anotherfsm-ticket-18\tests\StateMachineTest\bin\Debug\net8.0\StateMachineTest.dll
+C:\Work\anotherfsm-ticket-18\tests\StateMachineTest\bin\Debug\net8.0\StateMachineTest.dll (.NETCoreApp,Version=v8.0)的测试运行
+总共 1 个测试文件与指定模式相匹配。
+[xUnit.net 00:00:00.58]     StateMachineTest.TypedContextFacts.APlanCannotSilentlySkipNodesAddedAfterWholeEngineAssembly [FAIL]
+  失败 StateMachineTest.TypedContextFacts.APlanCannotSilentlySkipNodesAddedAfterWholeEngineAssembly [73 ms]
+  错误消息:
+   Expected a <StateMachine.FSMException> to be thrown, but no exception was thrown.
+  堆栈跟踪:
+     at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+   at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(String message)
+   at FluentAssertions.Specialized.DelegateAssertionsBase`2.ThrowInternal[TException](Exception exception, String because, Object[] becauseArgs)
+   at FluentAssertions.Specialized.DelegateAssertions`2.Throw[TException](String because, Object[] becauseArgs)
+   at StateMachineTest.TypedContextFacts.APlanCannotSilentlySkipNodesAddedAfterWholeEngineAssembly() in C:\Work\anotherfsm-ticket-18\tests\StateMachineTest\TypedContextFacts.cs:line 356
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+
+失败!  - 失败:     1，通过:    31，已跳过:     0，总计:    32，持续时间: 481 ms - StateMachineTest.dll (net8.0)

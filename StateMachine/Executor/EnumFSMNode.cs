@@ -48,7 +48,7 @@ namespace StateMachine
                     }
                     if (executor.Current is IYieldAction yieldAfter)
                     {
-                        yieldAfter.Context = context;
+                        yieldAfter.Control = Control;
                         yieldAfter.SolveContext = ExecuterContext;
                         await yieldAfter.AfterYieldAsync();
                         switch (yieldAfter.Result)
@@ -74,8 +74,9 @@ namespace StateMachine
                     HandleException(e);
                     throw e;
                 }
+                Control.CheckPause();
             }
-            context.CheckPause();
+            Control.CheckPause();
         }
 
         private IEnumerator? executor;
@@ -131,7 +132,7 @@ namespace StateMachine
                     }
                     if (executor.Current is IYieldAction yieldAfter)
                     {
-                        yieldAfter.Context = context;
+                        yieldAfter.Control = Control;
                         yieldAfter.SolveContext = ExecuterContext;
                         await yieldAfter.AfterYieldAsync();
                         switch (yieldAfter.Result)
@@ -157,7 +158,7 @@ namespace StateMachine
                     HandleException(e);
                     throw e;
                 }
-                context.CheckPause();
+                Control.CheckPause();
             }
         }
 

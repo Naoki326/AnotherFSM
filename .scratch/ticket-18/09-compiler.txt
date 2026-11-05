@@ -1,0 +1,7 @@
+PASS: BAD_BINDING rejected with CS0266
+PASS: BAD_INPUT rejected with CS1503
+PASS: BAD_INIT rejected with CS8852
+PASS: BAD_PRIVATE rejected with CS0272
+PASS: BAD_READONLY rejected with CS0200
+PASS: BAD_CONTEXT_REBIND rejected with CS0200
+PASS: positive builds and real compiler negative cases

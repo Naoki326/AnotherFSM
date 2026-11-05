@@ -7,6 +7,10 @@
 
 简体中文 | [English](./README.EN.md)
 
+### 类型化 Context（迁移中）
+
+新增核心用法见 [类型化局部 Context](docs/typed-context.md)：节点直接使用局部业务接口，聚合绑定在执行前固定，控制与触发分离。旧 Context/Data/Restart 示例是暂存迁移入口，不是新业务绑定用法；完整宿主/生成消费者迁移及生命周期保障由 #19–#22 完成。
+
 ### Demo
 
 [演示流程的控制、修改、执行](https://naoki326.github.io/AnotherFSM)

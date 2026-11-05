@@ -1,0 +1,9 @@
+PASS: GROUP rejected by C# compiler
+PASS: GROUP_ONE rejected by C# compiler
+PASS: GROUP_TWO rejected by C# compiler
+PASS: PARALLEL rejected by C# compiler
+PASS: PARALLEL_ONE rejected by C# compiler
+PASS: PARALLEL_TWO rejected by C# compiler
+PASS: HOOK rejected by C# compiler
+PASS: DESCRIPTOR rejected by C# compiler
+PASS: BASE_GROUP rejected by C# compiler

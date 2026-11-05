@@ -31,7 +31,7 @@ namespace StateMachine
                     {
                         await yieldBefore.BeforeNextAsync();
                         isMoveNext = yieldBefore.IsMoveNext;
-                        if(yieldBefore is YieldEvent yEvent)
+                        if (yieldBefore is YieldEvent yEvent)
                         {
                             if (yEvent.EventContext is null)
                             { PublishEvent(yEvent.EventIndex); }
@@ -48,7 +48,7 @@ namespace StateMachine
                     }
                     if (executor.Current is IYieldAction yieldAfter)
                     {
-                        yieldAfter.Context = context;
+                        yieldAfter.Control = Control;
                         yieldAfter.SolveContext = ExecuterContext;
                         await yieldAfter.AfterYieldAsync();
                         switch (yieldAfter.Result)
@@ -134,7 +134,7 @@ namespace StateMachine
 
                     if (executor.Current is IYieldAction yieldAfter)
                     {
-                        yieldAfter.Context = context;
+                        yieldAfter.Control = Control;
                         yieldAfter.SolveContext = ExecuterContext;
                         await yieldAfter.AfterYieldAsync();
                         switch (yieldAfter.Result)

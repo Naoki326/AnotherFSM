@@ -1,0 +1,23 @@
+tests\FSMScriptAnalyzerTest\SleepNode.cs:                await Task.Delay(Duration, Context.Token);
+tests\FSMScriptAnalyzerTest\TestNodes.cs:            try { await Task.Delay(100, Context.Token); }
+demos\DemoNodes\BaseNodes\StartNode.cs:                await Task.Delay(1000, Context.Token);
+demos\DemoNodes\BaseNodes\SleepNode.cs:                await Task.Delay(Duration, Context.Token);
+demos\DemoNodes\BaseNodes\IdleNode.cs:                await Task.Delay(5000, Context.Token);
+demos\DemoNodes\BaseNodes\EndNode.cs:                await Task.Delay(500, Context.Token);
+demos\DemoNodes\BaseNodes\AccumulateNode.cs:                await Task.Delay(500, Context.Token);
+StateMachine\Executor\FSMExecutor.cs:                if (currentNode.Context.IsPaused)
+StateMachine\Executor\FSMExecutor.cs:                                    currentNode.Context.TriggerEvent = @event;
+StateMachine\Executor\FSMExecutor.cs:            if (currentNode != null && !currentNode.Context.IsPaused)
+StateMachine\Executor\FSMExecutor.cs:            if (currentNode.Context.IsPaused || pausing || (State != FSMState.Running && State != FSMState.Proceeding
+StateMachine\Executor\FSMExecutor.cs:            if (currentNode.Context.IsPaused || pausing || (State != FSMState.Running && State != FSMState.Proceeding))
+StateMachine\Executor\FSMExecutor.cs:            if (currentNode.Context.IsPaused || pausing)
+StateMachine\Yield\YieldRestoreIfPaused.cs:            restoreRegistration = Context.Token.Register(ChangeRestore);
+
+14 matches
+14 matched lines
+9 files contained matches
+106 files searched
+1519 bytes printed
+593153 bytes searched
+0.005962 seconds spent searching
+0.043257 seconds total

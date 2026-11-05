@@ -4,5 +4,8 @@
     {
         public FSMException(string message) : base(message)
         { }
+
+        public FSMException(string message, Exception innerException) : base(message, innerException)
+        { }
     }
 }

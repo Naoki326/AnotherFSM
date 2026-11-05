@@ -1,0 +1,2 @@
+  StateMachine -> C:\Work\anotherfsm-ticket-18\StateMachine\bin\Debug\netstandard2.0\AnotherFSM.dll
+C:\Work\anotherfsm-ticket-18\tests\StateMachineTest\TypedContextFacts.cs(51,38): error CS0246: 未能找到类型或命名空间名“FSMContextBindings<>”(是否缺少 using 指令或程序集引用?) [C:\Work\anotherfsm-ticket-18\tests\StateMachineTest\StateMachineTest.csproj]
