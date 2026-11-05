@@ -196,10 +196,12 @@ public class RuntimeSessionFacts
         await manager.StartExecution("Old", "Done");
         await probe.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
         var old = manager.Executor!;
+        var finished = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        manager.StateChanged += (state, _) => { if (state == ExecutionState.Finished) finished.TrySetResult(); };
         old.Execution.PublishEvent("Done");
         try
         {
-            await probe.Cleaning.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await finished.Task.WaitAsync(TimeSpan.FromSeconds(5));
             old.Execution.Completion.IsCompleted.Should().BeFalse();
             manager.CurrentState.Should().Be(ExecutionState.Finished);
             Func<Task> conflicting = () => manager.StartExecution("Old", "Done");
@@ -207,7 +209,7 @@ public class RuntimeSessionFacts
             manager.CurrentState.Should().Be(ExecutionState.Finished);
             manager.Executor.Should().BeSameAs(old);
         }
-        finally { probe.Released.TrySetResult(); }
+        finally { probe.Released.TrySetResult(); old.Stop(); }
         await old.Execution.Completion.WaitAsync(TimeSpan.FromSeconds(5));
     }
 
