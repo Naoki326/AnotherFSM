@@ -243,7 +243,7 @@ def launch_sandbox(home: Path, launch: dict, logs: Path, acceptance: bool = Fals
                 raise ValueError("Build/install the separate acceptance observer first")
             evidence = logs / "acceptance"
             evidence.mkdir()
-            properties = ["-Danotherfsm.acceptance=true", "-Danotherfsm.acceptance.dir=" + evidence.as_posix(),
+            properties = ["-Danotherfsm.acceptance=true", "-Danotherfsm.transportReconnectAcceptance=true", "-Danotherfsm.acceptance.dir=" + evidence.as_posix(),
                           "-Danotherfsm.fixture.root=" + FIXTURE.parent.as_posix()]
             arguments = properties + arguments
             environment["ANOTHERFSM_ACCEPTANCE_DIR"] = str(evidence)

@@ -49,6 +49,6 @@ python rider/tools/sandbox.py run
  python rider/tools/prepare-acceptance.py --launch
 ```
 
-真实宿主测试通过 `ActionManager` 调用正式插件动作和原生 Find Usages；单独的后端 observer 只观察原生 descriptor、范围、状态及事件，不执行搜索或改写结果。另一个 SDK 导航守卫探针使用真实 popup context 调用已过期 occurrence 的公开导航入口，验证拒绝跳转。它不进入开发 ZIP，只有 `--acceptance` 沙盒启用。测试会修改并恢复已知夹具的编辑缓冲区，不访问任意业务项目。
+真实宿主测试通过 `ActionManager` 调用正式插件动作和原生 Find Usages；单独的后端 observer 只观察原生 descriptor、范围、状态及事件，不执行搜索或改写结果。另一个 SDK 导航守卫探针使用真实 popup context 调用已过期 occurrence 的公开导航入口，验证拒绝跳转。它不进入开发 ZIP，只有 `--acceptance` 沙盒启用。测试会修改并恢复已知夹具的编辑缓冲区，不访问任意业务项目。功能通过后，还会关闭该测试项目当前的 loopback TCP socket，观察宿主原 wire 的真实断开/重连，再验证新的 RD 请求和正式导航；不销毁 protocol 或业务进程。进程致命故障注入是另行 opt-in 的异常安全测试，不作为默认恢复流程。
 
 构建成功、SDK seam、核心测试、真实宿主和性能必须分别报告。当前实施证据与最终 verdict 由 #32 的交付记录维护；未完成的宿主验收不得靠本 README 视为通过。

@@ -11,13 +11,14 @@ namespace AnotherFSM.Rider;
 
 /// <summary>Versioned RD payloads. All PSI work is scheduled by the host, never waited on by the UI.</summary>
 [SolutionComponent(Instantiation.ContainerAsyncPrimaryThread)]
-public sealed class BridgeQueries(ISolution solution, IPsiServices psi, ScriptIndex index)
+public sealed class BridgeQueries(ISolution solution, IPsiServices psi, ScriptIndex index, ResultLifecycle results)
 {
     private static readonly JsonSerializerOptions Json = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, PropertyNameCaseInsensitive = true };
     private sealed record Request(string Action, string Path, string Text, long DocumentVersion, int Offset,
-        string RequestId, bool Implementation = false, string? Session = null, long ContextVersion = -1, TypeIdentity? Target = null);
+        string RequestId, bool Implementation = false, string? Session = null, long ContextVersion = -1, TypeIdentity? Target = null,
+        string? ListId = null);
     private sealed record Reply(string Status, string Reason, string RequestId, long DocumentVersion, string Session,
-        long ContextVersion, SourceSpan? Span = null, TypeIdentity? Target = null);
+        long ContextVersion, SourceSpan? Span = null, TypeIdentity? Target = null, ReferenceQueryStatus? Reference = null);
 
     public async Task<string> Query(Lifetime lifetime, string json)
     {
@@ -27,7 +28,16 @@ public sealed class BridgeQueries(ISolution solution, IPsiServices psi, ScriptIn
         if (request == null || request.Text == null || request.Path == null || request.RequestId == null
             || request.Offset < 0 || request.Offset > request.Text.Length) return "{\"status\":\"invalidRequest\"}";
         Reply reply;
-        if (request.Action == "navigateType")
+        if (request.Action == "referenceStatus")
+        {
+            reply = await psi.Files.CommitWithRetryMainRead(lifetime, () => {
+                var status = request.ListId == null ? null : results.GetStatus(request.ListId);
+                return status == null
+                    ? Response(request, "unknownQuery", "Native query identity is unavailable or ambiguous")
+                    : Response(request, "referenceStatus", "Native query status") with { Reference = status };
+            }).ConfigureAwait(false);
+        }
+        else if (request.Action == "navigateType")
         {
             var validation = await psi.Files.CommitWithRetryBackgroundRead(lifetime, () => Resolve(request with { Action = "resolve" })).ConfigureAwait(false);
             reply = validation.Status == "type" && validation.Target == request.Target

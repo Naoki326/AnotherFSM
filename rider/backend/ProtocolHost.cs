@@ -14,6 +14,7 @@ namespace AnotherFSM.Rider;
 public sealed class ProtocolHost
 {
     private static readonly ILogger Log = Logger.GetLogger("AnotherFSM");
+    private static readonly JsonSerializerOptions Json = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
     public ProtocolHost(Lifetime lifetime, ISolution solution, ScriptIndex index, BridgeQueries queries, ResultLifecycle results)
     {
         var root = solution.GetProtocolSolution();
@@ -30,9 +31,9 @@ public sealed class ProtocolHost
             void Invalidate() => scheduler.Queue(() => {
                 if (lifetime.IsAlive) model.Invalidated.Fire(JsonSerializer.Serialize(new { session = index.Session, contextVersion = index.Epoch }));
             });
-            void Expire(IReadOnlyList<string> titles) => scheduler.Queue(() => {
+            void Expire(IReadOnlyList<ReferenceQueryStatus> status) => scheduler.Queue(() => {
                 if (lifetime.IsAlive) model.Invalidated.Fire(JsonSerializer.Serialize(new {
-                    session = index.Session, contextVersion = index.Epoch, expiredReferences = titles }));
+                    session = index.Session, contextVersion = index.Epoch, expiredReferences = status }, Json));
             });
             index.Invalidated += Invalidate;
             results.ReferencesExpired += Expire;

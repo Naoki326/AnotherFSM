@@ -19,6 +19,9 @@ import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.vfs.*;
 import com.intellij.util.concurrency.AppExecutorUtil;
 import com.jetbrains.rd.util.lifetime.Lifetime;
+import com.jetbrains.rd.framework.SocketWire;
+import com.jetbrains.rider.protocol.DelayedServerWire;
+import java.net.Socket;
 import com.jetbrains.rd.util.lifetime.LifetimeDefinition;
 import com.jetbrains.rd.util.lifetime.LifetimeStatus;
 import com.jetbrains.rider.projectView.SolutionHostExtensionsKt;
@@ -35,7 +38,7 @@ import kotlin.Unit;
 /**
  * Separate test-observer plugin only; HostAcceptance calls start after its full journey passes.
  * No host/service construction, guessed restart action, protocol mutation or business execution.
- * The ONLY destructive operation is the explicitly gated kill of this JVM's own project backend.
+ * Default fault closes the current loopback socket; opt-in crash mode targets this JVM's own backend only.
  * No buffer edits/saves; no claim of packet reordering or a deterministically outstanding old RPC.
  */
 public final class BackendReconnectAcceptance {
@@ -55,6 +58,10 @@ public final class BackendReconnectAcceptance {
     static final String EXPECTED_TYPE = "Orders.Container+LookupWorker";
     static final long LIMIT_MS = 180_000;
     final Project project;
+    final boolean transportOnly=Boolean.getBoolean("anotherfsm.transportReconnectAcceptance")&&!Boolean.getBoolean("anotherfsm.backendCrashAcceptance");
+    Socket oldSocket;
+    final AtomicBoolean wireRecovered=new AtomicBoolean();
+    volatile Throwable transportFailure;
     final Path output, suppliedRoot;
     final long jvmPid = ProcessHandle.current().pid();
     final long begun = System.nanoTime();
@@ -214,7 +221,7 @@ public final class BackendReconnectAcceptance {
       }
       if (System.nanoTime() < nextProbe) return;
       IProtocolHost candidate = host();
-      if (!readyCandidate(candidate) || (!baseline && pid(candidate) == oldPid)) return;
+      if (!readyCandidate(candidate) || (!baseline && !transportOnly && pid(candidate) == oldPid)) return;
       long candidatePid = pid(candidate), generation = ++queryGeneration;
       JsonObject envelope = request();
       inFlight = true; queryStarted = System.nanoTime(); nextProbe = queryStarted + TimeUnit.MILLISECONDS.toNanos(750);
@@ -246,7 +253,7 @@ public final class BackendReconnectAcceptance {
             record("baseline-host", snapshot(oldHost)); record("baseline-session", session); record("baseline-target", target);
             observeOldWire(); next(Stage.INJECT);
           } else {
-            require(!session.equals(baselineSession), "Reconnected actual RD query reused old backend session");
+            require(transportOnly || !session.equals(baselineSession), "Replacement backend reused old semantic session");
             for (String key : List.of("module", "context", "clrName"))
               require(baselineTarget.get(key).equals(target.get(key)), "Recovered target identity changed: " + reply);
             newHost = candidate; newPid = candidatePid; newSession = session;
@@ -273,6 +280,7 @@ public final class BackendReconnectAcceptance {
         if (!done && observation.getStatus() == LifetimeStatus.Alive)
           oldHost.getProtocol().getWire().getConnected().advise(observation, connected -> {
             if (injected && !connected) oldWireFalse.set(true);
+            if (injected && connected && oldWireFalse.get()) wireRecovered.set(true);
             rdEvents.add(event("old-wire-connected-raw", connected)); return Unit.INSTANCE;
           });
         return Unit.INSTANCE;
@@ -308,7 +316,7 @@ public final class BackendReconnectAcceptance {
         record("old-request-result-not-used-for-recovery", raw);
         if (oldRequestCancelled) finish(false, "Old request delivered success after its handle was cancelled");
       }, failure -> { if (!done) record("old-request-failure", failure.toString()); });
-      action();
+      if(!transportOnly) action();
       requireScriptUnchangedAndSelected();
       // Repeat every destructive gate immediately before the one and only kill. Never traverse children.
       validateFixture();
@@ -320,12 +328,27 @@ public final class BackendReconnectAcceptance {
           && oldProcess.parent().map(parent -> parent.pid() == ProcessHandle.current().pid()).orElse(false),
           "Backend parent/PID safety gate changed");
       injected = true; injectedAt = System.nanoTime(); injectedWall = System.currentTimeMillis();
-      record("fault-injection-requested", "ProcessHandle.destroyForcibly on validated direct child only");
+      record("fault-injection-requested", transportOnly?"Socket.close on the existing project transport only":"ProcessHandle.destroyForcibly on validated direct child only");
       report("running", null);
-      boolean accepted = oldProcess.destroyForcibly();
-      record("destroyForcibly-returned", accepted);
-      require(accepted, "OS refused controlled backend fault injection");
+      if(transportOnly) {
+        oldSocket=socket(oldHost);
+        require(oldSocket!=null&&!oldSocket.isClosed()&&oldSocket.getInetAddress().isLoopbackAddress()
+            &&oldSocket.getLocalAddress().isLoopbackAddress(),"Not the expected live loopback project socket");
+        record("old-socket",Map.of("identity",System.identityHashCode(oldSocket),"local",oldSocket.getLocalSocketAddress().toString(),"remote",oldSocket.getRemoteSocketAddress().toString()));
+        CompletableFuture.runAsync(() -> {try {oldSocket.close();} catch(Throwable failure){transportFailure=failure;}});
+      } else {
+        boolean accepted = oldProcess.destroyForcibly();
+        record("destroyForcibly-returned", accepted);
+        require(accepted, "OS refused controlled backend fault injection");
+      }
       next(Stage.DISCONNECTED);
+    }
+
+    Socket socket(IProtocolHost host) {
+      var wire=host.getProtocol().getWire();
+      if(wire instanceof DelayedServerWire delayed)return delayed.getRealWire().getSocketProvider().getValueOrNull();
+      if(wire instanceof SocketWire.Base base)return base.getSocketProvider().getValueOrNull();
+      throw new IllegalStateException("Unsupported actual host wire: "+wire.getClass());
     }
 
     void cancelOldRequest(String reason) {
@@ -388,8 +411,11 @@ public final class BackendReconnectAcceptance {
     void tick() throws Exception {
       if (done) return;
       if (since(begun) >= LIMIT_MS) {
-        finish(false, "180s deadline at " + stage + "; no fabricated recovery: require dead old PID + real disconnect + new PID/session/RD target + registered navigation"); return;
+        finish(false, "180s deadline at " + stage + (transportOnly
+            ? "; require real wire false/true, different socket, live original backend, real RD and registered navigation"
+            : "; require dead old PID, real disconnect, replacement PID/session, real RD and registered navigation")); return;
       }
+      if(transportFailure!=null)throw new IllegalStateException("Transport close failed",transportFailure);
       if (!initialized) initialize();
       require(!project.isDisposed() && ProcessHandle.current().pid() == jvmPid, "Project disposed or test JVM changed");
       JsonObject pending;
@@ -407,14 +433,16 @@ public final class BackendReconnectAcceptance {
           if (!oldProcess.isAlive() && !deathRecorded) { deathRecorded = true; record("old-process-observed-dead", oldPid); }
           boolean disconnected = oldWireFalse.get() || oldHost.getLifetime().getStatus() == LifetimeStatus.Terminated;
           if (disconnected && !disconnectRecorded) { disconnectRecorded = true; record("actual-disconnect", snapshot(oldHost)); cancelOldRequest("wire false / old host terminated"); }
-          if (deathRecorded && disconnectRecorded) next(Stage.RECOVER);
+          if (disconnectRecorded && (transportOnly?oldSocket.isClosed():deathRecorded)) next(Stage.RECOVER);
         }
         case RECOVER -> {
           IProtocolHost candidate = host();
-          if (readyCandidate(candidate) && pid(candidate) != oldPid) {
+          if (readyCandidate(candidate) && (transportOnly
+              ?pid(candidate)==oldPid&&oldProcess.isAlive()&&wireRecovered.get()&&socket(candidate)!=oldSocket
+              :pid(candidate)!=oldPid)) {
             record("replacement-candidate-not-semantic-readiness", snapshot(candidate)); next(Stage.RESOLVE);
-          } else if (candidate == null || pid(candidate) == oldPid || pid(candidate) <= 0
-              || ProcessHandle.of(pid(candidate)).map(process -> !process.isAlive()).orElse(true)) {
+          } else if (!transportOnly&&(candidate == null || pid(candidate) == oldPid || pid(candidate) <= 0
+              || ProcessHandle.of(pid(candidate)).map(process -> !process.isAlive()).orElse(true))) {
             // A live replacement process is already an automatic recovery attempt; never restart it again.
             recoverFromActualNotification();
           }
@@ -453,6 +481,8 @@ public final class BackendReconnectAcceptance {
       try {
         Files.createDirectories(output);
         JsonObject value = new JsonObject();
+        value.addProperty("mode",transportOnly?"existing-socket-reconnect":"backend-process-crash");
+        value.addProperty("wireRecoveredObserved",wireRecovered.get());
         value.addProperty("status", status); value.addProperty("stage", stage.name()); value.addProperty("elapsedMs", since(begun));
         value.addProperty("error", error); value.addProperty("jvmPid", jvmPid);
         value.addProperty("oldBackendPid", oldPid); value.addProperty("newBackendPid", newPid);

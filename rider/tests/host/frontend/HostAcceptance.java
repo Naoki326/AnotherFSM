@@ -5,6 +5,15 @@ import com.google.gson.*;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.actionSystem.*;
 import com.intellij.ide.DataManager;
+import com.intellij.ui.content.Content;
+import com.intellij.usages.UsageView;
+import com.intellij.usages.impl.UsageViewImpl;
+import com.jetbrains.rdclient.usages.FrontendUsageTarget;
+import com.jetbrains.rd.ide.model.RdFindUsagesSession;
+import com.jetbrains.rider.protocol.ApplicationProtocolKt;
+import com.jetbrains.rider.projectView.SolutionHostExtensionsKt;
+import com.anotherfsm.rider.protocol.AnotherFsmModel_GeneratedKt;
+import kotlin.Unit;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.*;
@@ -38,6 +47,8 @@ public final class HostAcceptance implements StartupActivity.DumbAware {
     long begun;
     final AtomicBoolean tickQueued=new AtomicBoolean();
     Set<Integer> contextBaseline=Set.of();
+    String oldLookupListId,freshLookupListId;JsonObject oldExpiry;
+    Content oldLookupContent;
     ScheduledFuture<?> timer; int stage; long stageStart; Disposable query; boolean inFlight; boolean done; Editor editor;
     Journey(Project project) { this.project=project; }
     void start() {
@@ -85,6 +96,31 @@ public final class HostAcceptance implements StartupActivity.DumbAware {
     String nativeTabTitle() {
       var window=ToolWindowManager.getInstance(project).getToolWindow("Find");
       return window==null||window.getContentManager().getSelectedContent()==null?"":window.getContentManager().getSelectedContent().getDisplayName();
+    }
+    Content nativeContent() {return ToolWindowManager.getInstance(project).getToolWindow("Find").getContentManager().getSelectedContent();}
+    RdFindUsagesSession nativeSession(Content content) {
+      var view=UsageView.USAGE_VIEW_KEY.getData(DataManager.getInstance().getDataContext(content.getComponent()));
+      if(!(view instanceof UsageViewImpl nativeView))throw new IllegalStateException("No actual native usage view");
+      var sessions=Collections.newSetFromMap(new IdentityHashMap<RdFindUsagesSession,Boolean>());
+      for(var target:nativeView.getTargets())if(target instanceof FrontendUsageTarget nativeTarget)sessions.add(nativeTarget.getSession());
+      if(sessions.size()!=1)throw new IllegalStateException("Native page has no unique session");return sessions.iterator().next();
+    }
+    void status(String listId,java.util.function.Consumer<JsonObject> success) {
+      if(inFlight)return;
+      var request=new JsonObject();request.addProperty("action","referenceStatus");request.addProperty("listId",listId);
+      request.addProperty("path","untitled");request.addProperty("text","");request.addProperty("documentVersion",0);
+      request.addProperty("offset",0);request.addProperty("requestId",UUID.randomUUID().toString());
+      inFlight=true;
+      query=BackendConnection.get(project).query(request.toString(),raw -> {inFlight=false;if(!done)success.accept(JsonParser.parseString(raw).getAsJsonObject());},failure -> {inFlight=false;finish(false,failure.toString());});
+    }
+    void replayOldExpiry() {
+      var packet=new JsonObject();packet.add("session",oldExpiry.get("session"));packet.add("contextVersion",oldExpiry.get("contextVersion"));
+      var expired=new JsonArray();expired.add(oldExpiry.get("reference"));packet.add("expiredReferences",expired);
+      var host=ApplicationProtocolKt.getProtocolHostIfExists(project);
+      host.getProtocol().getScheduler().queue(() -> {
+        AnotherFsmModel_GeneratedKt.getAnotherFsmModel(SolutionHostExtensionsKt.getSolution(project)).getInvalidated().fire(packet.toString());return Unit.INSTANCE;
+      });
+      record("replayed-actual-old-query-expiry",packet);
     }
     void probe(String relative,String needle,String expectedType,Runnable success) {
       if(inFlight) { if(elapsed(5000)) { if(query!=null) Disposer.dispose(query); record("probe-cancel-timeout",relative); inFlight=false; stageStart=System.nanoTime(); } return; }
@@ -227,7 +263,54 @@ public final class HostAcceptance implements StartupActivity.DumbAware {
             var doc=document("Orders/Nodes.cs"); WriteCommandAction.runWriteCommandAction(project,() -> doc.setText(originals.get(doc))); next();
           }
         }
-        case 38 -> probe("Orders/orders.fsm","BusinessQuery)","Orders.Container+LookupWorker",() -> finish(true,null));
+        case 38 -> probe("Orders/orders.fsm","BusinessQuery)","Orders.Container+LookupWorker",this::next);
+        case 39 -> { open("Orders/UnusedWorker.cs","UnusedWorker :"); action("FindUsages"); next(); }
+        case 40 -> { if(nativeTabTitle().equals("Usages of 'UnusedWorker'")) {record("zero-dsl-query-before-change",nativeTabTitle());next();} }
+        case 41 -> {
+          var doc=document("Orders/UnusedWorker.cs");var marker="[FSMNode(\"NeverUsed\")]";int offset=doc.getText().indexOf(marker);
+          if(offset<0)throw new IllegalStateException("Missing zero-reference attribute");
+          WriteCommandAction.runWriteCommandAction(project,() -> doc.deleteString(offset,offset+marker.length()));next();
+        }
+        case 42 -> { if(nativeTabTitle().startsWith("结果已过期")&&nativeTabTitle().contains("UnusedWorker")) {
+          record("zero-dsl-query-expires-after-attribute-removal",true);
+          var doc=document("Orders/UnusedWorker.cs");WriteCommandAction.runWriteCommandAction(project,() -> doc.setText(originals.get(doc)));next();
+        } }
+        case 43 -> {open("Orders/Nodes.cs","LookupWorker);");action("FindUsages");next();}
+        case 44 -> {
+          if(nativeTabTitle().equals("Usages of 'LookupWorker'")) {
+            var model=nativeSession(nativeContent());if(!Boolean.TRUE.equals(model.isSearchComplete().getValueOrNull()))break;
+            oldLookupContent=nativeContent();oldLookupContent.setPinned(true);oldLookupListId=model.getUsages().getListId();
+            record("old-same-title-page",oldLookupListId);next();
+          }
+        }
+        case 45 -> {
+          open("Orders/orders.fsm","BusinessQuery)");var doc=editor.getDocument();int offset=doc.getText().indexOf("BusinessQuery)");
+          WriteCommandAction.runWriteCommandAction(project,() -> doc.replaceString(offset,offset+13,"MissingKey"));next();
+        }
+        case 46 -> {if(oldLookupContent.getDisplayName().startsWith("结果已过期"))status(oldLookupListId,reply -> {
+          if(!reply.has("reference")||reply.get("reference").isJsonNull())throw new IllegalStateException("Old native query identity missing");
+          oldExpiry=reply.deepCopy();next();
+        });}
+        case 47 -> {open("Orders/Nodes.cs","LookupWorker);");action("FindUsages");next();}
+        case 48 -> {
+          var model=nativeSession(nativeContent());freshLookupListId=model.getUsages().getListId();
+          if(!freshLookupListId.equals(oldLookupListId)&&Boolean.TRUE.equals(model.isSearchComplete().getValueOrNull())) {
+            if(!model.getTitle().equals(nativeSession(oldLookupContent).getTitle()))throw new IllegalStateException("Test requires two same-title native pages");
+            record("fresh-same-title-page",freshLookupListId);replayOldExpiry();next();
+          }
+        }
+        case 49 -> {if(elapsed(750)) {
+          if(nativeContent().getDisplayName().startsWith("结果已过期")||nativeContent().getDisplayName().startsWith("刷新中"))throw new IllegalStateException("Old other-page packet overwrote fresh same-title native page");
+          record("same-title-fresh-page-not-invalidated",true);
+          ToolWindowManager.getInstance(project).getToolWindow("Find").getContentManager().setSelectedContent(oldLookupContent);rerunNativeSearch();next();
+        }}
+        case 50 -> {if(!oldLookupContent.getDisplayName().startsWith("结果已过期")&&!oldLookupContent.getDisplayName().startsWith("刷新中")) {
+          replayOldExpiry();next();
+        }}
+        case 51 -> {if(elapsed(750)) {
+          if(oldLookupContent.getDisplayName().startsWith("结果已过期"))throw new IllegalStateException("Late previous-generation expiry overwrote refreshed native page");
+          record("late-old-generation-expiry-ignored",true);capture("same-title-native-pages.png");finish(true,null);
+        }}
       }
     }
     void capture(String name) throws Exception {
@@ -262,7 +345,7 @@ public final class HostAcceptance implements StartupActivity.DumbAware {
         } catch(Exception failure) { passed=false; error="Missing SDK stale-navigation guard evidence: "+failure; }
       }
       report(passed?"passed":"failed",error);
-      if(passed&&Boolean.getBoolean("anotherfsm.backendCrashAcceptance")) BackendReconnectAcceptance.start(project,output,root);
+      if(passed&&(Boolean.getBoolean("anotherfsm.transportReconnectAcceptance")||Boolean.getBoolean("anotherfsm.backendCrashAcceptance"))) BackendReconnectAcceptance.start(project,output,root);
     }
   }
 }
