@@ -1,0 +1,4 @@
+import LinkedChecker as LinkedAlias;
+use LinkedAlias as Linked;
+def LinkedEnd(GraphKey) { }
+Linked.Done -> LinkedEnd;

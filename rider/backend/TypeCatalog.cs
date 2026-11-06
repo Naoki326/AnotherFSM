@@ -1,7 +1,9 @@
 using AnotherFSM.Semantics;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.CSharp;
+using JetBrains.ReSharper.Psi.CSharp.Tree;
 using JetBrains.ReSharper.Psi.Modules;
+using JetBrains.ReSharper.Psi.Tree;
 
 namespace AnotherFSM.Rider;
 
@@ -65,6 +67,49 @@ public static class TypeCatalog
                 if (parent.GetTypeElement() is { } element) pending.Push(element);
         }
         return false;
+    }
+
+    public sealed record BranchMetadataLocation(string DocumentId, SourceSpan Span, string Text);
+
+    /// <summary>Only explicit, statically known FSMNode.Indexes metadata; never enum names or return/yield analysis.</summary>
+    public static BranchMetadataLocation? BranchMetadata(IPsiServices psi, TypeIdentity identity, int index)
+    {
+        var type = Resolve(psi, identity);
+        if (type == null) return null;
+        var sourceContext = type.GetSourceFiles().FirstOrDefault(file => file.IsValid());
+        if (sourceContext == null) return null;
+        // C# constant/collection conversion consults runtime features from the active compilation context.
+        using var context = CompilationContextCookie.GetOrCreate(sourceContext.ResolveContext);
+        var attributes = psi.Symbols.GetSymbolScope(type.Module, true, true).GetTypeElementsByCLRName("StateMachine.FSMNodeAttribute");
+        if (attributes.Length != 1) return null;
+        var attributeType = attributes[0];
+        var instances = type.GetAttributeInstances(AttributesSource.Self).Where(instance => {
+            var resolved = instance.GetAttributeType().GetTypeElement();
+            return resolved != null && resolved.GetClrName().FullName == attributeType.GetClrName().FullName
+                && ReferenceEquals(resolved.Module, attributeType.Module);
+        }).ToArray();
+        if (instances.Length != 1) return null;
+        var instance = instances[0];
+        var named = instance.NamedParameters().Where(pair => pair.First == "Indexes").ToArray();
+        var value = AttributeValue.BAD_VALUE;
+        if (named.Length == 1) value = named[0].Second;
+        else if (named.Length == 0 && instance.Constructor is { } constructor)
+        {
+            var parameters = constructor.Parameters.ToArray();
+            var positions = Enumerable.Range(0, parameters.Length).Where(i => parameters[i].ShortName == "indexes").ToArray();
+            if (positions.Length == 1 && positions[0] < instance.PositionParameterCount) value = instance.PositionParameter(positions[0]);
+        }
+        if (!value.IsArray || value.ArrayValue == null
+            || value.ArrayValue.Any(item => !item.IsConstant || item.ConstantValue.Kind != ConstantValueKind.Int)
+            || !value.ArrayValue.Any(item => item.ConstantValue.IntValue == index)) return null;
+        var declarations = type.GetDeclarations().OfType<IAttributesOwnerDeclaration>().SelectMany(declaration => declaration.Attributes)
+            .Where(attribute => attribute.TypeReference?.Resolve().DeclaredElement is ITypeElement resolved
+                && resolved.GetClrName().FullName == attributeType.GetClrName().FullName && ReferenceEquals(resolved.Module, attributeType.Module)).ToArray();
+        if (declarations.Length != 1) return null;
+        var source = declarations[0].GetSourceFile();
+        var range = declarations[0].GetDocumentRange();
+        if (source == null || !source.IsValid() || !range.IsValid()) return null;
+        return new(ScriptDocuments.Id(source), new(range.TextRange.StartOffset, range.TextRange.Length), source.Document.GetText());
     }
 
     public static ITypeElement? Resolve(IPsiServices psi, TypeIdentity identity)

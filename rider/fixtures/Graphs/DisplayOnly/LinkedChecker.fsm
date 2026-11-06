@@ -1,0 +1,2 @@
+// Not a project item: Link presentation directory must never determine import resolution.
+module LinkedChecker { input WrongDisplayEntry; def WrongDisplayEntry(GraphKey) { } }

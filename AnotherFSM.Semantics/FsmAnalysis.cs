@@ -21,7 +21,9 @@ public static class FsmAnalysis
         cancellation.ThrowIfCancellationRequested();
         var projection = new Projection(cancellation, errors.Offsets);
         projection.Visit(tree);
-        return new DocumentAnalysis(document, projection.Nodes.Where(node => !projection.BlockedNames.Contains(node.Name)), projection.References, errors.Messages);
+        return new DocumentAnalysis(document, projection.Nodes.Where(node => node.Scope != "" || !projection.BlockedNames.Contains(node.Name))
+            .Select(node => node with { DocumentId = document.Id }), projection.References, errors.Messages, tree, errors.Offsets,
+            projection.Nodes.Select(node => node with { DocumentId = document.Id }));
     }
 
     private sealed class CancellableLexer(string text, CancellationToken cancellation, Action? checkHostCancellation)
@@ -63,6 +65,7 @@ public static class FsmAnalysis
     {
         private readonly CancellationToken cancellation;
         private string prefix = "";
+        private string scope = "";
         public readonly List<NodeDeclaration> Nodes = new();
         public readonly List<NodeReference> References = new();
         public readonly HashSet<string> BlockedNames = new(StringComparer.OrdinalIgnoreCase);
@@ -70,8 +73,17 @@ public static class FsmAnalysis
         public Projection(CancellationToken cancellation, IReadOnlyList<int> errorOffsets)
             => (this.cancellation, this.errorOffsets) = (cancellation, errorOffsets);
         private bool HasError(int start, int end) => errorOffsets.Any(p => p >= start && p <= end);
-        // Modules/imports are deliberately not guessed into the ordinary-file scope (#33).
-        public override object? VisitModule_statement(StateMachineScriptParser.Module_statementContext context) => null;
+        public override object? VisitModule_statement(StateMachineScriptParser.Module_statementContext context)
+        {
+            var open = context.children.OfType<ITerminalNode>().FirstOrDefault(n => n.GetText() == "{");
+            if (open == null || open is IErrorNode || open.Symbol.TokenIndex < 0
+                || HasError(context.Start.StartIndex, open.Symbol.StartIndex)) return null;
+            var saved = scope;
+            scope = "module:" + context.Start.StartIndex;
+            Visit(context.module_body());
+            scope = saved;
+            return null;
+        }
         public override object? VisitModule_instance(StateMachineScriptParser.Module_instanceContext context)
         {
             var names = context.STRING();
@@ -107,7 +119,7 @@ public static class FsmAnalysis
             var typeKey = AnotherFSM.Syntax.DeclarationRules.TypeKey(name.GetText(), names.Length == 1 ? null : key.GetText());
             if (AnotherFSM.Syntax.DeclarationRules.IsRemovedComposition(typeKey)) return null;
             Nodes.Add(new NodeDeclaration(AnotherFSM.Syntax.DeclarationRules.Qualify(prefix, name.GetText()), typeKey,
-                Span(name), Span(key), names.Length == 1));
+                Span(name), Span(key), names.Length == 1, scope));
             return null;
         }
         public override object? VisitDefTransition(StateMachineScriptParser.DefTransitionContext context)
@@ -116,7 +128,7 @@ public static class FsmAnalysis
             var names = context.STRING();
             if (names.Length == 3 && !HasError(context.Start.StartIndex, context.Stop.StopIndex)
                 && !context.children.OfType<ITerminalNode>().Any(n => n is IErrorNode || n.Symbol.TokenIndex < 0))
-                foreach (var name in names.Skip(1)) References.Add(new NodeReference(prefix + name.GetText(), Span(name)));
+                foreach (var name in names.Skip(1)) References.Add(new NodeReference(prefix + name.GetText(), Span(name), scope));
             return null;
         }
         private static SourceSpan Span(ITerminalNode token) => new(token.Symbol.StartIndex, token.Symbol.StopIndex - token.Symbol.StartIndex + 1);

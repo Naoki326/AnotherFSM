@@ -1,0 +1,2 @@
+// Discovery supports .FSMScript, but import ExtensionOnly still requires ExtensionOnly.fsm.
+module ExtensionOnly { input Entry; def Entry(GraphKey) { } }

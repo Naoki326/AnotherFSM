@@ -1,0 +1,3 @@
+module Legacy { input Entry; terminal Finished; def Entry(GraphKey) { } }
+def Old(Legacy) { Done->Mapped; }
+use Legacy as Instance { 1->Mapped; }

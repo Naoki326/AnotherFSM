@@ -63,7 +63,7 @@ internal class BuildStateVisitor : StateMachineScriptBaseVisitor<object>
     public override object? VisitModule_statement(StateMachineScriptParser.Module_statementContext context)
     {
         var names = context.STRING();
-        var registryName = names[names.Length - 1].GetText();
+        var registryName = AnotherFSM.Syntax.DeclarationRules.ModuleRegistrationName(names[0].GetText(), names.Length > 1 ? names[1].GetText() : null);
         if (!declaredModuleNames.Add(registryName)
             || (engine.TryGetModule(registryName, out var existing) && !ReferenceEquals(existing, loadingModule)
                 && (!string.IsNullOrEmpty(existing.ScriptContent)
@@ -222,16 +222,7 @@ internal class BuildStateVisitor : StateMachineScriptBaseVisitor<object>
 
     public override object? VisitDefBranch2(StateMachineScriptParser.DefBranch2Context context)
     {
-        var index = context.branch_type.Type switch
-        {
-            StateMachineScriptParser.INT => int.Parse(context.INT().GetText()),
-            StateMachineScriptParser.SUCCESS => 1,
-            StateMachineScriptParser.FAILED => 2,
-            StateMachineScriptParser.ERROR => 3,
-            StateMachineScriptParser.BREAK => 4,
-            StateMachineScriptParser.CANCEL => 5,
-            _ => 0,
-        };
+        var index = AnotherFSM.Syntax.DeclarationRules.BranchIndex(context.branch_type.Text);
         EnsureNotModuleOwned(nameprev + context.STRING().GetText());
         node!.SetBranchEvent(index, GetOrAddEvent(nameprev + context.STRING().GetText()));
         return null;

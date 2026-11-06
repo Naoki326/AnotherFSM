@@ -1,0 +1,42 @@
+import Checker as Alias;
+use Alias as Left;
+use Alias as Right;
+module Multi {
+    input First, Second;
+    output Done;
+    def First(GraphKey) { success->Done; }
+    def Second(GraphKey) { failed->Done; }
+    def Private(GraphKey) { }
+}
+use Multi as Many;
+module Original as Renamed {
+    input Door;
+    def Door(GraphKey) { }
+}
+use Renamed as Registered;
+def Start(GraphKey) { success->Launch; 2->LaunchEntry; 3->LaunchFirst; 4->LaunchSecond; 5->LaunchDotted; 6->LaunchLocal; }
+def End(GraphKey) { }
+def Signal(GraphKey) { }
+def Signal event;
+def Explicit event;
+def Branches(GraphBareKey) { error->Fault; break->Stop; cancel->Abort; 3->FaultAgain; }
+Launch -> Start to Left;
+Left.Done -> Right;
+Right.Done -> End;
+LaunchEntry -> Start to Left.Entry;
+LaunchFirst -> Start to Many.First;
+LaunchSecond -> Start to Many.Second;
+Signal -> Signal to End;
+Explicit -> Start to End;
+namespace Zone {
+    def Local(GraphKey) { success->Moved; }
+    def Exit(GraphKey) { }
+    Moved -> Local to Exit;
+}
+namespace Zone {
+    def Tail(GraphKey) { }
+}
+def Plain.Dotted(GraphKey) { }
+LaunchDotted -> Start to Plain.Dotted;
+LaunchLocal -> Start to Zone.Local;
+Launch -> Zone.Exit to Zone.Tail;

@@ -1,0 +1,8 @@
+module Overwrite {
+    input Entry;
+    output Done;
+    def Entry(GraphKey) { 1->Done; 1->Other; }
+}
+use Overwrite as Lost;
+def End(GraphKey) { }
+Lost.Done -> End;

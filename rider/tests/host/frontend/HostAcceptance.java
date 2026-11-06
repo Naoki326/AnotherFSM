@@ -345,7 +345,9 @@ public final class HostAcceptance implements StartupActivity.DumbAware {
         } catch(Exception failure) { passed=false; error="Missing SDK stale-navigation guard evidence: "+failure; }
       }
       report(passed?"passed":"failed",error);
-      if(passed&&(Boolean.getBoolean("anotherfsm.transportReconnectAcceptance")||Boolean.getBoolean("anotherfsm.backendCrashAcceptance"))) BackendReconnectAcceptance.start(project,output,root);
+      if(passed) DslHostAcceptance.start(project,output,root,() -> {
+        if(Boolean.getBoolean("anotherfsm.transportReconnectAcceptance")||Boolean.getBoolean("anotherfsm.backendCrashAcceptance")) BackendReconnectAcceptance.start(project,output,root);
+      });
     }
   }
 }

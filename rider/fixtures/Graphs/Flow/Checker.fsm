@@ -1,0 +1,11 @@
+import Leaf;
+module Checker {
+    input Entry;
+    output Done;
+    def Entry(GraphKey) { success->Next; failed->NextB; }
+    def PublisherA(GraphKey) { 1->Done; 2->Done; 3->Discarded; 3->Done; }
+    def PublisherB(GraphKey) { success->Done; }
+    def Private(GraphKey) { }
+    Next -> Entry to PublisherA;
+    NextB -> Entry to PublisherB;
+}

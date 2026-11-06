@@ -29,7 +29,9 @@ def main():
     parser.add_argument('--launch', action='store_true', help='Explicitly run this controlled host test after preparation')
     args = parser.parse_args()
     home, _, launch = host(args.rider_home)
-    logs = log_directory('host-acceptance-prepare')
+    # Issue #33 controlled fixture/observer evidence; preparation still never launches by default.
+    logs = no_links(ROOT / '.scratch/issue-33/host' / ('prepare-' + uuid.uuid4().hex))
+    logs.mkdir(parents=True)
     output = managed_directory(RIDER_ROOT / 'build/host-tests')
     work = output / ('work-' + uuid.uuid4().hex)
     work.mkdir()

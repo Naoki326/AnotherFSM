@@ -38,7 +38,9 @@ public sealed class HostObserver
         psi.Files.AfterPsiChanged += ObservePsi;
         lifetime.OnTermination(() => psi.Files.AfterPsiChanged -= ObservePsi);
         timer = new Timer(_ => {
-            if (!lifetime.IsAlive || DateTime.UtcNow - start > TimeSpan.FromMinutes(4)) { timer?.Dispose(); return; }
+            // The chained #32 + #33 journeys and transport check have independent bounded deadlines.
+            // Never let the observer stop halfway and mistake a previous sample for current evidence.
+            if (!lifetime.IsAlive || DateTime.UtcNow - start > TimeSpan.FromMinutes(20)) { timer?.Dispose(); return; }
             if (Interlocked.Exchange(ref queued, 1) != 0) return;
             solution.Locks.QueueReadLock(lifetime, "AnotherFSM.TestObserver.Sample", () => {
                 try

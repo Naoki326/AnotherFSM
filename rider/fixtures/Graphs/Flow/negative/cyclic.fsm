@@ -1,0 +1,5 @@
+import CycleA;
+use CycleA as Loop;
+def Safe(GraphKey) { }
+def End(GraphKey) { }
+SafeEvent -> Safe to End;

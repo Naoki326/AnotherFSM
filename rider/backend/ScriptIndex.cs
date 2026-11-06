@@ -19,6 +19,8 @@ public sealed class ScriptIndex
     private long epoch;
     private long version;
     private long typeVersion;
+    private long structureVersion;
+    public long StructureVersion => Interlocked.Read(ref structureVersion);
     private bool closed;
     public Guid Session { get; } = Guid.NewGuid();
     public long Epoch => Interlocked.Read(ref epoch);
@@ -29,7 +31,9 @@ public sealed class ScriptIndex
         changes.Changed.Advise(lifetime, args => {
             var structural = args.ChangeMap.GetChanges<PsiModuleChange>().Any()
                 || args.ChangeMap.GetChanges<ProjectModelChange>().Any();
-            if (structural || args.ChangeMap.GetChanges<JetBrains.DocumentModel.DocumentChange>().Any()) Invalidate(structural, structural);
+            var fileSystem = args.ChangeMap.GetChanges<FileSystemChange>().Any(change => change.Deltas.Any(ScriptChanged));
+            if (structural || fileSystem || args.ChangeMap.GetChanges<JetBrains.DocumentModel.DocumentChange>().Any())
+                Invalidate(structural, structural, fileSystem);
         });
         psi.Files.AfterPsiChanged += OnPsiChanged;
         lifetime.OnTermination(() => {
@@ -39,19 +43,26 @@ public sealed class ScriptIndex
             Invalidated = null;
         });
     }
+    private static bool ScriptChanged(FileSystemChangeDelta delta) =>
+        (!delta.OldPath.IsEmpty && ScriptDocuments.IsScriptName(delta.OldPath.Name))
+        || (!delta.NewPath.IsEmpty && ScriptDocuments.IsScriptName(delta.NewPath.Name))
+        || delta.Children.Any(ScriptChanged);
+
     private void OnPsiChanged(JetBrains.ReSharper.Psi.Tree.ITreeNode? node, PsiChangedElementType kind)
     {
         // A null node denotes a broad PSI change, e.g. initial solution commit.
         if (node == null || node.GetSourceFile()?.PrimaryPsiLanguage is CSharpLanguage) Invalidate(true);
     }
-    private void Invalidate(bool typesChanged, bool documentSetChanged = false)
+    private void Invalidate(bool typesChanged, bool documentSetChanged = false, bool inventoryChanged = false)
     {
         lock (gate)
         {
             if (typesChanged) { catalogs.Clear(); typeVersion++; }
             Interlocked.Increment(ref epoch);
+            if (inventoryChanged && !documentSetChanged) Interlocked.Increment(ref structureVersion);
             if (documentSetChanged && !closed)
             {
+                Interlocked.Increment(ref structureVersion);
                 documents.Dispose();
                 documents = new FsmWorkspace();
             }
@@ -62,10 +73,13 @@ public sealed class ScriptIndex
     public static bool IsScript(IPsiSourceFile file) => file.IsValid() &&
         (file.Name.EndsWith(".fsm", StringComparison.OrdinalIgnoreCase) || file.Name.EndsWith(".FSMScript", StringComparison.OrdinalIgnoreCase));
     public DocumentAnalysis Read(IPsiSourceFile file, long? expectedEpoch = null)
+        => Read(ScriptDocuments.Id(file), file.Document, expectedEpoch);
+
+    public DocumentAnalysis Read(string key, JetBrains.DocumentModel.IDocument document, long? expectedEpoch = null)
     {
         if (expectedEpoch.HasValue && expectedEpoch.Value != Epoch) throw new OperationCanceledException("AnotherFSM query context expired");
-        var key = file.GetLocation().FullPath + "|" + file.PsiModule.GetPersistentID();
-        var text = file.Document.GetText();
+        // Syntax is independent of the consuming host. Graph/binding identities retain their own context.
+        var text = document.GetText();
         lock (gate)
         {
             ObjectDisposedException.ThrowIf(closed, this);
@@ -76,7 +90,7 @@ public sealed class ScriptIndex
                 Interruption.Current.CheckAndThrow();
                 if (expectedEpoch.HasValue && expectedEpoch.Value != Epoch) throw new OperationCanceledException("AnotherFSM query context expired");
             });
-        if (result == null || closed || file.Document.GetText() != text)
+        if (result == null || closed || document.GetText() != text)
             throw new OperationCanceledException("Document changed during analysis");
         return result.Analysis;
     }

@@ -26,15 +26,10 @@ public class BuildTransitionVisitor : StateMachineScriptBaseVisitor<object>
     public override object? VisitModule_instance(StateMachineScriptParser.Module_instanceContext context) => null;
 
     private string Qualify(string reference)
-    {
-        var local = nameprev + reference;
-        // 优先当前 Namespace，但真实的限定实例名也可以直接引用。
-        if (ModuleInstances.ContainsKey(local) || NodeDict.ContainsKey(local)) return local;
-        // 完整实例身份优先于不相关实例的词形前缀；普通名称仍沿用 Namespace 前缀规则。
-        if (ModuleInstances.ContainsKey(reference) || IsExpandedNode(reference)) return reference;
-        if (Interfaces.FindOwner(local) != null) return local;
-        return Interfaces.FindOwner(reference) != null ? reference : local;
-    }
+        => AnotherFSM.Syntax.DeclarationRules.QualifyNodeReference(nameprev, reference,
+            name => ModuleInstances.ContainsKey(name) || NodeDict.ContainsKey(name),
+            name => ModuleInstances.ContainsKey(name) || IsExpandedNode(name),
+            name => Interfaces.FindOwner(name) != null);
 
     private string ResolveTarget(string reference)
     {

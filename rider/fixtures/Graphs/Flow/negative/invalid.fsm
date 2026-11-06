@@ -1,0 +1,10 @@
+use Later as Premature;
+module Later { input Entry; def Entry(GraphKey) { } }
+module Multi { input First, Second; def First(GraphKey) { } def Second(GraphKey) { } def Private(GraphKey) { } }
+use Multi as Many;
+module Original as Registered { input Entry; def Entry(GraphKey) { } }
+use Original as WrongRegistration;
+def Start(GraphKey) { 1->Launch; }
+Launch -> Start to Many;
+Launch -> Start to Many.Private;
+Launch -> Many to Start;

@@ -1,0 +1,2 @@
+// Alias must not change the filename chosen by import Checker as Alias.
+module Alias { input WrongAliasEntry; def WrongAliasEntry(GraphKey) { } }

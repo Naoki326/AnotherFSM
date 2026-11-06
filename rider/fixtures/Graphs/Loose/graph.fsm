@@ -1,0 +1,5 @@
+// Physically below the project, deliberately NOT included by any item glob.
+import Checker;
+def Local(GraphKey) { 1->LocalEvent; }
+def End(GraphKey) { }
+LocalEvent -> Local to End;

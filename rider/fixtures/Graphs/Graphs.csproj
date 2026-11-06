@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
+  </PropertyGroup>
+  <ItemGroup><ProjectReference Include="../../../StateMachine/StateMachine.csproj" /></ItemGroup>
+  <ItemGroup>
+    <AdditionalFiles Include="Flow/graph.fsm" />
+    <None Include="Flow/**/*.fsm;Flow/**/*.FSMScript" Exclude="Flow/graph.fsm" />
+    <None Include="Items/none.FSMScript" />
+    <Content Include="Items/content.fsm" />
+    <EmbeddedResource Include="Items/resource.FSMScript" />
+    <None Include="../SharedGraphs/linked.FSMScript" Link="DisplayOnly/linked.FSMScript" />
+  </ItemGroup>
+</Project>

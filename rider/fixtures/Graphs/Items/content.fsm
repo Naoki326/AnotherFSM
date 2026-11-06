@@ -1,0 +1,3 @@
+def ContentEntry(GraphKey) { 1->ContentEvent; }
+def ContentExit(GraphKey) { }
+ContentEvent -> ContentEntry to ContentExit;

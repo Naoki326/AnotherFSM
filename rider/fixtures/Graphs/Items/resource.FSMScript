@@ -1,0 +1,3 @@
+def ResourceEntry(GraphKey) { 1->ResourceEvent; }
+def ResourceExit(GraphKey) { }
+ResourceEvent -> ResourceEntry to ResourceExit;

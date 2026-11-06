@@ -1,0 +1,2 @@
+// Not a project item; same filename is not a solution-wide fallback.
+module Checker { input WrongEntry; def WrongEntry(GraphKey) { } }

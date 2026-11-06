@@ -10,8 +10,10 @@
     <ProjectReference Include="../../../backend/AnotherFSM.Rider.csproj" />
     <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.Core.dll" Private="false" />
     <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.Util.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.Metadata.dll" Private="false" />
     <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.ProjectModel.dll" Private="false" />
     <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.DocumentModel.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.DocumentManager.dll" Private="false" />
     <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.Shell.dll" Private="false" />
     <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.ComponentModel.dll" Private="false" />
     <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.Ide.dll" Private="false" />

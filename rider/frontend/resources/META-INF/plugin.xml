@@ -1,7 +1,7 @@
 <idea-plugin>
   <id>io.github.naoki326.anotherfsm</id>
   <name>AnotherFSM</name>
-  <version>0.1.0-dev</version>
+  <version>0.2.0-dev</version>
   <vendor>Naoki326</vendor>
   <description>Static AnotherFSM DSL navigation and native C# references. Development build.</description>
   <idea-version since-build="262.10968.170" until-build="262.10968.170"/>
@@ -12,14 +12,34 @@
     <rider.editors.customBackendLanguageSupport implementation="anotherfsm.FsmBackendLanguageSupport"/>
     <notificationGroup id="AnotherFSM" displayType="BALLOON"/>
     <postStartupActivity implementation="anotherfsm.ResultExpiryUi$Start"/>
+    <toolWindow id="AnotherFSM" anchor="bottom" factoryClass="anotherfsm.SemanticUi$Factory" canCloseContents="true"/>
   </extensions>
   <actions>
-    <action id="AnotherFSM.GoToDeclaration" class="anotherfsm.NavigationActions$Declaration" text="转到 AnotherFSM 声明" description="从 Node 引用转到 DSL 声明；从工厂类型键转到 C# 类型">
+    <action id="AnotherFSM.GoToDeclaration" class="anotherfsm.NavigationActions$Declaration" text="转到 AnotherFSM 声明" description="按当前语义部分导航全部 DSL 名称；从工厂类型键转到 C# 类型">
       <keyboard-shortcut keymap="$default" first-keystroke="control B"/>
       <add-to-group group-id="EditorPopupMenu" anchor="last"/>
     </action>
     <action id="AnotherFSM.GoToImplementation" class="anotherfsm.NavigationActions$Implementation" text="转到 AnotherFSM C# 实现" description="通过当前 Node 的静态工厂键关联转到 C# 类型">
       <keyboard-shortcut keymap="$default" first-keystroke="control alt B"/>
+      <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+    </action>
+    <action id="AnotherFSM.FindReferences" class="anotherfsm.NavigationActions$References" text="查找 AnotherFSM 引用" description="按真实符号及实例身份查询解决方案脚本">
+      <keyboard-shortcut keymap="$default" first-keystroke="control alt shift F7"/>
+      <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+    </action>
+    <action id="AnotherFSM.FindTemplateReferences" class="anotherfsm.NavigationActions$TemplateReferences" text="查找模板符号全部引用">
+      <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+    </action>
+    <action id="AnotherFSM.GoToModuleDefinition" class="anotherfsm.NavigationActions$ModuleDefinition" text="转到 AnotherFSM 模块定义">
+      <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+    </action>
+    <action id="AnotherFSM.GoToEntry" class="anotherfsm.NavigationActions$Entry" text="转到 AnotherFSM 入口">
+      <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+    </action>
+    <action id="AnotherFSM.GoToInternal" class="anotherfsm.NavigationActions$Internal" text="查看 AnotherFSM 内部定义／真实发布位置">
+      <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+    </action>
+    <action id="AnotherFSM.BranchMetadata" class="anotherfsm.NavigationActions$BranchMetadata" text="查看 AnotherFSM 分支元数据">
       <add-to-group group-id="EditorPopupMenu" anchor="last"/>
     </action>
   </actions>

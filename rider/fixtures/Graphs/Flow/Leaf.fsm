@@ -1,0 +1,5 @@
+module Leaf {
+    input Bud;
+    output Grown;
+    def Bud(GraphKey) { success->Grown; }
+}

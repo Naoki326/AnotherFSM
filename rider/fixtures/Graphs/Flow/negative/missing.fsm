@@ -1,0 +1,6 @@
+import Checker as MissingAlias;
+import ExtensionOnly;
+use MissingAlias as Missing;
+def Safe(GraphKey) { }
+def End(GraphKey) { }
+SafeEvent -> Safe to End;

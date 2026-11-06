@@ -1,0 +1,4 @@
+import Checker as UnopenedAlias;
+use UnopenedAlias as Unopened;
+def Finish(GraphKey) { }
+Unopened.Done -> Finish;

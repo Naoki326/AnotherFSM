@@ -1,0 +1,5 @@
+module LinkedChecker {
+    input ActualEntry;
+    output Done;
+    def ActualEntry(GraphKey) { 1->Done; }
+}

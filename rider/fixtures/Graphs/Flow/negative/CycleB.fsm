@@ -1,0 +1,2 @@
+import CycleA;
+module CycleB { input Entry; def Entry(GraphKey) { } }

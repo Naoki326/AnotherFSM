@@ -1,0 +1,3 @@
+def NoneEntry(GraphKey) { 1->NoneEvent; }
+def NoneExit(GraphKey) { }
+NoneEvent -> NoneEntry to NoneExit;

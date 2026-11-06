@@ -28,9 +28,8 @@ public sealed class FsmModuleInterfaceResolver
     internal FsmModuleInstance? FindPublicOwner(string reference, bool isOutput)
     {
         var matches = instances.Values.Where(instance =>
-            reference.StartsWith(instance.InstanceName + ".", StringComparison.OrdinalIgnoreCase)
-            && (isOutput ? instance.PublicOutputs : instance.PublicInputs)
-                .ContainsKey(reference.Substring(instance.InstanceName.Length + 1))).ToArray();
+            AnotherFSM.Syntax.DeclarationRules.IsQualifiedInterface(reference, instance.InstanceName,
+                (isOutput ? instance.PublicOutputs : instance.PublicInputs).Keys)).ToArray();
         if (matches.Length > 1)
             throw new ScriptException($"模块公开接口 {reference} 有多个有效归属，名称碰撞");
         return matches.SingleOrDefault();
