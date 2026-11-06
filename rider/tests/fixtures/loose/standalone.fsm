@@ -1,0 +1,3 @@
+def Local(LoneKey) {}
+def End(LoneKey) {}
+Go -> Local to End;

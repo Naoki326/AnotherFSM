@@ -200,11 +200,11 @@ internal class BuildStateVisitor : StateMachineScriptBaseVisitor<object>
 
     private object? DefineNode(string[] names, StateMachineScriptParser.State_branchContext[] branches)
     {
-        var name = nameprev + names[0];
+        var name = AnotherFSM.Syntax.DeclarationRules.Qualify(nameprev, names[0]);
         EnsureNotModuleOwned(name, isNode: true);
         if (NodeDict.ContainsKey(name))
             throw new ScriptException($"State {name} 定义出错，已存在相同名字的 State");
-        node = CreateNode(names[names.Length - 1], name);
+        node = CreateNode(AnotherFSM.Syntax.DeclarationRules.TypeKey(names[0], names.Length == 1 ? null : names[names.Length - 1]), name);
         node.Name = name;
         node.NamePrefix = nameprev;
         NodeDict.Add(name, node);

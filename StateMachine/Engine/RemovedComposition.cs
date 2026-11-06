@@ -7,8 +7,7 @@ public static class RemovedComposition
 
     public static void RejectType(string type)
     {
-        if (type.ToUpperInvariant() is "GROUP" or "GROUPT" or "GROUPTU"
-            or "PARALLEL" or "PARALLELT" or "PARALLELTU" or "GROUPNODE" or "PARALLELNODE")
+        if (AnotherFSM.Syntax.DeclarationRules.IsRemovedComposition(type))
             throw new ScriptException($"{Diagnostic} Unsupported type: {type}.");
     }
 }

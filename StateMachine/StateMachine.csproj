@@ -45,6 +45,7 @@
 
   <ItemGroup>
     <Compile Remove="Antlr\**" />
+    <Compile Include="../shared/DeclarationRules.cs" Link="Engine/DeclarationRules.cs" />
   </ItemGroup>
 
   <ItemGroup>

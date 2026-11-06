@@ -1,0 +1,11 @@
+// BusinessQuery is text, not a reference here.
+def Query(BusinessQuery) { 1 -> Ready; Color:"BusinessQuery"; }
+def BusinessQuery() {}
+def BusinessQuery event;
+Ready -> Query to BusinessQuery;
+def Conflicting(Conflict) {}
+def Invalid(Generic) {}
+def Plain(NotNode) {}
+def Fake(Impostor) {}
+def BadFallback(ForbiddenFallback) {}
+def NestedGeneric(OuterGeneric) {}

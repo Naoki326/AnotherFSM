@@ -47,10 +47,10 @@ namespace FSMScriptAnalyzer
                     else if (hasBody)
                     {
                         // def Name(Type) {...} and def Name as Type state {...}.
-                        var type = name;
+                        var type = AnotherFSM.Syntax.DeclarationRules.TypeKey(name, null);
                         if (statement[2] == "(" && statement.Count > 4) type = statement[3];
                         else if (statement[2] == "as" && statement.Count > 4) type = statement[3];
-                        result.Nodes.Add(new NodeDeclaration(prefix + name, type));
+                        result.Nodes.Add(new NodeDeclaration(AnotherFSM.Syntax.DeclarationRules.Qualify(prefix, name), type));
                         position++;
                         ReadBranches(tokens, ref position, result, prefix);
                         continue;

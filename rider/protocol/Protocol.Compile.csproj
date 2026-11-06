@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Public SDK compilation seam only; not a plugin packaging project. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <Nullable>enable</Nullable>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <EnableNETAnalyzers>false</EnableNETAnalyzers>
+  </PropertyGroup>
+  <Target Name="RequireRiderHome" BeforeTargets="ResolveReferences">
+    <Error Condition="!Exists('$(RiderHome)/lib/ReSharperHost/JetBrains.RdFramework.dll')"
+           Text="Set RiderHome to the target Rider installation." />
+  </Target>
+  <ItemGroup>
+    <Compile Include="generated/csharp/*.cs;examples/*.cs" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.*.dll">
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+</Project>

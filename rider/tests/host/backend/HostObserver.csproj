@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>ReSharperPlugin.AnotherFSM.Acceptance</AssemblyName>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RiderHome Condition="'$(RiderHome)' == ''">$(LOCALAPPDATA)/Programs/Rider</RiderHome>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../backend/AnotherFSM.Rider.csproj" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.Core.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.Util.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.ProjectModel.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.DocumentModel.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.Shell.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.ComponentModel.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.Ide.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.Text.Protocol.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.ReSharper.Feature.Services.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.ReSharper.Psi.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Lifetimes.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/System.Text.Json.dll" Private="false" />
+  </ItemGroup>
+</Project>

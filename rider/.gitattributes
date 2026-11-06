@@ -1,0 +1,4 @@
+*.fsm text eol=lf
+*.FSMScript text eol=lf
+*.Generated.cs text eol=lf
+*.Generated.kt text eol=lf

@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>ReSharperPlugin.AnotherFSM</AssemblyName>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RiderHome Condition="'$(RiderHome)' == ''">$(LOCALAPPDATA)/Programs/Rider</RiderHome>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../AnotherFSM.Semantics/AnotherFSM.Semantics.csproj" />
+    <Compile Include="../protocol/generated/csharp/*.cs" Link="Protocol/%(Filename)%(Extension)" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.RdFramework.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Annotations.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.RdProtocol.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.Core.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.Util.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.Metadata.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.ProjectModel.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.DocumentModel.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.DocumentManager.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.Shell.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.ComponentModel.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.Ide.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.Text.Protocol.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.UIInteractive.Shell.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.ReSharper.Psi.CSharp.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Lifetimes.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/System.Text.Json.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.ReSharper.Psi.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.ReSharper.Feature.Services.dll" Private="false" />
+  </ItemGroup>
+</Project>

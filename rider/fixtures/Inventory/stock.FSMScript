@@ -1,0 +1,5 @@
+namespace Warehouse {
+    def Convert(PayloadTransform) { success -> Next; }
+    def Finish(PayloadTransform) {}
+    Next -> Convert to Finish;
+}

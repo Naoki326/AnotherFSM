@@ -1,0 +1,4 @@
+/build/
+/.sandbox/
+/tools/__pycache__/
+/fixtures/.idea/

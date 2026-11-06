@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <AntlrJavaExec>PATH;DOWNLOAD</AntlrJavaExec>
+    <AntlrJavaExec Condition="Exists('$(JAVA_HOME)/bin/java')">$(JAVA_HOME)/bin/java</AntlrJavaExec>
+    <AntlrJavaExec Condition="Exists('$(JAVA_HOME)/bin/java.exe')">$(JAVA_HOME)/bin/java.exe</AntlrJavaExec>
+    <AntlrJavaExec Condition="Exists('$(LOCALAPPDATA)/Programs/Rider/jbr/bin/java.exe')">$(LOCALAPPDATA)/Programs/Rider/jbr/bin/java.exe</AntlrJavaExec>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../shared/DeclarationRules.cs" Link="DeclarationRules.cs" />
+    <PackageReference Include="Antlr4.Runtime.Standard" Version="4.13.1" />
+    <PackageReference Include="Antlr4BuildTasks" Version="12.14.0" PrivateAssets="all" />
+    <Antlr4 Include="../StateMachine/Engine/StateMachineScript.g4" Link="Syntax/StateMachineScript.g4" Package="AnotherFSM.Semantics.Syntax" JavaExec="$(AntlrJavaExec)" />
+  </ItemGroup>
+</Project>

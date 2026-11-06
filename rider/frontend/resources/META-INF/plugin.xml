@@ -1,0 +1,26 @@
+<idea-plugin>
+  <id>io.github.naoki326.anotherfsm</id>
+  <name>AnotherFSM</name>
+  <version>0.1.0-dev</version>
+  <vendor>Naoki326</vendor>
+  <description>Static AnotherFSM DSL navigation and native C# references. Development build.</description>
+  <idea-version since-build="262.10968.170" until-build="262.10968.170"/>
+  <depends>com.intellij.modules.rider</depends>
+  <extensions defaultExtensionNs="com.intellij">
+    <fileType name="AnotherFSM" language="AnotherFSM" implementationClass="anotherfsm.FsmLanguage$Type" fieldName="INSTANCE" extensions="fsm;FSMScript"/>
+    <lang.parserDefinition language="AnotherFSM" implementationClass="anotherfsm.FsmLanguage$Parser"/>
+    <rider.editors.customBackendLanguageSupport implementation="anotherfsm.FsmBackendLanguageSupport"/>
+    <notificationGroup id="AnotherFSM" displayType="BALLOON"/>
+    <postStartupActivity implementation="anotherfsm.ResultExpiryUi$Start"/>
+  </extensions>
+  <actions>
+    <action id="AnotherFSM.GoToDeclaration" class="anotherfsm.NavigationActions$Declaration" text="转到 AnotherFSM 声明" description="从 Node 引用转到 DSL 声明；从工厂类型键转到 C# 类型">
+      <keyboard-shortcut keymap="$default" first-keystroke="control B"/>
+      <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+    </action>
+    <action id="AnotherFSM.GoToImplementation" class="anotherfsm.NavigationActions$Implementation" text="转到 AnotherFSM C# 实现" description="通过当前 Node 的静态工厂键关联转到 C# 类型">
+      <keyboard-shortcut keymap="$default" first-keystroke="control alt B"/>
+      <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+    </action>
+  </actions>
+</idea-plugin>
