@@ -99,14 +99,20 @@ public sealed class ScriptDocuments
 
     public IPsiSourceFile? Import(IPsiModule module, string importingPath, string name)
     {
-        // Names are supplied by the authoritative grammar; never accept a path or invent new import syntax.
+        var path = ResolveImportPath(importingPath, name);
+        if (path == null) return null;
+        // A linked file's Location is physical. No virtual project folder participates in resolution.
+        return Roots(module).FirstOrDefault(file => file.GetLocation().Equals(path)) ?? TextView(path, module);
+    }
+
+    private static VirtualFileSystemPath? ResolveImportPath(string importingPath, string name)
+    {
+        // Names are supplied by the authoritative grammar; no new path syntax or cwd fallback.
         if (!Path.IsPathFullyQualified(importingPath) || name.IndexOfAny(['/', '\\', ':', '\0']) >= 0) return null;
         var directory = Path.GetDirectoryName(importingPath);
         if (directory == null) return null;
         var path = VirtualFileSystemPath.Parse(Path.Combine(directory, name + ".fsm"), InteractionContext.SolutionContext);
-        if (!path.ExistsFile) return null;
-        // A linked file's Location is physical. No virtual project folder participates in resolution.
-        return Roots(module).FirstOrDefault(file => file.GetLocation().Equals(path)) ?? TextView(path, module);
+        return path.ExistsFile ? path : null;
     }
 
     private IPsiSourceFile TextView(VirtualFileSystemPath path, IPsiModule module, IProjectFile? projectFile = null)
@@ -179,11 +185,8 @@ public sealed class ScriptDocuments
         var root = FsmAnalysis.Analyze(new(path, version, text), checkHostCancellation: Check);
         return SemanticGraph.Build(new[] { root }, (from, name) => {
             Check();
-            if (!Path.IsPathFullyQualified(from) || name.IndexOfAny(['/', '\\', ':', '\0']) >= 0) return null;
-            var directory = Path.GetDirectoryName(from);
-            if (directory == null) return null;
-            var target = VirtualFileSystemPath.Parse(Path.Combine(directory, name + ".fsm"), InteractionContext.SolutionContext);
-            return target.ExistsFile ? index.Read(target.FullPath.Replace('\\', '/'), documentManager.GetOrCreateDocument(target), epoch) : null;
+            var target = ResolveImportPath(from, name);
+            return target != null ? index.Read(target.FullPath.Replace('\\', '/'), documentManager.GetOrCreateDocument(target), epoch) : null;
         }, checkHostCancellation: Check);
     }
 
