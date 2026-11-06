@@ -427,6 +427,16 @@ public final class DslHostAcceptance {
       step("chooser selection navigates to real template source",() -> {
         var labels=modelRows(publisherChooser);publisherChooser.setSelectedIndex(labels.get(0).contains("PublisherA")?0:1);pressEnter(publisherChooser);
       },() -> located(at(CHECKER,"def PublisherA(GraphKey)","PublisherA"),true));
+      String chain="Graphs/Flow/edges/alias-chain.fsm",chainModule="Graphs/Flow/edges/Chain.fsm";
+      navigation("chained alias keeps its own default declaration",at(chain,"use SecondAlias as Chained;","SecondAlias"),DECL,
+          at(chain,"import FirstAlias as SecondAlias;","SecondAlias"));
+      navigation("chained alias Module definition reaches real template",at(chain,"use SecondAlias as Chained;","SecondAlias"),"AnotherFSM.GoToModuleDefinition",
+          at(chainModule,"module Chain {","Chain"));
+      references("Module query includes transitive aliases",at(chainModule,"module Chain {","Chain"),REFS,3,rows -> sourceHas(rows,"alias-chain.fsm"));
+      references("first alias query stays local to its own import use",at(chain,"import Chain as FirstAlias;","FirstAlias"),REFS,1,rows -> sourceHas(rows,"alias-chain.fsm"));
+      String damaged="Graphs/Flow/negative/damaged-inputs.fsm";
+      rejected("damaged multiple Inputs do not authorize implicit target",at(damaged,"Go -> Start to Bad;","Bad"),DECL);
+      rejected("damaged multiple Inputs have no unique entry operation",at(damaged,"use DamagedMany as Bad;","Bad"),"AnotherFSM.GoToEntry");
       reverseCsharp();
       negativeCases();
       untitledCases();

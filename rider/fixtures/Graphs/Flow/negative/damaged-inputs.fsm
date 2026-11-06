@@ -1,0 +1,7 @@
+module DamagedMany {
+    input Ready,Missing;
+    def Ready(GraphKey) { }
+}
+use DamagedMany as Bad;
+def Start(GraphKey) { 1->Go; }
+Go -> Start to Bad;

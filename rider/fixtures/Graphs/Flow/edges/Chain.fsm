@@ -1,0 +1,4 @@
+module Chain {
+    input Door;
+    def Door(GraphKey) { }
+}

@@ -292,8 +292,9 @@ public sealed class SemanticGraph
             n => scope.Instances.Values.Any(i => n.StartsWith(i.Name + ".", StringComparison.OrdinalIgnoreCase)));
         if (scope.Instances.TryGetValue(name, out var instance))
         {
-            var inputs = instance.Body?.Nodes.Values.Where(n => !n.Invalid && n.Uses.Any(o => o.Role == "input")).ToArray();
-            var uniqueInput = inputs?.Length == 1;
+            // Unresolved Inputs still count as declared interfaces; damage cannot authorize omission.
+            var inputs = instance.Body?.Nodes.Values.Where(n => n.Uses.Any(o => o.Role == "input")).ToArray();
+            var uniqueInput = inputs?.Length == 1 && !IsInvalid(inputs[0]);
             Add(source || !uniqueInput ? null : instance, scope, Span(token), "use", "Instance is not a source Node; multi/zero Input targets require an explicit public Input.");
             // The same real token uses both the instance and its omitted unique public Input.
             // Keep the instance occurrence first so ordinary navigation/implementation never invents an instance Node.
@@ -354,10 +355,13 @@ public sealed class SemanticGraph
         }
         Add(module, scope, Span(names[0]), "import");
         if (names.Length == 1 || module == null) return;
-        var alias = new Symbol("alias", names[1].GetText(), scope) { Template = module, Body = module.Body };
+        // Every alias targets the canonical Module, while its declaration/use identity stays local.
+        // This also makes an import of an existing alias a registry lookup, never an Alias.fsm guess.
+        var targetModule = module.Kind == "alias" ? module.Template! : module;
+        var alias = new Symbol("alias", names[1].GetText(), scope) { Template = targetModule, Body = targetModule.Body };
         symbols.Add(alias);
         Add(alias, scope, Span(names[1]), "declaration");
-        if (scope.Registry.TryGetValue(alias.Name, out var existing) && (existing.Kind == "alias" ? existing.Template : existing) != module)
+        if (scope.Registry.TryGetValue(alias.Name, out var existing) && (existing.Kind == "alias" ? existing.Template : existing) != targetModule)
         { scope.BlockedRegistrations.Add(alias.Name); alias.Invalid = true; }
         scope.Registry[alias.Name] = alias;
     }
@@ -466,8 +470,9 @@ public sealed class SemanticGraph
         if (operation == "entry")
         {
             if (symbol.Kind != "instance") return Unresolved("Select a Module Instance with a unique public Input, not a Module declaration.");
-            var inputs = symbol.Body?.Nodes.Values.Where(n => n.Uses.Any(o => o.Role == "input") && !n.Invalid).ToArray();
-            return inputs?.Length == 1 ? new("resolved", "", Locations(inputs[0].Uses.Where(o => o.Role == "input"))) : Unresolved("Select an explicit public Input; there is no unique entry.");
+            var inputs = symbol.Body?.Nodes.Values.Where(n => n.Uses.Any(o => o.Role == "input")).ToArray();
+            return inputs?.Length == 1 && !IsInvalid(inputs[0]) ? new("resolved", "", Locations(inputs[0].Uses.Where(o => o.Role == "input")))
+                : Unresolved("Select an explicit public Input; there is no unique reliable entry.");
         }
         if (operation == "moduleDefinition" && symbol.Kind is "alias" or "instance" && symbol.Template != null) symbol = symbol.Template;
         var preferInterface = symbol.Instance != null || occurrence!.Role is "input" or "output";
