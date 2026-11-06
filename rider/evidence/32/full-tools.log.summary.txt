@@ -1,0 +1,30 @@
+✔ matching readback is compact and does not print the resolution or map (14.8679ms)
+✔ CRLF and LF compare equally, meaningful whitespace does not (6.614ms)
+✔ a changed body reports the first bounded difference, not the entire text (11.7096ms)
+✔ rejects wrong issue (6.2738ms)
+✔ rejects comment belongs to another issue (1.5033ms)
+✔ rejects wrong comment (3.4608ms)
+✔ rejects still open (1.4775ms)
+✔ rejects not planned closure (2.0871ms)
+✔ rejects missing native parent (1.8192ms)
+✔ rejects missing blocker (1.6528ms)
+✔ rejects unexpected blocking edge (1.0798ms)
+✔ rejects link only in fog (0.8693ms)
+✔ rejects bare URL is not an index entry (0.6268ms)
+✔ same issue number in another repository is not the expected dependency (2.0933ms)
+✔ only rendered named links count as the map index (5.1768ms)
+✔ reference-style named links are valid index entries (1.9496ms)
+✔ a heading inside a code block cannot start the decisions section (0.772ms)
+✔ a dependency without its repository identity fails verification (0.9224ms)
+✔ an index at end of the map is supported (1.2074ms)
+✔ expectation must explicitly list both dependency directions (0.9351ms)
+✔ collects only six read endpoints, and paginates all relationships (1.5045ms)
+✔ transport failure is not treated as an empty list or successful verification (0.4591ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1916.448

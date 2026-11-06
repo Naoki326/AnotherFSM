@@ -1,0 +1,16 @@
+{
+  "status": "failed",
+  "stage": "RECOVER",
+  "elapsedMs": 180170,
+  "error": "180s deadline at RECOVER; no fabricated recovery: require dead old PID + real disconnect + new PID/session/RD target + registered navigation",
+  "jvmPid": 29628,
+  "oldBackendPid": 54912,
+  "newBackendPid": -1,
+  "baselineSession": "b4c5c037-4f7e-409e-9681-b24c3840aef0",
+  "oldProcessDead": true,
+  "realDisconnectObserved": true,
+  "oldWireFalseObserved": true,
+  "transportInvalidatedObserved": true,
+  "oldRequestHandleDisposed": true,
+  "notificationRecoveryInvoked": false
+}

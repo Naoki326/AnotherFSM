@@ -1,0 +1,24 @@
+
+> fsm-demo-frontend@0.0.0 test
+> node --test test/*.test.ts
+
+✔ single Input selects instance; multiple Inputs require explicit public Input, never private nodes (3.2372ms)
+✔ qualified Outputs preserve instance and Namespace identity, do not invent aliases (0.6538ms)
+✔ one interface edge for many publishers, with distinct target Inputs and self-module loop retained (0.4473ms)
+✔ internal template canvas cannot connect across public boundary (0.3953ms)
+✔ ordinary nodes keep event connections and colliding instance names are skipped (0.354ms)
+✔ Root and Module views project only real members, not ordinary same-prefix nodes (legacy DemoRuntime projection) (0.5041ms)
+✔ legacy DemoRuntime connection projection keeps ordinary same-prefix nodes outside Module views (0.2944ms)
+✔ legacy DemoRuntime demo projects both Checker instances and their internal transitions (0.4307ms)
+✔ HTTP client sends canonical interface names for create/delete and reports API export refusals (7.3391ms)
+✔ api: EditorRuntime no longer offers runtime composition editing (1.5305ms)
+✔ wasm: EditorRuntime no longer offers runtime composition editing (0.4588ms)
+✔ WASM operations before initialization fail explicitly, never fall back to API (4.3559ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 421.0514

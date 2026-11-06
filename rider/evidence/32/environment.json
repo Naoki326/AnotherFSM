@@ -1,0 +1,14 @@
+{
+  "os": "Windows-11-10.0.26200-SP0",
+  "windowsVersion": [
+    10,
+    0,
+    26200,
+    2,
+    ""
+  ],
+  "architecture": "AMD64",
+  "cpu": "AMD Ryzen 7 3700X 8-Core Processor             ",
+  "python": "3.13.14",
+  "rider": "2026.2.3.1 / RD-262.10968.170"
+}

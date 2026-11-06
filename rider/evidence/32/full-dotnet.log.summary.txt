@@ -1,0 +1,35 @@
+C:\Program Files\dotnet\sdk\10.0.300\NuGet.Build.Tasks.Pack.targets(222,5): warning NU5128: 在 nuspec 和 lib/ref 文件夹的依赖项组中声明的某些目标框架在其他位置没有完全匹配项。请参阅以下操作列表: [c:\work\anotherfsm\FSMNodeAnalyzer\FSMNodeAnalyzer.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\NuGet.Build.Tasks.Pack.targets(222,5): warning NU5128: -为以下组件添加库或引用程序集 netstandard2.0 目标框架 [c:\work\anotherfsm\FSMNodeAnalyzer\FSMNodeAnalyzer.csproj]
+  包 Naoki.AnotherFSM.NodeAnalyzer.1.1.6 缺少自述文件。转到 https://aka.ms/nuget/authoring-best-practices/readme 了解为什么包阅读主题很重要。
+  已成功创建包“c:\work\anotherfsm\FSMNodeAnalyzer\bin\Debug\Naoki.AnotherFSM.NodeAnalyzer.1.1.6.nupkg”。
+  AnotherFSM.Semantics.Tests -> c:\work\anotherfsm\tests\AnotherFSM.Semantics.Tests\bin\Debug\net8.0\AnotherFSM.Semantics.Tests.dll
+c:\work\anotherfsm\tests\AnotherFSM.Semantics.Tests\bin\Debug\net8.0\AnotherFSM.Semantics.Tests.dll (.NETCoreApp,Version=v8.0)的测试运行
+总共 1 个测试文件与指定模式相匹配。
+c:\work\anotherfsm\tests\StateMachineTest\TestInfrastructure\FakeNode.cs(64,36): warning CS0067: 从不使用事件“FakeNode.ContinueWith” [c:\work\anotherfsm\tests\StateMachineTest\StateMachineTest.csproj]
+c:\work\anotherfsm\tests\StateMachineTest\TestInfrastructure\FakeNode.cs(67,26): warning CS0067: 从不使用事件“FakeNode.RaisePause” [c:\work\anotherfsm\tests\StateMachineTest\StateMachineTest.csproj]
+c:\work\anotherfsm\tests\StateMachineTest\EventSharingFacts.cs(207,39): warning xUnit1031: Test methods should not use blocking task operations, as they can cause deadlocks. Use an async test method and await instead. (https://xunit.net/xunit.analyzers/rules/xUnit1031) [c:\work\anotherfsm\tests\StateMachineTest\StateMachineTest.csproj]
+c:\work\anotherfsm\tests\StateMachineTest\ExecutionReviewFacts.cs(404,118): warning xUnit1031: Test methods should not use blocking task operations, as they can cause deadlocks. Use an async test method and await instead. (https://xunit.net/xunit.analyzers/rules/xUnit1031) [c:\work\anotherfsm\tests\StateMachineTest\StateMachineTest.csproj]
+c:\work\anotherfsm\tests\StateMachineTest\EventSharingFacts.cs(631,39): warning xUnit1031: Test methods should not use blocking task operations, as they can cause deadlocks. Use an async test method and await instead. (https://xunit.net/xunit.analyzers/rules/xUnit1031) [c:\work\anotherfsm\tests\StateMachineTest\StateMachineTest.csproj]
+c:\work\anotherfsm\tests\StateMachineTest\EventSharingFacts.cs(732,39): warning xUnit1031: Test methods should not use blocking task operations, as they can cause deadlocks. Use an async test method and await instead. (https://xunit.net/xunit.analyzers/rules/xUnit1031) [c:\work\anotherfsm\tests\StateMachineTest\StateMachineTest.csproj]
+  StateMachineTest -> c:\work\anotherfsm\tests\StateMachineTest\bin\Debug\net8.0\StateMachineTest.dll
+  DemoNodes -> c:\work\anotherfsm\demos\DemoNodes\bin\Debug\netstandard2.0\DemoNodes.dll
+c:\work\anotherfsm\tests\StateMachineTest\bin\Debug\net8.0\StateMachineTest.dll (.NETCoreApp,Version=v8.0)的测试运行
+总共 1 个测试文件与指定模式相匹配。
+
+已通过! - 失败:     0，通过:    23，已跳过:     0，总计:    23，持续时间: 117 ms - AnotherFSM.Semantics.Tests.dll (net8.0)
+  包 DemoNodes.1.0.0 缺少自述文件。转到 https://aka.ms/nuget/authoring-best-practices/readme 了解为什么包阅读主题很重要。
+  已成功创建包“c:\work\anotherfsm\demos\DemoNodes\bin\Debug\DemoNodes.1.0.0.nupkg”。
+  FSMDemo.Runtime -> c:\work\anotherfsm\demos\FSMDemo.Runtime\bin\Debug\net10.0\FSMDemo.Runtime.dll
+
+已通过! - 失败:     0，通过:   310，已跳过:     0，总计:   310，持续时间: 1 s - StateMachineTest.dll (net8.0)
+  FSMDemoWasmTest -> c:\work\anotherfsm\tests\FSMDemoWasmTest\bin\Debug\net10.0\FSMDemoWasmTest.dll
+c:\work\anotherfsm\tests\FSMDemoWasmTest\bin\Debug\net10.0\FSMDemoWasmTest.dll (.NETCoreApp,Version=v10.0)的测试运行
+总共 1 个测试文件与指定模式相匹配。
+  FSMDemo.API -> c:\work\anotherfsm\demos\FSMDemo.API\bin\Debug\net10.0\FSMDemo.API.dll
+  FSMDemoApiTest -> c:\work\anotherfsm\tests\FSMDemoApiTest\bin\Debug\net10.0\FSMDemoApiTest.dll
+c:\work\anotherfsm\tests\FSMDemoApiTest\bin\Debug\net10.0\FSMDemoApiTest.dll (.NETCoreApp,Version=v10.0)的测试运行
+总共 1 个测试文件与指定模式相匹配。
+
+已通过! - 失败:     0，通过:    42，已跳过:     0，总计:    42，持续时间: 5 s - FSMDemoWasmTest.dll (net10.0)
+
+已通过! - 失败:     0，通过:    83，已跳过:     0，总计:    83，持续时间: 2 s - FSMDemoApiTest.dll (net10.0)

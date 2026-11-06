@@ -1,0 +1,20 @@
+{
+  "revision": "b249346",
+  "sha256": "bdfa227825d95c01648542f3f77db7e85197f5ae185152529dba98ebaa8955a8",
+  "identicalZip": true,
+  "identicalRuntimeAssets": true,
+  "manifest": {
+    "pluginId": "io.github.naoki326.anotherfsm",
+    "pluginVersion": "0.1.0-dev",
+    "riderVersion": "2026.2.3.1",
+    "riderBuild": "262.10968.170",
+    "rdProtocolIncluded": true,
+    "sha256": {
+      "anotherfsm/dotnet/AnotherFSM.Semantics.dll": "3220d38099b9a9d19914038dcf2a2879cd94ea13cfb85ab01f6082814005002d",
+      "anotherfsm/dotnet/Antlr4.Runtime.Standard.dll": "0440e3d2c5906326e04df87d6a5272192b7d29099901ba4215ca9e0f5dca7591",
+      "anotherfsm/dotnet/ReSharperPlugin.AnotherFSM.dll": "fbe80b0cbd2e45a926ec78d085380f57b174dc76cc3d1d65d5fd8fd06cb883bc",
+      "anotherfsm/lib/anotherfsm-protocol.jar": "0118fce6b6e5028ded12d6d528bf4b7bcc0e30604fd4471aec17ee7c7edce490",
+      "anotherfsm/lib/anotherfsm.jar": "267f02905ec4acb94784ebb423103d3ac56412b2275386a9e3e36f685d6cf6a9"
+    }
+  }
+}

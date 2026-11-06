@@ -1,0 +1,12 @@
+{
+  "implementationRevision": "b249346",
+  "zipSha256": "bdfa227825d95c01648542f3f77db7e85197f5ae185152529dba98ebaa8955a8",
+  "riderVersion": "2026.2.3.1",
+  "riderBuild": "262.10968.170",
+  "windowsJvmPid": 58324,
+  "fixture": "rider/fixtures/Acceptance.sln",
+  "installation": "ZIP extracted by isolated sandbox installer; inventory verified before launch",
+  "hostAcceptance": "passed 51 stages",
+  "transportReconnect": "passed",
+  "rawRun": "C:/Work/AnotherFSM/.scratch/issue-32/sandbox-host-test-20261106T184508.704649Z-24c3b7e2/acceptance"
+}
