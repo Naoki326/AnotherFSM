@@ -51,9 +51,12 @@ public sealed class FsmSearcherFactory(SearchDomainFactory domains) : DomainSpec
         var solution = types[0].Module.GetSolution();
         if (types.Any(type => !ReferenceEquals(solution, type.Module.GetSolution()))) yield break;
         var index = solution.GetComponent<ScriptIndex>();
+        var epoch = index.Epoch;
+        JetBrains.Application.Interruption.Current.CheckAndThrow();
+        var identities = types.Select(TypeCatalog.Identity).ToArray();
+        if (index.Epoch != epoch) throw new OperationCanceledException("AnotherFSM import search context expired");
         // Created before the named visitor starts. Both phases retain this epoch, including resumable callbacks.
-        yield return new FsmImportSearcher(types.Select(TypeCatalog.Identity).ToArray(), index,
-            solution.GetComponent<ScriptDocuments>(), index.Epoch);
+        yield return new FsmImportSearcher(identities, index, solution.GetComponent<ScriptDocuments>(), epoch);
     }
 }
 
@@ -61,32 +64,54 @@ public sealed class FsmSearcherFactory(SearchDomainFactory domains) : DomainSpec
 /// It retains the original user scope; no source is submitted through another file's callback.</summary>
 internal sealed class FsmImportSearcher(TypeIdentity[] targets, ScriptIndex index, ScriptDocuments scripts, long epoch) : ITwoPhaseDomainSpecificSearcher
 {
+    private readonly HashSet<string> completed = new(StringComparer.OrdinalIgnoreCase);
+    private readonly FsmSearcher firstPhase = new(targets, index, scripts, epoch);
+    private static string FileKey(IPsiSourceFile file) => file.PsiModule.GetPersistentID() + "|" + ScriptDocuments.Id(file);
     private void Check()
     {
         JetBrains.Application.Interruption.Current.CheckAndThrow();
         if (index.Epoch != epoch) throw new OperationCanceledException("AnotherFSM import search context expired");
     }
-    public bool ProcessProjectItem<T>(IPsiSourceFile file, IFindResultConsumer<T> consumer) { Check(); return false; }
-    public bool ProcessElement<T>(ITreeNode element, IFindResultConsumer<T> consumer) { Check(); return false; }
+    private bool IsImportOnly(IPsiSourceFile file) => ScriptIndex.IsScript(file)
+        && targets.Any(target => target.Module == file.PsiModule.GetPersistentID() && target.Context == file.PsiModule.TargetFrameworkId.UniqueString)
+        && !scripts.Roots(file.PsiModule).Any(root => StringComparer.OrdinalIgnoreCase.Equals(ScriptDocuments.Id(root), ScriptDocuments.Id(file)));
+    public bool ProcessProjectItem<T>(IPsiSourceFile file, IFindResultConsumer<T> consumer)
+    {
+        Check();
+        if (!IsImportOnly(file)) return false;
+        var stopped = firstPhase.ProcessProjectItem(file, consumer);
+        Check();
+        if (!stopped) lock (completed) completed.Add(FileKey(file));
+        return stopped;
+    }
+    public bool ProcessElement<T>(ITreeNode element, IFindResultConsumer<T> consumer)
+    {
+        Check();
+        // A node visit is not proof that the whole source has been searched.
+        return element.GetSourceFile() is { } file && IsImportOnly(file) && firstPhase.ProcessElement(element, consumer);
+    }
     public (IDomainSpecificSearcher? Searcher, ISearchDomain? SearchDomain) TryCreateSecondPhaseInfo(
         SearchDomainFactory domains, ISearchDomain originalSearchDomain, HashSet<IPsiSourceFile>? processedFiles)
     {
         Check();
         var additional = new List<IPsiSourceFile>();
+        HashSet<string> searched;
+        lock (completed) searched = new(completed, StringComparer.OrdinalIgnoreCase);
+        // SDK processedFiles also includes sources visited only through individual nodes; it cannot
+        // prove full coverage. Only this adapter's completed whole-file callbacks suppress phase two.
         foreach (var module in scripts.Modules().Where(module => targets.Any(target => target.Module == module.GetPersistentID()
             && target.Context == module.TargetFrameworkId.UniqueString)))
         {
             Check();
             var roots = scripts.Roots(module).Select(ScriptDocuments.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
             scripts.Graph(module, epoch, out var sources);
-            additional.AddRange(sources.Values.Where(file => !roots.Contains(ScriptDocuments.Id(file))
-                && (processedFiles == null || !processedFiles.Any(processed => processed.PsiModule.GetPersistentID() == module.GetPersistentID()
-                    && StringComparer.OrdinalIgnoreCase.Equals(ScriptDocuments.Id(processed), ScriptDocuments.Id(file))))));
+            additional.AddRange(sources.Values.Where(file => !roots.Contains(ScriptDocuments.Id(file)) && !searched.Contains(FileKey(file))));
         }
         Check();
         // A broad module domain can enumerate only its own SourceFiles even though algebraically it
         // contains a known import source. The explicit, intersected second phase preserves that source.
         var domain = domains.CreateSearchDomain(additional).Intersect(originalSearchDomain);
+        Check();
         return domain.IsEmpty ? (null, null) : (new FsmSearcher(targets, index, scripts, epoch), domain);
     }
 }

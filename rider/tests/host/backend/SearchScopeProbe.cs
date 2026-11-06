@@ -233,6 +233,22 @@ public sealed class SearchScopeProbe
                             && explicitFound[0].start == expectedOffset && explicitFound[0].length == "GraphKey".Length
                             && explicitFound[0].text == "GraphKey",
                             new { expectedFile = importPath, expectedOffset, expectedLength = "GraphKey".Length, found = explicitFound });
+                        // The SDK's processedFiles may come from node visits, not complete file callbacks.
+                        // Exercise that public contract without fabricating a PSI tree for this text-only language.
+                        var phased = importFactory.CreateImplicitUsageSearchers(SearchPattern.FIND_USAGES, new IDeclaredElement[] { target }).Single();
+                        var unconfirmed = phased.TryCreateSecondPhaseInfo(psi.SearchDomainFactory, importDomain, new HashSet<IPsiSourceFile> { imported });
+                        Check("SDK processedFiles alone does not suppress an unconfirmed import source",
+                            unconfirmed.Searcher != null && unconfirmed.SearchDomain?.EnumerateFiles().Any(file => SamePath(ScriptDocuments.Id(file), importPath)) == true,
+                            unconfirmed.SearchDomain == null ? "no additional domain" : DomainEvidence(unconfirmed.SearchDomain));
+                        var firstPhaseConsumer = new Collector();
+                        phased.ProcessProjectItem(imported, firstPhaseConsumer);
+                        var firstPhaseRows = firstPhaseConsumer.Snapshot().Select(Describe).ToArray();
+                        Check("first-phase whole import callback contributes its real key", firstPhaseRows.Length == 1
+                            && firstPhaseRows[0].valid && firstPhaseRows[0].start == expectedOffset, firstPhaseRows);
+                        var completedPhase = phased.TryCreateSecondPhaseInfo(psi.SearchDomainFactory, importDomain, null);
+                        Check("only a successful whole-file callback suppresses the second phase",
+                            completedPhase.SearchDomain == null || !completedPhase.SearchDomain.EnumerateFiles().Any(file => SamePath(ScriptDocuments.Id(file), importPath)),
+                            completedPhase.SearchDomain == null ? "covered by first phase" : DomainEvidence(completedPhase.SearchDomain));
                         // Diagnostic comparisons only: neither substitutes for the Finder regression above.
                         Observe("public factory import-only callback (not Finder/UI acceptance)", () => {
                             var consumer = new Collector();
