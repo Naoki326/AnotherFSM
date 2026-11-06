@@ -387,6 +387,8 @@ public final class DslHostAcceptance {
           rows -> rows.stream().allMatch(row -> row.contains("graph.fsm")));
       references("instance query stays separate from Right",at(GRAPH,"use Alias as Left;","Left"),REFS,3,
           rows -> has(rows,"Left")&&lacks(rows,"Right")&&lacks(rows,"Unopened"));
+      references("whole instance can switch to Module template references",at(GRAPH,"use Alias as Left;","Left"),TEMPLATE,5,
+          rows -> sourceHas(rows,"graph.fsm")&&sourceHas(rows,"unopened.FSMScript"));
       references("alias references exclude module/other alias declarations",at(GRAPH,"import Checker as Alias;","Alias"),REFS,2,
           rows -> has(rows,"graph.fsm")&&lacks(rows,"unopened.FSMScript"));
       references("explicit Event references exclude Node with same spelling",at(GRAPH,"def Signal event;","Signal"),REFS,1,rows -> has(rows,"graph.fsm"));

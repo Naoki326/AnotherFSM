@@ -495,6 +495,7 @@ public sealed class SemanticGraph
         var occurrence = At(documentId, offset);
         if (occurrence?.Symbol is not { Invalid: false } symbol) return Unresolved(occurrence?.Reason ?? "No reliable symbol.");
         if (IsInvalid(symbol)) return Unresolved("Invalid template or instance.");
+        if (template && symbol.Kind == "instance" && symbol.Template != null) symbol = symbol.Template;
         var original = Original(symbol);
         var proxies = symbols.Where(s => s.Template == original && s.Instance is { Invalid: false }).ToArray();
         var templateInstances = symbols.Where(s => s.Kind == "instance" && s.Template == original.Scope.Module && !IsInvalid(s));
