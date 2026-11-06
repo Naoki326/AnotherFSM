@@ -1,0 +1,1064 @@
+{
+  "status": "passed",
+  "seam": "public target SDK Finder single-file domain \u002B factory callbacks \u002B project document identity; NOT native UI acceptance",
+  "backendPid": 9924,
+  "epoch": 376,
+  "module": "33911fe8-1e6d-4aa7-b624-9c789a114633(Graphs)-A34DCEB8[net8.0]",
+  "cancellations": 0,
+  "projectItems": [
+    "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/broken-import.fsm",
+    "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/Broken.fsm",
+    "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/CycleA.fsm",
+    "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/CycleB.fsm",
+    "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/cyclic.fsm",
+    "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/invalid.fsm",
+    "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/legacy.fsm",
+    "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/missing.fsm",
+    "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/overwrite.fsm",
+    "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/ExtensionOnly.FSMScript",
+    "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/damaged-inputs.fsm",
+    "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+    "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Alias.fsm",
+    "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm",
+    "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/implicit.fsm",
+    "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Leaf.fsm",
+    "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript",
+    "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/edges/Chain.fsm",
+    "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/edges/alias-chain.fsm",
+    "C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/none.FSMScript",
+    "C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/content.fsm",
+    "C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/resource.FSMScript",
+    "C:/Work/AnotherFSM/rider/fixtures/SharedGraphs/linked.FSMScript"
+  ],
+  "checks": [
+    {
+      "name": "Roots binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/broken-import.fsm",
+      "passed": true,
+      "detail": {
+        "rootCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "Find binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/broken-import.fsm",
+      "passed": true,
+      "detail": {
+        "foundCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "CurrentText agrees with real project document (no buffer edit): C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/broken-import.fsm",
+      "passed": true,
+      "detail": {
+        "unsavedEditExercised": false,
+        "projectTextLength": 109
+      }
+    },
+    {
+      "name": "Roots binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/Broken.fsm",
+      "passed": true,
+      "detail": {
+        "rootCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "Find binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/Broken.fsm",
+      "passed": true,
+      "detail": {
+        "foundCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "CurrentText agrees with real project document (no buffer edit): C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/Broken.fsm",
+      "passed": true,
+      "detail": {
+        "unsavedEditExercised": false,
+        "projectTextLength": 55
+      }
+    },
+    {
+      "name": "Roots binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/CycleA.fsm",
+      "passed": true,
+      "detail": {
+        "rootCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "Find binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/CycleA.fsm",
+      "passed": true,
+      "detail": {
+        "foundCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "CurrentText agrees with real project document (no buffer edit): C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/CycleA.fsm",
+      "passed": true,
+      "detail": {
+        "unsavedEditExercised": false,
+        "projectTextLength": 70
+      }
+    },
+    {
+      "name": "Roots binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/CycleB.fsm",
+      "passed": true,
+      "detail": {
+        "rootCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "Find binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/CycleB.fsm",
+      "passed": true,
+      "detail": {
+        "foundCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "CurrentText agrees with real project document (no buffer edit): C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/CycleB.fsm",
+      "passed": true,
+      "detail": {
+        "unsavedEditExercised": false,
+        "projectTextLength": 70
+      }
+    },
+    {
+      "name": "Roots binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/cyclic.fsm",
+      "passed": true,
+      "detail": {
+        "rootCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "Find binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/cyclic.fsm",
+      "passed": true,
+      "detail": {
+        "foundCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "CurrentText agrees with real project document (no buffer edit): C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/cyclic.fsm",
+      "passed": true,
+      "detail": {
+        "unsavedEditExercised": false,
+        "projectTextLength": 106
+      }
+    },
+    {
+      "name": "Roots binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/invalid.fsm",
+      "passed": true,
+      "detail": {
+        "rootCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "Find binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/invalid.fsm",
+      "passed": true,
+      "detail": {
+        "foundCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "CurrentText agrees with real project document (no buffer edit): C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/invalid.fsm",
+      "passed": true,
+      "detail": {
+        "unsavedEditExercised": false,
+        "projectTextLength": 434
+      }
+    },
+    {
+      "name": "Roots binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/legacy.fsm",
+      "passed": true,
+      "detail": {
+        "rootCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "Find binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/legacy.fsm",
+      "passed": true,
+      "detail": {
+        "foundCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "CurrentText agrees with real project document (no buffer edit): C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/legacy.fsm",
+      "passed": true,
+      "detail": {
+        "unsavedEditExercised": false,
+        "projectTextLength": 146
+      }
+    },
+    {
+      "name": "Roots binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/missing.fsm",
+      "passed": true,
+      "detail": {
+        "rootCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "Find binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/missing.fsm",
+      "passed": true,
+      "detail": {
+        "foundCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "CurrentText agrees with real project document (no buffer edit): C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/missing.fsm",
+      "passed": true,
+      "detail": {
+        "unsavedEditExercised": false,
+        "projectTextLength": 154
+      }
+    },
+    {
+      "name": "Roots binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/overwrite.fsm",
+      "passed": true,
+      "detail": {
+        "rootCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "Find binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/overwrite.fsm",
+      "passed": true,
+      "detail": {
+        "foundCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "CurrentText agrees with real project document (no buffer edit): C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/overwrite.fsm",
+      "passed": true,
+      "detail": {
+        "unsavedEditExercised": false,
+        "projectTextLength": 165
+      }
+    },
+    {
+      "name": "Roots binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/ExtensionOnly.FSMScript",
+      "passed": true,
+      "detail": {
+        "rootCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "Find binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/ExtensionOnly.FSMScript",
+      "passed": true,
+      "detail": {
+        "foundCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "CurrentText agrees with real project document (no buffer edit): C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/ExtensionOnly.FSMScript",
+      "passed": true,
+      "detail": {
+        "unsavedEditExercised": false,
+        "projectTextLength": 155
+      }
+    },
+    {
+      "name": "Roots binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/damaged-inputs.fsm",
+      "passed": true,
+      "detail": {
+        "rootCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "Find binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/damaged-inputs.fsm",
+      "passed": true,
+      "detail": {
+        "foundCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "CurrentText agrees with real project document (no buffer edit): C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/damaged-inputs.fsm",
+      "passed": true,
+      "detail": {
+        "unsavedEditExercised": false,
+        "projectTextLength": 151
+      }
+    },
+    {
+      "name": "Roots binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+      "passed": true,
+      "detail": {
+        "rootCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "Find binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+      "passed": true,
+      "detail": {
+        "foundCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "CurrentText agrees with real project document (no buffer edit): C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+      "passed": true,
+      "detail": {
+        "unsavedEditExercised": false,
+        "projectTextLength": 1184
+      }
+    },
+    {
+      "name": "Roots binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Alias.fsm",
+      "passed": true,
+      "detail": {
+        "rootCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "Find binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Alias.fsm",
+      "passed": true,
+      "detail": {
+        "foundCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "CurrentText agrees with real project document (no buffer edit): C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Alias.fsm",
+      "passed": true,
+      "detail": {
+        "unsavedEditExercised": false,
+        "projectTextLength": 147
+      }
+    },
+    {
+      "name": "Roots binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm",
+      "passed": true,
+      "detail": {
+        "rootCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "Find binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm",
+      "passed": true,
+      "detail": {
+        "foundCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "CurrentText agrees with real project document (no buffer edit): C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm",
+      "passed": true,
+      "detail": {
+        "unsavedEditExercised": false,
+        "projectTextLength": 343
+      }
+    },
+    {
+      "name": "Roots binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/implicit.fsm",
+      "passed": true,
+      "detail": {
+        "rootCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "Find binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/implicit.fsm",
+      "passed": true,
+      "detail": {
+        "foundCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "CurrentText agrees with real project document (no buffer edit): C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/implicit.fsm",
+      "passed": true,
+      "detail": {
+        "unsavedEditExercised": false,
+        "projectTextLength": 97
+      }
+    },
+    {
+      "name": "Roots binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Leaf.fsm",
+      "passed": true,
+      "detail": {
+        "rootCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "Find binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Leaf.fsm",
+      "passed": true,
+      "detail": {
+        "foundCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "CurrentText agrees with real project document (no buffer edit): C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Leaf.fsm",
+      "passed": true,
+      "detail": {
+        "unsavedEditExercised": false,
+        "projectTextLength": 91
+      }
+    },
+    {
+      "name": "Roots binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript",
+      "passed": true,
+      "detail": {
+        "rootCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "Find binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript",
+      "passed": true,
+      "detail": {
+        "foundCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "CurrentText agrees with real project document (no buffer edit): C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript",
+      "passed": true,
+      "detail": {
+        "unsavedEditExercised": false,
+        "projectTextLength": 114
+      }
+    },
+    {
+      "name": "Roots binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/edges/Chain.fsm",
+      "passed": true,
+      "detail": {
+        "rootCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "Find binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/edges/Chain.fsm",
+      "passed": true,
+      "detail": {
+        "foundCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "CurrentText agrees with real project document (no buffer edit): C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/edges/Chain.fsm",
+      "passed": true,
+      "detail": {
+        "unsavedEditExercised": false,
+        "projectTextLength": 60
+      }
+    },
+    {
+      "name": "Roots binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/edges/alias-chain.fsm",
+      "passed": true,
+      "detail": {
+        "rootCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "Find binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/edges/alias-chain.fsm",
+      "passed": true,
+      "detail": {
+        "foundCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "CurrentText agrees with real project document (no buffer edit): C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/edges/alias-chain.fsm",
+      "passed": true,
+      "detail": {
+        "unsavedEditExercised": false,
+        "projectTextLength": 90
+      }
+    },
+    {
+      "name": "Roots binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/none.FSMScript",
+      "passed": true,
+      "detail": {
+        "rootCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "Find binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/none.FSMScript",
+      "passed": true,
+      "detail": {
+        "foundCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "CurrentText agrees with real project document (no buffer edit): C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/none.FSMScript",
+      "passed": true,
+      "detail": {
+        "unsavedEditExercised": false,
+        "projectTextLength": 105
+      }
+    },
+    {
+      "name": "Roots binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/content.fsm",
+      "passed": true,
+      "detail": {
+        "rootCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "Find binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/content.fsm",
+      "passed": true,
+      "detail": {
+        "foundCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "CurrentText agrees with real project document (no buffer edit): C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/content.fsm",
+      "passed": true,
+      "detail": {
+        "unsavedEditExercised": false,
+        "projectTextLength": 123
+      }
+    },
+    {
+      "name": "Roots binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/resource.FSMScript",
+      "passed": true,
+      "detail": {
+        "rootCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "Find binds real project document: C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/resource.FSMScript",
+      "passed": true,
+      "detail": {
+        "foundCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "CurrentText agrees with real project document (no buffer edit): C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/resource.FSMScript",
+      "passed": true,
+      "detail": {
+        "unsavedEditExercised": false,
+        "projectTextLength": 129
+      }
+    },
+    {
+      "name": "Roots binds real project document: C:/Work/AnotherFSM/rider/fixtures/SharedGraphs/linked.FSMScript",
+      "passed": true,
+      "detail": {
+        "rootCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "Find binds real project document: C:/Work/AnotherFSM/rider/fixtures/SharedGraphs/linked.FSMScript",
+      "passed": true,
+      "detail": {
+        "foundCount": 1,
+        "sameDocuments": [
+          true
+        ]
+      }
+    },
+    {
+      "name": "CurrentText agrees with real project document (no buffer edit): C:/Work/AnotherFSM/rider/fixtures/SharedGraphs/linked.FSMScript",
+      "passed": true,
+      "detail": {
+        "unsavedEditExercised": false,
+        "projectTextLength": 118
+      }
+    },
+    {
+      "name": "file A is available for restricted query",
+      "passed": true,
+      "detail": [
+        "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/broken-import.fsm",
+        "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/Broken.fsm",
+        "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/CycleA.fsm",
+        "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/CycleB.fsm",
+        "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/cyclic.fsm",
+        "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/invalid.fsm",
+        "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/legacy.fsm",
+        "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/missing.fsm",
+        "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/overwrite.fsm",
+        "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/ExtensionOnly.FSMScript",
+        "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/damaged-inputs.fsm",
+        "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Alias.fsm",
+        "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm",
+        "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/implicit.fsm",
+        "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Leaf.fsm",
+        "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript",
+        "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/edges/Chain.fsm",
+        "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/edges/alias-chain.fsm",
+        "C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/none.FSMScript",
+        "C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/content.fsm",
+        "C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/resource.FSMScript",
+        "C:/Work/AnotherFSM/rider/fixtures/SharedGraphs/linked.FSMScript"
+      ]
+    },
+    {
+      "name": "Finder single-file domain returns only the two real file-A keys",
+      "passed": true,
+      "detail": {
+        "expectedFile": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/none.FSMScript",
+        "expectedOffsets": [
+          14,
+          55
+        ],
+        "found": [
+          {
+            "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/none.FSMScript",
+            "start": 14,
+            "length": 8,
+            "text": "GraphKey",
+            "valid": true
+          },
+          {
+            "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/none.FSMScript",
+            "start": 55,
+            "length": 8,
+            "text": "GraphKey",
+            "valid": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "public factory supplies GraphWorker searcher",
+      "passed": true,
+      "detail": "FsmSearcherFactory.CreateReferenceSearcher"
+    },
+    {
+      "name": "callback #1 contributes file A only",
+      "passed": true,
+      "detail": {
+        "expectedFile": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/none.FSMScript",
+        "expectedOffsets": [
+          14,
+          55
+        ],
+        "found": [
+          {
+            "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/none.FSMScript",
+            "start": 14,
+            "length": 8,
+            "text": "GraphKey",
+            "valid": true
+          },
+          {
+            "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/none.FSMScript",
+            "start": 55,
+            "length": 8,
+            "text": "GraphKey",
+            "valid": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "same searcher callback #2 remains repeatable",
+      "passed": true,
+      "detail": {
+        "expectedFile": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/none.FSMScript",
+        "expectedOffsets": [
+          14,
+          55
+        ],
+        "found": [
+          {
+            "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/none.FSMScript",
+            "start": 14,
+            "length": 8,
+            "text": "GraphKey",
+            "valid": true
+          },
+          {
+            "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/none.FSMScript",
+            "start": 55,
+            "length": 8,
+            "text": "GraphKey",
+            "valid": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "linked physical import supplies its exact source",
+      "passed": true,
+      "detail": "C:/Work/AnotherFSM/rider/fixtures/SharedGraphs/LinkedChecker.fsm"
+    },
+    {
+      "name": "import-only source does not fabricate project membership",
+      "passed": true,
+      "detail": "C:/Work/AnotherFSM/rider/fixtures/SharedGraphs/LinkedChecker.fsm"
+    },
+    {
+      "name": "Finder import-only source domain returns its one real GraphKey range",
+      "passed": true,
+      "detail": {
+        "expectedFile": "C:/Work/AnotherFSM/rider/fixtures/SharedGraphs/LinkedChecker.fsm",
+        "expectedOffset": 83,
+        "expectedLength": 8,
+        "found": [
+          {
+            "file": "C:/Work/AnotherFSM/rider/fixtures/SharedGraphs/LinkedChecker.fsm",
+            "start": 83,
+            "length": 8,
+            "text": "GraphKey",
+            "valid": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "SDK processedFiles alone does not suppress an unconfirmed import source",
+      "passed": true,
+      "detail": {
+        "IsEmpty": false,
+        "fileCount": 1,
+        "importPathMatches": 1,
+        "sameSource": true,
+        "matchingSourceTypes": [
+          "JetBrains.ReSharper.Psi.PsiSourceFileFromPath"
+        ],
+        "dump": "RootSearchDomainNode\r\n  PsiModuleSearchDomain:Graphs\r\n    PsiSourceFileFileSearchDomain:SharedGraphs\\LinkedChecker.fsm WholePsiSourceFile\r\n"
+      }
+    },
+    {
+      "name": "first-phase whole import callback contributes its real key",
+      "passed": true,
+      "detail": [
+        {
+          "file": "C:/Work/AnotherFSM/rider/fixtures/SharedGraphs/LinkedChecker.fsm",
+          "start": 83,
+          "length": 8,
+          "text": "GraphKey",
+          "valid": true
+        }
+      ]
+    },
+    {
+      "name": "only a successful whole-file callback suppresses the second phase",
+      "passed": true,
+      "detail": "covered by first phase"
+    },
+    {
+      "name": "Finder whole-solution query includes the one real import-only key without broadening a restricted file scope",
+      "passed": true,
+      "detail": {
+        "expectedFile": "C:/Work/AnotherFSM/rider/fixtures/SharedGraphs/LinkedChecker.fsm",
+        "expectedOffset": 83,
+        "found": [
+          {
+            "file": "C:/Work/AnotherFSM/rider/fixtures/SharedGraphs/LinkedChecker.fsm",
+            "start": 83,
+            "length": 8,
+            "text": "GraphKey",
+            "valid": true
+          }
+        ]
+      }
+    }
+  ],
+  "importOnlyEvidence": [
+    {
+      "name": "source language and cache properties",
+      "value": {
+        "file": "C:/Work/AnotherFSM/rider/fixtures/SharedGraphs/LinkedChecker.fsm",
+        "sourceType": "JetBrains.ReSharper.Psi.PsiSourceFileFromPath",
+        "languageType": "ProjectFileType:AnotherFSM",
+        "languageTypeClass": "AnotherFSM.Rider.FsmFileType",
+        "primaryPsiLanguage": "PsiLanguageType:AnotherFSM",
+        "primaryPsiLanguageClass": "AnotherFSM.Rider.FsmLanguage",
+        "IsICacheParticipant": false,
+        "ShouldBuildPsi": false,
+        "inModuleSourceFiles": false
+      }
+    },
+    {
+      "name": "public GetLanguages categories used by Finder factory dispatch",
+      "value": {
+        "dominantLanguages": [
+          {
+            "name": "PsiLanguageType:AnotherFSM",
+            "type": "AnotherFSM.Rider.FsmLanguage",
+            "compatible": true
+          }
+        ],
+        "allLanguages": [
+          {
+            "name": "PsiLanguageType:AnotherFSM",
+            "type": "AnotherFSM.Rider.FsmLanguage",
+            "compatible": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "public word-index candidate evidence (false cache participation alone is not a skip)",
+      "value": {
+        "words": [
+          "def",
+          "import",
+          "use"
+        ],
+        "allFactoryWords": [
+          "GraphWorker",
+          "graph-worker",
+          "def",
+          "import",
+          "use"
+        ],
+        "wordIndexType": "JetBrains.ReSharper.Feature.Services.Cpp.Caches.CppUnrealWordIndex",
+        "canContainFactoryWords": true,
+        "canContainGraphKey": true,
+        "canContainAnyCombinedFactoryWord": true
+      }
+    },
+    {
+      "name": "public word-index enumeration (absence alone does not imply CanContainAnyWord=false)",
+      "value": {
+        "indexedImportPaths": []
+      }
+    },
+    {
+      "name": "explicit import source domain",
+      "value": {
+        "IsEmpty": false,
+        "fileCount": 1,
+        "importPathMatches": 1,
+        "sameSource": true,
+        "matchingSourceTypes": [
+          "JetBrains.ReSharper.Psi.PsiSourceFileFromPath"
+        ],
+        "dump": "RootSearchDomainNode\r\n  PsiModuleSearchDomain:Graphs\r\n    PsiSourceFileFileSearchDomain:SharedGraphs\\LinkedChecker.fsm WholePsiSourceFile\r\n"
+      }
+    },
+    {
+      "name": "plugin declared domain",
+      "value": {
+        "IsEmpty": false,
+        "fileCount": 24,
+        "importPathMatches": 1,
+        "sameSource": true,
+        "matchingSourceTypes": [
+          "JetBrains.ReSharper.Psi.PsiSourceFileFromPath"
+        ],
+        "dump": "RootSearchDomainNode\r\n  PsiModuleSearchDomain:Graphs\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\DisplayOnly\\linked.FSMScript WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\Alias.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\Checker.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\edges\\alias-chain.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\edges\\Chain.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\graph.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\implicit.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\Leaf.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\negative\\broken-import.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\negative\\Broken.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\negative\\CycleA.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\negative\\CycleB.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\negative\\cyclic.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\negative\\damaged-inputs.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\negative\\ExtensionOnly.FSMScript WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\negative\\invalid.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\negative\\legacy.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\negative\\missing.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\negative\\overwrite.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\unopened.FSMScript WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Items\\content.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Items\\none.FSMScript WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Items\\resource.FSMScript WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:SharedGraphs\\LinkedChecker.fsm WholePsiSourceFile\r\n"
+      }
+    },
+    {
+      "name": "SDK combined target domain from all searcher factories",
+      "value": {
+        "IsEmpty": false,
+        "fileCount": 30,
+        "importPathMatches": 0,
+        "sameSource": false,
+        "matchingSourceTypes": [],
+        "dump": "RootSearchDomainNode\r\n  PsiModuleSearchDomain:Graphs WholePsiModule\r\n"
+      }
+    },
+    {
+      "name": "SDK whole-solution domain (not a captured UI scope)",
+      "value": {
+        "IsEmpty": false,
+        "fileCount": 129,
+        "importPathMatches": 0,
+        "sameSource": false,
+        "matchingSourceTypes": [],
+        "dump": "RootSearchDomainNode\r\n  PsiModuleSearchDomain:C\u002B\u002B External Module WholePsiModule\r\n  PsiModuleSearchDomain:Config files WholePsiModule\r\n  PsiModuleSearchDomain:Graphs WholePsiModule\r\n  PsiModuleSearchDomain:Inventory WholePsiModule\r\n  PsiModuleSearchDomain:Miscellaneous Files WholePsiModule\r\n  PsiModuleSearchDomain:MsBuild Properties files WholePsiModule\r\n  PsiModuleSearchDomain:Orders WholePsiModule\r\n  PsiModuleSearchDomain:Referenced external files WholePsiModule\r\n  PsiModuleSearchDomain:StateMachine WholePsiModule\r\n  PsiModuleSearchDomain:T4OutsideSolution WholePsiModule\r\n  PsiModuleSearchDomain:Unity external files WholePsiModule\r\n  PsiModuleSearchDomain:Unreal Engine Assets WholePsiModule\r\n"
+      }
+    },
+    {
+      "name": "whole-solution intersect plugin declared domain",
+      "value": {
+        "IsEmpty": false,
+        "fileCount": 24,
+        "importPathMatches": 1,
+        "sameSource": true,
+        "matchingSourceTypes": [
+          "JetBrains.ReSharper.Psi.PsiSourceFileFromPath"
+        ],
+        "dump": "RootSearchDomainNode\r\n  PsiModuleSearchDomain:Graphs\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\DisplayOnly\\linked.FSMScript WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\Alias.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\Checker.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\edges\\alias-chain.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\edges\\Chain.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\graph.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\implicit.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\Leaf.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\negative\\broken-import.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\negative\\Broken.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\negative\\CycleA.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\negative\\CycleB.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\negative\\cyclic.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\negative\\damaged-inputs.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\negative\\ExtensionOnly.FSMScript WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\negative\\invalid.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\negative\\legacy.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\negative\\missing.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\negative\\overwrite.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\unopened.FSMScript WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Items\\content.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Items\\none.FSMScript WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Items\\resource.FSMScript WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:SharedGraphs\\LinkedChecker.fsm WholePsiSourceFile\r\n"
+      }
+    },
+    {
+      "name": "whole-solution intersect SDK combined target domain",
+      "value": {
+        "IsEmpty": false,
+        "fileCount": 30,
+        "importPathMatches": 0,
+        "sameSource": false,
+        "matchingSourceTypes": [],
+        "dump": "RootSearchDomainNode\r\n  PsiModuleSearchDomain:Graphs WholePsiModule\r\n"
+      }
+    },
+    {
+      "name": "SDK whole-solution after public Finder narrowing",
+      "value": {
+        "IsEmpty": false,
+        "fileCount": 25,
+        "importPathMatches": 0,
+        "sameSource": false,
+        "matchingSourceTypes": [],
+        "dump": "RootSearchDomainNode\r\n  PsiModuleSearchDomain:Graphs\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\DisplayOnly\\linked.FSMScript WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\Alias.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\Checker.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\edges\\alias-chain.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\edges\\Chain.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\graph.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\implicit.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\Leaf.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\negative\\broken-import.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\negative\\Broken.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\negative\\CycleA.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\negative\\CycleB.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\negative\\cyclic.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\negative\\damaged-inputs.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\negative\\ExtensionOnly.FSMScript WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\negative\\invalid.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\negative\\legacy.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\negative\\missing.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\negative\\overwrite.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Flow\\unopened.FSMScript WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\GraphExecutionSentinel.cs WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Items\\content.fsm WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Items\\none.FSMScript WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Items\\resource.FSMScript WholePsiSourceFile\r\n    PsiSourceFileFileSearchDomain:\u003CGraphs\u003E\\Nodes.cs WholePsiSourceFile\r\n"
+      }
+    },
+    {
+      "name": "Finder explicit import-only source query",
+      "value": {
+        "found": [
+          {
+            "file": "C:/Work/AnotherFSM/rider/fixtures/SharedGraphs/LinkedChecker.fsm",
+            "start": 83,
+            "length": 8,
+            "text": "GraphKey",
+            "valid": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "public factory import-only callback (not Finder/UI acceptance)",
+      "value": {
+        "found": [
+          {
+            "file": "C:/Work/AnotherFSM/rider/fixtures/SharedGraphs/LinkedChecker.fsm",
+            "start": 83,
+            "length": 8,
+            "text": "GraphKey",
+            "valid": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "Finder SDK whole-solution query (not native UI scope)",
+      "value": {
+        "totalResults": 50,
+        "importOnlyResults": [
+          {
+            "file": "C:/Work/AnotherFSM/rider/fixtures/SharedGraphs/LinkedChecker.fsm",
+            "start": 83,
+            "length": 8,
+            "text": "GraphKey",
+            "valid": true
+          }
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "No unsaved buffer modification: host UI must verify CurrentText after edits.",
+    "No ProcessElement subtree-range assertion; no cancellation/recovery race reproduction.",
+    "No cross-project/TFM, external JSON, completion/docs or budget acceptance."
+  ]
+}

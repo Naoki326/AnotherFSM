@@ -1,0 +1,22 @@
+{
+  "status": "passed",
+  "seam": "BridgeQueries.Query in the target SDK; no claim of UI action acceptance",
+  "checks": [
+    {
+      "name": "one implicit Event use remains a location list",
+      "passed": true,
+      "requestId": "d4303bbd-b9d1-4a32-a12f-37860dc2df71",
+      "status": "locations",
+      "count": 1,
+      "reason": "Implicit Event: introduction/use locations, not a unique declaration."
+    },
+    {
+      "name": "overwritten Output publisher is not a unique declaration",
+      "passed": true,
+      "requestId": "562f807c-51ac-46dd-ae4f-34fbf1070a25",
+      "status": "locations",
+      "count": 1,
+      "reason": "No real Branch publisher; Event use positions only."
+    }
+  ]
+}

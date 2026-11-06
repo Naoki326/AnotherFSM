@@ -1,0 +1,16 @@
+{
+  "baselineCommit": "1ef8913",
+  "productZipSha256": "bdfa227825d95c01648542f3f77db7e85197f5ae185152529dba98ebaa8955a8",
+  "directory": ".scratch/issue-33/host/red-8c81a42881884bda991fdc1b1a551209/acceptance",
+  "base32": {
+    "status": "passed",
+    "stage": 51
+  },
+  "dsl33": {
+    "status": "failed",
+    "step": 3,
+    "reason": "import file target uses Checker.fsm, not alias or decoy — no reliable ordinary Node; import navigation not supported by baseline"
+  },
+  "screenshotInspected": "dsl-host-failure.png shows actual Rider with current import position and baseline unsupported-name notification",
+  "limits": "A true feature red against retained #32 ZIP, not a final acceptance or complete coverage report"
+}

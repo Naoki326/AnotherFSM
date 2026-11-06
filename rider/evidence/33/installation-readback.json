@@ -1,0 +1,97 @@
+{
+  "status": "implementation-checks-review-and-package-passed",
+  "artifactSourceCommit": "bf22f958c2c13fb81e7141b9d66232787e7430b9",
+  "sourceTree": "2f54a88bf7d8913024aa0269ecaf4752fd20d451",
+  "platform": {
+    "os": "Windows-11-10.0.26200-SP0",
+    "machine": "AMD64",
+    "windowsVersion": [
+      "11",
+      "10.0.26200",
+      "SP0",
+      "Multiprocessor Free"
+    ],
+    "riderVersion": "2026.2.3.1",
+    "riderBuild": "262.10968.170",
+    "dotnetSdk": "10.0.300"
+  },
+  "zip": {
+    "path": "rider/build/tools-build/anotherfsm.zip",
+    "sha256": "e01e22d8a95b7c8af8417aae131436a4324bea2843bc71443af933c02e66260a",
+    "pluginVersion": "0.2.0-dev",
+    "reproducibleBuilds": [
+      ".scratch/issue-32/build-20261106T233820.632107Z-50e2a2b3",
+      ".scratch/issue-32/build-20261106T233838.548501Z-7f2eefdb"
+    ],
+    "installedAssetsMatchPreparedManifest": true,
+    "installationReadBack": {
+      "riderHome": "C:\\Users\\Naoki\\AppData\\Local\\Programs\\Rider",
+      "version": "2026.2.3.1",
+      "build": "262.10968.170",
+      "zip": "C:\\Work\\AnotherFSM\\rider\\build\\tools-build\\anotherfsm.zip",
+      "zipSha256": "e01e22d8a95b7c8af8417aae131436a4324bea2843bc71443af933c02e66260a",
+      "fixture": "C:\\Work\\AnotherFSM\\rider\\fixtures\\Acceptance.sln",
+      "installedSha256": {
+        "build-manifest.json": "8aa963df2e6491e8cdd26f79d7afaa1657724e16f51082245a3dd0f87cb404b2",
+        "dotnet/AnotherFSM.Semantics.dll": "e2dd85b6d6dcb9f46f5cb4144816c6128e11fcddf307d0244b803f5b0975b13b",
+        "dotnet/Antlr4.Runtime.Standard.dll": "0440e3d2c5906326e04df87d6a5272192b7d29099901ba4215ca9e0f5dca7591",
+        "dotnet/ReSharperPlugin.AnotherFSM.dll": "5f283a3a1c6e3f708016747b75bf4aa58ce42b86163b0705008938eb60b29a16",
+        "lib/anotherfsm-protocol.jar": "0118fce6b6e5028ded12d6d528bf4b7bcc0e30604fd4471aec17ee7c7edce490",
+        "lib/anotherfsm.jar": "a2c9cbf69be55f946704dd9042b1c2d3ef068db84c4cf4d79d7c08bd91c43f53"
+      }
+    }
+  },
+  "checks": {
+    "dotnet": {
+      "passed": 498,
+      "bySuite": {
+        "core": 63,
+        "runtime": 310,
+        "api": 83,
+        "sharedBrowserSession": 42
+      }
+    },
+    "react": 12,
+    "repositoryTools": 22,
+    "releaseTools": 6,
+    "typecheck": "passed",
+    "lint": "passed",
+    "legacyHostStage": 51,
+    "dslHostSteps": 117,
+    "sdkSearchScopeChecks": 81,
+    "sdkNavigationStatusChecks": 2,
+    "nativeFactoryKeyRanges": 49,
+    "nativeImportOnlyRange": {
+      "id": 79,
+      "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+      "file": "C:/Work/AnotherFSM/rider/fixtures/SharedGraphs/LinkedChecker.fsm",
+      "start": 83,
+      "length": 8,
+      "valid": true,
+      "text": "AnotherFSM — FSMNode 特性约定（非运行时注册证明）：工厂类型键 GraphKey",
+      "currentSlice": "GraphKey",
+      "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+      "documentStamp": "0"
+    },
+    "nativeQueryComplete": true,
+    "sdkStaleNavigationGuard": true,
+    "existingSocketReconnect": "passed"
+  },
+  "originalHostEvidence": ".scratch/issue-33/host/final03-d6452f6259a547f7a0ddb924b5aff2a1/acceptance",
+  "retainedSourceNote": "These JSON/UI reports are from the exact installed commit ZIP. SDK seam, actual UI and original-core suites are separate evidence levels.",
+  "reviews": {
+    "standards": { "hardViolations": 0, "initialHeuristics": 1, "resolvedHeuristics": 1, "unresolved": 0 },
+    "spec": { "initialP2Findings": 3, "resolved": 3, "unresolved": 0 },
+    "finalReviewedImplementation": "bf22f958c2c13fb81e7141b9d66232787e7430b9"
+  },
+  "remoteDelivery": {
+    "authority": "GitHub Issue #33 final evidence and closed state plus remote branch readback",
+    "localReceiptDoesNotClaimRemoteCompletion": true
+  },
+  "notClaimed": [
+    "#34 multi-host/TFM/external/JSON",
+    "#35 complete authoring documentation",
+    "#36 performance/resource budgets",
+    "OS/Rider versions outside the pinned support"
+  ]
+}
