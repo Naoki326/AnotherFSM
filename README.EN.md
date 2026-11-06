@@ -80,6 +80,10 @@ Prerequisites: .NET 10 SDK, Node.js 22.18+ (or 24+), npm, and a JDK for ANTLR ge
 - Browser mode supports self-contained DSL, inline Module definitions and browser-safe built-in/Demo nodes. Server filesystem discovery, dynamic plugins and device nodes fail explicitly.
 - See [runtime development notes](docs/react-runtime.md) for builds, capability coverage and browser verification.
 
+### NuGet releases
+
+All three NuGet packages share the version from a pushed `vMAJOR.MINOR.PATCH` tag, with optional prerelease suffixes such as `-beta.1`. Tests and package validation run before publishing. Publishing uses NuGet Trusted Publishing (OIDC), without a stored long-lived API key. See the [release guide](docs/releases.md) for setup, publishing, and retries.
+
 ### Simple Usage Tutorial (StateMachine project only)
 
 Current in-repository examples: [business script](demos/BusinessContext.fsm), [nodes/aggregate](demos/DemoNodes/BusinessFlow.cs), and [host configuration](docs/consumer-host.EN.md). The external [early getting-started project](https://github.com/Naoki326/AnoterFSM.Demo) is not a current contract guide.

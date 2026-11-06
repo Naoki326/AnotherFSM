@@ -80,6 +80,10 @@ just test-browser # API/真实 WASM 的浏览器合同及 UI 回归
 - 浏览器只支持自包含 DSL 与其中的 Module 定义，以及安全内置/Demo 节点。服务器文件系统模块发现、动态插件、设备节点不受支持，会明确报错。
 - 构建、合同覆盖和浏览器验证方法见 [运行时开发说明](docs/react-runtime.md)。
 
+### NuGet 发布
+
+三个 NuGet 包使用同一版本，推送 `v主版本.次版本.补丁版本` tag 后自动测试、打包并发布，支持 `-beta.1` 等预发布后缀。使用 NuGet Trusted Publishing（OIDC），无需长期 API key；首次配置、发布及重试方法见 [发布指南](docs/releases.md)。
+
 ### 简单使用教程（仅 StateMachine 项目）
 
 仓库内目标 API 示例：[业务脚本](demos/BusinessContext.fsm)、[节点及聚合类](demos/DemoNodes/BusinessFlow.cs)、[宿主配置](docs/consumer-host.md)。仓库外的[早期上手项目](https://github.com/Naoki326/AnoterFSM.Demo)不作为当前契约指南。

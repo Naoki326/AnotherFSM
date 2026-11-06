@@ -28,6 +28,8 @@ jobs:
       with:
         distribution: temurin
         java-version: 17
+    - name: Test release validation (offline)
+      run: python3 -m unittest discover -s tools/test -p 'test_release.py' -v
     - name: Test .NET solution
       run: dotnet test AnotherFSM.sln --nologo -p:NuGetAudit=false
 

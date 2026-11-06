@@ -57,10 +57,8 @@ namespace FSMNodeAnalyzerTest
             {
                 Console.WriteLine($"Error: {ex.Message}");
                 Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                throw; // Fail the CI smoke test instead of reporting success.
             }
-            
-            Console.WriteLine("Press any key to exit...");
-            Console.ReadKey();
         }
     }
 

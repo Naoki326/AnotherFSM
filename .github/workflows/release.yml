@@ -1,0 +1,103 @@
+name: Publish NuGet packages
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        persist-credentials: false
+    - name: Validate release tag
+      id: version
+      run: python3 tools/release.py version "$GITHUB_REF_NAME" >> "$GITHUB_OUTPUT"
+    - uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: |
+          8.0.x
+          10.0.x
+    - uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: 17
+    - name: Test release validation
+      run: python3 -m unittest discover -s tools/test -p 'test_release.py' -v
+    - name: Test .NET solution and generated consumers
+      env:
+        VERSION: ${{ steps.version.outputs.version }}
+      run: |
+        dotnet test AnotherFSM.sln -c Release --nologo -p:Version="$VERSION" -p:ContinuousIntegrationBuild=true -p:GeneratePackageOnBuild=false -p:NuGetAudit=false
+        dotnet run --project tests/FSMNodeAnalyzerTest/FSMNodeAnalyzerTest.csproj -c Release --no-restore -p:Version="$VERSION" -p:ContinuousIntegrationBuild=true -p:GeneratePackageOnBuild=false
+        dotnet run --project tests/FSMScriptAnalyzerTest/FSMScriptAnalyzerTest.csproj -c Release --no-restore -p:Version="$VERSION" -p:ContinuousIntegrationBuild=true -p:GeneratePackageOnBuild=false
+    - name: Pack all three packages with the tag version
+      env:
+        VERSION: ${{ steps.version.outputs.version }}
+      run: |
+        for project in StateMachine FSMNodeAnalyzer FSMScriptAnalyzer; do
+          dotnet pack "$project/$project.csproj" -c Release --no-build --no-restore --output artifacts/nuget -p:Version="$VERSION" -p:ContinuousIntegrationBuild=true -p:GeneratePackageOnBuild=false
+        done
+        python3 tools/release.py verify "$GITHUB_REF_NAME" artifacts/nuget
+    - uses: actions/upload-artifact@v4
+      with:
+        name: nuget-${{ steps.version.outputs.version }}
+        path: artifacts/nuget/*.nupkg
+        if-no-files-found: error
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+    - uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.0.x
+    - uses: actions/download-artifact@v4
+      with:
+        name: nuget-${{ needs.build.outputs.version }}
+        path: artifacts/nuget
+    - name: Authenticate to NuGet.org with OIDC
+      id: nuget-login
+      uses: NuGet/login@v1
+      with:
+        user: NaokiZ
+    - name: Publish packages to NuGet.org
+      env:
+        NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
+      run: |
+        if [[ -z "$NUGET_API_KEY" ]]; then
+          echo 'NuGet OIDC login did not return a short-lived API key. Check the Trusted Publishing policy.' >&2
+          exit 1
+        fi
+        dotnet nuget push 'artifacts/nuget/*.nupkg' --source https://api.nuget.org/v3/index.json --api-key "$NUGET_API_KEY" --skip-duplicate
+    - name: Create or update GitHub Release
+      env:
+        GH_TOKEN: ${{ github.token }}
+        GH_REPO: ${{ github.repository }}
+        PRERELEASE: ${{ needs.build.outputs.prerelease }}
+      run: |
+        if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+          gh release upload "$GITHUB_REF_NAME" artifacts/nuget/*.nupkg --clobber
+        else
+          flags=()
+          if [[ "$PRERELEASE" == true ]]; then
+            flags+=(--prerelease)
+          fi
+          gh release create "$GITHUB_REF_NAME" artifacts/nuget/*.nupkg --verify-tag --generate-notes --title "$GITHUB_REF_NAME" "${flags[@]}"
+        fi
