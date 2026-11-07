@@ -22,7 +22,8 @@ public sealed class ScriptIndex
     private sealed record TrackedDocument(IDocument Document, string Stamp, string Text);
     private readonly Dictionary<string, TrackedDocument> tracked = new(StringComparer.OrdinalIgnoreCase);
     private FsmWorkspace documents = new();
-    private readonly Dictionary<string, IReadOnlyList<NodeType>> catalogs = new();
+    private sealed record CatalogSnapshot(int PsiTimestamp, IReadOnlyList<NodeType> Types);
+    private readonly Dictionary<string, CatalogSnapshot> catalogs = new();
     private long epoch;
     private long version;
     private long typeVersion;
@@ -223,19 +224,23 @@ public sealed class ScriptIndex
     public IReadOnlyList<NodeType> Catalog(IPsiModule module)
     {
         var key = module.GetPersistentID();
+        // This SDK timestamp also covers changes which do not publish AfterPsiChanged.
+        // It expires only the derived catalog, not the identity/epoch of displayed results.
+        var timestamp = psi.Files.PsiCacheTimestamp;
         long expectedVersion;
         lock (gate)
         {
             ObjectDisposedException.ThrowIf(closed, this);
-            if (catalogs.TryGetValue(key, out var cached)) return cached;
+            if (catalogs.TryGetValue(key, out var cached) && cached.PsiTimestamp == timestamp) return cached.Types;
             expectedVersion = typeVersion;
         }
         var current = TypeCatalog.Read(module);
         lock (gate)
         {
-            if (closed || expectedVersion != typeVersion) throw new OperationCanceledException("AnotherFSM type context changed");
+            if (closed || expectedVersion != typeVersion || timestamp != psi.Files.PsiCacheTimestamp)
+                throw new OperationCanceledException("AnotherFSM type context changed");
             if (catalogs.Count >= 128) catalogs.Clear();
-            catalogs[key] = current;
+            catalogs[key] = new(timestamp, current);
         }
         return current;
     }

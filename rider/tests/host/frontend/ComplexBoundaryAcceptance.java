@@ -323,6 +323,18 @@ public final class ComplexBoundaryAcceptance {
         return true;
       }catch(java.io.IOException pendingSave){return false;}
     }
+    final class ProjectReload {
+      ActionCallback action;long sequence=-1;int attempts;
+      void request(JsonObject sample) {
+        long observed=sample==null?-1:sample.get("seq").getAsLong();
+        if(action!=null&&action.isRejected()&&observed>=sequence+2&&attempts<3)action=null;
+        if(action!=null||attempts>=3)return;
+        var selected=ProjectLifecycleActions.select(project,root.resolve("Host/BoundaryHost.csproj"));if(selected==null)return;
+        event("selected-real-native-project-for-explicit-reload",selected.observation());
+        action=ProjectLifecycleActions.perform(selected,"RiderReloadProjectAction");attempts++;sequence=observed;
+        event("native-project-reload-requested-not-completion",Map.of("id","RiderReloadProjectAction","attempt",attempts));
+      }
+    }
     void reload(String name,String key,String node,String source,String type,UnaryOperator<String> mutation,Predicate<JsonObject> established) {
       var warm=new StableHost();
       setup(name+": open actual baseline editors and wait stable host",() -> {
@@ -332,7 +344,7 @@ public final class ComplexBoundaryAcceptance {
         return warm.observe(sample);
       });
       lists(node,key,source,type);holdBinding(key);
-      final ActionCallback[] reloadAction={null};final long[] reloadSample={-1};final int[] reloadAttempts={0};
+      var reload=new ProjectReload();
       setup(name+": real saved project reevaluation",() -> {
         before=sample();require(module(before)!=null,"No ready baseline module");heldEpoch=before.get("epoch").getAsLong();heldSession=before.get("session").getAsString();
         require(oldBinding.get("contextVersion").getAsLong()==heldEpoch&&oldBinding.get("session").getAsString().equals(heldSession),"Held binding already stale BEFORE project mutation; rerun, no reload proof");
@@ -341,27 +353,17 @@ public final class ComplexBoundaryAcceptance {
       },() -> {
         if(!projectSaved())return false;
         var sample=sample();boolean changed=module(sample)!=null&&sample.get("structureVersion").getAsLong()>before.get("structureVersion").getAsLong()&&established.test(sample);
-        if(!changed) {
-          if(reloadAction[0]!=null&&reloadAction[0].isRejected()&&sample!=null&&sample.get("seq").getAsLong()>=reloadSample[0]+2&&reloadAttempts[0]<3)reloadAction[0]=null;
-          if(name.startsWith("TFM")&&reloadAction[0]==null&&reloadAttempts[0]<3) {
-            var selected=ProjectLifecycleActions.select(project,root.resolve("Host/BoundaryHost.csproj"));if(selected==null)return false;
-            event("selected-real-native-project-for-explicit-reload",selected.observation());
-            reloadAction[0]=ProjectLifecycleActions.perform(selected,"RiderReloadProjectAction");reloadAttempts[0]++;
-            reloadSample[0]=sample==null?-1:sample.get("seq").getAsLong();
-            event("native-project-reload-requested-not-completion",Map.of("id","RiderReloadProjectAction","attempt",reloadAttempts[0]));
-          }
-          return false;
-        }
+        if(!changed) {reload.request(sample);return false;}
         require(sample.get("epoch").getAsLong()>heldEpoch||!sample.get("session").getAsString().equals(heldSession),"Host changed without invalidation identity");
         event("actual-reevaluated-host-state",sample);return true;
       });
       staleChecks(name);
-      var recovered=new StableHost();
+      var recovered=new StableHost();var restoreReload=new ProjectReload();
       setup(name+": restore original project and wait actual host recovery",() -> {recovered.reset();saveProject(text -> text);},() -> {
         if(!projectSaved())return false;
         var sample=sample();boolean ready=module(sample)!=null&&"net8.0".equals(module(sample).get("framework").getAsString())
             &&bound(sample,"BoundaryReferenceKey","Determined","ReferenceWorker")&&bound(sample,"BoundaryProjectKey","Determined","ProjectWorker")&&bound(sample,"BoundaryFrameworkKey","Determined","LegacyWorker");
-        if(!ready){recovered.reset();return false;}return recovered.observe(sample);
+        if(!ready){restoreReload.request(sample);recovered.reset();return false;}return recovered.observe(sample);
       });
     }
     void staleChecks(String name) {
