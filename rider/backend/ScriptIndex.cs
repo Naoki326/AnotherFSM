@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using AnotherFSM.Semantics;
 using JetBrains.Application;
 using JetBrains.Application.Parts;
@@ -73,13 +75,13 @@ public sealed class ScriptIndex
         // Broad source PSI also describes SDK-generated external views. Check actual business inputs,
         // never the global PSI timestamp; real assembly/module deltas remain unconditional above.
         if (source?.PrimaryPsiLanguage is CSharpLanguage && source.PsiModule.ContainingProjectModule is IProject)
-            Invalidate(true);
+            RefreshInputs();
         else if (node == null)
         {
             // SDK metadata resolution can advance without a project-input change. Never retain
             // a partial symbol scope across that notification. This is cache freshness, not proof
             // that business bindings changed: generated external views must not expire UI results.
-            lock (gate) { catalogs.Clear(); typeVersion++; }
+            lock (gate) catalogs.Clear();
             RefreshInputs();
         }
     }
@@ -153,7 +155,10 @@ public sealed class ScriptIndex
             {
                 values.Add("module:" + module.GetPersistentID() + "/" + module.TargetFrameworkId.UniqueString);
                 foreach (var file in module.SourceFiles.Where(file => file.IsValid() && file.PrimaryPsiLanguage is CSharpLanguage))
-                    values.Add("source:" + ScriptDocuments.Id(file) + "/" + file.InMemoryModificationStamp + "/" + file.ExternalModificationStamp + "/" + file.LastWriteTimeUtc.Ticks);
+                    // PSI tree/cache construction can change source-file stamps without an edit.
+                    // Actual host text includes unsaved C# input; identical bytes do not expire a query.
+                    values.Add("source:" + ScriptDocuments.Id(file) + "/"
+                        + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(file.Document.GetText()))));
             }
             signature = string.Join("\n", values.Distinct().Order(StringComparer.Ordinal));
         }
@@ -237,10 +242,14 @@ public sealed class ScriptIndex
         var current = TypeCatalog.Read(module);
         lock (gate)
         {
-            if (closed || expectedVersion != typeVersion || timestamp != psi.Files.PsiCacheTimestamp)
-                throw new OperationCanceledException("AnotherFSM type context changed");
-            if (catalogs.Count >= 128) catalogs.Clear();
-            catalogs[key] = new(timestamp, current);
+            if (closed || expectedVersion != typeVersion) throw new OperationCanceledException("AnotherFSM type context changed");
+            // A cache-only SDK change must not cancel a valid user operation. The committed
+            // read remains usable, but do not cache it across a stamp change during lazy resolution.
+            if (timestamp == psi.Files.PsiCacheTimestamp)
+            {
+                if (catalogs.Count >= 128) catalogs.Clear();
+                catalogs[key] = new(timestamp, current);
+            }
         }
         return current;
     }
