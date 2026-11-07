@@ -1,0 +1,17 @@
+{
+  "backupId": "517fa55b-8ec8-48bb-82c4-65660d3a2654",
+  "state": "restored",
+  "capturedUtc": "2026-11-07T07:33:26.801382+00:00",
+  "confirmedClosed": true,
+  "launcherPidAtCapture": 35252,
+  "exists": true,
+  "sha256": "e86c040b6ab4a1ab03a43c1fa76c7b126db7a34d35cb8ea8a00affaaa5be26c8",
+  "byteLength": 1469,
+  "settings": "C:/Work/AnotherFSM/rider/.sandbox/config/resharper-host/GlobalSettingsStorage.DotSettings",
+  "scope": "exact known sandbox global settings layer only; main must keep backend closed during restore",
+  "restoredUtc": "2026-11-07T07:35:39.572184+00:00",
+  "exactBytesOrAbsenceVerified": true,
+  "finalAfterAllJourneysRestoreUtc": "2026-11-07T07:50:27.159377+00:00",
+  "beforeFinalRestoreSha256": "75396b813460903d10968cd7510c499e24382eb0beabe866c31d16c4fc98ba28",
+  "finalFrontendAndBackendClosedVerified": true
+}

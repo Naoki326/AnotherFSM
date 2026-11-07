@@ -1,0 +1,22 @@
+{
+  "implementationCommit": "c1ffd56f8f537859392ddf9997ec251e8866862f",
+  "zip": "rider/build/tools-build/anotherfsm.zip",
+  "zipSha256": "01e1f74524c7de30e4f80faecd972c87989b122dd286fa5c3ce94382ecee7c6b",
+  "repeatedBuildByteIdentical": true,
+  "installedRuntimeHashesVerified": true,
+  "manifest": {
+    "pluginId": "io.github.naoki326.anotherfsm",
+    "pluginVersion": "0.2.0-dev",
+    "rdProtocolIncluded": true,
+    "riderBuild": "262.10968.170",
+    "riderVersion": "2026.2.3.1",
+    "sha256": {
+      "anotherfsm/dotnet/AnotherFSM.Semantics.dll": "7229b92df1f64d795f64a018cbbe42bbc3ebcf39895662b0fcfdbcde3f02f5db",
+      "anotherfsm/dotnet/Antlr4.Runtime.Standard.dll": "0440e3d2c5906326e04df87d6a5272192b7d29099901ba4215ca9e0f5dca7591",
+      "anotherfsm/dotnet/ReSharperPlugin.AnotherFSM.dll": "5196b97d346ff6bc088618f2bec8ddb4b94d829371abe841306e627e22689c94",
+      "anotherfsm/lib/anotherfsm-protocol.jar": "0118fce6b6e5028ded12d6d528bf4b7bcc0e30604fd4471aec17ee7c7edce490",
+      "anotherfsm/lib/anotherfsm.jar": "a67ce682862066f0e2a106a74b06c1cadb656e59a0284b0c884efc4a523ae97a"
+    }
+  },
+  "scope": "product only; controlled acceptance observer is a separate plugin, not included in this ZIP"
+}

@@ -1,0 +1,10 @@
+{
+  "runId": "e286163b-ea3c-47da-849b-8f97fbe65bf8",
+  "commandId": "9d4b95a3-639e-428b-9560-5999aa1f4205",
+  "frontendPid": 9260,
+  "clickedYes": true,
+  "ownedFixtureOnly": true,
+  "dialogCaption": "Rider – Decompiler Legal Notice — Accept",
+  "dialogScreenshot": "actual-legal-dialog.png",
+  "dialogScreenshotSha256": "b757488a5282454e77fd21acc559a07281562edc86acd2d268597270fdf59d46"
+}

@@ -1,0 +1,333 @@
+{
+  "mode": "existing-socket-reconnect",
+  "wireRecoveredObserved": true,
+  "status": "passed",
+  "stage": "VERIFY",
+  "elapsedMs": 3512,
+  "jvmPid": 34644,
+  "oldBackendPid": 42548,
+  "newBackendPid": 42548,
+  "baselineSession": "4bb45c53-5ac9-4921-844b-539dc0813ecf",
+  "reconnectedSession": "4bb45c53-5ac9-4921-844b-539dc0813ecf",
+  "oldProcessDead": false,
+  "realDisconnectObserved": true,
+  "oldWireFalseObserved": true,
+  "transportInvalidatedObserved": true,
+  "oldRequestHandleDisposed": true,
+  "notificationRecoveryInvoked": false,
+  "observations": [
+    {
+      "elapsedMs": 36,
+      "stage": "BASELINE",
+      "name": "environment",
+      "value": {
+        "jvmPid": 34644,
+        "fixtureRoot": "C:\\Work\\AnotherFSM\\rider\\fixtures",
+        "bufferModifiedByTest": false,
+        "networkReorderingInjected": false,
+        "riderBuild": "262.10968.170"
+      }
+    },
+    {
+      "elapsedMs": 39,
+      "stage": "BASELINE",
+      "name": "host-wire-snapshot",
+      "value": {
+        "jvmPid": 34644,
+        "hasSolution": true,
+        "host": "ReSharper Process 0",
+        "hostIdentity": "331cdb7a",
+        "hostProjectMatches": true,
+        "hostLifetime": "Alive",
+        "wireConnected": true,
+        "backendPid": 42548,
+        "backendProcessLifetime": "Alive"
+      }
+    },
+    {
+      "elapsedMs": 41,
+      "stage": "BASELINE",
+      "name": "query-submitted",
+      "value": {
+        "action": "resolve",
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Orders/orders.fsm",
+        "text": "// BusinessQuery is text, not a reference here.\ndef Query(BusinessQuery) { 1 -\u003e Ready; Color:\"BusinessQuery\"; }\ndef BusinessQuery() {}\ndef BusinessQuery event;\nReady -\u003e Query to BusinessQuery;\ndef Conflicting(Conflict) {}\ndef Invalid(Generic) {}\ndef Plain(NotNode) {}\ndef Fake(Impostor) {}\ndef BadFallback(ForbiddenFallback) {}\ndef NestedGeneric(OuterGeneric) {}\n",
+        "documentVersion": 0,
+        "offset": 58,
+        "requestId": "1b5c1a0e-3af4-4fb0-8adf-c6a55954334c",
+        "contextVersion": -1
+      }
+    },
+    {
+      "elapsedMs": 69,
+      "stage": "BASELINE",
+      "name": "query-result-raw",
+      "value": "{\"status\":\"type\",\"reason\":\"FSMNode attribute convention; not proof of runtime registration\",\"requestId\":\"1b5c1a0e-3af4-4fb0-8adf-c6a55954334c\",\"documentVersion\":0,\"session\":\"4bb45c53-5ac9-4921-844b-539dc0813ecf\",\"contextVersion\":28,\"span\":null,\"target\":{\"module\":\"feb96820-5097-4234-995e-9b0264bc5ea1(Orders)-B0F5C8B8[net8.0]\",\"context\":\"net8.0\",\"clrName\":\"Orders.Container\\u002BLookupWorker\",\"consumer\":\"feb96820-5097-4234-995e-9b0264bc5ea1(Orders)-B0F5C8B8[net8.0]\",\"construction\":\"\",\"alias\":\"global\"},\"reference\":null,\"locations\":null,\"hosts\":null,\"externalPresentation\":null}"
+    },
+    {
+      "elapsedMs": 69,
+      "stage": "BASELINE",
+      "name": "baseline-host",
+      "value": {
+        "jvmPid": 34644,
+        "hasSolution": true,
+        "host": "ReSharper Process 0",
+        "hostIdentity": "331cdb7a",
+        "hostProjectMatches": true,
+        "hostLifetime": "Alive",
+        "wireConnected": true,
+        "backendPid": 42548,
+        "backendProcessLifetime": "Alive"
+      }
+    },
+    {
+      "elapsedMs": 69,
+      "stage": "BASELINE",
+      "name": "baseline-session",
+      "value": "4bb45c53-5ac9-4921-844b-539dc0813ecf"
+    },
+    {
+      "elapsedMs": 69,
+      "stage": "BASELINE",
+      "name": "baseline-target",
+      "value": {
+        "module": "feb96820-5097-4234-995e-9b0264bc5ea1(Orders)-B0F5C8B8[net8.0]",
+        "context": "net8.0",
+        "clrName": "Orders.Container+LookupWorker",
+        "consumer": "feb96820-5097-4234-995e-9b0264bc5ea1(Orders)-B0F5C8B8[net8.0]",
+        "construction": "",
+        "alias": "global"
+      }
+    },
+    {
+      "elapsedMs": 73,
+      "stage": "INJECT",
+      "name": "old-wire-connected-raw",
+      "value": true
+    },
+    {
+      "elapsedMs": 253,
+      "stage": "INJECT",
+      "name": "host-wire-snapshot",
+      "value": {
+        "jvmPid": 34644,
+        "hasSolution": true,
+        "host": "ReSharper Process 0",
+        "hostIdentity": "331cdb7a",
+        "hostProjectMatches": true,
+        "hostLifetime": "Alive",
+        "wireConnected": true,
+        "backendPid": 42548,
+        "backendProcessLifetime": "Alive",
+        "oldHost": {
+          "jvmPid": 34644,
+          "hasSolution": true,
+          "host": "ReSharper Process 0",
+          "hostIdentity": "331cdb7a",
+          "hostProjectMatches": true,
+          "hostLifetime": "Alive",
+          "wireConnected": true,
+          "backendPid": 42548,
+          "backendProcessLifetime": "Alive"
+        },
+        "originalBackendProcessLifetime": "Alive"
+      }
+    },
+    {
+      "elapsedMs": 277,
+      "stage": "INJECT",
+      "name": "pre-injection-host",
+      "value": {
+        "jvmPid": 34644,
+        "hasSolution": true,
+        "host": "ReSharper Process 0",
+        "hostIdentity": "331cdb7a",
+        "hostProjectMatches": true,
+        "hostLifetime": "Alive",
+        "wireConnected": true,
+        "backendPid": 42548,
+        "backendProcessLifetime": "Alive"
+      }
+    },
+    {
+      "elapsedMs": 278,
+      "stage": "INJECT",
+      "name": "pre-injection-process",
+      "value": {
+        "parentPid": 34644,
+        "pid": 42548,
+        "session": "4bb45c53-5ac9-4921-844b-539dc0813ecf",
+        "startInstant": "2026-11-07T07:36:34.325Z"
+      }
+    },
+    {
+      "elapsedMs": 300,
+      "stage": "INJECT",
+      "name": "fault-injection-requested",
+      "value": "Socket.close on the existing project transport only"
+    },
+    {
+      "elapsedMs": 302,
+      "stage": "INJECT",
+      "name": "old-socket",
+      "value": {
+        "local": "/127.0.0.1:54190",
+        "remote": "/127.0.0.1:54200",
+        "identity": 2118435346
+      }
+    },
+    {
+      "elapsedMs": 306,
+      "stage": "DISCONNECTED",
+      "name": "invalidated-raw",
+      "value": "{\"transportInvalidated\":true}"
+    },
+    {
+      "elapsedMs": 306,
+      "stage": "DISCONNECTED",
+      "name": "old-request-handle-disposed",
+      "value": "actual invalidation; cancellation requested, not proof of an outstanding RPC"
+    },
+    {
+      "elapsedMs": 308,
+      "stage": "DISCONNECTED",
+      "name": "invalidated-raw",
+      "value": "{\"transportInvalidated\":true}"
+    },
+    {
+      "elapsedMs": 304,
+      "stage": "DISCONNECTED",
+      "name": "old-wire-connected-raw",
+      "value": false
+    },
+    {
+      "elapsedMs": 308,
+      "stage": "DISCONNECTED",
+      "name": "old-wire-connected-raw",
+      "value": true
+    },
+    {
+      "elapsedMs": 504,
+      "stage": "DISCONNECTED",
+      "name": "actual-disconnect",
+      "value": {
+        "jvmPid": 34644,
+        "hasSolution": true,
+        "host": "ReSharper Process 0",
+        "hostIdentity": "331cdb7a",
+        "hostProjectMatches": true,
+        "hostLifetime": "Alive",
+        "wireConnected": true,
+        "backendPid": 42548,
+        "backendProcessLifetime": "Alive"
+      }
+    },
+    {
+      "elapsedMs": 754,
+      "stage": "RECOVER",
+      "name": "replacement-candidate-not-semantic-readiness",
+      "value": {
+        "jvmPid": 34644,
+        "hasSolution": true,
+        "host": "ReSharper Process 0",
+        "hostIdentity": "331cdb7a",
+        "hostProjectMatches": true,
+        "hostLifetime": "Alive",
+        "wireConnected": true,
+        "backendPid": 42548,
+        "backendProcessLifetime": "Alive"
+      }
+    },
+    {
+      "elapsedMs": 1004,
+      "stage": "RESOLVE",
+      "name": "query-submitted",
+      "value": {
+        "action": "resolve",
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Orders/orders.fsm",
+        "text": "// BusinessQuery is text, not a reference here.\ndef Query(BusinessQuery) { 1 -\u003e Ready; Color:\"BusinessQuery\"; }\ndef BusinessQuery() {}\ndef BusinessQuery event;\nReady -\u003e Query to BusinessQuery;\ndef Conflicting(Conflict) {}\ndef Invalid(Generic) {}\ndef Plain(NotNode) {}\ndef Fake(Impostor) {}\ndef BadFallback(ForbiddenFallback) {}\ndef NestedGeneric(OuterGeneric) {}\n",
+        "documentVersion": 0,
+        "offset": 58,
+        "requestId": "a08857f4-850e-4070-be10-28815fb1718e",
+        "contextVersion": -1
+      }
+    },
+    {
+      "elapsedMs": 1006,
+      "stage": "RESOLVE",
+      "name": "query-result-raw",
+      "value": "{\"status\":\"type\",\"reason\":\"FSMNode attribute convention; not proof of runtime registration\",\"requestId\":\"a08857f4-850e-4070-be10-28815fb1718e\",\"documentVersion\":0,\"session\":\"4bb45c53-5ac9-4921-844b-539dc0813ecf\",\"contextVersion\":28,\"span\":null,\"target\":{\"module\":\"feb96820-5097-4234-995e-9b0264bc5ea1(Orders)-B0F5C8B8[net8.0]\",\"context\":\"net8.0\",\"clrName\":\"Orders.Container\\u002BLookupWorker\",\"consumer\":\"feb96820-5097-4234-995e-9b0264bc5ea1(Orders)-B0F5C8B8[net8.0]\",\"construction\":\"\",\"alias\":\"global\"},\"reference\":null,\"locations\":null,\"hosts\":null,\"externalPresentation\":null}"
+    },
+    {
+      "elapsedMs": 1006,
+      "stage": "RESOLVE",
+      "name": "reconnected-host",
+      "value": {
+        "jvmPid": 34644,
+        "hasSolution": true,
+        "host": "ReSharper Process 0",
+        "hostIdentity": "331cdb7a",
+        "hostProjectMatches": true,
+        "hostLifetime": "Alive",
+        "wireConnected": true,
+        "backendPid": 42548,
+        "backendProcessLifetime": "Alive"
+      }
+    },
+    {
+      "elapsedMs": 1006,
+      "stage": "RESOLVE",
+      "name": "reconnected-session",
+      "value": "4bb45c53-5ac9-4921-844b-539dc0813ecf"
+    },
+    {
+      "elapsedMs": 1006,
+      "stage": "RESOLVE",
+      "name": "fresh-actual-rd-result",
+      "value": {
+        "status": "type",
+        "reason": "FSMNode attribute convention; not proof of runtime registration",
+        "requestId": "a08857f4-850e-4070-be10-28815fb1718e",
+        "documentVersion": 0,
+        "session": "4bb45c53-5ac9-4921-844b-539dc0813ecf",
+        "contextVersion": 28,
+        "target": {
+          "module": "feb96820-5097-4234-995e-9b0264bc5ea1(Orders)-B0F5C8B8[net8.0]",
+          "context": "net8.0",
+          "clrName": "Orders.Container+LookupWorker",
+          "consumer": "feb96820-5097-4234-995e-9b0264bc5ea1(Orders)-B0F5C8B8[net8.0]",
+          "construction": "",
+          "alias": "global"
+        }
+      }
+    },
+    {
+      "elapsedMs": 2008,
+      "stage": "QUIET",
+      "name": "no-old-epoch-navigation-observed",
+      "value": true
+    },
+    {
+      "elapsedMs": 2259,
+      "stage": "VERIFY",
+      "name": "registered-navigation-action",
+      "value": "AnotherFSM.GoToDeclaration"
+    },
+    {
+      "elapsedMs": 2510,
+      "stage": "VERIFY",
+      "name": "actual-csharp-declaration-navigation",
+      "value": {
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Orders/Nodes.cs",
+        "session": "4bb45c53-5ac9-4921-844b-539dc0813ecf",
+        "backendPid": 42548
+      }
+    },
+    {
+      "elapsedMs": 3511,
+      "stage": "VERIFY",
+      "name": "post-navigation-stability-ms",
+      "value": 1001
+    }
+  ]
+}

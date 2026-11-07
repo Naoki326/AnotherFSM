@@ -1,0 +1,3220 @@
+{
+  "status": "partial",
+  "runId": "e286163b-ea3c-47da-849b-8f97fbe65bf8",
+  "frontendPid": 9260,
+  "backendPid": 38188,
+  "elapsedMs": 50226,
+  "step": 12,
+  "coverage": [
+    {
+      "name": "Verify live isolation/exact prelaunch backup/actual compiled source-case host bindings",
+      "status": "passed"
+    },
+    {
+      "name": "Explicit standalone setup: disable decompiler, all three PDB/source switches false",
+      "status": "passed"
+    },
+    {
+      "name": "Effective decompiler disabled + PDB Download/UseSymbolFiles/SourceLink\u003dfalse survive formal action",
+      "status": "passed"
+    },
+    {
+      "name": "Explicit standalone setup: allow local decompiler, all three PDB/source switches false",
+      "status": "passed"
+    },
+    {
+      "name": "Host-approved decompiler consent: existing approval or main-witnessed real legal notice",
+      "status": "passed"
+    },
+    {
+      "name": "Controlled source-service availability: offline",
+      "status": "passed"
+    },
+    {
+      "name": "Actual allowed presentation while the owned loopback source service refuses connections",
+      "status": "passed"
+    },
+    {
+      "name": "Controlled source-service availability: unauthorized",
+      "status": "passed"
+    },
+    {
+      "name": "Actual allowed presentation with controlled local HTTP401 source evidence",
+      "status": "passed"
+    },
+    {
+      "name": "SourceCSPath candidate/PDB checksum differs: actual presentation remains explicitly unverified",
+      "status": "passed"
+    },
+    {
+      "name": "No CodeView/PDB/embedded source: actual presentation does not invent verified source",
+      "status": "passed"
+    },
+    {
+      "name": "Actual host method-decompilation failure on invalid IL retains confirmed type metadata",
+      "status": "passed"
+    }
+  ],
+  "observations": [
+    {
+      "value": "Verify live isolation/exact prelaunch backup/actual compiled source-case host bindings",
+      "kind": "begin",
+      "step": 0,
+      "elapsedMs": 444
+    },
+    {
+      "value": {
+        "runId": "e286163b-ea3c-47da-849b-8f97fbe65bf8",
+        "root": "C:\\Work\\AnotherFSM\\rider\\tests\\fixtures\\boundary",
+        "output": "C:\\Work\\AnotherFSM\\.scratch\\issue-32\\sandbox-run-20261107T073326.988211Z-097abd4c\\acceptance",
+        "frontendPid": 9260,
+        "launcherSha256": "fd8d3e7206c7cc1981bca6251cf9dafe0cb7c9a7e9ccc0214835c3e3cef65dbe",
+        "backupId": "517fa55b-8ec8-48bb-82c4-65660d3a2654",
+        "properties": {
+          "idea.config.path": "C:/Work/AnotherFSM/rider/.sandbox/config",
+          "idea.system.path": "C:/Work/AnotherFSM/rider/.sandbox/system",
+          "idea.plugins.path": "C:/Work/AnotherFSM/rider/.sandbox/plugins",
+          "idea.log.path": "C:/Work/AnotherFSM/.scratch/issue-32/sandbox-ide",
+          "idea.config.import.enabled": "false",
+          "idea.settings.sync.enabled": "false",
+          "idea.initially.ask.config": "false"
+        }
+      },
+      "kind": "verified-isolation-and-exact-backup",
+      "step": 0,
+      "elapsedMs": 726
+    },
+    {
+      "value": {
+        "status": "type",
+        "reason": "FSMNode attribute convention; not proof of runtime registration",
+        "requestId": "0210c835-a892-4d8a-ac5b-cd45aeea74b0",
+        "documentVersion": 0,
+        "session": "1fe2b295-70cb-4514-bdd1-44848e37a391",
+        "contextVersion": 7,
+        "target": {
+          "module": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::1e62daab999542d69df36f1b8712961e1400::dll",
+          "context": "net8.0",
+          "clrName": "Issue34.SourceCases.OfflineWorker",
+          "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+          "construction": "",
+          "alias": "global"
+        }
+      },
+      "kind": "script-document-readiness-only-not-presentation",
+      "step": 0,
+      "elapsedMs": 6229
+    },
+    {
+      "value": "Verify live isolation/exact prelaunch backup/actual compiled source-case host bindings",
+      "kind": "passed",
+      "step": 0,
+      "elapsedMs": 7578
+    },
+    {
+      "value": "Explicit standalone setup: disable decompiler, all three PDB/source switches false",
+      "kind": "begin",
+      "step": 1,
+      "elapsedMs": 7827
+    },
+    {
+      "value": {
+        "runId": "e286163b-ea3c-47da-849b-8f97fbe65bf8",
+        "commandId": "2453f402-d16e-4ff5-9cdc-06c2ae83dc24",
+        "operation": "disable-decompile-and-downloads",
+        "createdUtc": "2026-11-07T07:33:54.246957Z"
+      },
+      "kind": "explicit-test-setup-command",
+      "step": 1,
+      "elapsedMs": 7831
+    },
+    {
+      "value": {
+        "runId": "e286163b-ea3c-47da-849b-8f97fbe65bf8",
+        "backendPid": 38188,
+        "seq": 6,
+        "sampledUtc": "2026-11-07T07:33:55.3156276Z",
+        "epoch": 7,
+        "session": "1fe2b295-70cb-4514-bdd1-44848e37a391",
+        "coherent": true,
+        "ready": true,
+        "policy": {
+          "rawBodies": false,
+          "effectiveBodies": false,
+          "consent": false,
+          "download": false,
+          "useSymbols": false,
+          "sourceLink": false,
+          "mode": "Sources",
+          "active": true,
+          "force": false
+        },
+        "targets": [
+          {
+            "key": "SourceOfflineKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::1e62daab999542d69df36f1b8712961e1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.OfflineWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.OfflineWorker",
+              "module": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::1e62daab999542d69df36f1b8712961e1400::dll",
+              "assembly": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": true
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": false
+              }
+            ]
+          },
+          {
+            "key": "SourceUnauthorizedKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::0dc6071640574d328cd03ef42f6e4f741400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.RestrictedWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.RestrictedWorker",
+              "module": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::0dc6071640574d328cd03ef42f6e4f741400::dll",
+              "assembly": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": true
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": false
+              }
+            ]
+          },
+          {
+            "key": "SourceMismatchKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::7cbe0b82c16d40a08eb3943d5f9889cc1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.MismatchWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.MismatchWorker",
+              "module": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::7cbe0b82c16d40a08eb3943d5f9889cc1400::dll",
+              "assembly": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": true
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": false
+              }
+            ]
+          },
+          {
+            "key": "SourceNoSymbolsKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::23814e1df4894459aca0fbce057b24d61200::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.SymbolLessWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.SymbolLessWorker",
+              "module": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::23814e1df4894459aca0fbce057b24d61200::dll",
+              "assembly": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": true
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": false
+              }
+            ]
+          },
+          {
+            "key": "SourceBrokenILKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::999ae1f9eebf41aca9e581fa5ebf71fa1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.BrokenWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.BrokenWorker",
+              "module": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::999ae1f9eebf41aca9e581fa5ebf71fa1400::dll",
+              "assembly": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": true
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": false
+              }
+            ]
+          }
+        ],
+        "seam": "read-only public SDK; not host navigation or source identity proof"
+      },
+      "kind": "independent-effective-policy-and-exact-provider-stable",
+      "step": 1,
+      "elapsedMs": 9211
+    },
+    {
+      "value": "Explicit standalone setup: disable decompiler, all three PDB/source switches false",
+      "kind": "passed",
+      "step": 1,
+      "elapsedMs": 9211
+    },
+    {
+      "value": "Effective decompiler disabled + PDB Download/UseSymbolFiles/SourceLink\u003dfalse survive formal action",
+      "kind": "begin",
+      "step": 2,
+      "elapsedMs": 10021
+    },
+    {
+      "value": {
+        "runId": "e286163b-ea3c-47da-849b-8f97fbe65bf8",
+        "backendPid": 38188,
+        "seq": 6,
+        "sampledUtc": "2026-11-07T07:33:55.3156276Z",
+        "epoch": 7,
+        "session": "1fe2b295-70cb-4514-bdd1-44848e37a391",
+        "coherent": true,
+        "ready": true,
+        "policy": {
+          "rawBodies": false,
+          "effectiveBodies": false,
+          "consent": false,
+          "download": false,
+          "useSymbols": false,
+          "sourceLink": false,
+          "mode": "Sources",
+          "active": true,
+          "force": false
+        },
+        "targets": [
+          {
+            "key": "SourceOfflineKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::1e62daab999542d69df36f1b8712961e1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.OfflineWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.OfflineWorker",
+              "module": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::1e62daab999542d69df36f1b8712961e1400::dll",
+              "assembly": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": true
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": false
+              }
+            ]
+          },
+          {
+            "key": "SourceUnauthorizedKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::0dc6071640574d328cd03ef42f6e4f741400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.RestrictedWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.RestrictedWorker",
+              "module": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::0dc6071640574d328cd03ef42f6e4f741400::dll",
+              "assembly": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": true
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": false
+              }
+            ]
+          },
+          {
+            "key": "SourceMismatchKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::7cbe0b82c16d40a08eb3943d5f9889cc1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.MismatchWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.MismatchWorker",
+              "module": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::7cbe0b82c16d40a08eb3943d5f9889cc1400::dll",
+              "assembly": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": true
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": false
+              }
+            ]
+          },
+          {
+            "key": "SourceNoSymbolsKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::23814e1df4894459aca0fbce057b24d61200::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.SymbolLessWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.SymbolLessWorker",
+              "module": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::23814e1df4894459aca0fbce057b24d61200::dll",
+              "assembly": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": true
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": false
+              }
+            ]
+          },
+          {
+            "key": "SourceBrokenILKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::999ae1f9eebf41aca9e581fa5ebf71fa1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.BrokenWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.BrokenWorker",
+              "module": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::999ae1f9eebf41aca9e581fa5ebf71fa1400::dll",
+              "assembly": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": true
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": false
+              }
+            ]
+          }
+        ],
+        "seam": "read-only public SDK; not host navigation or source identity proof"
+      },
+      "kind": "actual-target-policy-before-formal-action",
+      "step": 2,
+      "elapsedMs": 10022
+    },
+    {
+      "value": {
+        "id": "AnotherFSM.GoToImplementation",
+        "documentVersion": 0,
+        "offset": 17
+      },
+      "kind": "registered-formal-action",
+      "step": 2,
+      "elapsedMs": 10028
+    },
+    {
+      "value": " AnotherFSM：FSMNode attribute convention; not proof of runtime registration; Determined C# binding retained; Issue34.SourceCases.OfflineWorker; assembly\u003dIssue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull; assemblyId\u003d1e62daab999542d69df36f1b8712961e1400; location\u003dC:\\Work\\AnotherFSM\\rider\\tests\\fixtures\\boundary\\SourceCases\\artifacts\\dll\\Issue34.Source.offline.dll; module\u003dIssue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::1e62daab999542d69df36f1b8712961e1400::dll; framework\u003dnet8.0; token\u003d0x02000004; moduleToken\u003d0x20000001; decompiler is not applicable under current host options; Metadata view navigation dispatched to Rider; source match unverified; editor opening not confirmed; consumer\u003d0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]; consuming TFM\u003dnet8.0",
+      "kind": "actual-visible-product-label",
+      "step": 2,
+      "elapsedMs": 11198
+    },
+    {
+      "value": {
+        "runId": "e286163b-ea3c-47da-849b-8f97fbe65bf8",
+        "backendPid": 38188,
+        "seq": 8,
+        "sampledUtc": "2026-11-07T07:33:57.818549Z",
+        "epoch": 7,
+        "session": "1fe2b295-70cb-4514-bdd1-44848e37a391",
+        "coherent": true,
+        "ready": true,
+        "policy": {
+          "rawBodies": false,
+          "effectiveBodies": false,
+          "consent": false,
+          "download": false,
+          "useSymbols": false,
+          "sourceLink": false,
+          "mode": "Sources",
+          "active": true,
+          "force": false
+        },
+        "targets": [
+          {
+            "key": "SourceOfflineKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::1e62daab999542d69df36f1b8712961e1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.OfflineWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.OfflineWorker",
+              "module": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::1e62daab999542d69df36f1b8712961e1400::dll",
+              "assembly": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": true
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": false
+              }
+            ]
+          },
+          {
+            "key": "SourceUnauthorizedKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::0dc6071640574d328cd03ef42f6e4f741400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.RestrictedWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.RestrictedWorker",
+              "module": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::0dc6071640574d328cd03ef42f6e4f741400::dll",
+              "assembly": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": true
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": false
+              }
+            ]
+          },
+          {
+            "key": "SourceMismatchKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::7cbe0b82c16d40a08eb3943d5f9889cc1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.MismatchWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.MismatchWorker",
+              "module": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::7cbe0b82c16d40a08eb3943d5f9889cc1400::dll",
+              "assembly": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": true
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": false
+              }
+            ]
+          },
+          {
+            "key": "SourceNoSymbolsKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::23814e1df4894459aca0fbce057b24d61200::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.SymbolLessWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.SymbolLessWorker",
+              "module": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::23814e1df4894459aca0fbce057b24d61200::dll",
+              "assembly": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": true
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": false
+              }
+            ]
+          },
+          {
+            "key": "SourceBrokenILKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::999ae1f9eebf41aca9e581fa5ebf71fa1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.BrokenWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.BrokenWorker",
+              "module": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::999ae1f9eebf41aca9e581fa5ebf71fa1400::dll",
+              "assembly": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": true
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": false
+              }
+            ]
+          }
+        ],
+        "seam": "read-only public SDK; not host navigation or source identity proof"
+      },
+      "kind": "actual-policy-after-action",
+      "step": 2,
+      "elapsedMs": 11615
+    },
+    {
+      "value": "source-disabled.png",
+      "kind": "actual-window-screenshot",
+      "step": 2,
+      "elapsedMs": 11790
+    },
+    {
+      "value": "Effective decompiler disabled + PDB Download/UseSymbolFiles/SourceLink\u003dfalse survive formal action",
+      "kind": "passed",
+      "step": 2,
+      "elapsedMs": 11790
+    },
+    {
+      "value": "Explicit standalone setup: allow local decompiler, all three PDB/source switches false",
+      "kind": "begin",
+      "step": 3,
+      "elapsedMs": 11843
+    },
+    {
+      "value": {
+        "runId": "e286163b-ea3c-47da-849b-8f97fbe65bf8",
+        "commandId": "231115b7-88ac-44fa-bf9f-7b7555e44fb0",
+        "operation": "enable-decompile-local-only",
+        "createdUtc": "2026-11-07T07:33:58.263447800Z"
+      },
+      "kind": "explicit-test-setup-command",
+      "step": 3,
+      "elapsedMs": 11847
+    },
+    {
+      "value": {
+        "runId": "e286163b-ea3c-47da-849b-8f97fbe65bf8",
+        "backendPid": 38188,
+        "seq": 11,
+        "sampledUtc": "2026-11-07T07:33:59.311451Z",
+        "epoch": 7,
+        "session": "1fe2b295-70cb-4514-bdd1-44848e37a391",
+        "coherent": true,
+        "ready": true,
+        "policy": {
+          "rawBodies": true,
+          "effectiveBodies": true,
+          "consent": false,
+          "download": false,
+          "useSymbols": false,
+          "sourceLink": false,
+          "mode": "Sources",
+          "active": true,
+          "force": false
+        },
+        "targets": [
+          {
+            "key": "SourceOfflineKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::1e62daab999542d69df36f1b8712961e1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.OfflineWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.OfflineWorker",
+              "module": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::1e62daab999542d69df36f1b8712961e1400::dll",
+              "assembly": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceUnauthorizedKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::0dc6071640574d328cd03ef42f6e4f741400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.RestrictedWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.RestrictedWorker",
+              "module": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::0dc6071640574d328cd03ef42f6e4f741400::dll",
+              "assembly": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceMismatchKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::7cbe0b82c16d40a08eb3943d5f9889cc1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.MismatchWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.MismatchWorker",
+              "module": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::7cbe0b82c16d40a08eb3943d5f9889cc1400::dll",
+              "assembly": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceNoSymbolsKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::23814e1df4894459aca0fbce057b24d61200::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.SymbolLessWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.SymbolLessWorker",
+              "module": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::23814e1df4894459aca0fbce057b24d61200::dll",
+              "assembly": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceBrokenILKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::999ae1f9eebf41aca9e581fa5ebf71fa1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.BrokenWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.BrokenWorker",
+              "module": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::999ae1f9eebf41aca9e581fa5ebf71fa1400::dll",
+              "assembly": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          }
+        ],
+        "seam": "read-only public SDK; not host navigation or source identity proof"
+      },
+      "kind": "independent-effective-policy-and-exact-provider-stable",
+      "step": 3,
+      "elapsedMs": 13098
+    },
+    {
+      "value": "Explicit standalone setup: allow local decompiler, all three PDB/source switches false",
+      "kind": "passed",
+      "step": 3,
+      "elapsedMs": 13098
+    },
+    {
+      "value": "Host-approved decompiler consent: existing approval or main-witnessed real legal notice",
+      "kind": "begin",
+      "step": 4,
+      "elapsedMs": 13349
+    },
+    {
+      "value": {
+        "runId": "e286163b-ea3c-47da-849b-8f97fbe65bf8",
+        "commandId": "9d4b95a3-639e-428b-9560-5999aa1f4205",
+        "operation": "request-consent",
+        "createdUtc": "2026-11-07T07:33:59.768249500Z"
+      },
+      "kind": "explicit-test-setup-command",
+      "step": 4,
+      "elapsedMs": 13352
+    },
+    {
+      "value": {
+        "runId": "e286163b-ea3c-47da-849b-8f97fbe65bf8",
+        "commandId": "9d4b95a3-639e-428b-9560-5999aa1f4205",
+        "frontendPid": 9260,
+        "clickedYes": true,
+        "ownedFixtureOnly": true,
+        "dialogCaption": "Rider – Decompiler Legal Notice — Accept",
+        "dialogScreenshot": "actual-legal-dialog.png",
+        "dialogScreenshotSha256": "b757488a5282454e77fd21acc559a07281562edc86acd2d268597270fdf59d46"
+      },
+      "kind": "main-supplied-real-legal-UI-witness",
+      "step": 4,
+      "elapsedMs": 43960
+    },
+    {
+      "value": {
+        "runId": "e286163b-ea3c-47da-849b-8f97fbe65bf8",
+        "commandId": "9d4b95a3-639e-428b-9560-5999aa1f4205",
+        "backendPid": 38188,
+        "status": "noticeReturned",
+        "alreadyAccepted": false,
+        "checkAndAskUserResult": true,
+        "before": {
+          "bodies": true,
+          "consent": false,
+          "download": false,
+          "useSymbols": false,
+          "sourceLink": false
+        },
+        "after": {
+          "bodies": true,
+          "consent": true,
+          "download": false,
+          "useSymbols": false,
+          "sourceLink": false
+        },
+        "completedUtc": "2026-11-07T07:34:20.2347028Z"
+      },
+      "kind": "actual-legal-api-return-and-observed-consent",
+      "step": 4,
+      "elapsedMs": 43960
+    },
+    {
+      "value": "Host-approved decompiler consent: existing approval or main-witnessed real legal notice",
+      "kind": "passed",
+      "step": 4,
+      "elapsedMs": 43960
+    },
+    {
+      "value": "Controlled source-service availability: offline",
+      "kind": "begin",
+      "step": 5,
+      "elapsedMs": 44198
+    },
+    {
+      "value": {
+        "fixture": "offline",
+        "host": "127.0.0.1",
+        "port": 38435,
+        "sampledUtc": "2026-11-07T07:34:30.618434300Z",
+        "scope": "source-service availability only; no whole-machine offline/private credentials/host downloader claim",
+        "established": true,
+        "result": "loopback connection refused"
+      },
+      "kind": "controlled-loopback-availability-only",
+      "step": 5,
+      "elapsedMs": 44448
+    },
+    {
+      "value": "Controlled source-service availability: offline",
+      "kind": "passed",
+      "step": 5,
+      "elapsedMs": 44448
+    },
+    {
+      "value": "Actual allowed presentation while the owned loopback source service refuses connections",
+      "kind": "begin",
+      "step": 6,
+      "elapsedMs": 44699
+    },
+    {
+      "value": {
+        "runId": "e286163b-ea3c-47da-849b-8f97fbe65bf8",
+        "backendPid": 38188,
+        "seq": 74,
+        "sampledUtc": "2026-11-07T07:34:30.8118489Z",
+        "epoch": 7,
+        "session": "1fe2b295-70cb-4514-bdd1-44848e37a391",
+        "coherent": true,
+        "ready": true,
+        "policy": {
+          "rawBodies": true,
+          "effectiveBodies": true,
+          "consent": true,
+          "download": false,
+          "useSymbols": false,
+          "sourceLink": false,
+          "mode": "Sources",
+          "active": true,
+          "force": false
+        },
+        "targets": [
+          {
+            "key": "SourceOfflineKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::1e62daab999542d69df36f1b8712961e1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.OfflineWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.OfflineWorker",
+              "module": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::1e62daab999542d69df36f1b8712961e1400::dll",
+              "assembly": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceUnauthorizedKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::0dc6071640574d328cd03ef42f6e4f741400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.RestrictedWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.RestrictedWorker",
+              "module": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::0dc6071640574d328cd03ef42f6e4f741400::dll",
+              "assembly": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceMismatchKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::7cbe0b82c16d40a08eb3943d5f9889cc1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.MismatchWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.MismatchWorker",
+              "module": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::7cbe0b82c16d40a08eb3943d5f9889cc1400::dll",
+              "assembly": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceNoSymbolsKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::23814e1df4894459aca0fbce057b24d61200::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.SymbolLessWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.SymbolLessWorker",
+              "module": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::23814e1df4894459aca0fbce057b24d61200::dll",
+              "assembly": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceBrokenILKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::999ae1f9eebf41aca9e581fa5ebf71fa1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.BrokenWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.BrokenWorker",
+              "module": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::999ae1f9eebf41aca9e581fa5ebf71fa1400::dll",
+              "assembly": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          }
+        ],
+        "seam": "read-only public SDK; not host navigation or source identity proof"
+      },
+      "kind": "actual-target-policy-before-formal-action",
+      "step": 6,
+      "elapsedMs": 44700
+    },
+    {
+      "value": {
+        "id": "AnotherFSM.GoToImplementation",
+        "documentVersion": 0,
+        "offset": 17
+      },
+      "kind": "registered-formal-action",
+      "step": 6,
+      "elapsedMs": 44714
+    },
+    {
+      "value": " AnotherFSM：FSMNode attribute convention; not proof of runtime registration; Determined C# binding retained; Issue34.SourceCases.OfflineWorker; assembly\u003dIssue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull; assemblyId\u003d1e62daab999542d69df36f1b8712961e1400; location\u003dC:\\Work\\AnotherFSM\\rider\\tests\\fixtures\\boundary\\SourceCases\\artifacts\\dll\\Issue34.Source.offline.dll; module\u003dIssue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::1e62daab999542d69df36f1b8712961e1400::dll; framework\u003dnet8.0; token\u003d0x02000004; moduleToken\u003d0x20000001; Decompiled code navigation dispatched to Rider; source match unverified; editor opening not confirmed; consumer\u003d0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]; consuming TFM\u003dnet8.0",
+      "kind": "actual-visible-product-label",
+      "step": 6,
+      "elapsedMs": 45071
+    },
+    {
+      "value": {
+        "decompilerHeader": true,
+        "path": "C:/Work/AnotherFSM/rider/.sandbox/config/resharper-host/DecompilerCache/decompiler/1e62daab999542d69df36f1b8712961e1400/4d/3258337b/OfflineWorker.cs",
+        "line": 14,
+        "type": "OfflineWorker"
+      },
+      "kind": "actual-generated-declaration-editor",
+      "step": 6,
+      "elapsedMs": 45455
+    },
+    {
+      "value": {
+        "runId": "e286163b-ea3c-47da-849b-8f97fbe65bf8",
+        "backendPid": 38188,
+        "seq": 76,
+        "sampledUtc": "2026-11-07T07:34:31.8152623Z",
+        "epoch": 7,
+        "session": "1fe2b295-70cb-4514-bdd1-44848e37a391",
+        "coherent": true,
+        "ready": true,
+        "policy": {
+          "rawBodies": true,
+          "effectiveBodies": true,
+          "consent": true,
+          "download": false,
+          "useSymbols": false,
+          "sourceLink": false,
+          "mode": "Sources",
+          "active": true,
+          "force": false
+        },
+        "targets": [
+          {
+            "key": "SourceOfflineKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::1e62daab999542d69df36f1b8712961e1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.OfflineWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.OfflineWorker",
+              "module": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::1e62daab999542d69df36f1b8712961e1400::dll",
+              "assembly": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceUnauthorizedKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::0dc6071640574d328cd03ef42f6e4f741400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.RestrictedWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.RestrictedWorker",
+              "module": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::0dc6071640574d328cd03ef42f6e4f741400::dll",
+              "assembly": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceMismatchKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::7cbe0b82c16d40a08eb3943d5f9889cc1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.MismatchWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.MismatchWorker",
+              "module": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::7cbe0b82c16d40a08eb3943d5f9889cc1400::dll",
+              "assembly": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceNoSymbolsKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::23814e1df4894459aca0fbce057b24d61200::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.SymbolLessWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.SymbolLessWorker",
+              "module": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::23814e1df4894459aca0fbce057b24d61200::dll",
+              "assembly": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceBrokenILKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::999ae1f9eebf41aca9e581fa5ebf71fa1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.BrokenWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.BrokenWorker",
+              "module": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::999ae1f9eebf41aca9e581fa5ebf71fa1400::dll",
+              "assembly": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          }
+        ],
+        "seam": "read-only public SDK; not host navigation or source identity proof"
+      },
+      "kind": "actual-policy-after-action",
+      "step": 6,
+      "elapsedMs": 45455
+    },
+    {
+      "value": "source-offline.png",
+      "kind": "actual-window-screenshot",
+      "step": 6,
+      "elapsedMs": 45545
+    },
+    {
+      "value": "Actual allowed presentation while the owned loopback source service refuses connections",
+      "kind": "passed",
+      "step": 6,
+      "elapsedMs": 45545
+    },
+    {
+      "value": "Controlled source-service availability: unauthorized",
+      "kind": "begin",
+      "step": 7,
+      "elapsedMs": 45705
+    },
+    {
+      "value": {
+        "fixture": "unauthorized",
+        "host": "127.0.0.1",
+        "port": 38434,
+        "sampledUtc": "2026-11-07T07:34:32.124716100Z",
+        "scope": "source-service availability only; no whole-machine offline/private credentials/host downloader claim",
+        "status": 401,
+        "authorizationSent": false,
+        "ownedPreparationId": "20261107T072411Z-1feb0ac9",
+        "established": true
+      },
+      "kind": "controlled-loopback-availability-only",
+      "step": 7,
+      "elapsedMs": 45956
+    },
+    {
+      "value": "Controlled source-service availability: unauthorized",
+      "kind": "passed",
+      "step": 7,
+      "elapsedMs": 45956
+    },
+    {
+      "value": "Actual allowed presentation with controlled local HTTP401 source evidence",
+      "kind": "begin",
+      "step": 8,
+      "elapsedMs": 46208
+    },
+    {
+      "value": {
+        "runId": "e286163b-ea3c-47da-849b-8f97fbe65bf8",
+        "backendPid": 38188,
+        "seq": 77,
+        "sampledUtc": "2026-11-07T07:34:32.313135Z",
+        "epoch": 7,
+        "session": "1fe2b295-70cb-4514-bdd1-44848e37a391",
+        "coherent": true,
+        "ready": true,
+        "policy": {
+          "rawBodies": true,
+          "effectiveBodies": true,
+          "consent": true,
+          "download": false,
+          "useSymbols": false,
+          "sourceLink": false,
+          "mode": "Sources",
+          "active": true,
+          "force": false
+        },
+        "targets": [
+          {
+            "key": "SourceOfflineKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::1e62daab999542d69df36f1b8712961e1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.OfflineWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.OfflineWorker",
+              "module": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::1e62daab999542d69df36f1b8712961e1400::dll",
+              "assembly": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceUnauthorizedKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::0dc6071640574d328cd03ef42f6e4f741400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.RestrictedWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.RestrictedWorker",
+              "module": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::0dc6071640574d328cd03ef42f6e4f741400::dll",
+              "assembly": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceMismatchKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::7cbe0b82c16d40a08eb3943d5f9889cc1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.MismatchWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.MismatchWorker",
+              "module": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::7cbe0b82c16d40a08eb3943d5f9889cc1400::dll",
+              "assembly": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceNoSymbolsKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::23814e1df4894459aca0fbce057b24d61200::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.SymbolLessWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.SymbolLessWorker",
+              "module": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::23814e1df4894459aca0fbce057b24d61200::dll",
+              "assembly": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceBrokenILKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::999ae1f9eebf41aca9e581fa5ebf71fa1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.BrokenWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.BrokenWorker",
+              "module": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::999ae1f9eebf41aca9e581fa5ebf71fa1400::dll",
+              "assembly": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          }
+        ],
+        "seam": "read-only public SDK; not host navigation or source identity proof"
+      },
+      "kind": "actual-target-policy-before-formal-action",
+      "step": 8,
+      "elapsedMs": 46209
+    },
+    {
+      "value": {
+        "id": "AnotherFSM.GoToImplementation",
+        "documentVersion": 0,
+        "offset": 58
+      },
+      "kind": "registered-formal-action",
+      "step": 8,
+      "elapsedMs": 46229
+    },
+    {
+      "value": " AnotherFSM：FSMNode attribute convention; not proof of runtime registration; Determined C# binding retained; Issue34.SourceCases.RestrictedWorker; assembly\u003dIssue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull; assemblyId\u003d0dc6071640574d328cd03ef42f6e4f741400; location\u003dC:\\Work\\AnotherFSM\\rider\\tests\\fixtures\\boundary\\SourceCases\\artifacts\\dll\\Issue34.Source.unauthorized.dll; module\u003dIssue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::0dc6071640574d328cd03ef42f6e4f741400::dll; framework\u003dnet8.0; token\u003d0x02000004; moduleToken\u003d0x20000001; Decompiled code navigation dispatched to Rider; source match unverified; editor opening not confirmed; consumer\u003d0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]; consuming TFM\u003dnet8.0",
+      "kind": "actual-visible-product-label",
+      "step": 8,
+      "elapsedMs": 46724
+    },
+    {
+      "value": {
+        "decompilerHeader": true,
+        "path": "C:/Work/AnotherFSM/rider/.sandbox/config/resharper-host/DecompilerCache/decompiler/0dc6071640574d328cd03ef42f6e4f741400/97/8fe0b153/RestrictedWorker.cs",
+        "line": 14,
+        "type": "RestrictedWorker"
+      },
+      "kind": "actual-generated-declaration-editor",
+      "step": 8,
+      "elapsedMs": 46963
+    },
+    {
+      "value": {
+        "runId": "e286163b-ea3c-47da-849b-8f97fbe65bf8",
+        "backendPid": 38188,
+        "seq": 79,
+        "sampledUtc": "2026-11-07T07:34:33.3138274Z",
+        "epoch": 7,
+        "session": "1fe2b295-70cb-4514-bdd1-44848e37a391",
+        "coherent": true,
+        "ready": true,
+        "policy": {
+          "rawBodies": true,
+          "effectiveBodies": true,
+          "consent": true,
+          "download": false,
+          "useSymbols": false,
+          "sourceLink": false,
+          "mode": "Sources",
+          "active": true,
+          "force": false
+        },
+        "targets": [
+          {
+            "key": "SourceOfflineKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::1e62daab999542d69df36f1b8712961e1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.OfflineWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.OfflineWorker",
+              "module": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::1e62daab999542d69df36f1b8712961e1400::dll",
+              "assembly": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceUnauthorizedKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::0dc6071640574d328cd03ef42f6e4f741400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.RestrictedWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.RestrictedWorker",
+              "module": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::0dc6071640574d328cd03ef42f6e4f741400::dll",
+              "assembly": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceMismatchKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::7cbe0b82c16d40a08eb3943d5f9889cc1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.MismatchWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.MismatchWorker",
+              "module": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::7cbe0b82c16d40a08eb3943d5f9889cc1400::dll",
+              "assembly": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceNoSymbolsKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::23814e1df4894459aca0fbce057b24d61200::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.SymbolLessWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.SymbolLessWorker",
+              "module": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::23814e1df4894459aca0fbce057b24d61200::dll",
+              "assembly": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceBrokenILKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::999ae1f9eebf41aca9e581fa5ebf71fa1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.BrokenWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.BrokenWorker",
+              "module": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::999ae1f9eebf41aca9e581fa5ebf71fa1400::dll",
+              "assembly": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          }
+        ],
+        "seam": "read-only public SDK; not host navigation or source identity proof"
+      },
+      "kind": "actual-policy-after-action",
+      "step": 8,
+      "elapsedMs": 46963
+    },
+    {
+      "value": "source-unauthorized.png",
+      "kind": "actual-window-screenshot",
+      "step": 8,
+      "elapsedMs": 47062
+    },
+    {
+      "value": "Actual allowed presentation with controlled local HTTP401 source evidence",
+      "kind": "passed",
+      "step": 8,
+      "elapsedMs": 47062
+    },
+    {
+      "value": "SourceCSPath candidate/PDB checksum differs: actual presentation remains explicitly unverified",
+      "kind": "begin",
+      "step": 9,
+      "elapsedMs": 47212
+    },
+    {
+      "value": {
+        "runId": "e286163b-ea3c-47da-849b-8f97fbe65bf8",
+        "backendPid": 38188,
+        "seq": 79,
+        "sampledUtc": "2026-11-07T07:34:33.3138274Z",
+        "epoch": 7,
+        "session": "1fe2b295-70cb-4514-bdd1-44848e37a391",
+        "coherent": true,
+        "ready": true,
+        "policy": {
+          "rawBodies": true,
+          "effectiveBodies": true,
+          "consent": true,
+          "download": false,
+          "useSymbols": false,
+          "sourceLink": false,
+          "mode": "Sources",
+          "active": true,
+          "force": false
+        },
+        "targets": [
+          {
+            "key": "SourceOfflineKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::1e62daab999542d69df36f1b8712961e1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.OfflineWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.OfflineWorker",
+              "module": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::1e62daab999542d69df36f1b8712961e1400::dll",
+              "assembly": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceUnauthorizedKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::0dc6071640574d328cd03ef42f6e4f741400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.RestrictedWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.RestrictedWorker",
+              "module": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::0dc6071640574d328cd03ef42f6e4f741400::dll",
+              "assembly": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceMismatchKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::7cbe0b82c16d40a08eb3943d5f9889cc1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.MismatchWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.MismatchWorker",
+              "module": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::7cbe0b82c16d40a08eb3943d5f9889cc1400::dll",
+              "assembly": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceNoSymbolsKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::23814e1df4894459aca0fbce057b24d61200::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.SymbolLessWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.SymbolLessWorker",
+              "module": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::23814e1df4894459aca0fbce057b24d61200::dll",
+              "assembly": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceBrokenILKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::999ae1f9eebf41aca9e581fa5ebf71fa1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.BrokenWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.BrokenWorker",
+              "module": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::999ae1f9eebf41aca9e581fa5ebf71fa1400::dll",
+              "assembly": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          }
+        ],
+        "seam": "read-only public SDK; not host navigation or source identity proof"
+      },
+      "kind": "actual-target-policy-before-formal-action",
+      "step": 9,
+      "elapsedMs": 47213
+    },
+    {
+      "value": {
+        "id": "AnotherFSM.GoToImplementation",
+        "documentVersion": 0,
+        "offset": 102
+      },
+      "kind": "registered-formal-action",
+      "step": 9,
+      "elapsedMs": 47236
+    },
+    {
+      "value": " AnotherFSM：FSMNode attribute convention; not proof of runtime registration; Determined C# binding retained; Issue34.SourceCases.MismatchWorker; assembly\u003dIssue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull; assemblyId\u003d7cbe0b82c16d40a08eb3943d5f9889cc1400; location\u003dC:\\Work\\AnotherFSM\\rider\\tests\\fixtures\\boundary\\SourceCases\\artifacts\\dll\\Issue34.Source.mismatch.dll; module\u003dIssue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::7cbe0b82c16d40a08eb3943d5f9889cc1400::dll; framework\u003dnet8.0; token\u003d0x02000004; moduleToken\u003d0x20000001; Decompiled code navigation dispatched to Rider; source match unverified; editor opening not confirmed; consumer\u003d0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]; consuming TFM\u003dnet8.0",
+      "kind": "actual-visible-product-label",
+      "step": 9,
+      "elapsedMs": 47539
+    },
+    {
+      "value": {
+        "decompilerHeader": true,
+        "path": "C:/Work/AnotherFSM/rider/.sandbox/config/resharper-host/DecompilerCache/decompiler/7cbe0b82c16d40a08eb3943d5f9889cc1400/5a/1680200d/MismatchWorker.cs",
+        "line": 15,
+        "type": "MismatchWorker"
+      },
+      "kind": "actual-generated-declaration-editor",
+      "step": 9,
+      "elapsedMs": 47966
+    },
+    {
+      "value": {
+        "runId": "e286163b-ea3c-47da-849b-8f97fbe65bf8",
+        "backendPid": 38188,
+        "seq": 81,
+        "sampledUtc": "2026-11-07T07:34:34.3211069Z",
+        "epoch": 7,
+        "session": "1fe2b295-70cb-4514-bdd1-44848e37a391",
+        "coherent": true,
+        "ready": true,
+        "policy": {
+          "rawBodies": true,
+          "effectiveBodies": true,
+          "consent": true,
+          "download": false,
+          "useSymbols": false,
+          "sourceLink": false,
+          "mode": "Sources",
+          "active": true,
+          "force": false
+        },
+        "targets": [
+          {
+            "key": "SourceOfflineKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::1e62daab999542d69df36f1b8712961e1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.OfflineWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.OfflineWorker",
+              "module": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::1e62daab999542d69df36f1b8712961e1400::dll",
+              "assembly": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceUnauthorizedKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::0dc6071640574d328cd03ef42f6e4f741400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.RestrictedWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.RestrictedWorker",
+              "module": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::0dc6071640574d328cd03ef42f6e4f741400::dll",
+              "assembly": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceMismatchKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::7cbe0b82c16d40a08eb3943d5f9889cc1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.MismatchWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.MismatchWorker",
+              "module": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::7cbe0b82c16d40a08eb3943d5f9889cc1400::dll",
+              "assembly": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceNoSymbolsKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::23814e1df4894459aca0fbce057b24d61200::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.SymbolLessWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.SymbolLessWorker",
+              "module": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::23814e1df4894459aca0fbce057b24d61200::dll",
+              "assembly": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceBrokenILKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::999ae1f9eebf41aca9e581fa5ebf71fa1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.BrokenWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.BrokenWorker",
+              "module": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::999ae1f9eebf41aca9e581fa5ebf71fa1400::dll",
+              "assembly": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          }
+        ],
+        "seam": "read-only public SDK; not host navigation or source identity proof"
+      },
+      "kind": "actual-policy-after-action",
+      "step": 9,
+      "elapsedMs": 47966
+    },
+    {
+      "value": "source-mismatch.png",
+      "kind": "actual-window-screenshot",
+      "step": 9,
+      "elapsedMs": 48044
+    },
+    {
+      "value": "SourceCSPath candidate/PDB checksum differs: actual presentation remains explicitly unverified",
+      "kind": "passed",
+      "step": 9,
+      "elapsedMs": 48044
+    },
+    {
+      "value": "No CodeView/PDB/embedded source: actual presentation does not invent verified source",
+      "kind": "begin",
+      "step": 10,
+      "elapsedMs": 48217
+    },
+    {
+      "value": {
+        "runId": "e286163b-ea3c-47da-849b-8f97fbe65bf8",
+        "backendPid": 38188,
+        "seq": 81,
+        "sampledUtc": "2026-11-07T07:34:34.3211069Z",
+        "epoch": 7,
+        "session": "1fe2b295-70cb-4514-bdd1-44848e37a391",
+        "coherent": true,
+        "ready": true,
+        "policy": {
+          "rawBodies": true,
+          "effectiveBodies": true,
+          "consent": true,
+          "download": false,
+          "useSymbols": false,
+          "sourceLink": false,
+          "mode": "Sources",
+          "active": true,
+          "force": false
+        },
+        "targets": [
+          {
+            "key": "SourceOfflineKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::1e62daab999542d69df36f1b8712961e1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.OfflineWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.OfflineWorker",
+              "module": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::1e62daab999542d69df36f1b8712961e1400::dll",
+              "assembly": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceUnauthorizedKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::0dc6071640574d328cd03ef42f6e4f741400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.RestrictedWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.RestrictedWorker",
+              "module": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::0dc6071640574d328cd03ef42f6e4f741400::dll",
+              "assembly": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceMismatchKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::7cbe0b82c16d40a08eb3943d5f9889cc1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.MismatchWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.MismatchWorker",
+              "module": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::7cbe0b82c16d40a08eb3943d5f9889cc1400::dll",
+              "assembly": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceNoSymbolsKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::23814e1df4894459aca0fbce057b24d61200::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.SymbolLessWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.SymbolLessWorker",
+              "module": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::23814e1df4894459aca0fbce057b24d61200::dll",
+              "assembly": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceBrokenILKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::999ae1f9eebf41aca9e581fa5ebf71fa1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.BrokenWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.BrokenWorker",
+              "module": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::999ae1f9eebf41aca9e581fa5ebf71fa1400::dll",
+              "assembly": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          }
+        ],
+        "seam": "read-only public SDK; not host navigation or source identity proof"
+      },
+      "kind": "actual-target-policy-before-formal-action",
+      "step": 10,
+      "elapsedMs": 48217
+    },
+    {
+      "value": {
+        "id": "AnotherFSM.GoToImplementation",
+        "documentVersion": 0,
+        "offset": 144
+      },
+      "kind": "registered-formal-action",
+      "step": 10,
+      "elapsedMs": 48233
+    },
+    {
+      "value": " AnotherFSM：FSMNode attribute convention; not proof of runtime registration; Determined C# binding retained; Issue34.SourceCases.SymbolLessWorker; assembly\u003dIssue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull; assemblyId\u003d23814e1df4894459aca0fbce057b24d61200; location\u003dC:\\Work\\AnotherFSM\\rider\\tests\\fixtures\\boundary\\SourceCases\\artifacts\\dll\\Issue34.Source.nosymbols.dll; module\u003dIssue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::23814e1df4894459aca0fbce057b24d61200::dll; framework\u003dnet8.0; token\u003d0x02000004; moduleToken\u003d0x20000001; Decompiled code navigation dispatched to Rider; source match unverified; editor opening not confirmed; consumer\u003d0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]; consuming TFM\u003dnet8.0",
+      "kind": "actual-visible-product-label",
+      "step": 10,
+      "elapsedMs": 48509
+    },
+    {
+      "value": {
+        "decompilerHeader": true,
+        "path": "C:/Work/AnotherFSM/rider/.sandbox/config/resharper-host/DecompilerCache/decompiler/23814e1df4894459aca0fbce057b24d61200/e9/a0582e94/SymbolLessWorker.cs",
+        "line": 14,
+        "type": "SymbolLessWorker"
+      },
+      "kind": "actual-generated-declaration-editor",
+      "step": 10,
+      "elapsedMs": 48970
+    },
+    {
+      "value": {
+        "runId": "e286163b-ea3c-47da-849b-8f97fbe65bf8",
+        "backendPid": 38188,
+        "seq": 83,
+        "sampledUtc": "2026-11-07T07:34:35.3082343Z",
+        "epoch": 7,
+        "session": "1fe2b295-70cb-4514-bdd1-44848e37a391",
+        "coherent": true,
+        "ready": true,
+        "policy": {
+          "rawBodies": true,
+          "effectiveBodies": true,
+          "consent": true,
+          "download": false,
+          "useSymbols": false,
+          "sourceLink": false,
+          "mode": "Sources",
+          "active": true,
+          "force": false
+        },
+        "targets": [
+          {
+            "key": "SourceOfflineKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::1e62daab999542d69df36f1b8712961e1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.OfflineWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.OfflineWorker",
+              "module": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::1e62daab999542d69df36f1b8712961e1400::dll",
+              "assembly": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceUnauthorizedKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::0dc6071640574d328cd03ef42f6e4f741400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.RestrictedWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.RestrictedWorker",
+              "module": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::0dc6071640574d328cd03ef42f6e4f741400::dll",
+              "assembly": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceMismatchKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::7cbe0b82c16d40a08eb3943d5f9889cc1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.MismatchWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.MismatchWorker",
+              "module": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::7cbe0b82c16d40a08eb3943d5f9889cc1400::dll",
+              "assembly": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceNoSymbolsKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::23814e1df4894459aca0fbce057b24d61200::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.SymbolLessWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.SymbolLessWorker",
+              "module": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::23814e1df4894459aca0fbce057b24d61200::dll",
+              "assembly": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceBrokenILKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::999ae1f9eebf41aca9e581fa5ebf71fa1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.BrokenWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.BrokenWorker",
+              "module": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::999ae1f9eebf41aca9e581fa5ebf71fa1400::dll",
+              "assembly": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          }
+        ],
+        "seam": "read-only public SDK; not host navigation or source identity proof"
+      },
+      "kind": "actual-policy-after-action",
+      "step": 10,
+      "elapsedMs": 48970
+    },
+    {
+      "value": "source-nosymbols.png",
+      "kind": "actual-window-screenshot",
+      "step": 10,
+      "elapsedMs": 49056
+    },
+    {
+      "value": "No CodeView/PDB/embedded source: actual presentation does not invent verified source",
+      "kind": "passed",
+      "step": 10,
+      "elapsedMs": 49056
+    },
+    {
+      "value": "Actual host method-decompilation failure on invalid IL retains confirmed type metadata",
+      "kind": "begin",
+      "step": 11,
+      "elapsedMs": 49220
+    },
+    {
+      "value": {
+        "runId": "e286163b-ea3c-47da-849b-8f97fbe65bf8",
+        "backendPid": 38188,
+        "seq": 83,
+        "sampledUtc": "2026-11-07T07:34:35.3082343Z",
+        "epoch": 7,
+        "session": "1fe2b295-70cb-4514-bdd1-44848e37a391",
+        "coherent": true,
+        "ready": true,
+        "policy": {
+          "rawBodies": true,
+          "effectiveBodies": true,
+          "consent": true,
+          "download": false,
+          "useSymbols": false,
+          "sourceLink": false,
+          "mode": "Sources",
+          "active": true,
+          "force": false
+        },
+        "targets": [
+          {
+            "key": "SourceOfflineKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::1e62daab999542d69df36f1b8712961e1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.OfflineWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.OfflineWorker",
+              "module": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::1e62daab999542d69df36f1b8712961e1400::dll",
+              "assembly": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceUnauthorizedKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::0dc6071640574d328cd03ef42f6e4f741400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.RestrictedWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.RestrictedWorker",
+              "module": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::0dc6071640574d328cd03ef42f6e4f741400::dll",
+              "assembly": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceMismatchKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::7cbe0b82c16d40a08eb3943d5f9889cc1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.MismatchWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.MismatchWorker",
+              "module": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::7cbe0b82c16d40a08eb3943d5f9889cc1400::dll",
+              "assembly": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceNoSymbolsKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::23814e1df4894459aca0fbce057b24d61200::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.SymbolLessWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.SymbolLessWorker",
+              "module": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::23814e1df4894459aca0fbce057b24d61200::dll",
+              "assembly": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceBrokenILKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::999ae1f9eebf41aca9e581fa5ebf71fa1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.BrokenWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.BrokenWorker",
+              "module": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::999ae1f9eebf41aca9e581fa5ebf71fa1400::dll",
+              "assembly": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          }
+        ],
+        "seam": "read-only public SDK; not host navigation or source identity proof"
+      },
+      "kind": "actual-target-policy-before-formal-action",
+      "step": 11,
+      "elapsedMs": 49221
+    },
+    {
+      "value": {
+        "id": "AnotherFSM.GoToImplementation",
+        "documentVersion": 0,
+        "offset": 183
+      },
+      "kind": "registered-formal-action",
+      "step": 11,
+      "elapsedMs": 49239
+    },
+    {
+      "value": " AnotherFSM：FSMNode attribute convention; not proof of runtime registration; Determined C# binding retained; Issue34.SourceCases.BrokenWorker; assembly\u003dIssue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull; assemblyId\u003d999ae1f9eebf41aca9e581fa5ebf71fa1400; location\u003dC:\\Work\\AnotherFSM\\rider\\tests\\fixtures\\boundary\\SourceCases\\artifacts\\dll\\Issue34.Source.broken.dll; module\u003dIssue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::999ae1f9eebf41aca9e581fa5ebf71fa1400::dll; framework\u003dnet8.0; token\u003d0x02000004; moduleToken\u003d0x20000001; Decompiled code navigation dispatched to Rider; source match unverified; editor opening not confirmed; consumer\u003d0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]; consuming TFM\u003dnet8.0",
+      "kind": "actual-visible-product-label",
+      "step": 11,
+      "elapsedMs": 49514
+    },
+    {
+      "value": {
+        "decompilerHeader": true,
+        "path": "C:/Work/AnotherFSM/rider/.sandbox/config/resharper-host/DecompilerCache/decompiler/999ae1f9eebf41aca9e581fa5ebf71fa1400/e2/d309bdad/BrokenWorker.cs",
+        "line": 14,
+        "type": "BrokenWorker"
+      },
+      "kind": "actual-generated-declaration-editor",
+      "step": 11,
+      "elapsedMs": 49973
+    },
+    {
+      "value": {
+        "runId": "e286163b-ea3c-47da-849b-8f97fbe65bf8",
+        "backendPid": 38188,
+        "seq": 85,
+        "sampledUtc": "2026-11-07T07:34:36.3126121Z",
+        "epoch": 7,
+        "session": "1fe2b295-70cb-4514-bdd1-44848e37a391",
+        "coherent": true,
+        "ready": true,
+        "policy": {
+          "rawBodies": true,
+          "effectiveBodies": true,
+          "consent": true,
+          "download": false,
+          "useSymbols": false,
+          "sourceLink": false,
+          "mode": "Sources",
+          "active": true,
+          "force": false
+        },
+        "targets": [
+          {
+            "key": "SourceOfflineKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::1e62daab999542d69df36f1b8712961e1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.OfflineWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.OfflineWorker",
+              "module": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::1e62daab999542d69df36f1b8712961e1400::dll",
+              "assembly": "Issue34.Source.offline, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceUnauthorizedKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::0dc6071640574d328cd03ef42f6e4f741400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.RestrictedWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.RestrictedWorker",
+              "module": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::0dc6071640574d328cd03ef42f6e4f741400::dll",
+              "assembly": "Issue34.Source.unauthorized, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceMismatchKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::7cbe0b82c16d40a08eb3943d5f9889cc1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.MismatchWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.MismatchWorker",
+              "module": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::7cbe0b82c16d40a08eb3943d5f9889cc1400::dll",
+              "assembly": "Issue34.Source.mismatch, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceNoSymbolsKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::23814e1df4894459aca0fbce057b24d61200::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.SymbolLessWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.SymbolLessWorker",
+              "module": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::23814e1df4894459aca0fbce057b24d61200::dll",
+              "assembly": "Issue34.Source.nosymbols, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          },
+          {
+            "key": "SourceBrokenILKey",
+            "state": "Determined",
+            "reason": "FSMNode attribute convention; not proof of runtime registration",
+            "identity": {
+              "module": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::999ae1f9eebf41aca9e581fa5ebf71fa1400::dll",
+              "context": "net8.0",
+              "clrName": "Issue34.SourceCases.BrokenWorker",
+              "consumer": "0ce93083-e593-48df-b491-725a3f5a3d35(BoundaryHost)-13CB43B[net8.0]",
+              "construction": "",
+              "alias": "global"
+            },
+            "compiled": true,
+            "metadata": {
+              "clrName": "Issue34.SourceCases.BrokenWorker",
+              "module": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull::999ae1f9eebf41aca9e581fa5ebf71fa1400::dll",
+              "assembly": "Issue34.Source.broken, Version\u003d1.0.0.0, Culture\u003dneutral, PublicKeyToken\u003dnull",
+              "token": 33554436
+            },
+            "providers": [
+              {
+                "id": "metadata",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.MetadataViewerExternalSourcesProvider",
+                "applicable": false
+              },
+              {
+                "id": "decompiler",
+                "runtimeType": "JetBrains.ReSharper.ExternalSources.MetadataViewer.DecompiledSourcesExternalSourcesProvider",
+                "applicable": true
+              }
+            ]
+          }
+        ],
+        "seam": "read-only public SDK; not host navigation or source identity proof"
+      },
+      "kind": "actual-policy-after-action",
+      "step": 11,
+      "elapsedMs": 49973
+    },
+    {
+      "value": "source-broken.png",
+      "kind": "actual-window-screenshot",
+      "step": 11,
+      "elapsedMs": 50067
+    },
+    {
+      "value": {
+        "method": "RenderProbe(int input)\n  {\n    // ISSUE: unable to decompile the method.\n  ",
+        "oracle": {
+          "method": "RenderProbe",
+          "rva": 8304,
+          "codeFileOffset": 636,
+          "length": 21,
+          "beforeSha256": "a5cfdc57e88616d7df9b12e16eb15680b0a4d74968e86f6d3c7d794164d0fa90",
+          "afterSha256": "43e856194cb4636f1242a4d1e978231802514146a9cafb76ddcfa54280e07526",
+          "metadataBytesUnchanged": true,
+          "scope": "invalid IL only; no claim that Rider\u0027s resilient decompiler must fail"
+        },
+        "scope": "Method-level failure explicitly reported by host; not a whole-engine exception/cancellation claim",
+        "mvid": "999ae1f9-eebf-41ac-a9e5-81fa5ebf71fa"
+      },
+      "kind": "actual-host-method-decompilation-failure-retains-metadata",
+      "step": 11,
+      "elapsedMs": 50068
+    },
+    {
+      "value": "Actual host method-decompilation failure on invalid IL retains confirmed type metadata",
+      "kind": "passed",
+      "step": 11,
+      "elapsedMs": 50068
+    }
+  ],
+  "pendingVerification": [
+    "Exact DotSettings restoration is main\u0027s post-shutdown step, not a runtime/default-value restore. Read restoration receipt separately.",
+    "Controlled loopback refusal/HTTP401 plus a formal action is not whole-machine offline, real private-feed authorization, or proof the host attempted source fetching. Sources/PDB/Source Link providers are never selected by this journey."
+  ],
+  "restoration": "Main must close sandbox and run exact restore-settings; this report does NOT claim restoration.",
+  "sentinel": {
+    "configured": true,
+    "exists": false,
+    "scope": "instrumented fixture paths only; absence is not universal execution/network proof"
+  },
+  "outOfScope": [
+    "#35 documentation/completion",
+    "#36 performance"
+  ]
+}

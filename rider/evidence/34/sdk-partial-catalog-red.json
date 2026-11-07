@@ -1,0 +1,166 @@
+{
+  "status": "failed",
+  "source": "sandbox-run-20261107T062652.189568Z-767131d0",
+  "failedNative": [
+    {
+      "name": "real SDK Finder reverse: LocalPackageKey",
+      "status": "failed",
+      "detail": [
+        {
+          "file": "C:/Work/AnotherFSM/rider/fixtures/SharedComplex/source-matrix.fsm",
+          "start": 254,
+          "length": 15,
+          "text": "LocalPackageKey",
+          "valid": true
+        }
+      ]
+    },
+    {
+      "name": "real SDK Finder restricted HostA source: LocalPackageKey",
+      "status": "failed",
+      "detail": []
+    }
+  ],
+  "catalogDifferences": [
+    {
+      "name": "cached consuming catalog agrees with committed SDK snapshot: CurrentHostKey",
+      "status": "failed",
+      "missingFromCached": [
+        {
+          "identity": {
+            "module": "Issue34.PackagedNodes, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null::83c2e2095ffe45fdb7256fd67735db8a2a00::dll",
+            "context": "net8.0",
+            "clrName": "Issue34.PackageLibrary.ParcelWorker",
+            "consumer": "34000000-0000-4000-8000-000000000003(HostA)-2659D386[net8.0]",
+            "construction": "",
+            "alias": "global"
+          },
+          "key": "LocalPackageKey",
+          "hasNodeContract": true,
+          "isOpenGeneric": false
+        }
+      ],
+      "freshMatchesSnapshot": true
+    },
+    {
+      "name": "cached consuming catalog agrees with committed SDK snapshot: ProjectLookupKey",
+      "status": "failed",
+      "missingFromCached": [
+        {
+          "identity": {
+            "module": "Issue34.PackagedNodes, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null::83c2e2095ffe45fdb7256fd67735db8a2a00::dll",
+            "context": "net8.0",
+            "clrName": "Issue34.PackageLibrary.ParcelWorker",
+            "consumer": "34000000-0000-4000-8000-000000000003(HostA)-2659D386[net8.0]",
+            "construction": "",
+            "alias": "global"
+          },
+          "key": "LocalPackageKey",
+          "hasNodeContract": true,
+          "isOpenGeneric": false
+        }
+      ],
+      "freshMatchesSnapshot": true
+    },
+    {
+      "name": "cached consuming catalog agrees with committed SDK snapshot: HostDllKey",
+      "status": "failed",
+      "missingFromCached": [
+        {
+          "identity": {
+            "module": "Issue34.PackagedNodes, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null::83c2e2095ffe45fdb7256fd67735db8a2a00::dll",
+            "context": "net8.0",
+            "clrName": "Issue34.PackageLibrary.ParcelWorker",
+            "consumer": "34000000-0000-4000-8000-000000000003(HostA)-2659D386[net8.0]",
+            "construction": "",
+            "alias": "global"
+          },
+          "key": "LocalPackageKey",
+          "hasNodeContract": true,
+          "isOpenGeneric": false
+        }
+      ],
+      "freshMatchesSnapshot": true
+    },
+    {
+      "name": "cached consuming catalog agrees with committed SDK snapshot: LocalPackageKey",
+      "status": "failed",
+      "missingFromCached": [
+        {
+          "identity": {
+            "module": "Issue34.PackagedNodes, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null::83c2e2095ffe45fdb7256fd67735db8a2a00::dll",
+            "context": "net8.0",
+            "clrName": "Issue34.PackageLibrary.ParcelWorker",
+            "consumer": "34000000-0000-4000-8000-000000000003(HostA)-2659D386[net8.0]",
+            "construction": "",
+            "alias": "global"
+          },
+          "key": "LocalPackageKey",
+          "hasNodeContract": true,
+          "isOpenGeneric": false
+        }
+      ],
+      "freshMatchesSnapshot": true
+    },
+    {
+      "name": "cached consuming catalog agrees with committed SDK snapshot: NestedLookupKey",
+      "status": "failed",
+      "missingFromCached": [
+        {
+          "identity": {
+            "module": "Issue34.PackagedNodes, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null::83c2e2095ffe45fdb7256fd67735db8a2a00::dll",
+            "context": "net8.0",
+            "clrName": "Issue34.PackageLibrary.ParcelWorker",
+            "consumer": "34000000-0000-4000-8000-000000000003(HostA)-2659D386[net8.0]",
+            "construction": "",
+            "alias": "global"
+          },
+          "key": "LocalPackageKey",
+          "hasNodeContract": true,
+          "isOpenGeneric": false
+        }
+      ],
+      "freshMatchesSnapshot": true
+    },
+    {
+      "name": "cached consuming catalog agrees with committed SDK snapshot: ClosedBufferKey",
+      "status": "failed",
+      "missingFromCached": [
+        {
+          "identity": {
+            "module": "Issue34.PackagedNodes, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null::83c2e2095ffe45fdb7256fd67735db8a2a00::dll",
+            "context": "net8.0",
+            "clrName": "Issue34.PackageLibrary.ParcelWorker",
+            "consumer": "34000000-0000-4000-8000-000000000003(HostA)-2659D386[net8.0]",
+            "construction": "",
+            "alias": "global"
+          },
+          "key": "LocalPackageKey",
+          "hasNodeContract": true,
+          "isOpenGeneric": false
+        }
+      ],
+      "freshMatchesSnapshot": true
+    },
+    {
+      "name": "cached consuming catalog agrees with committed SDK snapshot: NamedOverrideKey",
+      "status": "failed",
+      "missingFromCached": [
+        {
+          "identity": {
+            "module": "Issue34.PackagedNodes, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null::83c2e2095ffe45fdb7256fd67735db8a2a00::dll",
+            "context": "net8.0",
+            "clrName": "Issue34.PackageLibrary.ParcelWorker",
+            "consumer": "34000000-0000-4000-8000-000000000003(HostA)-2659D386[net8.0]",
+            "construction": "",
+            "alias": "global"
+          },
+          "key": "LocalPackageKey",
+          "hasNodeContract": true,
+          "isOpenGeneric": false
+        }
+      ],
+      "freshMatchesSnapshot": true
+    }
+  ]
+}

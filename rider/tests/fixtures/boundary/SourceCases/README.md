@@ -132,6 +132,8 @@ conditions or post-shutdown restoration are unverified. Continuation means no fa
 not an all-AC pass. A missing importer/backup/real host setup remains pending and performs no setup.
 #35 documentation/completion and #36 performance are outside this task.
 
-Current contribution validation: observer and Java compiled; controlled assets built and PE/PDB
-inspected; execution sentinel absent. NO real Rider UI run, settings setup, consent click, source
-server run or host generation failure has been executed by this contributor.
+Contribution-level preparation originally covered observer/Java compilation and PE/PDB inspection
+only; it did not stand in for acceptance. Main integration has since completed the actual 12-step
+Rider policy/source journey, visible owned-fixture consent, method-level host failure witness,
+loopback-service checks and exact post-shutdown settings restoration. See the permanent scoped
+reports and safety limits in `rider/evidence/34/README.md`; the reports, not preparation, prove these actions.

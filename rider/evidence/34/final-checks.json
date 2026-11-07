@@ -1,0 +1,53 @@
+{
+  "implementationCommit": "c1ffd56f8f537859392ddf9997ec251e8866862f",
+  "status": "passed",
+  "checks": [
+    {
+      "command": "dotnet test AnotherFSM.sln --nologo -p:NuGetAudit=false",
+      "passed": 507,
+      "breakdown": {
+        "semantics": 72,
+        "engine": 310,
+        "wasmHostContract": 42,
+        "api": 83
+      },
+      "log": ".scratch/issue-34/final-checks/dotnet.log",
+      "warnings": "Existing CS0067/xUnit1031 and packaging notices retained; not suppressed or repaired out of scope."
+    },
+    {
+      "command": "npm --script-shell='C:/Program Files/Git/bin/bash.exe' --prefix demos/FSMDemo.Frontend run lint / run typecheck / test",
+      "passed": 12,
+      "lint": "passed",
+      "typecheck": "passed",
+      "log": ".scratch/issue-34/final-checks/frontend.log"
+    },
+    {
+      "command": "python -m unittest discover -s tools/test -p test_release.py -v",
+      "passed": 6,
+      "log": ".scratch/issue-34/final-checks/tools.log"
+    },
+    {
+      "command": "node --test tools/test/*.test.mjs",
+      "passed": 22,
+      "log": ".scratch/issue-34/final-checks/tools.log"
+    },
+    {
+      "command": "python rider/tools/build.py (twice at same implementation commit)",
+      "status": "passed",
+      "repeatableZipSha256": "01e1f74524c7de30e4f80faecd972c87989b122dd286fa5c3ce94382ecee7c6b"
+    },
+    {
+      "command": "git diff --check",
+      "status": "passed"
+    }
+  ],
+  "cleanup": {
+    "sandboxFrontendAndBackendStopped": true,
+    "ownedSourceServerStopped": true,
+    "originalSandboxSettingsBytesRestored": true,
+    "fixtureSourceAndProjectDiffEmpty": true,
+    "trustRefusalMsbuildMarkerAbsent": true,
+    "temporaryDebugMarkersAbsent": true
+  },
+  "scope": "Host-WASM contract tests do not claim real WASM execution; controlled actual WebAssembly SDK Debug/Release builds are separately evidenced. Sentinel proof is restricted to instrumented fixture paths."
+}

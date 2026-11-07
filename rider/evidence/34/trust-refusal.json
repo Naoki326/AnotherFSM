@@ -1,0 +1,14 @@
+{
+  "seam": "real native Rider trust gate; not inferred from empty search results",
+  "fixture": "rider/tests/fixtures/trust-declined/Declined.sln",
+  "frontendWindowsPid": 45784,
+  "launcher": ".scratch/issue-32/sandbox-run-20261107T055210.802934Z-6971b9a2/command.json",
+  "observedPrompt": "Untrusted Solution Declined",
+  "action": "Clicked the actual Don't Open button; never granted trust",
+  "observedOutcome": "Cannot Execute Command — Opening was canceled",
+  "promptFrame": "real-trust-refusal-prompt.png",
+  "outcomeFrame": "real-trust-opening-cancelled.png",
+  "msbuildInitialTargetMarkerAbsentBeforeAndAfter": true,
+  "safetyScope": "The instrumented untrusted fixture was not executed. This is not a universal process/network proof.",
+  "localDslAndNoBorrowedCSharp": "Separately asserted from the same declined folder in the trusted boundary suite; final verdict belongs to that suite's actual report."
+}

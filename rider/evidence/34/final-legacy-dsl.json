@@ -1,0 +1,4644 @@
+{
+  "status": "passed",
+  "step": 117,
+  "elapsedMs": 60515,
+  "seam": "real Rider actions/editor/Swing UI; RD readiness evidence only",
+  "coverage": [
+    {
+      "name": "pinned Rider and real RD readiness",
+      "status": "passed"
+    },
+    {
+      "name": "unopened project scripts remain closed",
+      "status": "passed"
+    },
+    {
+      "name": "AdditionalFiles: Node is not factory key",
+      "status": "passed"
+    },
+    {
+      "name": "import file target uses Checker.fsm, not alias or decoy",
+      "status": "passed"
+    },
+    {
+      "name": "alias use defaults to alias declaration",
+      "status": "passed"
+    },
+    {
+      "name": "alias has separate module-definition operation",
+      "status": "passed"
+    },
+    {
+      "name": "relative transitive import",
+      "status": "passed"
+    },
+    {
+      "name": "qualified instance prefix is use declaration",
+      "status": "passed"
+    },
+    {
+      "name": "Input suffix defaults to interface",
+      "status": "passed"
+    },
+    {
+      "name": "Input internal definition shares Node identity",
+      "status": "passed"
+    },
+    {
+      "name": "Output suffix defaults to interface",
+      "status": "passed"
+    },
+    {
+      "name": "single Input omission defaults to instance",
+      "status": "passed"
+    },
+    {
+      "name": "single Input explicit entry operation",
+      "status": "passed"
+    },
+    {
+      "name": "multiple Input First",
+      "status": "passed"
+    },
+    {
+      "name": "multiple Input Second",
+      "status": "passed"
+    },
+    {
+      "name": "module A as B registers only B",
+      "status": "passed"
+    },
+    {
+      "name": "explicit Event distinct from same-named Node",
+      "status": "passed"
+    },
+    {
+      "name": "same-named Node remains Node",
+      "status": "passed"
+    },
+    {
+      "name": "ordinary explicit Event",
+      "status": "passed"
+    },
+    {
+      "name": "Namespace prefix resolves local Node",
+      "status": "passed"
+    },
+    {
+      "name": "dotted ordinary name is not Module Instance",
+      "status": "passed"
+    },
+    {
+      "name": "Namespace-qualified Node suffix",
+      "status": "passed"
+    },
+    {
+      "name": "merged Namespace declarations are multiple real source positions",
+      "status": "passed"
+    },
+    {
+      "name": "merged Namespace declarations are multiple real source positions: selected real source location",
+      "status": "passed"
+    },
+    {
+      "name": "None: real project-item declaration",
+      "status": "passed"
+    },
+    {
+      "name": "None: host membership and GraphKey binding",
+      "status": "passed"
+    },
+    {
+      "name": "Content: real project-item declaration",
+      "status": "passed"
+    },
+    {
+      "name": "Content: host membership and GraphKey binding",
+      "status": "passed"
+    },
+    {
+      "name": "EmbeddedResource: real project-item declaration",
+      "status": "passed"
+    },
+    {
+      "name": "EmbeddedResource: host membership and GraphKey binding",
+      "status": "passed"
+    },
+    {
+      "name": "linked file uses physical directory not Link display",
+      "status": "passed"
+    },
+    {
+      "name": "linked file retains owning project binding",
+      "status": "passed"
+    },
+    {
+      "name": "change Content factory to another valid key without saving",
+      "status": "passed"
+    },
+    {
+      "name": "unsaved Content key navigates using real project buffer, not disk path document",
+      "status": "passed"
+    },
+    {
+      "name": "restore unsaved Content factory",
+      "status": "passed"
+    },
+    {
+      "name": "Module Input C# implementation",
+      "status": "passed"
+    },
+    {
+      "name": "qualified Input C# implementation",
+      "status": "passed"
+    },
+    {
+      "name": "Output has no fabricated C# type",
+      "status": "passed"
+    },
+    {
+      "name": "Module Instance is not an executable Node",
+      "status": "passed"
+    },
+    {
+      "name": "Event has no fabricated C# type",
+      "status": "passed"
+    },
+    {
+      "name": "Namespace has no C# namespace binding",
+      "status": "passed"
+    },
+    {
+      "name": "Branch error is DSL index 3, not C# enum",
+      "status": "passed"
+    },
+    {
+      "name": "Branch break is DSL index 4, not C# enum",
+      "status": "passed"
+    },
+    {
+      "name": "Branch cancel is DSL index 5, not C# enum",
+      "status": "passed"
+    },
+    {
+      "name": "Branch with explicit metadata locates its real attribute, not a return or enum",
+      "status": "passed"
+    },
+    {
+      "name": "Module references include both aliases and unopened dependent script",
+      "status": "passed"
+    },
+    {
+      "name": "import target references share actual Module identity",
+      "status": "passed"
+    },
+    {
+      "name": "Namespace references are real prefix uses, not declarations",
+      "status": "passed"
+    },
+    {
+      "name": "Branch query groups error and numeric 3 only for this Node",
+      "status": "passed"
+    },
+    {
+      "name": "instance query stays separate from Right",
+      "status": "passed"
+    },
+    {
+      "name": "whole instance can switch to Module template references",
+      "status": "passed"
+    },
+    {
+      "name": "alias references exclude module/other alias declarations",
+      "status": "passed"
+    },
+    {
+      "name": "explicit Event references exclude Node with same spelling",
+      "status": "passed"
+    },
+    {
+      "name": "reference Enter uses actual Event span",
+      "status": "passed"
+    },
+    {
+      "name": "Node references exclude Event with same spelling",
+      "status": "passed"
+    },
+    {
+      "name": "reference doubleClick uses actual Node span",
+      "status": "passed"
+    },
+    {
+      "name": "implicit Event declaration action offers introduction/use locations",
+      "status": "passed"
+    },
+    {
+      "name": "implicit Event declaration action offers introduction/use locations: selected real source location",
+      "status": "passed"
+    },
+    {
+      "name": "implicit Event has all introduction/use locations, no invented declaration",
+      "status": "passed"
+    },
+    {
+      "name": "Left Output query includes internal uses but not Right/Unopened",
+      "status": "passed"
+    },
+    {
+      "name": "template switch aggregates three instances and unopened file, deduped real positions",
+      "status": "passed"
+    },
+    {
+      "name": "solution references did not require opening dependent script",
+      "status": "passed"
+    },
+    {
+      "name": "template declaration has same reference scope",
+      "status": "passed"
+    },
+    {
+      "name": "instance Input keeps Left context",
+      "status": "passed"
+    },
+    {
+      "name": "Input template switch merges real internal/external Node references",
+      "status": "passed"
+    },
+    {
+      "name": "internal Node and Input declarations query the same identity",
+      "status": "passed"
+    },
+    {
+      "name": "Output internal publishers: two real Nodes, same-Node branches deduplicated",
+      "status": "passed"
+    },
+    {
+      "name": "chooser selection navigates to real template source",
+      "status": "passed"
+    },
+    {
+      "name": "chained alias keeps its own default declaration",
+      "status": "passed"
+    },
+    {
+      "name": "chained alias Module definition reaches real template",
+      "status": "passed"
+    },
+    {
+      "name": "Module query includes transitive aliases",
+      "status": "passed"
+    },
+    {
+      "name": "first alias query stays local to its own import use",
+      "status": "passed"
+    },
+    {
+      "name": "damaged multiple Inputs do not authorize implicit target",
+      "status": "passed"
+    },
+    {
+      "name": "damaged multiple Inputs have no unique entry operation",
+      "status": "passed"
+    },
+    {
+      "name": "native C# Find Usages finds real keys across all project item kinds",
+      "status": "passed"
+    },
+    {
+      "name": "missing import does not guess same-named solution file",
+      "status": "passed"
+    },
+    {
+      "name": "import M still requires M.fsm, not discovered M.FSMScript",
+      "status": "passed"
+    },
+    {
+      "name": "reliable local Node survives missing.fsm",
+      "status": "passed"
+    },
+    {
+      "name": "reliable local Node survives cyclic.fsm",
+      "status": "passed"
+    },
+    {
+      "name": "reliable local Node survives broken-import.fsm",
+      "status": "passed"
+    },
+    {
+      "name": "cyclic import reports why no target is safe",
+      "status": "passed"
+    },
+    {
+      "name": "broken imported interface is not a certain target",
+      "status": "passed"
+    },
+    {
+      "name": "use requires an already available Module",
+      "status": "passed"
+    },
+    {
+      "name": "module original name is not also registered",
+      "status": "passed"
+    },
+    {
+      "name": "multiple Inputs require explicit choice",
+      "status": "passed"
+    },
+    {
+      "name": "private Node cannot be selected as public Input",
+      "status": "passed"
+    },
+    {
+      "name": "instance cannot be Transition source Node",
+      "status": "passed"
+    },
+    {
+      "name": "overwritten Branch is not a real Output publisher",
+      "status": "passed"
+    },
+    {
+      "name": "legacy module def is not a Node implementation",
+      "status": "passed"
+    },
+    {
+      "name": "unowned loose script retains local assistance",
+      "status": "passed"
+    },
+    {
+      "name": "directory proximity does not grant project membership",
+      "status": "passed"
+    },
+    {
+      "name": "loose relative import does not guess project module",
+      "status": "passed"
+    },
+    {
+      "name": "no-directory unsaved editor retains reliable local declaration",
+      "status": "passed"
+    },
+    {
+      "name": "no-directory relative import explains absent context without guessing",
+      "status": "passed"
+    },
+    {
+      "name": "no-host factory binding stays unresolved",
+      "status": "passed"
+    },
+    {
+      "name": "close no-directory editor without saving",
+      "status": "passed"
+    },
+    {
+      "name": "leave unrelated incomplete syntax unsaved",
+      "status": "passed"
+    },
+    {
+      "name": "reliable Module interface survives unrelated incomplete tail",
+      "status": "passed"
+    },
+    {
+      "name": "restore incomplete tail",
+      "status": "passed"
+    },
+    {
+      "name": "stale baseline page",
+      "status": "passed"
+    },
+    {
+      "name": "retain first query identity",
+      "status": "passed"
+    },
+    {
+      "name": "same-title second query gets independent Content",
+      "status": "passed"
+    },
+    {
+      "name": "retain second query identity",
+      "status": "passed"
+    },
+    {
+      "name": "dependent unsaved change actively expires both pages without reordering",
+      "status": "passed"
+    },
+    {
+      "name": "stale row doubleClick revalidates and rejects navigation",
+      "status": "passed"
+    },
+    {
+      "name": "stale row Enter revalidates and rejects navigation",
+      "status": "passed"
+    },
+    {
+      "name": "refresh applies current unsaved dependency only to selected query",
+      "status": "passed"
+    },
+    {
+      "name": "template edit invalidates dependency results",
+      "status": "passed"
+    },
+    {
+      "name": "template change actively expires refreshed results",
+      "status": "passed"
+    },
+    {
+      "name": "restore template and dependency",
+      "status": "passed"
+    },
+    {
+      "name": "refresh after restore finds all real references again",
+      "status": "passed"
+    },
+    {
+      "name": "import edit invalidates template relation",
+      "status": "passed"
+    },
+    {
+      "name": "import change actively expires open reference query",
+      "status": "passed"
+    },
+    {
+      "name": "restore import",
+      "status": "passed"
+    },
+    {
+      "name": "refresh after import restoration",
+      "status": "passed"
+    },
+    {
+      "name": "fresh result navigates to actual external source",
+      "status": "passed"
+    },
+    {
+      "name": "final screenshot",
+      "status": "passed"
+    }
+  ],
+  "observations": [
+    {
+      "elapsedMs": 35,
+      "step": 0,
+      "name": "begin",
+      "value": "pinned Rider and real RD readiness"
+    },
+    {
+      "elapsedMs": 38,
+      "step": 0,
+      "name": "business-execution-sentinel-scope",
+      "value": {
+        "explicitFixtureBuild": "Authorized separately; compiling/restoring the controlled fixture is not IDE analysis and does not intentionally invoke these entries",
+        "guardedPaths": [
+          "GraphFactory.ctor",
+          "GraphFactory.Current.get",
+          "GraphFactory.CreateNode",
+          "GraphFactory.GetNodeType",
+          "GraphFactory.GetNodeFeatureName",
+          "GraphWorker.ctor",
+          "GraphWorker.BusinessValue.get",
+          "GraphWorker.RuntimeKey.get",
+          "GraphWorker.ExecuteEnumerable",
+          "BareWorker.ctor",
+          "BareWorker.ExecuteEnumerable",
+          "IdentityUse.Node.get"
+        ],
+        "sourceFiles": [
+          "rider/fixtures/Graphs/GraphExecutionSentinel.cs",
+          "rider/fixtures/Graphs/Nodes.cs"
+        ],
+        "markers": [
+          "C:\\Work\\AnotherFSM\\.scratch\\issue-34\\host\\finalregression-cb5f69dd5a8a4dda8251ea93e9444477\\acceptance\\graph-business-execution.marker",
+          "C:\\Work\\AnotherFSM\\.scratch\\issue-33\\host\\graph-business-execution.marker"
+        ],
+        "claimLimit": "Marker absence observes these instrumented fixture paths only; not proof that every business execution/download/credential boundary is safe"
+      }
+    },
+    {
+      "elapsedMs": 269,
+      "step": 0,
+      "name": "actual-rd-request",
+      "value": {
+        "action": "resolve",
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "text": "import Checker as Alias;\nuse Alias as Left;\nuse Alias as Right;\nmodule Multi {\n    input First, Second;\n    output Done;\n    def First(GraphKey) { success-\u003eDone; }\n    def Second(GraphKey) { failed-\u003eDone; }\n    def Private(GraphKey) { }\n}\nuse Multi as Many;\nmodule Original as Renamed {\n    input Door;\n    def Door(GraphKey) { }\n}\nuse Renamed as Registered;\ndef Start(GraphKey) { success-\u003eLaunch; 2-\u003eLaunchEntry; 3-\u003eLaunchFirst; 4-\u003eLaunchSecond; 5-\u003eLaunchDotted; 6-\u003eLaunchLocal; }\ndef End(GraphKey) { }\ndef Signal(GraphKey) { }\ndef Signal event;\ndef Explicit event;\ndef Branches(GraphBareKey) { error-\u003eFault; break-\u003eStop; cancel-\u003eAbort; 3-\u003eFaultAgain; }\nLaunch -\u003e Start to Left;\nLeft.Done -\u003e Right;\nRight.Done -\u003e End;\nLaunchEntry -\u003e Start to Left.Entry;\nLaunchFirst -\u003e Start to Many.First;\nLaunchSecond -\u003e Start to Many.Second;\nSignal -\u003e Signal to End;\nExplicit -\u003e Start to End;\nnamespace Zone {\n    def Local(GraphKey) { success-\u003eMoved; }\n    def Exit(GraphKey) { }\n    Moved -\u003e Local to Exit;\n}\nnamespace Zone {\n    def Tail(GraphKey) { }\n}\ndef Plain.Dotted(GraphKey) { }\nLaunchDotted -\u003e Start to Plain.Dotted;\nLaunchLocal -\u003e Start to Zone.Local;\nLaunch -\u003e Zone.Exit to Zone.Tail;\n",
+        "documentVersion": 0,
+        "offset": 369,
+        "requestId": "e3a543aa-da91-429a-8547-6dc788c4fed8",
+        "implementation": true
+      }
+    },
+    {
+      "elapsedMs": 288,
+      "step": 0,
+      "name": "actual-rd-reply",
+      "value": "{\"status\":\"type\",\"reason\":\"FSMNode attribute convention; not proof of runtime registration\",\"requestId\":\"e3a543aa-da91-429a-8547-6dc788c4fed8\",\"documentVersion\":0,\"session\":\"4bb45c53-5ac9-4921-844b-539dc0813ecf\",\"contextVersion\":18,\"span\":null,\"target\":{\"module\":\"33911fe8-1e6d-4aa7-b624-9c789a114633(Graphs)-A34DCEB8[net8.0]\",\"context\":\"net8.0\",\"clrName\":\"Graphs.GraphWorker\",\"consumer\":\"33911fe8-1e6d-4aa7-b624-9c789a114633(Graphs)-A34DCEB8[net8.0]\",\"construction\":\"\",\"alias\":\"global\"},\"reference\":null,\"locations\":null,\"hosts\":null,\"externalPresentation\":null}"
+    },
+    {
+      "elapsedMs": 515,
+      "step": 0,
+      "name": "passed",
+      "value": "pinned Rider and real RD readiness"
+    },
+    {
+      "elapsedMs": 766,
+      "step": 1,
+      "name": "begin",
+      "value": "unopened project scripts remain closed"
+    },
+    {
+      "elapsedMs": 770,
+      "step": 1,
+      "name": "unopened-script",
+      "value": "Graphs/Flow/unopened.FSMScript"
+    },
+    {
+      "elapsedMs": 1016,
+      "step": 1,
+      "name": "passed",
+      "value": "unopened project scripts remain closed"
+    },
+    {
+      "elapsedMs": 1267,
+      "step": 2,
+      "name": "begin",
+      "value": "AdditionalFiles: Node is not factory key"
+    },
+    {
+      "elapsedMs": 1369,
+      "step": 2,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 665,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 1770,
+      "step": 2,
+      "name": "actual-editor-target",
+      "value": {
+        "offset": 363,
+        "file": "Graphs/Flow/graph.fsm",
+        "selection": "Start"
+      }
+    },
+    {
+      "elapsedMs": 1770,
+      "step": 2,
+      "name": "passed",
+      "value": "AdditionalFiles: Node is not factory key"
+    },
+    {
+      "elapsedMs": 2019,
+      "step": 3,
+      "name": "begin",
+      "value": "import file target uses Checker.fsm, not alias or decoy"
+    },
+    {
+      "elapsedMs": 2028,
+      "step": 3,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 7,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 2301,
+      "step": 3,
+      "name": "actual-editor-target",
+      "value": {
+        "offset": 20,
+        "file": "Graphs/Flow/Checker.fsm",
+        "selection": "Checker"
+      }
+    },
+    {
+      "elapsedMs": 2301,
+      "step": 3,
+      "name": "passed",
+      "value": "import file target uses Checker.fsm, not alias or decoy"
+    },
+    {
+      "elapsedMs": 2523,
+      "step": 4,
+      "name": "begin",
+      "value": "alias use defaults to alias declaration"
+    },
+    {
+      "elapsedMs": 2541,
+      "step": 4,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 29,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 2775,
+      "step": 4,
+      "name": "actual-editor-target",
+      "value": {
+        "offset": 18,
+        "file": "Graphs/Flow/graph.fsm",
+        "selection": "Alias"
+      }
+    },
+    {
+      "elapsedMs": 2775,
+      "step": 4,
+      "name": "passed",
+      "value": "alias use defaults to alias declaration"
+    },
+    {
+      "elapsedMs": 3025,
+      "step": 5,
+      "name": "begin",
+      "value": "alias has separate module-definition operation"
+    },
+    {
+      "elapsedMs": 3035,
+      "step": 5,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToModuleDefinition",
+        "offset": 29,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 3278,
+      "step": 5,
+      "name": "actual-editor-target",
+      "value": {
+        "offset": 20,
+        "file": "Graphs/Flow/Checker.fsm",
+        "selection": "Checker"
+      }
+    },
+    {
+      "elapsedMs": 3278,
+      "step": 5,
+      "name": "passed",
+      "value": "alias has separate module-definition operation"
+    },
+    {
+      "elapsedMs": 3528,
+      "step": 6,
+      "name": "begin",
+      "value": "relative transitive import"
+    },
+    {
+      "elapsedMs": 3537,
+      "step": 6,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 7,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 3781,
+      "step": 6,
+      "name": "actual-editor-target",
+      "value": {
+        "offset": 7,
+        "file": "Graphs/Flow/Leaf.fsm",
+        "selection": "Leaf"
+      }
+    },
+    {
+      "elapsedMs": 3781,
+      "step": 6,
+      "name": "passed",
+      "value": "relative transitive import"
+    },
+    {
+      "elapsedMs": 4030,
+      "step": 7,
+      "name": "begin",
+      "value": "qualified instance prefix is use declaration"
+    },
+    {
+      "elapsedMs": 4049,
+      "step": 7,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 680,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 4283,
+      "step": 7,
+      "name": "actual-editor-target",
+      "value": {
+        "offset": 38,
+        "file": "Graphs/Flow/graph.fsm",
+        "selection": "Left"
+      }
+    },
+    {
+      "elapsedMs": 4283,
+      "step": 7,
+      "name": "passed",
+      "value": "qualified instance prefix is use declaration"
+    },
+    {
+      "elapsedMs": 4532,
+      "step": 8,
+      "name": "begin",
+      "value": "Input suffix defaults to interface"
+    },
+    {
+      "elapsedMs": 4543,
+      "step": 8,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 748,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 4785,
+      "step": 8,
+      "name": "actual-editor-target",
+      "value": {
+        "offset": 40,
+        "file": "Graphs/Flow/Checker.fsm",
+        "selection": "Entry"
+      }
+    },
+    {
+      "elapsedMs": 4785,
+      "step": 8,
+      "name": "passed",
+      "value": "Input suffix defaults to interface"
+    },
+    {
+      "elapsedMs": 5033,
+      "step": 9,
+      "name": "begin",
+      "value": "Input internal definition shares Node identity"
+    },
+    {
+      "elapsedMs": 5041,
+      "step": 9,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToInternal",
+        "offset": 40,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 5287,
+      "step": 9,
+      "name": "actual-editor-target",
+      "value": {
+        "offset": 72,
+        "file": "Graphs/Flow/Checker.fsm",
+        "selection": "Entry"
+      }
+    },
+    {
+      "elapsedMs": 5287,
+      "step": 9,
+      "name": "passed",
+      "value": "Input internal definition shares Node identity"
+    },
+    {
+      "elapsedMs": 5536,
+      "step": 10,
+      "name": "begin",
+      "value": "Output suffix defaults to interface"
+    },
+    {
+      "elapsedMs": 5554,
+      "step": 10,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 685,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 5788,
+      "step": 10,
+      "name": "actual-editor-target",
+      "value": {
+        "offset": 58,
+        "file": "Graphs/Flow/Checker.fsm",
+        "selection": "Done"
+      }
+    },
+    {
+      "elapsedMs": 5788,
+      "step": 10,
+      "name": "passed",
+      "value": "Output suffix defaults to interface"
+    },
+    {
+      "elapsedMs": 6037,
+      "step": 11,
+      "name": "begin",
+      "value": "single Input omission defaults to instance"
+    },
+    {
+      "elapsedMs": 6054,
+      "step": 11,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 674,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 6289,
+      "step": 11,
+      "name": "actual-editor-target",
+      "value": {
+        "offset": 38,
+        "file": "Graphs/Flow/graph.fsm",
+        "selection": "Left"
+      }
+    },
+    {
+      "elapsedMs": 6290,
+      "step": 11,
+      "name": "passed",
+      "value": "single Input omission defaults to instance"
+    },
+    {
+      "elapsedMs": 6538,
+      "step": 12,
+      "name": "begin",
+      "value": "single Input explicit entry operation"
+    },
+    {
+      "elapsedMs": 6548,
+      "step": 12,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToEntry",
+        "offset": 674,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 6790,
+      "step": 12,
+      "name": "actual-editor-target",
+      "value": {
+        "offset": 40,
+        "file": "Graphs/Flow/Checker.fsm",
+        "selection": "Entry"
+      }
+    },
+    {
+      "elapsedMs": 6790,
+      "step": 12,
+      "name": "passed",
+      "value": "single Input explicit entry operation"
+    },
+    {
+      "elapsedMs": 7041,
+      "step": 13,
+      "name": "begin",
+      "value": "multiple Input First"
+    },
+    {
+      "elapsedMs": 7061,
+      "step": 13,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 784,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 7292,
+      "step": 13,
+      "name": "actual-editor-target",
+      "value": {
+        "offset": 89,
+        "file": "Graphs/Flow/graph.fsm",
+        "selection": "First"
+      }
+    },
+    {
+      "elapsedMs": 7293,
+      "step": 13,
+      "name": "passed",
+      "value": "multiple Input First"
+    },
+    {
+      "elapsedMs": 7542,
+      "step": 14,
+      "name": "begin",
+      "value": "multiple Input Second"
+    },
+    {
+      "elapsedMs": 7552,
+      "step": 14,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 821,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 7795,
+      "step": 14,
+      "name": "actual-editor-target",
+      "value": {
+        "offset": 96,
+        "file": "Graphs/Flow/graph.fsm",
+        "selection": "Second"
+      }
+    },
+    {
+      "elapsedMs": 7795,
+      "step": 14,
+      "name": "passed",
+      "value": "multiple Input Second"
+    },
+    {
+      "elapsedMs": 8045,
+      "step": 15,
+      "name": "begin",
+      "value": "module A as B registers only B"
+    },
+    {
+      "elapsedMs": 8054,
+      "step": 15,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 336,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 8296,
+      "step": 15,
+      "name": "actual-editor-target",
+      "value": {
+        "offset": 277,
+        "file": "Graphs/Flow/graph.fsm",
+        "selection": "Renamed"
+      }
+    },
+    {
+      "elapsedMs": 8296,
+      "step": 15,
+      "name": "passed",
+      "value": "module A as B registers only B"
+    },
+    {
+      "elapsedMs": 8545,
+      "step": 16,
+      "name": "begin",
+      "value": "explicit Event distinct from same-named Node"
+    },
+    {
+      "elapsedMs": 8554,
+      "step": 16,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 829,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 8798,
+      "step": 16,
+      "name": "actual-editor-target",
+      "value": {
+        "offset": 533,
+        "file": "Graphs/Flow/graph.fsm",
+        "selection": "Signal"
+      }
+    },
+    {
+      "elapsedMs": 8798,
+      "step": 16,
+      "name": "passed",
+      "value": "explicit Event distinct from same-named Node"
+    },
+    {
+      "elapsedMs": 9047,
+      "step": 17,
+      "name": "begin",
+      "value": "same-named Node remains Node"
+    },
+    {
+      "elapsedMs": 9056,
+      "step": 17,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 839,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 9299,
+      "step": 17,
+      "name": "actual-editor-target",
+      "value": {
+        "offset": 508,
+        "file": "Graphs/Flow/graph.fsm",
+        "selection": "Signal"
+      }
+    },
+    {
+      "elapsedMs": 9299,
+      "step": 17,
+      "name": "passed",
+      "value": "same-named Node remains Node"
+    },
+    {
+      "elapsedMs": 9550,
+      "step": 18,
+      "name": "begin",
+      "value": "ordinary explicit Event"
+    },
+    {
+      "elapsedMs": 9561,
+      "step": 18,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 854,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 9802,
+      "step": 18,
+      "name": "actual-editor-target",
+      "value": {
+        "offset": 551,
+        "file": "Graphs/Flow/graph.fsm",
+        "selection": "Explicit"
+      }
+    },
+    {
+      "elapsedMs": 9802,
+      "step": 18,
+      "name": "passed",
+      "value": "ordinary explicit Event"
+    },
+    {
+      "elapsedMs": 10051,
+      "step": 19,
+      "name": "begin",
+      "value": "Namespace prefix resolves local Node"
+    },
+    {
+      "elapsedMs": 10061,
+      "step": 19,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 981,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 10303,
+      "step": 19,
+      "name": "actual-editor-target",
+      "value": {
+        "offset": 905,
+        "file": "Graphs/Flow/graph.fsm",
+        "selection": "Local"
+      }
+    },
+    {
+      "elapsedMs": 10303,
+      "step": 19,
+      "name": "passed",
+      "value": "Namespace prefix resolves local Node"
+    },
+    {
+      "elapsedMs": 10552,
+      "step": 20,
+      "name": "begin",
+      "value": "dotted ordinary name is not Module Instance"
+    },
+    {
+      "elapsedMs": 10562,
+      "step": 20,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 1100,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 10805,
+      "step": 20,
+      "name": "actual-editor-target",
+      "value": {
+        "offset": 1048,
+        "file": "Graphs/Flow/graph.fsm",
+        "selection": "Plain.Dotted"
+      }
+    },
+    {
+      "elapsedMs": 10805,
+      "step": 20,
+      "name": "passed",
+      "value": "dotted ordinary name is not Module Instance"
+    },
+    {
+      "elapsedMs": 11054,
+      "step": 21,
+      "name": "begin",
+      "value": "Namespace-qualified Node suffix"
+    },
+    {
+      "elapsedMs": 11064,
+      "step": 21,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 1143,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 11307,
+      "step": 21,
+      "name": "actual-editor-target",
+      "value": {
+        "offset": 905,
+        "file": "Graphs/Flow/graph.fsm",
+        "selection": "Local"
+      }
+    },
+    {
+      "elapsedMs": 11307,
+      "step": 21,
+      "name": "passed",
+      "value": "Namespace-qualified Node suffix"
+    },
+    {
+      "elapsedMs": 11556,
+      "step": 22,
+      "name": "begin",
+      "value": "merged Namespace declarations are multiple real source positions"
+    },
+    {
+      "elapsedMs": 11567,
+      "step": 22,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 890,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 11809,
+      "step": 22,
+      "name": "actual-location-chooser",
+      "value": [
+        "namespace Zone — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:31 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+        "namespace Zone — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:36 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0"
+      ]
+    },
+    {
+      "elapsedMs": 11809,
+      "step": 22,
+      "name": "passed",
+      "value": "merged Namespace declarations are multiple real source positions"
+    },
+    {
+      "elapsedMs": 12060,
+      "step": 23,
+      "name": "begin",
+      "value": "merged Namespace declarations are multiple real source positions: selected real source location"
+    },
+    {
+      "elapsedMs": 12063,
+      "step": 23,
+      "name": "public Swing Enter binding",
+      "value": {
+        "condition": 1,
+        "physicalOsKey": false,
+        "component": "com.intellij.ui.components.JBList",
+        "binding": "javax.swing.JComponent$ActionStandin@2777bfaa"
+      }
+    },
+    {
+      "elapsedMs": 12313,
+      "step": 23,
+      "name": "passed",
+      "value": "merged Namespace declarations are multiple real source positions: selected real source location"
+    },
+    {
+      "elapsedMs": 12560,
+      "step": 24,
+      "name": "begin",
+      "value": "None: real project-item declaration"
+    },
+    {
+      "elapsedMs": 12677,
+      "step": 24,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 82,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/none.FSMScript",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 13064,
+      "step": 24,
+      "name": "actual-editor-target",
+      "value": {
+        "offset": 4,
+        "file": "Graphs/Items/none.FSMScript",
+        "selection": "NoneEntry"
+      }
+    },
+    {
+      "elapsedMs": 13064,
+      "step": 24,
+      "name": "passed",
+      "value": "None: real project-item declaration"
+    },
+    {
+      "elapsedMs": 13313,
+      "step": 25,
+      "name": "begin",
+      "value": "None: host membership and GraphKey binding"
+    },
+    {
+      "elapsedMs": 13321,
+      "step": 25,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToImplementation",
+        "offset": 14,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/none.FSMScript",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 13565,
+      "step": 25,
+      "name": "actual-csharp-target",
+      "value": "Graphs.GraphWorker"
+    },
+    {
+      "elapsedMs": 13565,
+      "step": 25,
+      "name": "passed",
+      "value": "None: host membership and GraphKey binding"
+    },
+    {
+      "elapsedMs": 13813,
+      "step": 26,
+      "name": "begin",
+      "value": "Content: real project-item declaration"
+    },
+    {
+      "elapsedMs": 13928,
+      "step": 26,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 94,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/content.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 14317,
+      "step": 26,
+      "name": "actual-editor-target",
+      "value": {
+        "offset": 4,
+        "file": "Graphs/Items/content.fsm",
+        "selection": "ContentEntry"
+      }
+    },
+    {
+      "elapsedMs": 14317,
+      "step": 26,
+      "name": "passed",
+      "value": "Content: real project-item declaration"
+    },
+    {
+      "elapsedMs": 14565,
+      "step": 27,
+      "name": "begin",
+      "value": "Content: host membership and GraphKey binding"
+    },
+    {
+      "elapsedMs": 14575,
+      "step": 27,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToImplementation",
+        "offset": 17,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/content.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 14818,
+      "step": 27,
+      "name": "actual-csharp-target",
+      "value": "Graphs.GraphWorker"
+    },
+    {
+      "elapsedMs": 14818,
+      "step": 27,
+      "name": "passed",
+      "value": "Content: host membership and GraphKey binding"
+    },
+    {
+      "elapsedMs": 15067,
+      "step": 28,
+      "name": "begin",
+      "value": "EmbeddedResource: real project-item declaration"
+    },
+    {
+      "elapsedMs": 15169,
+      "step": 28,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 98,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/resource.FSMScript",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 15573,
+      "step": 28,
+      "name": "actual-editor-target",
+      "value": {
+        "offset": 4,
+        "file": "Graphs/Items/resource.FSMScript",
+        "selection": "ResourceEntry"
+      }
+    },
+    {
+      "elapsedMs": 15573,
+      "step": 28,
+      "name": "passed",
+      "value": "EmbeddedResource: real project-item declaration"
+    },
+    {
+      "elapsedMs": 15822,
+      "step": 29,
+      "name": "begin",
+      "value": "EmbeddedResource: host membership and GraphKey binding"
+    },
+    {
+      "elapsedMs": 15832,
+      "step": 29,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToImplementation",
+        "offset": 18,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/resource.FSMScript",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 16076,
+      "step": 29,
+      "name": "actual-csharp-target",
+      "value": "Graphs.GraphWorker"
+    },
+    {
+      "elapsedMs": 16076,
+      "step": 29,
+      "name": "passed",
+      "value": "EmbeddedResource: host membership and GraphKey binding"
+    },
+    {
+      "elapsedMs": 16324,
+      "step": 30,
+      "name": "begin",
+      "value": "linked file uses physical directory not Link display"
+    },
+    {
+      "elapsedMs": 16442,
+      "step": 30,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 7,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/SharedGraphs/linked.FSMScript",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 16829,
+      "step": 30,
+      "name": "actual-editor-target",
+      "value": {
+        "offset": 7,
+        "file": "SharedGraphs/LinkedChecker.fsm",
+        "selection": "LinkedChecker"
+      }
+    },
+    {
+      "elapsedMs": 16829,
+      "step": 30,
+      "name": "passed",
+      "value": "linked file uses physical directory not Link display"
+    },
+    {
+      "elapsedMs": 17077,
+      "step": 31,
+      "name": "begin",
+      "value": "linked file retains owning project binding"
+    },
+    {
+      "elapsedMs": 17097,
+      "step": 31,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToImplementation",
+        "offset": 78,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/SharedGraphs/linked.FSMScript",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 17329,
+      "step": 31,
+      "name": "actual-csharp-target",
+      "value": "Graphs.GraphWorker"
+    },
+    {
+      "elapsedMs": 17329,
+      "step": 31,
+      "name": "passed",
+      "value": "linked file retains owning project binding"
+    },
+    {
+      "elapsedMs": 17579,
+      "step": 32,
+      "name": "begin",
+      "value": "change Content factory to another valid key without saving"
+    },
+    {
+      "elapsedMs": 17607,
+      "step": 32,
+      "name": "unsaved-edit",
+      "value": "Graphs/Items/content.fsm"
+    },
+    {
+      "elapsedMs": 17830,
+      "step": 32,
+      "name": "passed",
+      "value": "change Content factory to another valid key without saving"
+    },
+    {
+      "elapsedMs": 18080,
+      "step": 33,
+      "name": "begin",
+      "value": "unsaved Content key navigates using real project buffer, not disk path document"
+    },
+    {
+      "elapsedMs": 18088,
+      "step": 33,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToImplementation",
+        "offset": 17,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/content.fsm",
+        "documentVersion": 336
+      }
+    },
+    {
+      "elapsedMs": 18333,
+      "step": 33,
+      "name": "passed",
+      "value": "unsaved Content key navigates using real project buffer, not disk path document"
+    },
+    {
+      "elapsedMs": 18582,
+      "step": 34,
+      "name": "begin",
+      "value": "restore unsaved Content factory"
+    },
+    {
+      "elapsedMs": 18832,
+      "step": 34,
+      "name": "passed",
+      "value": "restore unsaved Content factory"
+    },
+    {
+      "elapsedMs": 19083,
+      "step": 35,
+      "name": "begin",
+      "value": "Module Input C# implementation"
+    },
+    {
+      "elapsedMs": 19102,
+      "step": 35,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToImplementation",
+        "offset": 40,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 19336,
+      "step": 35,
+      "name": "actual-csharp-target",
+      "value": "Graphs.GraphWorker"
+    },
+    {
+      "elapsedMs": 19336,
+      "step": 35,
+      "name": "passed",
+      "value": "Module Input C# implementation"
+    },
+    {
+      "elapsedMs": 19586,
+      "step": 36,
+      "name": "begin",
+      "value": "qualified Input C# implementation"
+    },
+    {
+      "elapsedMs": 19602,
+      "step": 36,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToImplementation",
+        "offset": 748,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 19838,
+      "step": 36,
+      "name": "actual-csharp-target",
+      "value": "Graphs.GraphWorker"
+    },
+    {
+      "elapsedMs": 19838,
+      "step": 36,
+      "name": "passed",
+      "value": "qualified Input C# implementation"
+    },
+    {
+      "elapsedMs": 20087,
+      "step": 37,
+      "name": "begin",
+      "value": "Output has no fabricated C# type"
+    },
+    {
+      "elapsedMs": 20103,
+      "step": 37,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToImplementation",
+        "offset": 685,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 20340,
+      "step": 37,
+      "name": "visible-explanation",
+      "value": " AnotherFSM：This DSL symbol has no intrinsic C# type target; Output/Event/Module/instance/Namespace are not nodes"
+    },
+    {
+      "elapsedMs": 20340,
+      "step": 37,
+      "name": "passed",
+      "value": "Output has no fabricated C# type"
+    },
+    {
+      "elapsedMs": 20590,
+      "step": 38,
+      "name": "begin",
+      "value": "Module Instance is not an executable Node"
+    },
+    {
+      "elapsedMs": 20599,
+      "step": 38,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToImplementation",
+        "offset": 680,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 20843,
+      "step": 38,
+      "name": "visible-explanation",
+      "value": " AnotherFSM：This DSL symbol has no intrinsic C# type target; Output/Event/Module/instance/Namespace are not nodes"
+    },
+    {
+      "elapsedMs": 20843,
+      "step": 38,
+      "name": "passed",
+      "value": "Module Instance is not an executable Node"
+    },
+    {
+      "elapsedMs": 21091,
+      "step": 39,
+      "name": "begin",
+      "value": "Event has no fabricated C# type"
+    },
+    {
+      "elapsedMs": 21100,
+      "step": 39,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToImplementation",
+        "offset": 854,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 21358,
+      "step": 39,
+      "name": "visible-explanation",
+      "value": " AnotherFSM：This DSL symbol has no intrinsic C# type target; Output/Event/Module/instance/Namespace are not nodes"
+    },
+    {
+      "elapsedMs": 21359,
+      "step": 39,
+      "name": "passed",
+      "value": "Event has no fabricated C# type"
+    },
+    {
+      "elapsedMs": 21604,
+      "step": 40,
+      "name": "begin",
+      "value": "Namespace has no C# namespace binding"
+    },
+    {
+      "elapsedMs": 21616,
+      "step": 40,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToImplementation",
+        "offset": 890,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 21862,
+      "step": 40,
+      "name": "visible-explanation",
+      "value": " AnotherFSM：This DSL symbol has no intrinsic C# type target; Output/Event/Module/instance/Namespace are not nodes"
+    },
+    {
+      "elapsedMs": 21862,
+      "step": 40,
+      "name": "passed",
+      "value": "Namespace has no C# namespace binding"
+    },
+    {
+      "elapsedMs": 22105,
+      "step": 41,
+      "name": "begin",
+      "value": "Branch error is DSL index 3, not C# enum"
+    },
+    {
+      "elapsedMs": 22114,
+      "step": 41,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.BranchMetadata",
+        "offset": 596,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 22358,
+      "step": 41,
+      "name": "visible-explanation",
+      "value": " AnotherFSM：Branch 3 of Node Branches; actual DSL integer, not a C# enum or return/yield location; FSMNode attribute convention; not proof of runtime registration; no explicit, source-locatable index metadata"
+    },
+    {
+      "elapsedMs": 22358,
+      "step": 41,
+      "name": "passed",
+      "value": "Branch error is DSL index 3, not C# enum"
+    },
+    {
+      "elapsedMs": 22607,
+      "step": 42,
+      "name": "begin",
+      "value": "Branch break is DSL index 4, not C# enum"
+    },
+    {
+      "elapsedMs": 22614,
+      "step": 42,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.BranchMetadata",
+        "offset": 610,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 22860,
+      "step": 42,
+      "name": "visible-explanation",
+      "value": " AnotherFSM：Branch 4 of Node Branches; actual DSL integer, not a C# enum or return/yield location; FSMNode attribute convention; not proof of runtime registration; no explicit, source-locatable index metadata"
+    },
+    {
+      "elapsedMs": 22860,
+      "step": 42,
+      "name": "passed",
+      "value": "Branch break is DSL index 4, not C# enum"
+    },
+    {
+      "elapsedMs": 23110,
+      "step": 43,
+      "name": "begin",
+      "value": "Branch cancel is DSL index 5, not C# enum"
+    },
+    {
+      "elapsedMs": 23119,
+      "step": 43,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.BranchMetadata",
+        "offset": 623,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 23362,
+      "step": 43,
+      "name": "visible-explanation",
+      "value": " AnotherFSM：Branch 5 of Node Branches; actual DSL integer, not a C# enum or return/yield location; FSMNode attribute convention; not proof of runtime registration; no explicit, source-locatable index metadata"
+    },
+    {
+      "elapsedMs": 23362,
+      "step": 43,
+      "name": "passed",
+      "value": "Branch cancel is DSL index 5, not C# enum"
+    },
+    {
+      "elapsedMs": 23611,
+      "step": 44,
+      "name": "begin",
+      "value": "Branch with explicit metadata locates its real attribute, not a return or enum"
+    },
+    {
+      "elapsedMs": 23619,
+      "step": 44,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.BranchMetadata",
+        "offset": 381,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 23863,
+      "step": 44,
+      "name": "passed",
+      "value": "Branch with explicit metadata locates its real attribute, not a return or enum"
+    },
+    {
+      "elapsedMs": 24112,
+      "step": 45,
+      "name": "begin",
+      "value": "Module references include both aliases and unopened dependent script"
+    },
+    {
+      "elapsedMs": 24127,
+      "step": 45,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.FindReferences",
+        "offset": 20,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 24364,
+      "step": 45,
+      "name": "actual-reference-page",
+      "value": {
+        "rows": [
+          "module Checker — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:1 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "alias Alias — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:2 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "alias Alias — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:3 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "module Checker — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript:1 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "alias UnopenedAlias — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript:2 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0"
+        ],
+        "title": "AnotherFSM 引用"
+      }
+    },
+    {
+      "elapsedMs": 24364,
+      "step": 45,
+      "name": "passed",
+      "value": "Module references include both aliases and unopened dependent script"
+    },
+    {
+      "elapsedMs": 24614,
+      "step": 46,
+      "name": "begin",
+      "value": "import target references share actual Module identity"
+    },
+    {
+      "elapsedMs": 24629,
+      "step": 46,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.FindReferences",
+        "offset": 7,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 24865,
+      "step": 46,
+      "name": "actual-reference-page",
+      "value": {
+        "rows": [
+          "module Checker — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:1 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "alias Alias — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:2 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "alias Alias — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:3 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "module Checker — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript:1 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "alias UnopenedAlias — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript:2 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0"
+        ],
+        "title": "AnotherFSM 引用"
+      }
+    },
+    {
+      "elapsedMs": 24865,
+      "step": 46,
+      "name": "passed",
+      "value": "import target references share actual Module identity"
+    },
+    {
+      "elapsedMs": 25117,
+      "step": 47,
+      "name": "begin",
+      "value": "Namespace references are real prefix uses, not declarations"
+    },
+    {
+      "elapsedMs": 25125,
+      "step": 47,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.FindReferences",
+        "offset": 890,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 25369,
+      "step": 47,
+      "name": "actual-reference-page",
+      "value": {
+        "rows": [
+          "namespace Zone — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:41 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "namespace Zone — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:42 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "namespace Zone — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:42 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0"
+        ],
+        "title": "AnotherFSM 引用"
+      }
+    },
+    {
+      "elapsedMs": 25369,
+      "step": 47,
+      "name": "passed",
+      "value": "Namespace references are real prefix uses, not declarations"
+    },
+    {
+      "elapsedMs": 25619,
+      "step": 48,
+      "name": "begin",
+      "value": "Branch query groups error and numeric 3 only for this Node"
+    },
+    {
+      "elapsedMs": 25628,
+      "step": 48,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.FindReferences",
+        "offset": 596,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 25870,
+      "step": 48,
+      "name": "actual-reference-page",
+      "value": {
+        "rows": [
+          "branch Branches#3 — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:22 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "branch Branches#3 — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:22 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0"
+        ],
+        "title": "AnotherFSM 引用"
+      }
+    },
+    {
+      "elapsedMs": 25870,
+      "step": 48,
+      "name": "passed",
+      "value": "Branch query groups error and numeric 3 only for this Node"
+    },
+    {
+      "elapsedMs": 26121,
+      "step": 49,
+      "name": "begin",
+      "value": "instance query stays separate from Right"
+    },
+    {
+      "elapsedMs": 26129,
+      "step": 49,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.FindReferences",
+        "offset": 38,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 26373,
+      "step": 49,
+      "name": "actual-reference-page",
+      "value": {
+        "rows": [
+          "instance Left — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:23 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "instance Left — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:24 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "instance Left — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:26 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0"
+        ],
+        "title": "AnotherFSM 引用"
+      }
+    },
+    {
+      "elapsedMs": 26373,
+      "step": 49,
+      "name": "passed",
+      "value": "instance query stays separate from Right"
+    },
+    {
+      "elapsedMs": 26624,
+      "step": 50,
+      "name": "begin",
+      "value": "whole instance can switch to Module template references"
+    },
+    {
+      "elapsedMs": 26631,
+      "step": 50,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.FindTemplateReferences",
+        "offset": 38,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 26875,
+      "step": 50,
+      "name": "actual-reference-page",
+      "value": {
+        "rows": [
+          "module Checker — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:1 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "alias Alias — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:2 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "alias Alias — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:3 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "module Checker — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript:1 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "alias UnopenedAlias — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript:2 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0"
+        ],
+        "title": "AnotherFSM 引用"
+      }
+    },
+    {
+      "elapsedMs": 26875,
+      "step": 50,
+      "name": "passed",
+      "value": "whole instance can switch to Module template references"
+    },
+    {
+      "elapsedMs": 27125,
+      "step": 51,
+      "name": "begin",
+      "value": "alias references exclude module/other alias declarations"
+    },
+    {
+      "elapsedMs": 27135,
+      "step": 51,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.FindReferences",
+        "offset": 18,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 27376,
+      "step": 51,
+      "name": "actual-reference-page",
+      "value": {
+        "rows": [
+          "alias Alias — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:2 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "alias Alias — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:3 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0"
+        ],
+        "title": "AnotherFSM 引用"
+      }
+    },
+    {
+      "elapsedMs": 27376,
+      "step": 51,
+      "name": "passed",
+      "value": "alias references exclude module/other alias declarations"
+    },
+    {
+      "elapsedMs": 27627,
+      "step": 52,
+      "name": "begin",
+      "value": "explicit Event references exclude Node with same spelling"
+    },
+    {
+      "elapsedMs": 27637,
+      "step": 52,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.FindReferences",
+        "offset": 533,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 27878,
+      "step": 52,
+      "name": "actual-reference-page",
+      "value": {
+        "rows": [
+          "event Signal — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:29 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0"
+        ],
+        "title": "AnotherFSM 引用"
+      }
+    },
+    {
+      "elapsedMs": 27878,
+      "step": 52,
+      "name": "passed",
+      "value": "explicit Event references exclude Node with same spelling"
+    },
+    {
+      "elapsedMs": 28128,
+      "step": 53,
+      "name": "begin",
+      "value": "reference Enter uses actual Event span"
+    },
+    {
+      "elapsedMs": 28131,
+      "step": 53,
+      "name": "reference-row-activation",
+      "value": {
+        "gesture": "Enter",
+        "row": "event Signal — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:29 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0"
+      }
+    },
+    {
+      "elapsedMs": 28131,
+      "step": 53,
+      "name": "public Swing Enter binding",
+      "value": {
+        "condition": 0,
+        "physicalOsKey": false,
+        "component": "com.intellij.ui.components.JBList",
+        "binding": "anotherfsm.navigate"
+      }
+    },
+    {
+      "elapsedMs": 28381,
+      "step": 53,
+      "name": "passed",
+      "value": "reference Enter uses actual Event span"
+    },
+    {
+      "elapsedMs": 28630,
+      "step": 54,
+      "name": "begin",
+      "value": "Node references exclude Event with same spelling"
+    },
+    {
+      "elapsedMs": 28640,
+      "step": 54,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.FindReferences",
+        "offset": 508,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 28881,
+      "step": 54,
+      "name": "actual-reference-page",
+      "value": {
+        "rows": [
+          "node Signal — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:29 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0"
+        ],
+        "title": "AnotherFSM 引用"
+      }
+    },
+    {
+      "elapsedMs": 28881,
+      "step": 54,
+      "name": "passed",
+      "value": "Node references exclude Event with same spelling"
+    },
+    {
+      "elapsedMs": 29132,
+      "step": 55,
+      "name": "begin",
+      "value": "reference doubleClick uses actual Node span"
+    },
+    {
+      "elapsedMs": 29135,
+      "step": 55,
+      "name": "reference-row-activation",
+      "value": {
+        "gesture": "doubleClick",
+        "row": "node Signal — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:29 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0"
+      }
+    },
+    {
+      "elapsedMs": 29384,
+      "step": 55,
+      "name": "passed",
+      "value": "reference doubleClick uses actual Node span"
+    },
+    {
+      "elapsedMs": 29633,
+      "step": 56,
+      "name": "begin",
+      "value": "implicit Event declaration action offers introduction/use locations"
+    },
+    {
+      "elapsedMs": 29651,
+      "step": 56,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 70,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/implicit.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 29884,
+      "step": 56,
+      "name": "actual-location-chooser",
+      "value": [
+        "event Pulse — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/implicit.fsm:1 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+        "event Pulse — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/implicit.fsm:1 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+        "event Pulse — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/implicit.fsm:3 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0"
+      ]
+    },
+    {
+      "elapsedMs": 29884,
+      "step": 56,
+      "name": "passed",
+      "value": "implicit Event declaration action offers introduction/use locations"
+    },
+    {
+      "elapsedMs": 30136,
+      "step": 57,
+      "name": "begin",
+      "value": "implicit Event declaration action offers introduction/use locations: selected real source location"
+    },
+    {
+      "elapsedMs": 30139,
+      "step": 57,
+      "name": "public Swing Enter binding",
+      "value": {
+        "condition": 1,
+        "physicalOsKey": false,
+        "component": "com.intellij.ui.components.JBList",
+        "binding": "javax.swing.JComponent$ActionStandin@7ba751fe"
+      }
+    },
+    {
+      "elapsedMs": 30388,
+      "step": 57,
+      "name": "passed",
+      "value": "implicit Event declaration action offers introduction/use locations: selected real source location"
+    },
+    {
+      "elapsedMs": 30636,
+      "step": 58,
+      "name": "begin",
+      "value": "implicit Event has all introduction/use locations, no invented declaration"
+    },
+    {
+      "elapsedMs": 30645,
+      "step": 58,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.FindReferences",
+        "offset": 70,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/implicit.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 30888,
+      "step": 58,
+      "name": "actual-reference-page",
+      "value": {
+        "rows": [
+          "event Pulse — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/implicit.fsm:1 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "event Pulse — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/implicit.fsm:1 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "event Pulse — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/implicit.fsm:3 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0"
+        ],
+        "title": "AnotherFSM 引用"
+      }
+    },
+    {
+      "elapsedMs": 30888,
+      "step": 58,
+      "name": "passed",
+      "value": "implicit Event has all introduction/use locations, no invented declaration"
+    },
+    {
+      "elapsedMs": 31139,
+      "step": 59,
+      "name": "begin",
+      "value": "Left Output query includes internal uses but not Right/Unopened"
+    },
+    {
+      "elapsedMs": 31160,
+      "step": 59,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.FindReferences",
+        "offset": 685,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 31389,
+      "step": 59,
+      "name": "actual-reference-page",
+      "value": {
+        "rows": [
+          "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm:6 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm:6 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm:6 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm:7 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:24 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0"
+        ],
+        "title": "AnotherFSM 引用"
+      }
+    },
+    {
+      "elapsedMs": 31389,
+      "step": 59,
+      "name": "passed",
+      "value": "Left Output query includes internal uses but not Right/Unopened"
+    },
+    {
+      "elapsedMs": 31639,
+      "step": 60,
+      "name": "begin",
+      "value": "template switch aggregates three instances and unopened file, deduped real positions"
+    },
+    {
+      "elapsedMs": 31644,
+      "step": 60,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.FindTemplateReferences",
+        "offset": 685,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 31890,
+      "step": 60,
+      "name": "actual-reference-page",
+      "value": {
+        "rows": [
+          "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm:6 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Right, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript::Unopened · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm:6 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Right, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript::Unopened · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm:6 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Right, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript::Unopened · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm:7 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Right, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript::Unopened · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:24 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:25 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Right · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript:4 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript::Unopened · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0"
+        ],
+        "title": "AnotherFSM 引用"
+      }
+    },
+    {
+      "elapsedMs": 31890,
+      "step": 60,
+      "name": "passed",
+      "value": "template switch aggregates three instances and unopened file, deduped real positions"
+    },
+    {
+      "elapsedMs": 32141,
+      "step": 61,
+      "name": "begin",
+      "value": "solution references did not require opening dependent script"
+    },
+    {
+      "elapsedMs": 32393,
+      "step": 61,
+      "name": "passed",
+      "value": "solution references did not require opening dependent script"
+    },
+    {
+      "elapsedMs": 32644,
+      "step": 62,
+      "name": "begin",
+      "value": "template declaration has same reference scope"
+    },
+    {
+      "elapsedMs": 32663,
+      "step": 62,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.FindReferences",
+        "offset": 58,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 32895,
+      "step": 62,
+      "name": "actual-reference-page",
+      "value": {
+        "rows": [
+          "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm:6 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Right, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript::Unopened · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm:6 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Right, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript::Unopened · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm:6 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Right, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript::Unopened · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm:7 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Right, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript::Unopened · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:24 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:25 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Right · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript:4 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript::Unopened · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0"
+        ],
+        "title": "AnotherFSM 引用"
+      }
+    },
+    {
+      "elapsedMs": 32895,
+      "step": 62,
+      "name": "passed",
+      "value": "template declaration has same reference scope"
+    },
+    {
+      "elapsedMs": 33145,
+      "step": 63,
+      "name": "begin",
+      "value": "instance Input keeps Left context"
+    },
+    {
+      "elapsedMs": 33161,
+      "step": 63,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.FindReferences",
+        "offset": 748,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 33396,
+      "step": 63,
+      "name": "actual-reference-page",
+      "value": {
+        "rows": [
+          "node Entry — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm:9 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "node Entry — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm:10 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "node Entry — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:23 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "node Entry — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:26 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0"
+        ],
+        "title": "AnotherFSM 引用"
+      }
+    },
+    {
+      "elapsedMs": 33396,
+      "step": 63,
+      "name": "passed",
+      "value": "instance Input keeps Left context"
+    },
+    {
+      "elapsedMs": 33647,
+      "step": 64,
+      "name": "begin",
+      "value": "Input template switch merges real internal/external Node references"
+    },
+    {
+      "elapsedMs": 33653,
+      "step": 64,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.FindTemplateReferences",
+        "offset": 748,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 33898,
+      "step": 64,
+      "name": "actual-reference-page",
+      "value": {
+        "rows": [
+          "node Entry — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm:9 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Right, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript::Unopened · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "node Entry — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm:10 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Right, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript::Unopened · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "node Entry — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:23 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "node Entry — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:24 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Right · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "node Entry — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:26 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0"
+        ],
+        "title": "AnotherFSM 引用"
+      }
+    },
+    {
+      "elapsedMs": 33898,
+      "step": 64,
+      "name": "passed",
+      "value": "Input template switch merges real internal/external Node references"
+    },
+    {
+      "elapsedMs": 34150,
+      "step": 65,
+      "name": "begin",
+      "value": "internal Node and Input declarations query the same identity"
+    },
+    {
+      "elapsedMs": 34172,
+      "step": 65,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.FindReferences",
+        "offset": 72,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 34402,
+      "step": 65,
+      "name": "actual-reference-page",
+      "value": {
+        "rows": [
+          "node Entry — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm:9 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Right, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript::Unopened · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "node Entry — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm:10 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Right, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript::Unopened · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "node Entry — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:23 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "node Entry — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:24 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Right · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "node Entry — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:26 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0"
+        ],
+        "title": "AnotherFSM 引用"
+      }
+    },
+    {
+      "elapsedMs": 34402,
+      "step": 65,
+      "name": "passed",
+      "value": "internal Node and Input declarations query the same identity"
+    },
+    {
+      "elapsedMs": 34652,
+      "step": 66,
+      "name": "begin",
+      "value": "Output internal publishers: two real Nodes, same-Node branches deduplicated"
+    },
+    {
+      "elapsedMs": 34661,
+      "step": 66,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToInternal",
+        "offset": 58,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 34903,
+      "step": 66,
+      "name": "actual-publisher-chooser",
+      "value": [
+        "node PublisherA — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm:6 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+        "node PublisherB — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm:7 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0"
+      ]
+    },
+    {
+      "elapsedMs": 34992,
+      "step": 66,
+      "name": "screenshot",
+      "value": "dsl-publishers.png"
+    },
+    {
+      "elapsedMs": 34992,
+      "step": 66,
+      "name": "passed",
+      "value": "Output internal publishers: two real Nodes, same-Node branches deduplicated"
+    },
+    {
+      "elapsedMs": 35153,
+      "step": 67,
+      "name": "begin",
+      "value": "chooser selection navigates to real template source"
+    },
+    {
+      "elapsedMs": 35156,
+      "step": 67,
+      "name": "public Swing Enter binding",
+      "value": {
+        "condition": 1,
+        "physicalOsKey": false,
+        "component": "com.intellij.ui.components.JBList",
+        "binding": "javax.swing.JComponent$ActionStandin@5cc78f7c"
+      }
+    },
+    {
+      "elapsedMs": 35407,
+      "step": 67,
+      "name": "passed",
+      "value": "chooser selection navigates to real template source"
+    },
+    {
+      "elapsedMs": 35655,
+      "step": 68,
+      "name": "begin",
+      "value": "chained alias keeps its own default declaration"
+    },
+    {
+      "elapsedMs": 35676,
+      "step": 68,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 66,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/edges/alias-chain.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 35908,
+      "step": 68,
+      "name": "actual-editor-target",
+      "value": {
+        "offset": 49,
+        "file": "Graphs/Flow/edges/alias-chain.fsm",
+        "selection": "SecondAlias"
+      }
+    },
+    {
+      "elapsedMs": 35908,
+      "step": 68,
+      "name": "passed",
+      "value": "chained alias keeps its own default declaration"
+    },
+    {
+      "elapsedMs": 36157,
+      "step": 69,
+      "name": "begin",
+      "value": "chained alias Module definition reaches real template"
+    },
+    {
+      "elapsedMs": 36166,
+      "step": 69,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToModuleDefinition",
+        "offset": 66,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/edges/alias-chain.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 36411,
+      "step": 69,
+      "name": "actual-editor-target",
+      "value": {
+        "offset": 7,
+        "file": "Graphs/Flow/edges/Chain.fsm",
+        "selection": "Chain"
+      }
+    },
+    {
+      "elapsedMs": 36411,
+      "step": 69,
+      "name": "passed",
+      "value": "chained alias Module definition reaches real template"
+    },
+    {
+      "elapsedMs": 36659,
+      "step": 70,
+      "name": "begin",
+      "value": "Module query includes transitive aliases"
+    },
+    {
+      "elapsedMs": 36668,
+      "step": 70,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.FindReferences",
+        "offset": 7,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/edges/Chain.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 36910,
+      "step": 70,
+      "name": "actual-reference-page",
+      "value": {
+        "rows": [
+          "module Chain — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/edges/alias-chain.fsm:1 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "alias FirstAlias — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/edges/alias-chain.fsm:2 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "alias SecondAlias — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/edges/alias-chain.fsm:3 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0"
+        ],
+        "title": "AnotherFSM 引用"
+      }
+    },
+    {
+      "elapsedMs": 36910,
+      "step": 70,
+      "name": "passed",
+      "value": "Module query includes transitive aliases"
+    },
+    {
+      "elapsedMs": 37161,
+      "step": 71,
+      "name": "begin",
+      "value": "first alias query stays local to its own import use"
+    },
+    {
+      "elapsedMs": 37176,
+      "step": 71,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.FindReferences",
+        "offset": 16,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/edges/alias-chain.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 37413,
+      "step": 71,
+      "name": "actual-reference-page",
+      "value": {
+        "rows": [
+          "alias FirstAlias — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/edges/alias-chain.fsm:2 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0"
+        ],
+        "title": "AnotherFSM 引用"
+      }
+    },
+    {
+      "elapsedMs": 37413,
+      "step": 71,
+      "name": "passed",
+      "value": "first alias query stays local to its own import use"
+    },
+    {
+      "elapsedMs": 37665,
+      "step": 72,
+      "name": "begin",
+      "value": "damaged multiple Inputs do not authorize implicit target"
+    },
+    {
+      "elapsedMs": 37680,
+      "step": 72,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 146,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/damaged-inputs.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 37917,
+      "step": 72,
+      "name": "visible-explanation",
+      "value": " AnotherFSM：Invalid connection: missing, private, ambiguous or invalid endpoint."
+    },
+    {
+      "elapsedMs": 37917,
+      "step": 72,
+      "name": "passed",
+      "value": "damaged multiple Inputs do not authorize implicit target"
+    },
+    {
+      "elapsedMs": 38166,
+      "step": 73,
+      "name": "begin",
+      "value": "damaged multiple Inputs have no unique entry operation"
+    },
+    {
+      "elapsedMs": 38174,
+      "step": 73,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToEntry",
+        "offset": 95,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/damaged-inputs.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 38418,
+      "step": 73,
+      "name": "visible-explanation",
+      "value": " AnotherFSM：Select an explicit public Input; there is no unique reliable entry."
+    },
+    {
+      "elapsedMs": 38418,
+      "step": 73,
+      "name": "passed",
+      "value": "damaged multiple Inputs have no unique entry operation"
+    },
+    {
+      "elapsedMs": 38668,
+      "step": 74,
+      "name": "begin",
+      "value": "native C# Find Usages finds real keys across all project item kinds"
+    },
+    {
+      "elapsedMs": 38685,
+      "step": 74,
+      "name": "formal-action",
+      "value": {
+        "id": "FindUsages",
+        "offset": 255,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Nodes.cs",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 39126,
+      "step": 74,
+      "name": "actual-native-GraphWorker-keys",
+      "value": [
+        {
+          "id": 30,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/CycleA.fsm",
+          "start": 54,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "0",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 31,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Alias.fsm",
+          "start": 131,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "0",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 32,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/CycleB.fsm",
+          "start": 54,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "0",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 33,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/Broken.fsm",
+          "start": 39,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "12",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 34,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/ExtensionOnly.FSMScript",
+          "start": 139,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "0",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 36,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/edges/Chain.fsm",
+          "start": 44,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "5",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 37,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Leaf.fsm",
+          "start": 59,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "16",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 38,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/broken-import.fsm",
+          "start": 47,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "11",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 39,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/broken-import.fsm",
+          "start": 69,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "11",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 40,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/content.fsm",
+          "start": 17,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "50",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 41,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/content.fsm",
+          "start": 64,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "50",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 42,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/SharedGraphs/linked.FSMScript",
+          "start": 78,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "3",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 43,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/implicit.fsm",
+          "start": 11,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "6",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 44,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/implicit.fsm",
+          "start": 56,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "6",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 45,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/cyclic.fsm",
+          "start": 44,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "4",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 46,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/cyclic.fsm",
+          "start": 66,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "4",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 47,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/damaged-inputs.fsm",
+          "start": 60,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "8",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 48,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/damaged-inputs.fsm",
+          "start": 110,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "8",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 49,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript",
+          "start": 75,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "17",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 50,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/missing.fsm",
+          "start": 92,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "7",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 51,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/missing.fsm",
+          "start": 114,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "7",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 52,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/none.FSMScript",
+          "start": 14,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "15",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 53,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/none.FSMScript",
+          "start": 55,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "15",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 54,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/overwrite.fsm",
+          "start": 67,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "13",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 55,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/overwrite.fsm",
+          "start": 133,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "13",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 56,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/resource.FSMScript",
+          "start": 18,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "10",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 57,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Items/resource.FSMScript",
+          "start": 67,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "10",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 58,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm",
+          "start": 78,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "14",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 59,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm",
+          "start": 141,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "14",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 60,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm",
+          "start": 215,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "14",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 61,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm",
+          "start": 260,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "14",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 62,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/invalid.fsm",
+          "start": 62,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "2",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 63,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/invalid.fsm",
+          "start": 124,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "2",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 64,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/invalid.fsm",
+          "start": 149,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "2",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 65,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/invalid.fsm",
+          "start": 175,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "2",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 66,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/invalid.fsm",
+          "start": 265,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "2",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 67,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/invalid.fsm",
+          "start": 326,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "2",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 68,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+          "start": 135,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "18",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 69,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+          "start": 179,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "18",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 70,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+          "start": 223,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "18",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 71,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+          "start": 316,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "18",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 72,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+          "start": 369,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "18",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 73,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+          "start": 490,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "18",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 74,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+          "start": 515,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "18",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 75,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+          "start": 911,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "18",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 76,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+          "start": 954,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "18",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 77,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+          "start": 1028,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "18",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 78,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+          "start": 1061,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "18",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        },
+        {
+          "id": 79,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/SharedGraphs/LinkedChecker.fsm",
+          "start": 83,
+          "length": 8,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 GraphKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "GraphKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "0",
+          "snapshotOnly": false,
+          "queryEpoch": 20
+        }
+      ]
+    },
+    {
+      "elapsedMs": 39126,
+      "step": 74,
+      "name": "native-query-complete",
+      "value": true
+    },
+    {
+      "elapsedMs": 39212,
+      "step": 74,
+      "name": "screenshot",
+      "value": "dsl-native-csharp-reverse.png"
+    },
+    {
+      "elapsedMs": 39212,
+      "step": 74,
+      "name": "passed",
+      "value": "native C# Find Usages finds real keys across all project item kinds"
+    },
+    {
+      "elapsedMs": 39423,
+      "step": 75,
+      "name": "begin",
+      "value": "missing import does not guess same-named solution file"
+    },
+    {
+      "elapsedMs": 39440,
+      "step": 75,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 7,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/missing.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 39675,
+      "step": 75,
+      "name": "visible-explanation",
+      "value": " AnotherFSM：Import target unavailable: Checker.fsm (requires the actual importing document directory or explicit host mapping)."
+    },
+    {
+      "elapsedMs": 39675,
+      "step": 75,
+      "name": "passed",
+      "value": "missing import does not guess same-named solution file"
+    },
+    {
+      "elapsedMs": 39924,
+      "step": 76,
+      "name": "begin",
+      "value": "import M still requires M.fsm, not discovered M.FSMScript"
+    },
+    {
+      "elapsedMs": 39933,
+      "step": 76,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 39,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/missing.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 40176,
+      "step": 76,
+      "name": "visible-explanation",
+      "value": " AnotherFSM：Import target unavailable: ExtensionOnly.fsm (requires the actual importing document directory or explicit host mapping)."
+    },
+    {
+      "elapsedMs": 40176,
+      "step": 76,
+      "name": "passed",
+      "value": "import M still requires M.fsm, not discovered M.FSMScript"
+    },
+    {
+      "elapsedMs": 40426,
+      "step": 77,
+      "name": "begin",
+      "value": "reliable local Node survives missing.fsm"
+    },
+    {
+      "elapsedMs": 40436,
+      "step": 77,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 141,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/missing.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 40679,
+      "step": 77,
+      "name": "actual-editor-target",
+      "value": {
+        "offset": 87,
+        "file": "Graphs/Flow/negative/missing.fsm",
+        "selection": "Safe"
+      }
+    },
+    {
+      "elapsedMs": 40679,
+      "step": 77,
+      "name": "passed",
+      "value": "reliable local Node survives missing.fsm"
+    },
+    {
+      "elapsedMs": 40928,
+      "step": 78,
+      "name": "begin",
+      "value": "reliable local Node survives cyclic.fsm"
+    },
+    {
+      "elapsedMs": 40943,
+      "step": 78,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 93,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/cyclic.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 41180,
+      "step": 78,
+      "name": "actual-editor-target",
+      "value": {
+        "offset": 39,
+        "file": "Graphs/Flow/negative/cyclic.fsm",
+        "selection": "Safe"
+      }
+    },
+    {
+      "elapsedMs": 41180,
+      "step": 78,
+      "name": "passed",
+      "value": "reliable local Node survives cyclic.fsm"
+    },
+    {
+      "elapsedMs": 41429,
+      "step": 79,
+      "name": "begin",
+      "value": "reliable local Node survives broken-import.fsm"
+    },
+    {
+      "elapsedMs": 41449,
+      "step": 79,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 96,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/broken-import.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 41681,
+      "step": 79,
+      "name": "actual-editor-target",
+      "value": {
+        "offset": 42,
+        "file": "Graphs/Flow/negative/broken-import.fsm",
+        "selection": "Safe"
+      }
+    },
+    {
+      "elapsedMs": 41681,
+      "step": 79,
+      "name": "passed",
+      "value": "reliable local Node survives broken-import.fsm"
+    },
+    {
+      "elapsedMs": 41930,
+      "step": 80,
+      "name": "begin",
+      "value": "cyclic import reports why no target is safe"
+    },
+    {
+      "elapsedMs": 41951,
+      "step": 80,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToModuleDefinition",
+        "offset": 19,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/cyclic.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 42182,
+      "step": 80,
+      "name": "visible-explanation",
+      "value": " AnotherFSM：Module must be unambiguous and declared or imported before use."
+    },
+    {
+      "elapsedMs": 42182,
+      "step": 80,
+      "name": "passed",
+      "value": "cyclic import reports why no target is safe"
+    },
+    {
+      "elapsedMs": 42431,
+      "step": 81,
+      "name": "begin",
+      "value": "broken imported interface is not a certain target"
+    },
+    {
+      "elapsedMs": 42450,
+      "step": 81,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToEntry",
+        "offset": 19,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/broken-import.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 42684,
+      "step": 81,
+      "name": "visible-explanation",
+      "value": " AnotherFSM：Select a Module Instance with a unique public Input, not a Module declaration."
+    },
+    {
+      "elapsedMs": 42684,
+      "step": 81,
+      "name": "passed",
+      "value": "broken imported interface is not a certain target"
+    },
+    {
+      "elapsedMs": 42933,
+      "step": 82,
+      "name": "begin",
+      "value": "use requires an already available Module"
+    },
+    {
+      "elapsedMs": 42953,
+      "step": 82,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 4,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/invalid.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 43187,
+      "step": 82,
+      "name": "visible-explanation",
+      "value": " AnotherFSM：Module must be unambiguous and declared or imported before use."
+    },
+    {
+      "elapsedMs": 43187,
+      "step": 82,
+      "name": "passed",
+      "value": "use requires an already available Module"
+    },
+    {
+      "elapsedMs": 43436,
+      "step": 83,
+      "name": "begin",
+      "value": "module original name is not also registered"
+    },
+    {
+      "elapsedMs": 43446,
+      "step": 83,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 285,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/invalid.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 43690,
+      "step": 83,
+      "name": "visible-explanation",
+      "value": " AnotherFSM：Module must be unambiguous and declared or imported before use."
+    },
+    {
+      "elapsedMs": 43690,
+      "step": 83,
+      "name": "passed",
+      "value": "module original name is not also registered"
+    },
+    {
+      "elapsedMs": 43940,
+      "step": 84,
+      "name": "begin",
+      "value": "multiple Inputs require explicit choice"
+    },
+    {
+      "elapsedMs": 43949,
+      "step": 84,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToEntry",
+        "offset": 370,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/invalid.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 44193,
+      "step": 84,
+      "name": "visible-explanation",
+      "value": " AnotherFSM：Invalid connection: missing, private, ambiguous or invalid endpoint."
+    },
+    {
+      "elapsedMs": 44193,
+      "step": 84,
+      "name": "passed",
+      "value": "multiple Inputs require explicit choice"
+    },
+    {
+      "elapsedMs": 44442,
+      "step": 85,
+      "name": "begin",
+      "value": "private Node cannot be selected as public Input"
+    },
+    {
+      "elapsedMs": 44452,
+      "step": 85,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 400,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/invalid.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 44695,
+      "step": 85,
+      "name": "visible-explanation",
+      "value": " AnotherFSM：Invalid connection: missing, private, ambiguous or invalid endpoint."
+    },
+    {
+      "elapsedMs": 44695,
+      "step": 85,
+      "name": "passed",
+      "value": "private Node cannot be selected as public Input"
+    },
+    {
+      "elapsedMs": 44944,
+      "step": 86,
+      "name": "begin",
+      "value": "instance cannot be Transition source Node"
+    },
+    {
+      "elapsedMs": 44954,
+      "step": 86,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToImplementation",
+        "offset": 419,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/invalid.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 45196,
+      "step": 86,
+      "name": "visible-explanation",
+      "value": " AnotherFSM：This DSL symbol has no intrinsic C# type target; Output/Event/Module/instance/Namespace are not nodes"
+    },
+    {
+      "elapsedMs": 45196,
+      "step": 86,
+      "name": "passed",
+      "value": "instance cannot be Transition source Node"
+    },
+    {
+      "elapsedMs": 45445,
+      "step": 87,
+      "name": "begin",
+      "value": "overwritten Branch is not a real Output publisher"
+    },
+    {
+      "elapsedMs": 45464,
+      "step": 87,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToInternal",
+        "offset": 47,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/overwrite.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 45697,
+      "step": 87,
+      "name": "visible-explanation",
+      "value": " AnotherFSM：No real Branch publisher; Event use positions only."
+    },
+    {
+      "elapsedMs": 45697,
+      "step": 87,
+      "name": "passed",
+      "value": "overwritten Branch is not a real Output publisher"
+    },
+    {
+      "elapsedMs": 45946,
+      "step": 88,
+      "name": "begin",
+      "value": "legacy module def is not a Node implementation"
+    },
+    {
+      "elapsedMs": 45964,
+      "step": 88,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToImplementation",
+        "offset": 82,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/negative/legacy.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 46198,
+      "step": 88,
+      "name": "visible-explanation",
+      "value": " AnotherFSM：This DSL symbol has no intrinsic C# type target; Output/Event/Module/instance/Namespace are not nodes"
+    },
+    {
+      "elapsedMs": 46198,
+      "step": 88,
+      "name": "passed",
+      "value": "legacy module def is not a Node implementation"
+    },
+    {
+      "elapsedMs": 46447,
+      "step": 89,
+      "name": "begin",
+      "value": "unowned loose script retains local assistance"
+    },
+    {
+      "elapsedMs": 46468,
+      "step": 89,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 168,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Loose/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 46700,
+      "step": 89,
+      "name": "actual-editor-target",
+      "value": {
+        "offset": 97,
+        "file": "Graphs/Loose/graph.fsm",
+        "selection": "Local"
+      }
+    },
+    {
+      "elapsedMs": 46700,
+      "step": 89,
+      "name": "passed",
+      "value": "unowned loose script retains local assistance"
+    },
+    {
+      "elapsedMs": 46949,
+      "step": 90,
+      "name": "begin",
+      "value": "directory proximity does not grant project membership"
+    },
+    {
+      "elapsedMs": 46960,
+      "step": 90,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToImplementation",
+        "offset": 103,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Loose/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 47203,
+      "step": 90,
+      "name": "visible-explanation",
+      "value": " AnotherFSM：C# host context unavailable; local DSL navigation remains available"
+    },
+    {
+      "elapsedMs": 47203,
+      "step": 90,
+      "name": "passed",
+      "value": "directory proximity does not grant project membership"
+    },
+    {
+      "elapsedMs": 47453,
+      "step": 91,
+      "name": "begin",
+      "value": "loose relative import does not guess project module"
+    },
+    {
+      "elapsedMs": 47461,
+      "step": 91,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 84,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Loose/graph.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 47705,
+      "step": 91,
+      "name": "visible-explanation",
+      "value": " AnotherFSM：Import target unavailable: Checker.fsm (requires the actual importing document directory or explicit host mapping)."
+    },
+    {
+      "elapsedMs": 47706,
+      "step": 91,
+      "name": "passed",
+      "value": "loose relative import does not guess project module"
+    },
+    {
+      "elapsedMs": 47956,
+      "step": 92,
+      "name": "begin",
+      "value": "no-directory unsaved editor retains reliable local declaration"
+    },
+    {
+      "elapsedMs": 47994,
+      "step": 92,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 70,
+        "path": "/issue33-untitled.fsm",
+        "documentVersion": 565
+      }
+    },
+    {
+      "elapsedMs": 48208,
+      "step": 92,
+      "name": "passed",
+      "value": "no-directory unsaved editor retains reliable local declaration"
+    },
+    {
+      "elapsedMs": 48459,
+      "step": 93,
+      "name": "begin",
+      "value": "no-directory relative import explains absent context without guessing"
+    },
+    {
+      "elapsedMs": 48464,
+      "step": 93,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 7,
+        "path": "/issue33-untitled.fsm",
+        "documentVersion": 565
+      }
+    },
+    {
+      "elapsedMs": 48711,
+      "step": 93,
+      "name": "visible-explanation",
+      "value": " AnotherFSM：Import target unavailable: Checker.fsm (requires the actual importing document directory or explicit host mapping)."
+    },
+    {
+      "elapsedMs": 48711,
+      "step": 93,
+      "name": "passed",
+      "value": "no-directory relative import explains absent context without guessing"
+    },
+    {
+      "elapsedMs": 48961,
+      "step": 94,
+      "name": "begin",
+      "value": "no-host factory binding stays unresolved"
+    },
+    {
+      "elapsedMs": 48965,
+      "step": 94,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToImplementation",
+        "offset": 26,
+        "path": "/issue33-untitled.fsm",
+        "documentVersion": 565
+      }
+    },
+    {
+      "elapsedMs": 49212,
+      "step": 94,
+      "name": "visible-explanation",
+      "value": " AnotherFSM：C# host context unavailable; local DSL navigation remains available"
+    },
+    {
+      "elapsedMs": 49212,
+      "step": 94,
+      "name": "passed",
+      "value": "no-host factory binding stays unresolved"
+    },
+    {
+      "elapsedMs": 49462,
+      "step": 95,
+      "name": "begin",
+      "value": "close no-directory editor without saving"
+    },
+    {
+      "elapsedMs": 49712,
+      "step": 95,
+      "name": "passed",
+      "value": "close no-directory editor without saving"
+    },
+    {
+      "elapsedMs": 49963,
+      "step": 96,
+      "name": "begin",
+      "value": "leave unrelated incomplete syntax unsaved"
+    },
+    {
+      "elapsedMs": 49994,
+      "step": 96,
+      "name": "unsaved-edit",
+      "value": "Graphs/Flow/graph.fsm"
+    },
+    {
+      "elapsedMs": 50213,
+      "step": 96,
+      "name": "passed",
+      "value": "leave unrelated incomplete syntax unsaved"
+    },
+    {
+      "elapsedMs": 50464,
+      "step": 97,
+      "name": "begin",
+      "value": "reliable Module interface survives unrelated incomplete tail"
+    },
+    {
+      "elapsedMs": 50473,
+      "step": 97,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.GoToDeclaration",
+        "offset": 685,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm",
+        "documentVersion": 567
+      }
+    },
+    {
+      "elapsedMs": 50717,
+      "step": 97,
+      "name": "actual-editor-target",
+      "value": {
+        "offset": 58,
+        "file": "Graphs/Flow/Checker.fsm",
+        "selection": "Done"
+      }
+    },
+    {
+      "elapsedMs": 50717,
+      "step": 97,
+      "name": "passed",
+      "value": "reliable Module interface survives unrelated incomplete tail"
+    },
+    {
+      "elapsedMs": 50967,
+      "step": 98,
+      "name": "begin",
+      "value": "restore incomplete tail"
+    },
+    {
+      "elapsedMs": 51217,
+      "step": 98,
+      "name": "passed",
+      "value": "restore incomplete tail"
+    },
+    {
+      "elapsedMs": 51467,
+      "step": 99,
+      "name": "begin",
+      "value": "stale baseline page"
+    },
+    {
+      "elapsedMs": 51476,
+      "step": 99,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.FindReferences",
+        "offset": 58,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 51719,
+      "step": 99,
+      "name": "actual-reference-page",
+      "value": {
+        "rows": [
+          "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm:6 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Right, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript::Unopened · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm:6 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Right, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript::Unopened · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm:6 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Right, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript::Unopened · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm:7 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Right, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript::Unopened · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:24 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:25 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Right · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript:4 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript::Unopened · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0"
+        ],
+        "title": "AnotherFSM 引用"
+      }
+    },
+    {
+      "elapsedMs": 51719,
+      "step": 99,
+      "name": "passed",
+      "value": "stale baseline page"
+    },
+    {
+      "elapsedMs": 51970,
+      "step": 100,
+      "name": "begin",
+      "value": "retain first query identity"
+    },
+    {
+      "elapsedMs": 52221,
+      "step": 100,
+      "name": "passed",
+      "value": "retain first query identity"
+    },
+    {
+      "elapsedMs": 52472,
+      "step": 101,
+      "name": "begin",
+      "value": "same-title second query gets independent Content"
+    },
+    {
+      "elapsedMs": 52482,
+      "step": 101,
+      "name": "formal-action",
+      "value": {
+        "id": "AnotherFSM.FindReferences",
+        "offset": 58,
+        "path": "C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm",
+        "documentVersion": 0
+      }
+    },
+    {
+      "elapsedMs": 52722,
+      "step": 101,
+      "name": "actual-reference-page",
+      "value": {
+        "rows": [
+          "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm:6 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Right, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript::Unopened · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm:6 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Right, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript::Unopened · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm:6 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Right, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript::Unopened · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm:7 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Right, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript::Unopened · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:24 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:25 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Right · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+          "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript:4 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript::Unopened · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0"
+        ],
+        "title": "AnotherFSM 引用"
+      }
+    },
+    {
+      "elapsedMs": 52722,
+      "step": 101,
+      "name": "passed",
+      "value": "same-title second query gets independent Content"
+    },
+    {
+      "elapsedMs": 52974,
+      "step": 102,
+      "name": "begin",
+      "value": "retain second query identity"
+    },
+    {
+      "elapsedMs": 53136,
+      "step": 102,
+      "name": "unsaved-edit",
+      "value": "Graphs/Flow/unopened.FSMScript"
+    },
+    {
+      "elapsedMs": 53238,
+      "step": 102,
+      "name": "passed",
+      "value": "retain second query identity"
+    },
+    {
+      "elapsedMs": 53475,
+      "step": 103,
+      "name": "begin",
+      "value": "dependent unsaved change actively expires both pages without reordering"
+    },
+    {
+      "elapsedMs": 53817,
+      "step": 103,
+      "name": "screenshot",
+      "value": "dsl-expired-references.png"
+    },
+    {
+      "elapsedMs": 53817,
+      "step": 103,
+      "name": "expired-content-titles",
+      "value": [
+        "结果已过期 — AnotherFSM",
+        "结果已过期 — AnotherFSM"
+      ]
+    },
+    {
+      "elapsedMs": 53817,
+      "step": 103,
+      "name": "passed",
+      "value": "dependent unsaved change actively expires both pages without reordering"
+    },
+    {
+      "elapsedMs": 53978,
+      "step": 104,
+      "name": "begin",
+      "value": "stale row doubleClick revalidates and rejects navigation"
+    },
+    {
+      "elapsedMs": 53994,
+      "step": 104,
+      "name": "reference-row-activation",
+      "value": {
+        "gesture": "doubleClick",
+        "row": "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript:4 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript::Unopened · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0"
+      }
+    },
+    {
+      "elapsedMs": 54232,
+      "step": 104,
+      "name": "visible-explanation",
+      "value": " AnotherFSM：结果已过期，请先刷新；没有跳转旧位置。"
+    },
+    {
+      "elapsedMs": 54232,
+      "step": 104,
+      "name": "passed",
+      "value": "stale row doubleClick revalidates and rejects navigation"
+    },
+    {
+      "elapsedMs": 54480,
+      "step": 105,
+      "name": "begin",
+      "value": "stale row Enter revalidates and rejects navigation"
+    },
+    {
+      "elapsedMs": 54491,
+      "step": 105,
+      "name": "reference-row-activation",
+      "value": {
+        "gesture": "Enter",
+        "row": "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript:4 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript::Unopened · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0"
+      }
+    },
+    {
+      "elapsedMs": 54491,
+      "step": 105,
+      "name": "public Swing Enter binding",
+      "value": {
+        "condition": 0,
+        "physicalOsKey": false,
+        "component": "com.intellij.ui.components.JBList",
+        "binding": "anotherfsm.navigate"
+      }
+    },
+    {
+      "elapsedMs": 54733,
+      "step": 105,
+      "name": "visible-explanation",
+      "value": " AnotherFSM：结果已过期，请先刷新；没有跳转旧位置。"
+    },
+    {
+      "elapsedMs": 54733,
+      "step": 105,
+      "name": "passed",
+      "value": "stale row Enter revalidates and rejects navigation"
+    },
+    {
+      "elapsedMs": 54983,
+      "step": 106,
+      "name": "begin",
+      "value": "refresh applies current unsaved dependency only to selected query"
+    },
+    {
+      "elapsedMs": 55057,
+      "step": 106,
+      "name": "refresh-click",
+      "value": "结果已过期 — AnotherFSM"
+    },
+    {
+      "elapsedMs": 55234,
+      "step": 106,
+      "name": "refreshed-public-model",
+      "value": [
+        "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm:6 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Right, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript::Unopened · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+        "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm:6 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Right, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript::Unopened · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+        "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm:6 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Right, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript::Unopened · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+        "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/Checker.fsm:7 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Right, C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript::Unopened · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+        "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:24 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Left · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0",
+        "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm:25 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/graph.fsm::Right · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0"
+      ]
+    },
+    {
+      "elapsedMs": 55320,
+      "step": 106,
+      "name": "screenshot",
+      "value": "dsl-refreshed-references.png"
+    },
+    {
+      "elapsedMs": 55320,
+      "step": 106,
+      "name": "passed",
+      "value": "refresh applies current unsaved dependency only to selected query"
+    },
+    {
+      "elapsedMs": 55484,
+      "step": 107,
+      "name": "begin",
+      "value": "template edit invalidates dependency results"
+    },
+    {
+      "elapsedMs": 55509,
+      "step": 107,
+      "name": "unsaved-edit",
+      "value": "Graphs/Flow/Checker.fsm"
+    },
+    {
+      "elapsedMs": 55735,
+      "step": 107,
+      "name": "passed",
+      "value": "template edit invalidates dependency results"
+    },
+    {
+      "elapsedMs": 55986,
+      "step": 108,
+      "name": "begin",
+      "value": "template change actively expires refreshed results"
+    },
+    {
+      "elapsedMs": 56237,
+      "step": 108,
+      "name": "passed",
+      "value": "template change actively expires refreshed results"
+    },
+    {
+      "elapsedMs": 56488,
+      "step": 109,
+      "name": "begin",
+      "value": "restore template and dependency"
+    },
+    {
+      "elapsedMs": 56740,
+      "step": 109,
+      "name": "passed",
+      "value": "restore template and dependency"
+    },
+    {
+      "elapsedMs": 56991,
+      "step": 110,
+      "name": "begin",
+      "value": "refresh after restore finds all real references again"
+    },
+    {
+      "elapsedMs": 57065,
+      "step": 110,
+      "name": "refresh-click",
+      "value": "结果已过期 — AnotherFSM"
+    },
+    {
+      "elapsedMs": 57242,
+      "step": 110,
+      "name": "passed",
+      "value": "refresh after restore finds all real references again"
+    },
+    {
+      "elapsedMs": 57492,
+      "step": 111,
+      "name": "begin",
+      "value": "import edit invalidates template relation"
+    },
+    {
+      "elapsedMs": 57515,
+      "step": 111,
+      "name": "unsaved-edit",
+      "value": "Graphs/Flow/graph.fsm"
+    },
+    {
+      "elapsedMs": 57744,
+      "step": 111,
+      "name": "passed",
+      "value": "import edit invalidates template relation"
+    },
+    {
+      "elapsedMs": 57997,
+      "step": 112,
+      "name": "begin",
+      "value": "import change actively expires open reference query"
+    },
+    {
+      "elapsedMs": 58247,
+      "step": 112,
+      "name": "passed",
+      "value": "import change actively expires open reference query"
+    },
+    {
+      "elapsedMs": 58498,
+      "step": 113,
+      "name": "begin",
+      "value": "restore import"
+    },
+    {
+      "elapsedMs": 58749,
+      "step": 113,
+      "name": "passed",
+      "value": "restore import"
+    },
+    {
+      "elapsedMs": 59001,
+      "step": 114,
+      "name": "begin",
+      "value": "refresh after import restoration"
+    },
+    {
+      "elapsedMs": 59076,
+      "step": 114,
+      "name": "refresh-click",
+      "value": "结果已过期 — AnotherFSM"
+    },
+    {
+      "elapsedMs": 59252,
+      "step": 114,
+      "name": "passed",
+      "value": "refresh after import restoration"
+    },
+    {
+      "elapsedMs": 59503,
+      "step": 115,
+      "name": "begin",
+      "value": "fresh result navigates to actual external source"
+    },
+    {
+      "elapsedMs": 59507,
+      "step": 115,
+      "name": "reference-row-activation",
+      "value": {
+        "gesture": "Enter",
+        "row": "event Done — C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript:4 · 实例 C:/Work/AnotherFSM/rider/fixtures/Graphs/Flow/unopened.FSMScript::Unopened · 宿主 C:/Work/AnotherFSM/rider/fixtures/Graphs/Graphs.csproj / net8.0"
+      }
+    },
+    {
+      "elapsedMs": 59507,
+      "step": 115,
+      "name": "public Swing Enter binding",
+      "value": {
+        "condition": 0,
+        "physicalOsKey": false,
+        "component": "com.intellij.ui.components.JBList",
+        "binding": "anotherfsm.navigate"
+      }
+    },
+    {
+      "elapsedMs": 59755,
+      "step": 115,
+      "name": "passed",
+      "value": "fresh result navigates to actual external source"
+    },
+    {
+      "elapsedMs": 60004,
+      "step": 116,
+      "name": "begin",
+      "value": "final screenshot"
+    },
+    {
+      "elapsedMs": 60111,
+      "step": 116,
+      "name": "screenshot",
+      "value": "dsl-host-acceptance.png"
+    },
+    {
+      "elapsedMs": 60262,
+      "step": 116,
+      "name": "passed",
+      "value": "final screenshot"
+    },
+    {
+      "elapsedMs": 60514,
+      "step": 117,
+      "name": "instrumented-business-markers-not-created",
+      "value": [
+        "C:\\Work\\AnotherFSM\\.scratch\\issue-34\\host\\finalregression-cb5f69dd5a8a4dda8251ea93e9444477\\acceptance\\graph-business-execution.marker",
+        "C:\\Work\\AnotherFSM\\.scratch\\issue-33\\host\\graph-business-execution.marker"
+      ]
+    }
+  ],
+  "notClaimed": [
+    "runtime/generator regression execution",
+    "deterministic delayed session/contextVersion packet ordering",
+    "cross-project/TFM/external/JSON (#34)",
+    "completion/documentation (#35)",
+    "performance (#36)"
+  ]
+}

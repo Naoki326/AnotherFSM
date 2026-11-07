@@ -1,0 +1,17 @@
+{
+  "productZipSha256": "abc111a3d8b9e60871e085609a24fb6691c94ac18f4f5b774176b1157926faa6",
+  "seam": "real Rider registered implementation action; correct class opened, configuration origin absent",
+  "report": {
+    "status": "failed",
+    "step": 61,
+    "elapsedMs": 89781,
+    "error": "java.lang.IllegalStateException: Deadline: explicit mapping replaces current attribute key and visibly reports configuration source; selected=C:/Work/AnotherFSM/rider/fixtures/Complex/ProjectNodes/Nodes.cs:450:null; currentRows=[node SharedEntry — C:/Work/AnotherFSM/rider/fixtures/SharedComplex/dual-host.fsm:4 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Complex/HostA/HostA.csproj / net8.0, C:/Work/AnotherFSM/rider/fixtures/Complex/HostB/HostB.csproj / net10.0, node SharedEntry — C:/Work/AnotherFSM/rider/fixtures/SharedComplex/dual-host.fsm:5 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Complex/HostA/HostA.csproj / net8.0, C:/Work/AnotherFSM/rider/fixtures/Complex/HostB/HostB.csproj / net10.0]; no cause inferred",
+    "failedCoverage": [
+      {
+        "name": "explicit mapping replaces current attribute key and visibly reports configuration source",
+        "status": "failed",
+        "detail": "java.lang.IllegalStateException: Deadline: explicit mapping replaces current attribute key and visibly reports configuration source; selected=C:/Work/AnotherFSM/rider/fixtures/Complex/ProjectNodes/Nodes.cs:450:null; currentRows=[node SharedEntry — C:/Work/AnotherFSM/rider/fixtures/SharedComplex/dual-host.fsm:4 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Complex/HostA/HostA.csproj / net8.0, C:/Work/AnotherFSM/rider/fixtures/Complex/HostB/HostB.csproj / net10.0, node SharedEntry — C:/Work/AnotherFSM/rider/fixtures/SharedComplex/dual-host.fsm:5 · 宿主 C:/Work/AnotherFSM/rider/fixtures/Complex/HostA/HostA.csproj / net8.0, C:/Work/AnotherFSM/rider/fixtures/Complex/HostB/HostB.csproj / net10.0]; no cause inferred"
+      }
+    ]
+  }
+}
