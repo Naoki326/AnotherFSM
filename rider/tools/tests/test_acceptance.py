@@ -45,6 +45,7 @@ class AcceptanceCliTests(unittest.TestCase):
         (box / "prepared.json").write_text(json.dumps({
             "zipSha256": "a" * 64, "version": "2026.2.3.1", "build": "262.10968.170",
             "installedSha256": {"product.bin": hashlib.sha256(product.read_bytes()).hexdigest()}}), encoding="utf-8")
+        (box / ".anotherfsm-tools-owner").write_text("anotherfsm-issue-32-tools-v1\n", encoding="utf-8")
         record_preparation(box, suite, source_preparation=source)
 
     def test_observer_without_independent_lifecycle_is_rejected_before_launch(self):
@@ -171,6 +172,42 @@ class AcceptanceCliTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
                 self.assertEqual(json.loads(result.stdout)["status"], "preflightFailed")
                 self.assertFalse((box / "launcher.json").exists())
+
+    def test_case_catalog_and_unknown_case_rejection_are_public_cli_behaviour(self):
+        result = subprocess.run([sys.executable, str(RUNNER), "cases", "--suite", "complex"],
+                                text=True, capture_output=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(json.loads(result.stdout)["cases"], ["all", "generic-native", "configuration", "source-matrix"])
+        with tempfile.TemporaryDirectory() as temporary:
+            box = Path(temporary)
+            self.prepared(box)
+            result = self.cli(box, extra=["--case", "not-a-case"])
+            self.assertEqual(result.returncode, 2)
+            self.assertFalse((box / "launcher.json").exists())
+
+    def test_case_is_bound_to_preparation_instead_of_silently_running_all(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            box = Path(temporary)
+            self.prepared(box, "complex")
+            result = self.cli(box, "complex", ["--case", "generic-native"])
+            self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+            self.assertEqual(json.loads(result.stdout)["code"], "caseMismatch")
+            self.assertFalse((box / "launcher.json").exists())
+
+    def test_select_changes_only_the_runtime_case_of_verified_prepared_outputs(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            box = Path(temporary)
+            self.prepared(box, "complex")
+            jar = box / "plugins/anotherfsm-acceptance/lib/acceptance.jar"
+            before = jar.read_bytes()
+            result = subprocess.run([sys.executable, str(RUNNER), "select", "--suite", "complex", "--case", "generic-native", "--sandbox", str(box)],
+                                    text=True, capture_output=True, timeout=10)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertEqual(json.loads(result.stdout)["status"], "selected")
+            self.assertEqual(before, jar.read_bytes())
+            result = self.cli(box, "complex", ["--case", "generic-native"])
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertFalse((box / "launcher.json").exists())
 
     def test_wrong_prepared_suite_is_rejected_before_host_start(self):
         with tempfile.TemporaryDirectory() as temporary:

@@ -91,8 +91,14 @@ def argfile(arguments: list[str]) -> str:
                      for a in arguments) + "\n"
 
 
-def clean_environment() -> dict[str, str]:
-    env = os.environ.copy()
+def clean_environment(environment=None) -> dict[str, str]:
+    env = dict(os.environ if environment is None else environment)
+    # Agent request/session metadata is not a compiler input. Remove it from the
+    # actual child environment as well as the fingerprint, rather than ignoring
+    # a variable which MSBuild could otherwise still consume as a property.
+    for name in tuple(env):
+        if name.startswith('PI_'):
+            env.pop(name)
     for name in ("JAVA_TOOL_OPTIONS", "_JAVA_OPTIONS", "JDK_JAVA_OPTIONS", "CLASSPATH",
                  "RIDER_PROPERTIES", "RIDER_VM_OPTIONS", "IDEA_PROPERTIES", "IDEA_VM_OPTIONS"):
         env.pop(name, None)

@@ -32,6 +32,7 @@ public sealed class ComplexSdkProbe
     private long stableEpoch = -1;
     private string? directory;
     private string[] waiting = Array.Empty<string>();
+    private readonly string caseId = Environment.GetEnvironmentVariable("ANOTHERFSM_ACCEPTANCE_CASE") ?? "all";
     private static readonly JsonSerializerOptions Json = new() { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
     public ComplexSdkProbe(Lifetime lifetime, ISolution solution, IPsiServices psi, ScriptDocuments scripts,
@@ -51,6 +52,11 @@ public sealed class ComplexSdkProbe
                     if (!modules.Any(module => Name(module) == "HostA" && (BindingSettings.ProjectPath(module) ?? "").EndsWith("/Complex/HostA/HostA.csproj", StringComparison.OrdinalIgnoreCase))) return;
                     detected = true;
                     CheckMarker();
+                    if (caseId != "all")
+                    {
+                        FocusedReadiness(psi, modules);
+                        return;
+                    }
                     var required = new[] { ("HostA", "net8.0", "CurrentHostKey"), ("HostB", "net10.0", "OtherHostOnlyKey"),
                         ("ProjectNodes", "netstandard2.0", "ProjectLookupKey"), ("MultiTarget", "net8.0", "FrameworkBindingKey"),
                         ("MultiTarget", "net10.0", "FrameworkBindingKey"), ("StaticWeb", "net8.0", "StaticSiteKey"),
@@ -352,6 +358,32 @@ public sealed class ComplexSdkProbe
         catch (Exception error) { failed = true; observations.Add(new { error = error.ToString() }); Report("failed"); }
     }
 
+    private void FocusedReadiness(IPsiServices psi, IEnumerable<IPsiModule> modules)
+    {
+        var values = modules.ToArray();
+        var caches = psi.Solution.GetComponent<IPsiCachesState>();
+        var required = caseId == "source-matrix"
+            ? new[] { ("MatrixLibrary", "netstandard2.0"), ("MatrixPlain", "net8.0"), ("MatrixPlain", "net10.0"),
+                ("MatrixWeb", "net8.0"), ("MatrixWeb", "net10.0"), ("MatrixWasm", "net8.0"), ("MatrixWasm", "net10.0"),
+                ("MatrixDependency", "netstandard2.0"), ("HostA", "net8.0") }
+            : new[] { ("HostA", "net8.0"), ("ProjectNodes", "netstandard2.0") };
+        waiting = required.Where(item => !values.Any(module => Name(module) == item.Item1 && BindingSettings.Framework(module) == item.Item2
+                && module.SourceFiles.Any(file => file.IsValid() && file.Name.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))))
+            .Select(item => "Source module not ready: " + item.Item1 + "/" + item.Item2).ToArray();
+        if (!psi.Files.AllDocumentsAreCommitted || !caches.IsInitialUpdateFinished.Value || !caches.IsPrimaryIdle.Value || waiting.Length > 0)
+        { Waiting(); return; }
+        // Readiness is independent of whether a factory key binds. Alias provenance is plain
+        // host metadata for this case's explicit mapping input, not a substitute for UI assertions.
+        var host = values.Single(module => Name(module) == "HostA" && BindingSettings.Framework(module) == "net8.0");
+        var definitions = psi.Modules.GetModuleReferences(host, host.GetContextFromModule())
+            .Where(reference => reference.Module is IAssemblyPsiModule)
+            .SelectMany(reference => reference.ExternAliases.Where(alias => alias is "LeftAssembly" or "RightAssembly")
+                .Select(alias => new { alias, assembly = ((IAssemblyPsiModule)reference.Module).Assembly.AssemblyName.FullName })).ToArray();
+        observations.Add(new { name = "alias-definitions", definitions });
+        observations.Add(new { name = "independent-focused-readiness", committed = true, initialUpdate = true, primaryIdle = true });
+        Report("ready"); timer?.Dispose();
+    }
+
     private sealed record ScriptSnapshot(string Path, string Text);
     private static ScriptSnapshot Snapshot(IPsiSourceFile file) => new(ScriptDocuments.Id(file), file.Document.GetText());
 
@@ -417,13 +449,14 @@ public sealed class ComplexSdkProbe
     private void Report(string status)
     {
         if (!detected || directory == null) return;
-        if (status is "passed" or "failed" or "pendingVerification") completed = true;
+        if (status is "passed" or "failed" or "pendingVerification" or "ready") completed = true;
         try
         {
             Directory.CreateDirectory(directory);
             var marker = Environment.GetEnvironmentVariable("ANOTHERFSM_COMPLEX_EXECUTION_MARKER");
             File.WriteAllText(Path.Combine(directory, "complex-sdk-probe.json"), JsonSerializer.Serialize(new {
-                status, seam = "target SDK/public core queries + real BridgeQueries; not UI acceptance", backendPid = Environment.ProcessId,
+                status, @case = caseId, scope = caseId == "all" ? "full SDK checks" : "readiness only, not full SDK checks",
+                seam = "target SDK/public core queries + real BridgeQueries; not UI acceptance", backendPid = Environment.ProcessId,
                 elapsedMs = (DateTime.UtcNow - started).TotalMilliseconds, waiting, checks, observations, abandonedAttempts,
                 sentinel = new { path = marker, configured = !string.IsNullOrEmpty(marker), exists = !string.IsNullOrEmpty(marker) && File.Exists(marker), claim = "instrumented paths only; absence is not universal execution/network safety proof" },
                 notClaimed = new[] { "real UI actions/native C# Find Usages (separate journey)", "live configuration buffer/project/reference reload invalidation",

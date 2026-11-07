@@ -6,7 +6,7 @@ import http.client
 import json
 import os
 import uuid
-from build import BUILD, VERSION, no_links
+from build import BUILD, VERSION, no_links, managed_directory
 import xml.etree.ElementTree as ET
 import zipfile
 
@@ -27,6 +27,15 @@ SUITES = {
 }
 
 
+CASES = {"legacy": ("all",), "complex": ("all", "generic-native", "configuration", "source-matrix"),
+         "boundary": ("all",), "source": ("all",)}
+
+
+def validate_case(suite: str, case: str):
+    if case not in CASES[suite]:
+        raise PreflightError("unknownCase", "Unknown case " + case + " for suite " + suite)
+
+
 class PreflightError(ValueError):
     def __init__(self, code, reason):
         super().__init__(reason)
@@ -36,23 +45,48 @@ class PreflightError(ValueError):
 SOURCE_PREPARATION = ROOT / "rider/tests/fixtures/boundary/SourceCases/artifacts/prepared.json"
 
 
-def verify_prepared_artifacts(box: Path, suite: str):
+def verify_prepared_artifacts(box: Path, suite: str, *, case: str = "all"):
     proof = json.loads(no_links(box / "acceptance-prepared.json").read_text(encoding="utf-8"))
     if not isinstance(proof, dict):
         raise PreflightError("invalidPreparation", "Preparation manifest must be a JSON object")
     if proof.get("suite") != suite:
         raise PreflightError("suiteMismatch", "Prepared suite is " + str(proof.get("suite")) + "; requested " + suite)
+    validate_case(suite, case)
+    if proof.get("case", "all") != case:
+        raise PreflightError("caseMismatch", "Preparation is for " + proof.get("case", "all") + "; requested " + case)
     verify_entrypoint(box, suite)
     verify_product(box, proof)
     verify_identity(box, suite, proof)
     return proof
 
 
-def check_preparation(box: Path, suite: str, source_preparation: Path | None = None):
-    proof = verify_prepared_artifacts(box, suite)
+def check_preparation(box: Path, suite: str, source_preparation: Path | None = None, *, case: str = "all"):
+    proof = verify_prepared_artifacts(box, suite, case=case)
     if suite == "source":
         verify_source_service(source_preparation or SOURCE_PREPARATION, proof)
         verify_source_backup(box, source_preparation or SOURCE_PREPARATION)
+    return proof
+
+
+def select_case(box: Path, suite: str, case: str):
+    """Retarget a verified frozen bundle, not a build-cache completeness claim."""
+    validate_case(suite, case)
+    if not box.is_dir():
+        raise PreflightError("invalidPreparation", "No owned prepared sandbox")
+    managed_directory(box)
+    old = json.loads(no_links(box / "acceptance-prepared.json").read_text(encoding="utf-8"))
+    proof = verify_prepared_artifacts(box, suite, case=old.get("case", "all"))
+    if case not in proof.get("cases", ["all"]):
+        raise PreflightError("caseUnavailable", "This observer predates the requested case; prepare it again")
+    launcher = no_links(box / "launcher.json")
+    if launcher.is_file():
+        from sandbox import windows_process
+        record = json.loads(launcher.read_text(encoding="utf-8"))
+        current = windows_process(record["windowsPid"])
+        if current is not None and current == record.get("creationFileTime"):
+            raise PreflightError("hostRunning", "Case selection requires the owned host to be stopped")
+    proof["case"] = case
+    write_json(box / "acceptance-prepared.json", proof)
     return proof
 
 
@@ -149,11 +183,12 @@ def write_json(path: Path, value):
         temporary.unlink(missing_ok=True)
 
 
-def record_preparation(box: Path, suite: str, source_preparation: Path | None = None):
+def record_preparation(box: Path, suite: str, source_preparation: Path | None = None, *, case: str = "all"):
     """Record actual completed preparation; never install, launch, build or execute a fixture."""
+    validate_case(suite, case)
     verify_entrypoint(box, suite)
     product = json.loads(no_links(box / "prepared.json").read_text(encoding="utf-8"))
-    proof = {"schemaVersion": 1, "suite": suite, "productZipSha256": product["zipSha256"],
+    proof = {"schemaVersion": 1, "suite": suite, "case": case, "cases": list(CASES[suite]), "productZipSha256": product["zipSha256"],
              "fixture": (ROOT / SUITES[suite].fixture).as_posix(), "fixtureInputs": fixture_inputs(suite),
              "fixtureAssets": fixture_assets(suite),
              "observerSha256": inventory(box / "plugins/anotherfsm-acceptance")}

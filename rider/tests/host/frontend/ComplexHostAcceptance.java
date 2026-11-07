@@ -54,6 +54,7 @@ public final class ComplexHostAcceptance implements StartupActivity.DumbAware {
   }
   private static final class Journey {
     final Project project;final Path output,root;
+    final String caseId=System.getProperty("anotherfsm.acceptance.case","all");
     final Gson gson=new GsonBuilder().setPrettyPrinting().create();
     final List<Step> steps=new ArrayList<>();final List<JsonObject> observations=new ArrayList<>();
     final List<String> gaps=new ArrayList<>();
@@ -81,9 +82,11 @@ public final class ComplexHostAcceptance implements StartupActivity.DumbAware {
       var supplied=Path.of(Objects.requireNonNull(System.getProperty("anotherfsm.fixture.root"),"anotherfsm.fixture.root")).toAbsolutePath().normalize();
       root=Files.isRegularFile(supplied.resolve("Complex.sln"))?supplied:supplied.resolve("Complex");
       initiallyOpen.addAll(Arrays.asList(FileEditorManager.getInstance(project).getOpenFiles()));
+      if(caseId.equals("all")) {
       gaps.add("Project/reference/TFM reload invalidation is not modeled by the linked-source and configuration change tests.");
       gaps.add("External verified-source/Source Link/offline/authorization distinctions cannot be inferred from editor paths or PDBs. Only actual product reason/status and actual navigation are recorded.");
       gaps.add("Decompiler disabled/unaccepted consent/generation failure/cancellation need independent policy setup and observations; this journey does not change host policy or manufacture external failures.");
+      }
       specify();
     }
     void require(boolean value,String message) {if(!value)throw new IllegalStateException(message);}
@@ -263,6 +266,7 @@ public final class ComplexHostAcceptance implements StartupActivity.DumbAware {
     }
 
     void specify() {
+      if(!caseId.equals("all")){specifyFocused();return;}
       readiness.addAll(List.of(key("HostA/sources.fsm","CurrentEntry","CurrentHostKey"),key("HostA/sources.fsm","ProjectEntry","ProjectLookupKey"),
           key("HostA/sources.fsm","BinaryEntry","HostDllKey"),key("HostA/sources.fsm","PackageEntry","LocalPackageKey"),
           key("HostB/host.fsm","DispatchEntry","OtherHostOnlyKey"),key("ProjectNodes/library.fsm","LibraryEntry","ProjectLookupKey"),
@@ -339,6 +343,29 @@ public final class ComplexHostAcceptance implements StartupActivity.DumbAware {
         record("WASM-scope","Microsoft.NET.Sdk.WebAssembly static analysis only; neither execution, AOT nor publish is claimed.");
         record("remaining-acceptance-gaps",gaps);capture("complex-host-acceptance.png");
       });
+    }
+
+    void specifyFocused() {
+      require(Set.of("generic-native","configuration","source-matrix").contains(caseId),"Unknown independent case: "+caseId);
+      if(caseId.equals("source-matrix"))readiness.add(key("../SharedComplex/source-matrix.fsm","MatrixCurrentEntry","MatrixCurrentKey"));
+      else readiness.addAll(List.of(key("HostA/sources.fsm","CurrentEntry","CurrentHostKey"),key("ProjectNodes/library.fsm","LibraryEntry","ProjectLookupKey")));
+      for(var ignored:readiness)readinessStatuses.add("readiness only");
+      steps.add(new Step("independent case source/PSI readiness, not binding evidence",() -> {
+        require(Files.isRegularFile(root.resolve("Complex.sln")),"Wrong controlled fixture");checkSentinel();
+        record("independent-case-scope",Map.of("case",caseId,"fullMatrixRun",false));
+      },() -> {if(!verifySandbox())return false;probeReadiness();return readinessIndex==readiness.size()&&sdkFinished();},90_000));
+      if(caseId.equals("configuration"))configurationCases();
+      else if(caseId.equals("source-matrix"))sourceMatrixCases();
+      else {
+        var from=key("HostA/sources.fsm","CurrentEntry","CurrentHostKey");
+        var target=projectTarget("../ProjectNodes/ProjectNodes.csproj","Issue34.ProjectLibrary.GenericWarehouse`1+SlotWorker");
+        var arguments=new JsonArray();arguments.add(projectTarget("HostA.csproj","Issue34.HostA.InvoiceWorker"));target.add("typeArguments",arguments);
+        once("save the independent closed nested generic input",() -> writeConfiguration(configuration(target,1)));
+        implementation("closed nested generic implementation",from,"ProjectNodes/Nodes.cs","SlotWorker");
+        nativeSearch("closed nested generic native reverse",null,"SlotWorker","CurrentHostKey",List.of("/HostA/sources.fsm"));
+        once("restore independent generic input",() -> cleanupConfiguration());
+      }
+      once("record independent case completion, not whole-support-matrix pass",() -> capture("case-"+caseId+".png"));
     }
 
     void sourceMatrixCases() {
@@ -426,7 +453,8 @@ public final class ComplexHostAcceptance implements StartupActivity.DumbAware {
         var path=output.resolve("complex-sdk-probe.json");if(!Files.isRegularFile(path))return false;
         var parsed=JsonParser.parseString(Files.readString(path));if(!parsed.isJsonObject())return false;
         var report=parsed.getAsJsonObject();String status=report.get("status").getAsString();
-        if(!Set.of("passed","failed","pendingVerification").contains(status))return false;
+        if(caseId.equals("all")) {if(!Set.of("passed","failed","pendingVerification").contains(status))return false;}
+        else if(!status.equals("ready")||!report.has("case")||!report.get("case").getAsString().equals(caseId))return false;
         var sample=observer();if(sample==null||sample.get("backendPid").getAsInt()!=report.get("backendPid").getAsInt())return false;
         record("SDK-terminal-readiness-only",Map.of("status",status,"backendPid",report.get("backendPid")));
         // A failed SDK report stays failed in its own seam; it does not silently become a UI assertion.
@@ -741,7 +769,7 @@ public final class ComplexHostAcceptance implements StartupActivity.DumbAware {
     }
     void report(String status,String error) {
       try {
-        Files.createDirectories(output);var report=new JsonObject();report.addProperty("status",status);report.addProperty("error",error);report.addProperty("step",index);report.addProperty("elapsedMs",since(begun));
+        Files.createDirectories(output);var report=new JsonObject();report.addProperty("status",status);report.addProperty("case",caseId);report.addProperty("scope",caseId.equals("all")?"full journey":"independent case, not whole matrix");report.addProperty("error",error);report.addProperty("step",index);report.addProperty("elapsedMs",since(begun));
         report.addProperty("seam","registered formal Rider actions + actual editors/Swing/native completed session; RD readiness only");
         var coverage=new JsonArray();for(var step:steps){var item=new JsonObject();item.addProperty("name",step.name);item.addProperty("status",step.status);item.addProperty("detail",step.detail);coverage.add(item);}
         report.add("coverage",coverage);report.add("observations",gson.toJsonTree(observations));report.add("pendingVerification",gson.toJsonTree(gaps));

@@ -223,7 +223,7 @@ def prepare(source: Path, home: Path, launch: dict, logs: Path) -> None:
 
 def launch_sandbox(home: Path, launch: dict, logs: Path, acceptance: bool = False, complex_contexts: bool = False,
                    boundary_contexts: bool = False, source_boundaries: bool = False, trust_probe: bool = False,
-                   run_id: str | None = None) -> dict:
+                   run_id: str | None = None, acceptance_case: str = 'all') -> dict:
     if os.name != "nt":
         raise ValueError("Run with native Windows Python to record the actual Windows Java PID")
     if run_id is not None:
@@ -248,27 +248,30 @@ def launch_sandbox(home: Path, launch: dict, logs: Path, acceptance: bool = Fals
             raise ValueError("Complex/boundary contexts require the explicit controlled acceptance mode")
         if source_boundaries and not boundary_contexts:
             raise ValueError('Source boundary setup requires the independent Boundary.sln')
+        if not acceptance and acceptance_case != 'all':
+            raise ValueError('An independent case requires explicit controlled acceptance mode')
         if acceptance:
             from acceptance_contract import check_preparation
             suite = 'source' if source_boundaries else 'boundary' if boundary_contexts else 'complex' if complex_contexts else 'legacy'
-            check_preparation(BOX, suite)
+            check_preparation(BOX, suite, case=acceptance_case)
         arguments = launch_arguments(home, launch, fixture)
         environment = clean_environment()
         environment.pop("ANOTHERFSM_ACCEPTANCE_DIR", None)
         environment.pop("ANOTHERFSM_COMPLEX_EXECUTION_MARKER", None)
         environment.pop("ANOTHERFSM_ACCEPTANCE_RUN_ID", None)
+        environment.pop("ANOTHERFSM_ACCEPTANCE_CASE", None)
         if acceptance:
             observer = BOX / "plugins/anotherfsm-acceptance"
             if not (observer / "lib/acceptance.jar").is_file():
                 raise ValueError("Build/install the separate acceptance observer first")
             evidence = logs / "acceptance"
             evidence.mkdir()
-            properties = ["-Danotherfsm.acceptance=true", "-Danotherfsm.transportReconnectAcceptance=true", "-Danotherfsm.acceptance.dir=" + evidence.as_posix(),
+            properties = ["-Danotherfsm.acceptance.case=" + acceptance_case, "-Danotherfsm.acceptance=true", "-Danotherfsm.transportReconnectAcceptance=true", "-Danotherfsm.acceptance.dir=" + evidence.as_posix(),
                           "-Danotherfsm.fixture.root=" + fixture.parent.as_posix()]
             if run_id is not None:
                 properties += ['-Danotherfsm.acceptance.runId=' + run_id,
                                '-Danotherfsm.acceptance.suite=' + suite,
-                               '-Danotherfsm.acceptance.fixture=' + str(fixture)]
+                               '-Danotherfsm.acceptance.fixture=' + fixture.as_posix()]
                 environment['ANOTHERFSM_ACCEPTANCE_RUN_ID'] = run_id
             if boundary_contexts:
                 properties.append("-Danotherfsm.boundaryAcceptance=true")
@@ -278,6 +281,7 @@ def launch_sandbox(home: Path, launch: dict, logs: Path, acceptance: bool = Fals
                 properties.append("-Danotherfsm.complexAcceptance=true")
             arguments = properties + arguments
             environment["ANOTHERFSM_ACCEPTANCE_DIR"] = str(evidence)
+            environment["ANOTHERFSM_ACCEPTANCE_CASE"] = acceptance_case
             if complex_contexts or boundary_contexts:
                 environment["ANOTHERFSM_COMPLEX_EXECUTION_MARKER"] = str(evidence / 'complex-business-execution.marker')
         args_file = logs / "launch.args"
@@ -288,7 +292,7 @@ def launch_sandbox(home: Path, launch: dict, logs: Path, acceptance: bool = Fals
                   "jbrRelease": (home / "jbr/release").read_text(encoding="utf-8"),
                   "command": command, "windowsCommandLine": subprocess.list2cmdline(command),
                   "expandedArguments": arguments, "argfileSha256": digest(args_file.read_bytes()),
-                  "cwd": str(BOX), "fixture": str(fixture), "zipSha256": state["zipSha256"], "runId": run_id,
+                  "cwd": str(BOX), "fixture": fixture.as_posix(), "zipSha256": state["zipSha256"], "runId": run_id, "case": acceptance_case,
                   "stdout": str(logs / "stdout.log"), "stderr": str(logs / "stderr.log"),
                   "ideLog": str(IDE_LOG), "complexExecutionMarker": environment.get("ANOTHERFSM_COMPLEX_EXECUTION_MARKER")}
         (logs / "command.json").write_text(json.dumps(record, indent=2), encoding="utf-8")

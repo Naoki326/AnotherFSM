@@ -95,6 +95,7 @@ public final class AcceptanceLifecycle implements StartupActivity.DumbAware {
     final Project project;
     final Path output;
     final String runId, suite, fixture;
+    final String caseId = System.getProperty("anotherfsm.acceptance.case", "all");
     final long pid = ProcessHandle.current().pid();
     final long startedEpochMs = ProcessHandle.current().info().startInstant().orElseThrow().toEpochMilli();
     final AtomicBoolean exitQueued = new AtomicBoolean();
@@ -119,7 +120,7 @@ public final class AcceptanceLifecycle implements StartupActivity.DumbAware {
       }, 250, 250, TimeUnit.MILLISECONDS);
     }
     void heartbeat() throws Exception {
-      write("lifecycle.json", Map.of("runId", runId, "suite", suite, "fixture", fixture,
+      write("lifecycle.json", Map.of("runId", runId, "suite", suite, "case", caseId, "fixture", fixture,
           "frontendPid", pid, "frontendStartedEpochMs", startedEpochMs, "seq", ++seq,
           "projectDisposed", project.isDisposed(), "heartbeatEpochMs", System.currentTimeMillis()));
     }

@@ -65,7 +65,8 @@ class SessionHost:
     outputs returns current JSON objects keyed by filename; transient IO is absent.
     request_exit only writes an identity-bound request; the observer calls exit.
     """
-    def __init__(self, *, heartbeat_timeout=5.0, cleanup_timeout=15.0, poll_interval=.1):
+    def __init__(self, *, heartbeat_timeout=5.0, cleanup_timeout=15.0, poll_interval=.1, case='all'):
+        self.case = case
         self.heartbeat_timeout = heartbeat_timeout
         self.cleanup_timeout = cleanup_timeout
         self.poll_interval = poll_interval
@@ -77,7 +78,7 @@ class SessionHost:
         return launch_sandbox(home, launch, logs, acceptance=True,
                               complex_contexts=suite == 'complex',
                               boundary_contexts=suite in ('boundary', 'source'),
-                              source_boundaries=suite == 'source', run_id=run_id)
+                              source_boundaries=suite == 'source', run_id=run_id, acceptance_case=self.case)
 
     def identity(self, pid):
         from sandbox import windows_process
@@ -124,12 +125,20 @@ def _identity(pid, created):
     return None
 
 
-def _summary(suite, outputs):
+def reports_for(suite, case):
+    return ('complex-host-acceptance.json',) if suite == 'complex' and case != 'all' else REQUIRED_REPORTS[suite]
+
+
+def _summary(suite, outputs, case='all'):
     reports, coverage, pending = {}, [], []
-    for name in REQUIRED_REPORTS[suite]:
+    required = reports_for(suite, case)
+    for name in required:
         report = outputs.get(name)
         if report is None:
             pending.append(name + ': missing or temporarily unreadable')
+            continue
+        if case != 'all' and report.get('case') != case:
+            pending.append(name + ': report belongs to a different case')
             continue
         status = report.get('status')
         reports[name] = status
@@ -144,12 +153,12 @@ def _summary(suite, outputs):
             pending.append(name + ': ' + str(status))
     failed = any(status == 'failed' for status in reports.values()) or any(
         item.get('status') == 'failed' for item in coverage)
-    complete = len(reports) == len(REQUIRED_REPORTS[suite]) and all(s in TERMINAL for s in reports.values())
+    complete = len(reports) == len(required) and all(s in TERMINAL for s in reports.values())
     return dict(reports=reports, actualCoverage=coverage, pendingVerification=pending,
                 allRequiredPassed=complete and not pending and not failed), failed, complete
 
 
-def run_session(suite, logs: Path, startup_timeout, total_timeout, *, session_host=None):
+def run_session(suite, logs: Path, startup_timeout, total_timeout, *, case='all', session_host=None):
     """Return plain JSON-compatible evidence, including cleanup confirmation.
 
     status: notStarted / heartbeatStopped / assertionFailed /
@@ -158,10 +167,10 @@ def run_session(suite, logs: Path, startup_timeout, total_timeout, *, session_ho
     even true is only permission to perform its own guarded restoration, not a
     claim that restoration happened. This function never touches those backups.
     """
-    adapter = session_host if session_host is not None else SessionHost()
+    adapter = session_host if session_host is not None else SessionHost(case=case)
     logs = Path(logs)
     run_id = str(uuid.uuid4())
-    result = dict(runId=run_id, suite=suite, artifactHash=None, status='notStarted',
+    result = dict(runId=run_id, suite=suite, case=case, scope='suite' if case == 'all' else 'case', artifactHash=None, status='notStarted',
                   allRequiredPassed=False, suiteStarted=False, actualCoverage=[], pendingVerification=[],
                   hostsStopped=False, hostStopped=False, cleanupBlocked=True, frontendIdentity=None,
                   backendIdentities=[], backendIdentityPending=[], cleanupErrors=[])
@@ -214,6 +223,8 @@ def run_session(suite, logs: Path, startup_timeout, total_timeout, *, session_ho
         logs.mkdir(parents=True, exist_ok=True)
         if suite not in REQUIRED_REPORTS:
             raise ValueError('Unknown suite: ' + str(suite))
+        from acceptance_contract import validate_case
+        validate_case(suite, case)
         if startup_timeout <= 0 or total_timeout <= 0:
             raise ValueError('Timeouts must be positive')
         # Never consume stale reporters or requests from an earlier session.
@@ -235,14 +246,15 @@ def run_session(suite, logs: Path, startup_timeout, total_timeout, *, session_ho
             now = time.monotonic()
             heartbeat = outputs.get('lifecycle.json', {})
             if (heartbeat.get('runId') == run_id and heartbeat.get('suite') == suite and
-                    heartbeat.get('frontendPid') == frontend['pid'] and
+                    heartbeat.get('frontendPid') == frontend['pid'] and heartbeat.get('case', 'all') == case and
                     heartbeat.get('fixture') == record.get('fixture') and
                     isinstance(heartbeat.get('seq'), int) and heartbeat['seq'] > (sequence or 0)):
                 sequence, heartbeat_at = heartbeat['seq'], now
             primary = outputs.get(PRIMARY_REPORT[suite], {})
-            if heartbeat_at is not None and primary.get('status') in TERMINAL | {'running', 'waiting', 'cleaningUp'}:
+            if (heartbeat_at is not None and (case == 'all' or primary.get('case') == case)
+                    and primary.get('status') in TERMINAL | {'running', 'waiting', 'cleaningUp'}):
                 result['suiteStarted'] = True
-            summary, failed, terminal = _summary(suite, outputs)
+            summary, failed, terminal = _summary(suite, outputs, case)
             result.update(summary)
             # Reports are accepted only after the independent owned lifecycle is seen.
             if heartbeat_at is not None:

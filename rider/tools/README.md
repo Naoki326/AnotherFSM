@@ -50,4 +50,23 @@ python -B -m unittest discover -s rider/tools/tests -v
 
 2026-11 的受控 Windows/Rider 冒烟验证了 40 秒主动超时后正常旅程取消、frontend/backend 退出、原设置精确还原和夹具无漂移；退出码 4 保留了未完成测试，不声称产品全量通过。首次实测还纠正了 Rider 自定义插件 loader 的空 CodeSource：现在通过公共 plugin descriptor 的 loader/path 验证身份。
 
-场景筛选/分阶段复用及产品失效原因诊断是后续顺序改动；不要假设当前已经提供 `--case` 或业务 epoch 事件流。
+## 独立场景与阶段准备
+
+```bash
+python rider/tools/acceptance.py cases --suite complex
+python rider/tools/acceptance.py prepare --suite complex --case generic-native
+python rider/tools/acceptance.py run --suite complex --case generic-native
+# 只切换已准备的冻结 bundle，不调用编译器/restore/夹具准备：
+python rider/tools/acceptance.py select --suite complex --case configuration
+python rider/tools/acceptance.py run --suite complex --case configuration
+```
+
+Complex 支持 `generic-native`、`configuration`、`source-matrix`，另有保持原验收的 `all`。每个独立 case 自建所需输入并恢复，只声明自身结果；轻量 SDK `ready` 不冒充全 SDK checks passed。实际泛型场景只执行6步、约28秒，不先重放完整174步。
+
+`prepare` 将 product、fixture、observer 分开，产物输入与输出 hash 均匹配才复用；阶段结果在 `acceptance-phases.json`。`--force`/`--no-cache` 强制重做。完整输入包括源码/传递引用/linked文件、props/targets、SDK/JBR/host、包和编译配置；实际子进程不继承动态 `PI_*`，不能一边忽略 fingerprint、一边让 MSBuild 消费它。
+
+实际 Legacy 重复准备已验证 product / fixture / observer 三阶段全部 cached；输出丢失/篡改、SDK/配置/传递依赖变化的 miss 由离线契约回归验证。
+
+**安全限制**：未知构建逻辑保守 miss。Complex 的 global.json 选择和 ILLink/WebAssembly 自定义 package 输入闭包尚未证实，当前 fixture 阶段不会标 cached；不要将该限制写成已消除。需要换 case 时使用 `select`，它先核对已安装 bundle、夹具及依赖未漂移，再仅更新运行选择；它不声称重新构建过，也不替代源码/SDK变化后的 prepare。产品和 observer 阶段能分别复用，不因更换 case 而重编译。
+
+业务失效原因诊断仍是后续顺序改动；当前阶段不声称已经提供业务 epoch 事件流。

@@ -43,11 +43,11 @@ while time.monotonic() - started < 2.5:
     if role == 'frontend' and mode != 'noHeartbeat' and not (mode == 'stalled' and seq > 0):
         seq += 1
         put('lifecycle.json', dict(runId='foreign' if mode == 'foreignHeartbeat' else run_id,
-                                   suite=suite, frontendPid=pid, fixture='offline-fixture', seq=seq))
-        if mode in ('failed', 'partial', 'partialDelayed', 'pending', 'passed', 'missingScope', 'unrelated', 'malformed'):
+                                   suite=suite, case='generic-native' if mode == 'casePassed' else 'all', frontendPid=pid, fixture='offline-fixture', seq=seq))
+        if mode in ('failed', 'partial', 'partialDelayed', 'pending', 'passed', 'missingScope', 'casePassed', 'unrelated', 'malformed'):
             status = {'failed':'failed','partial':'partial','partialDelayed':'partial','pending':'pendingVerification'}.get(mode,'passed')
-            name = 'complex-host-acceptance.json' if mode == 'unrelated' else 'host-acceptance.json'
-            put(name, '{' if mode == 'malformed' else dict(status=status, coverage=[dict(name='actual assertion', status='passed')],
+            name = 'complex-host-acceptance.json' if mode in ('unrelated', 'casePassed') else 'host-acceptance.json'
+            put(name, '{' if mode == 'malformed' else dict(status=status, case='generic-native' if mode == 'casePassed' else 'all', coverage=[dict(name='actual assertion', status='passed')],
                            pendingVerification=['unverified AC'] if mode == 'partial' else []))
             if mode not in ('failed', 'unrelated') and (mode != 'partialDelayed' or time.monotonic() - started >= .18):
                 for name in ('dsl-host-acceptance.json','host-reconnect.json','sdk-graph-probe.json'):
@@ -69,8 +69,9 @@ if role == 'frontend':
 
 class PythonProcessHost(SessionHost):
     """Uses only the public adapter seam; children validate their own exit identity."""
-    def __init__(self, mode, *, wrong_identity=False):
+    def __init__(self, mode, *, wrong_identity=False, case='all'):
         super().__init__(heartbeat_timeout=.12, cleanup_timeout=.7, poll_interval=.02)
+        self.case = case
         self.mode = mode
         self.wrong_identity = wrong_identity
         self.process = None
@@ -99,7 +100,7 @@ class PythonProcessHost(SessionHost):
                                          str(evidence), run_id, suite, self.mode, 'frontend'])
         created = self.identity(self.process.pid)
         record = dict(windowsPid=self.process.pid, creationFileTime=created + int(self.wrong_identity),
-                      zipSha256='offline-artifact', fixture='offline-fixture', runId=run_id)
+                      zipSha256='offline-artifact', fixture='offline-fixture', runId=run_id, case=self.case)
         if self.mode == 'launchError':
             (logs / 'process.json').write_text(json.dumps(record), encoding='utf-8')
             raise OSError('launch failed after persisting process identity')
@@ -194,6 +195,18 @@ class SessionTests(unittest.TestCase):
         self.assertEqual('verificationPending', result['status'])
         self.assertFalse(result['allRequiredPassed'])
         self.assertTrue(result['hostsStopped'])
+
+    def test_focused_case_pass_is_scoped_and_does_not_require_the_full_sdk_matrix(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            adapter = PythonProcessHost('casePassed', case='generic-native')
+            try:
+                result = run_session('complex', Path(temporary), .35, .8, case='generic-native', session_host=adapter)
+                self.assertEqual('succeeded', result['status'])
+                self.assertEqual('generic-native', result['case'])
+                self.assertEqual(['complex-host-acceptance.json'], list(result['reports']))
+                self.assertTrue(result['hostsStopped'])
+            finally:
+                adapter.join()
 
     def test_all_required_reports_passed(self):
         result, _, _ = self.session('passed')
