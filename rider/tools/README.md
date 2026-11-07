@@ -67,7 +67,7 @@ Complex 支持 `generic-native`、`configuration`、`source-matrix`、`index-inv
 
 实际 Legacy 重复准备已验证 product / fixture / observer 三阶段全部 cached；输出丢失/篡改、SDK/配置/传递依赖变化的 miss 由离线契约回归验证。
 
-**安全限制**：未知构建逻辑保守 miss。Complex 的 global.json 选择和 ILLink/WebAssembly 自定义 package 输入闭包尚未证实，当前 fixture 阶段不会标 cached；不要将该限制写成已消除。需要换 case 时使用 `select`，它先核对已安装 bundle、夹具及依赖未漂移，再仅更新运行选择；它不声称重新构建过，也不替代源码/SDK变化后的 prepare。产品和 observer 阶段能分别复用，不因更换 case 而重编译。
+**安全限制**：未知构建逻辑保守 miss。环境指定的 Directory.Build / Directory.Packages 导入、CustomBefore/After、MSBuild/编译器 override 等未证实的隐式输入也会保守 miss，不把相同路径字符串当成外部文件内容已核验；不改实际编译环境。Complex 的 global.json 选择和 ILLink/WebAssembly 自定义 package 输入闭包尚未证实，当前 fixture 阶段不会标 cached；不要将该限制写成已消除。需要换 case 时使用 `select`，它先核对已安装 bundle、夹具及依赖未漂移，再仅更新运行选择；它不声称重新构建过，也不替代源码/SDK变化后的 prepare。产品和 observer 阶段能分别复用，不因更换 case 而重编译。
 
 ## 结构化失效与取消诊断
 

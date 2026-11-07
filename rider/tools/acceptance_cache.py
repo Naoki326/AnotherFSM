@@ -21,7 +21,7 @@ from typing import Callable, Iterable
 import uuid
 import xml.etree.ElementTree as ET
 
-from build import managed_directory, no_links
+from build import clean_environment, managed_directory, no_links
 
 # Input trees only. Output inventories NEVER exclude anything.
 EXCLUDED = frozenset({'bin', 'obj', 'artifacts', '.git', '.idea', '__pycache__', '.packages'})
@@ -91,6 +91,17 @@ def project_inputs(projects: Iterable[Path], *, properties=None, assets=(), antl
     """
     paths, seen, incomplete = set(), set(), set()
     properties = dict(properties or {})
+    # Standard SDK imports/tool selection can consume environment properties without
+    # appearing in project XML. Hashing an unchanged path string does not certify
+    # external file bytes. Keep the actual compiler environment, but refuse reuse
+    # for these unverified override families (MSBuild names are case-insensitive).
+    for name, value in clean_environment().items():
+        key = name.lower()
+        if value and (key.startswith(('directorybuild', 'directorypackages', 'custombefore',
+                                      'customafter', 'msbuild', 'roslyn', 'csc', 'vbc',
+                                      'frameworkpathoverride', 'targetframeworkrootpath'))
+                      or key.endswith(('propspath', 'targetspath'))):
+            incomplete.add('unverified MSBuild environment override: ' + name)
     libraries, evidence = set(), {}
     # Existing restore evidence is read, never generated here. Hash *whole*
     # extracted package directories, not just the DLL selected for compilation.

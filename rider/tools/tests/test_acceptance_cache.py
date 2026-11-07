@@ -1,5 +1,6 @@
 """Offline public-API tests: real dependency trees and byte-sized build outputs."""
 import json
+import os
 from pathlib import Path
 import sys
 import tempfile
@@ -123,6 +124,36 @@ class AcceptanceCacheTests(unittest.TestCase):
         result = self.execute('product', deps.paths, incomplete=deps.incomplete)
         self.assertEqual('executed', result['status'])
         self.assertIn('incomplete', result['reason'])
+
+    def test_external_msbuild_environment_imports_never_reuse_an_unproven_closure(self):
+        top = self.file('src/App.csproj', '<Project Sdk="Microsoft.NET.Sdk" />')
+        imported = self.file('outside/Custom.props', '<Project />')
+        for variable in ('DirectoryBuildPropsPath', 'directorybuildtargetspath',
+                         'DirectoryPackagesPropsPath', 'CustomBeforeMicrosoftCommonTargets',
+                         'MSBuildExtensionsPath', 'RoslynTargetsPath'):
+            with self.subTest(variable=variable):
+                # Same real environment value throughout; only the external file bytes change.
+                # The scanner cannot certify this implicit SDK import, so every attempt runs.
+                environment = {variable: str(imported)}
+                def prepare():
+                    previous = os.environ.get(variable)
+                    os.environ[variable] = str(imported)
+                    try:
+                        deps = project_inputs([top])
+                    finally:
+                        if previous is None:
+                            del os.environ[variable]
+                        else:
+                            os.environ[variable] = previous
+                    return self.execute('external-import', deps.paths, incomplete=deps.incomplete,
+                                        config={'environment': environment})
+                first = prepare()
+                second = prepare()
+                imported.write_text(imported.read_text(encoding='utf-8') + '\n', encoding='utf-8')
+                third = prepare()
+                self.assertEqual(['executed'] * 3, [item['status'] for item in (first, second, third)])
+                self.assertIn('incomplete', second['reason'])
+                self.assertIn('incomplete', third['reason'])
 
     def test_force_failed_execution_and_changed_input_never_bless_old_output(self):
         source = self.file('code.cs')

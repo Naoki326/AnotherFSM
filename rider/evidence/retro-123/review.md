@@ -11,7 +11,9 @@
 
 ## Spec
 
-独立 Spec 轴仍待回报；未用自审替代。
+独立审查员 `01a1b5c2-4793-7598-bbcf-a5ab6a916853`：1 项 P2，外部 MSBuild 环境输入闭包。主代理核对 SDK 的 `Microsoft.Common.props` 确认：DirectoryBuildPropsPath 和 CustomBefore/After 等可导入扫描树外的文件，原缓存只 hash 环境字符串，路径不变而内容改变可能误复用；这是已核实的条件性静态缺陷，不声称当前宿主曾误命中。
+
+**采纳并最小修复**：闭包扫描发现相关环境 override family 即标 incomplete，保持实际编译环境，不尝试扩大为通用 MSBuild 求值器。6 种真实环境变量（含大小写变体）指向真实外部文件，先证实旧版在内容改变后仍 cached 的红，再验证全程保守 executed。完整 Python 回归现在 48 项、1 skip；普通无 override 的复用契约继续通过。待原审查员只读复核此 followup。
 
 ## 冻结后完整回归：未通过，保留阻塞
 
