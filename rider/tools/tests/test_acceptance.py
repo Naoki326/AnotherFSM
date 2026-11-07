@@ -194,18 +194,21 @@ class AcceptanceCliTests(unittest.TestCase):
             self.assertEqual(json.loads(result.stdout)["code"], "caseMismatch")
             self.assertFalse((box / "launcher.json").exists())
 
-    def test_select_changes_only_the_runtime_case_of_verified_prepared_outputs(self):
+    def test_select_refuses_external_sandbox_without_writing_prepared_outputs(self):
         with tempfile.TemporaryDirectory() as temporary:
             box = Path(temporary)
             self.prepared(box, "complex")
             jar = box / "plugins/anotherfsm-acceptance/lib/acceptance.jar"
             before = jar.read_bytes()
+            manifest = box / "acceptance-prepared.json"
+            original_manifest = manifest.read_bytes()
             result = subprocess.run([sys.executable, str(RUNNER), "select", "--suite", "complex", "--case", "index-invalidation", "--sandbox", str(box)],
                                     text=True, capture_output=True, timeout=10)
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            self.assertEqual(json.loads(result.stdout)["status"], "selected")
+            self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+            self.assertIn("Sandbox/source overrides are read-only check inputs", result.stderr)
+            self.assertEqual(original_manifest, manifest.read_bytes())
             self.assertEqual(before, jar.read_bytes())
-            result = self.cli(box, "complex", ["--case", "index-invalidation"])
+            result = self.cli(box, "complex")
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertFalse((box / "launcher.json").exists())
 

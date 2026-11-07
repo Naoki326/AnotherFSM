@@ -28,7 +28,7 @@ def main():
     parser.add_argument("--timeout", type=float, default=900, help="Total supervised host seconds")
     parser.add_argument("--cleanup-timeout", type=float, default=45, help="Seconds to confirm cooperative frontend/backend exit")
     args = parser.parse_args()
-    if (args.action not in ("check", "select") and args.sandbox.absolute() != (ROOT / "rider/.sandbox").absolute()) or (args.action != "check" and args.source_preparation):
+    if (args.action != "check" and args.sandbox.absolute() != (ROOT / "rider/.sandbox").absolute()) or (args.action != "check" and args.source_preparation):
         parser.error("Sandbox/source overrides are read-only check inputs")
     if args.force and args.action != "prepare":
         parser.error("--force applies only to prepare")
