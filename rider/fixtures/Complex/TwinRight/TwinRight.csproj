@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>netstandard2.0</TargetFramework><AssemblyName>Issue34.TwinRight</AssemblyName><IsPackable>false</IsPackable></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../StaticContract/StaticContract.csproj" />
+    <Compile Include="../TwinLeft/Twins.cs" Link="Shared/Twins.cs" />
+  </ItemGroup>
+</Project>

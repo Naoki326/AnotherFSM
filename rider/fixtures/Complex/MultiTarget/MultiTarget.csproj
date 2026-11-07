@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFrameworks>net8.0;net10.0</TargetFrameworks><IsPackable>false</IsPackable></PropertyGroup>
+  <ItemGroup><ProjectReference Include="../StaticContract/StaticContract.csproj" /></ItemGroup>
+  <ItemGroup>
+    <None Remove="net8-only.fsm" />
+    <None Include="net8-only.fsm" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <None Remove="only-eight.fsm" />
+    <None Include="only-eight.fsm" Condition="'$(TargetFramework)' == 'net8.0'" />
+  </ItemGroup>
+</Project>

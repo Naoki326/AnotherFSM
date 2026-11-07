@@ -35,7 +35,7 @@ import javax.imageio.ImageIO;
 /** Separate, sandbox-only test plugin. Invokes installed product actions, never fabricates targets. */
 public final class HostAcceptance implements StartupActivity.DumbAware {
   public void runActivity(Project project) {
-    if(!Boolean.getBoolean("anotherfsm.acceptance")) return;
+    if(!Boolean.getBoolean("anotherfsm.acceptance")||Boolean.getBoolean("anotherfsm.complexAcceptance")) return;
     new Journey(project).start();
   }
   private static final class Journey {

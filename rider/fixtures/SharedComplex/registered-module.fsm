@@ -1,0 +1,5 @@
+module Configured {
+    input Entry;
+    output Done;
+    def Entry(CurrentHostKey) { 1->Done; }
+}

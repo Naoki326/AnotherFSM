@@ -1,0 +1,15 @@
+// Both assemblies contribute this key: preserve ambiguity, do not choose by CLR name alone.
+def AmbiguousEntry(AmbiguousAssemblyKey) {}
+// No visible HostB reference: another solution project is not automatically a dependency.
+def InvisibleHostEntry(OtherHostOnlyKey) {}
+def OpenEntry(OpenGenericKey) {}
+def OpenOuterEntry(OpenOuterKey) {}
+def PlainEntry(PlainNotNodeKey) {}
+def AbstractEntry(AbstractOnlyKey) {}
+def ClosedNonNodeEntry(ClosedNonNodeKey) {}
+def AbstractClosedEntry(AbstractClosedKey) {}
+def UnregisteredNestedEntry(UnregisteredShelfWorker) {}
+def InvalidEntry(ForbiddenFallbackKey) {}
+def IgnoredEntry(IgnoredCtorKey) {}
+// A constructed generic type expression is not a factory Key spelling.
+def TypeSpellingEntry(Issue34.ProjectLibrary.BufferWorker) {}

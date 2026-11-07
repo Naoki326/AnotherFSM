@@ -1,0 +1,2 @@
+// This project intentionally cannot resolve the DLL; never invent a fallback association.
+def AbsentBinaryEntry(HostDllKey) {}

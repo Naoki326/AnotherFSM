@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>Issue34.PackagedNodes</AssemblyName>
+    <PackageId>Issue34.LocalNodes</PackageId>
+    <Version>1.0.0</Version>
+    <Description>Controlled static-symbol fixture; no runtime support.</Description>
+    <Authors>AnotherFSM fixture</Authors>
+  </PropertyGroup>
+  <ItemGroup><ProjectReference Include="../StaticContract/StaticContract.csproj" PrivateAssets="all" /></ItemGroup>
+</Project>

@@ -1,0 +1,2 @@
+// One physical DSL file, two owning projects. Do not collapse these host identities.
+def SharedEntry(SharedHostKey) {}

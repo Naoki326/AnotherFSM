@@ -41,11 +41,11 @@ public sealed class DocumentAnalysis
         return node != null && Nodes.Count(n => n.Name == node.Name && n.Scope == node.Scope) == 1 ? node : null;
     }
 
-    public IReadOnlyList<TypeReference> FindTypeReferences(IEnumerable<NodeType> types, TypeIdentity target)
+    public IReadOnlyList<TypeReference> FindTypeReferences(IEnumerable<NodeType> types, TypeIdentity target, BindingOptions? options = null)
     {
         var catalog = types.ToArray();
         return Array.AsReadOnly(Nodes.Where(node => Nodes.Count(n => n.Name == node.Name && n.Scope == node.Scope) == 1)
-            .Where(node => { var binding = NodeBindings.Resolve(node, catalog);
+            .Where(node => { var binding = NodeBindings.Resolve(node, catalog, options);
                 return binding.State == BindingState.Determined && binding.Candidates[0] == target; })
             .Select(node => new TypeReference(node.KeySpan, node.TypeKey, node.ImplicitKey)).Distinct().ToArray());
     }

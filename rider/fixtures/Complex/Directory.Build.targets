@@ -1,0 +1,16 @@
+<Project>
+  <PropertyGroup>
+    <!-- This machine has 8.0.5 targeting packs, not the servicing version preferred by SDK 10.
+         Use real installed packs, never fabricate reference assemblies or download newer packs. -->
+    <Issue34Net8TargetingPackVersion Condition="'$(Issue34Net8TargetingPackVersion)' == ''">8.0.5</Issue34Net8TargetingPackVersion>
+    <EnableTargetingPackDownload>false</EnableTargetingPackDownload>
+    <!-- WebAssembly must acquire its real runtime pack through the local-only NuGet feed.
+         This does not authorize network sources, workload installation, run or publish. -->
+    <EnableRuntimePackDownload Condition="'$(UsingMicrosoftNETSdkWebAssembly)' != 'true'">false</EnableRuntimePackDownload>
+    <EnableRuntimePackDownload Condition="'$(UsingMicrosoftNETSdkWebAssembly)' == 'true'">true</EnableRuntimePackDownload>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
+    <KnownFrameworkReference Update="@(KnownFrameworkReference)"
+      TargetingPackVersion="$(Issue34Net8TargetingPackVersion)" />
+  </ItemGroup>
+</Project>

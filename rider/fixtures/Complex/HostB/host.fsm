@@ -1,0 +1,6 @@
+def DispatchEntry(OtherHostOnlyKey) {}
+def ProjectEntry(ProjectLookupKey) {}
+// Deliberately absent here: HostB has no DLL or NuGet reference.
+def UnavailableBinaryEntry(HostDllKey) {}
+def UnavailablePackageEntry(LocalPackageKey) {}
+def UnavailableCurrentEntry(CurrentHostKey) {}

@@ -1,0 +1,3 @@
+use Configured as ConfiguredFlow;
+def Finish(CurrentHostKey) {}
+ConfiguredFlow.Done -> Finish;

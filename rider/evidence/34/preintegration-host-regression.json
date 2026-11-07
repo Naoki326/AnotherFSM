@@ -1,0 +1,555 @@
+{
+  "status": "passed",
+  "stage": 51,
+  "observations": [
+    {
+      "name": "probe-pending",
+      "value": {
+        "status": "unresolved",
+        "reason": "Unresolved: No verified FSMNode attribute key in this host context",
+        "requestId": "089053f6-eaf7-4333-8931-58d417fef747",
+        "documentVersion": 0,
+        "session": "9c0322a3-d92a-4cb8-a80d-4ceb1aef5570",
+        "contextVersion": 63
+      }
+    },
+    {
+      "name": "probe-pending",
+      "value": {
+        "status": "unresolved",
+        "reason": "Unresolved: No verified FSMNode attribute key in this host context",
+        "requestId": "906bb05d-b841-42df-984f-03079005a0d3",
+        "documentVersion": 0,
+        "session": "9c0322a3-d92a-4cb8-a80d-4ceb1aef5570",
+        "contextVersion": 178
+      }
+    },
+    {
+      "name": "actual-rd-result",
+      "value": {
+        "status": "type",
+        "reason": "FSMNode attribute convention; not proof of runtime registration",
+        "requestId": "78c492db-30da-4c05-95a0-3fdd0d861ce7",
+        "documentVersion": 0,
+        "session": "9c0322a3-d92a-4cb8-a80d-4ceb1aef5570",
+        "contextVersion": 357,
+        "target": {
+          "module": "feb96820-5097-4234-995e-9b0264bc5ea1(Orders)-B0F5C8B8[net8.0]",
+          "context": "net8.0",
+          "clrName": "Orders.Container+LookupWorker",
+          "consumer": "feb96820-5097-4234-995e-9b0264bc5ea1(Orders)-B0F5C8B8[net8.0]",
+          "construction": "",
+          "alias": "global"
+        }
+      }
+    },
+    {
+      "name": "orders-script-unopened",
+      "value": true
+    },
+    {
+      "name": "action",
+      "value": "AnotherFSM.GoToDeclaration"
+    },
+    {
+      "name": "dsl-declaration-selection",
+      "value": 52
+    },
+    {
+      "name": "action",
+      "value": "AnotherFSM.GoToDeclaration"
+    },
+    {
+      "name": "orders-csharp-navigation",
+      "value": "C:/Work/AnotherFSM/rider/fixtures/Orders/Nodes.cs"
+    },
+    {
+      "name": "native-search-script-closed",
+      "value": true
+    },
+    {
+      "name": "action",
+      "value": "FindUsages"
+    },
+    {
+      "name": "native-csharp-declaration-factory-ranges",
+      "value": [
+        {
+          "id": 2,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Orders/orders.fsm",
+          "start": 58,
+          "length": 13,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 BusinessQuery · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Orders/Orders.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "BusinessQuery",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "3"
+        },
+        {
+          "id": 3,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Orders/orders.fsm",
+          "start": 116,
+          "length": 13,
+          "valid": true,
+          "text": "AnotherFSM — 隐式类型键 BusinessQuery · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Orders/Orders.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "BusinessQuery",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "3"
+        }
+      ]
+    },
+    {
+      "name": "action",
+      "value": "AnotherFSM.GoToDeclaration"
+    },
+    {
+      "name": "unsaved-buffer",
+      "value": true
+    },
+    {
+      "name": "disk-still-original",
+      "value": true
+    },
+    {
+      "name": "late-reply-did-not-navigate",
+      "value": true
+    },
+    {
+      "name": "visible-expired-native-tab",
+      "value": "结果已过期 — Usages of \u0027LookupWorker\u0027"
+    },
+    {
+      "name": "expired-native-rows",
+      "value": [
+        {
+          "id": 2,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Orders/orders.fsm",
+          "start": 58,
+          "length": 10,
+          "valid": false,
+          "text": "AnotherFSM — 结果已过期，请刷新 Find Usages：工厂类型键 BusinessQuery · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Orders/Orders.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "MissingKey",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "26"
+        },
+        {
+          "id": 3,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Orders/orders.fsm",
+          "start": 113,
+          "length": 13,
+          "valid": false,
+          "text": "AnotherFSM — 结果已过期，请刷新 Find Usages：隐式类型键 BusinessQuery · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Orders/Orders.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "BusinessQuery",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "26"
+        }
+      ]
+    },
+    {
+      "name": "action",
+      "value": "UsageView.Rerun"
+    },
+    {
+      "name": "native-refresh-uses-current-unsaved-key",
+      "value": [
+        {
+          "id": 7,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Orders/orders.fsm",
+          "start": 113,
+          "length": 13,
+          "valid": true,
+          "text": "AnotherFSM — 隐式类型键 BusinessQuery · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Orders/Orders.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "BusinessQuery",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "26"
+        }
+      ]
+    },
+    {
+      "name": "actual-rd-result",
+      "value": {
+        "status": "type",
+        "reason": "FSMNode attribute convention; not proof of runtime registration",
+        "requestId": "eac79929-7f29-4c81-9a96-418a7122f8a1",
+        "documentVersion": 0,
+        "session": "9c0322a3-d92a-4cb8-a80d-4ceb1aef5570",
+        "contextVersion": 365,
+        "target": {
+          "module": "0892000e-7f51-47d4-a74b-ff94f9846e8f(Inventory)-A9037EA9[net8.0]",
+          "context": "net8.0",
+          "clrName": "Inventory.ChangeWorker",
+          "consumer": "0892000e-7f51-47d4-a74b-ff94f9846e8f(Inventory)-A9037EA9[net8.0]",
+          "construction": "",
+          "alias": "global"
+        }
+      }
+    },
+    {
+      "name": "action",
+      "value": "AnotherFSM.GoToDeclaration"
+    },
+    {
+      "name": "independent-inventory-csharp-navigation",
+      "value": "C:/Work/AnotherFSM/rider/fixtures/Inventory/Nodes.cs"
+    },
+    {
+      "name": "actual-rd-result",
+      "value": {
+        "status": "type",
+        "reason": "FSMNode attribute convention; not proof of runtime registration",
+        "requestId": "deb0a7bc-ef65-4f66-897b-ab0aae199303",
+        "documentVersion": 176,
+        "session": "9c0322a3-d92a-4cb8-a80d-4ceb1aef5570",
+        "contextVersion": 369,
+        "target": {
+          "module": "feb96820-5097-4234-995e-9b0264bc5ea1(Orders)-B0F5C8B8[net8.0]",
+          "context": "net8.0",
+          "clrName": "Orders.Container+LookupWorker",
+          "consumer": "feb96820-5097-4234-995e-9b0264bc5ea1(Orders)-B0F5C8B8[net8.0]",
+          "construction": "",
+          "alias": "global"
+        }
+      }
+    },
+    {
+      "name": "actual-rd-result",
+      "value": {
+        "status": "unresolved",
+        "reason": "No reliable unique symbol at this position.",
+        "requestId": "12fdb835-fa06-4a25-8599-7699ed025222",
+        "documentVersion": 183,
+        "session": "9c0322a3-d92a-4cb8-a80d-4ceb1aef5570",
+        "contextVersion": 373,
+        "locations": []
+      }
+    },
+    {
+      "name": "action",
+      "value": "FindUsages"
+    },
+    {
+      "name": "native-csharp-type-use-factory-ranges",
+      "value": [
+        {
+          "id": 9,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Orders/orders.fsm",
+          "start": 58,
+          "length": 13,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 BusinessQuery · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Orders/Orders.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "BusinessQuery",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "34"
+        },
+        {
+          "id": 10,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Orders/orders.fsm",
+          "start": 116,
+          "length": 13,
+          "valid": true,
+          "text": "AnotherFSM — 隐式类型键 BusinessQuery · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Orders/Orders.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "BusinessQuery",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "34"
+        }
+      ]
+    },
+    {
+      "name": "actual-rd-result",
+      "value": {
+        "status": "unresolved",
+        "reason": "Ambiguous: Conflicting FSMNode attribute keys: feb96820-5097-4234-995e-9b0264bc5ea1(Orders)-B0F5C8B8[net8.0]/net8.0:Orders.FirstWorker, feb96820-5097-4234-995e-9b0264bc5ea1(Orders)-B0F5C8B8[net8.0]/net8.0:Orders.SecondWorker",
+        "requestId": "ab79f741-016e-47df-8d17-a82c8f717c5a",
+        "documentVersion": 0,
+        "session": "9c0322a3-d92a-4cb8-a80d-4ceb1aef5570",
+        "contextVersion": 377
+      }
+    },
+    {
+      "name": "actual-rd-result",
+      "value": {
+        "status": "unresolved",
+        "reason": "Unresolved: Node contract unconfirmed or open generic; not a concrete Node binding",
+        "requestId": "87888922-ce04-4626-8d62-f08f776f4420",
+        "documentVersion": 0,
+        "session": "9c0322a3-d92a-4cb8-a80d-4ceb1aef5570",
+        "contextVersion": 377
+      }
+    },
+    {
+      "name": "actual-rd-result",
+      "value": {
+        "status": "unresolved",
+        "reason": "Unresolved: Node contract unconfirmed or open generic; not a concrete Node binding",
+        "requestId": "d45ab3c7-1892-45be-bf28-da75f365fecf",
+        "documentVersion": 0,
+        "session": "9c0322a3-d92a-4cb8-a80d-4ceb1aef5570",
+        "contextVersion": 377
+      }
+    },
+    {
+      "name": "actual-rd-result",
+      "value": {
+        "status": "unresolved",
+        "reason": "Unresolved: No verified FSMNode attribute key in this host context",
+        "requestId": "f0da6ab0-f48d-47b3-96b6-42172b1f9323",
+        "documentVersion": 0,
+        "session": "9c0322a3-d92a-4cb8-a80d-4ceb1aef5570",
+        "contextVersion": 377
+      }
+    },
+    {
+      "name": "actual-rd-result",
+      "value": {
+        "status": "unresolved",
+        "reason": "Unresolved: No verified FSMNode attribute key in this host context",
+        "requestId": "60f70327-ed6c-43d6-9f7a-abbc2eaf5f84",
+        "documentVersion": 0,
+        "session": "9c0322a3-d92a-4cb8-a80d-4ceb1aef5570",
+        "contextVersion": 377
+      }
+    },
+    {
+      "name": "actual-rd-result",
+      "value": {
+        "status": "unresolved",
+        "reason": "Unresolved: Node contract unconfirmed or open generic; not a concrete Node binding",
+        "requestId": "0239baad-4a5b-4c21-b1c4-d597f13e191b",
+        "documentVersion": 0,
+        "session": "9c0322a3-d92a-4cb8-a80d-4ceb1aef5570",
+        "contextVersion": 377
+      }
+    },
+    {
+      "name": "action",
+      "value": "AnotherFSM.GoToDeclaration"
+    },
+    {
+      "name": "no-host-local-declaration",
+      "value": true
+    },
+    {
+      "name": "actual-rd-result",
+      "value": {
+        "status": "unresolved",
+        "reason": "C# host context unavailable; local DSL navigation remains available",
+        "requestId": "61d663a4-1bcf-495a-b6c4-5d34832d1d1b",
+        "documentVersion": 0,
+        "session": "9c0322a3-d92a-4cb8-a80d-4ceb1aef5570",
+        "contextVersion": 377
+      }
+    },
+    {
+      "name": "action",
+      "value": "FindUsages"
+    },
+    {
+      "name": "csharp-context-valid-baseline",
+      "value": [
+        {
+          "id": 9,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Orders/orders.fsm",
+          "start": 58,
+          "length": 13,
+          "valid": true,
+          "text": "AnotherFSM — 工厂类型键 BusinessQuery · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Orders/Orders.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "BusinessQuery",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "34"
+        },
+        {
+          "id": 10,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Orders/orders.fsm",
+          "start": 116,
+          "length": 13,
+          "valid": true,
+          "text": "AnotherFSM — 隐式类型键 BusinessQuery · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Orders/Orders.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "BusinessQuery",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "34"
+        }
+      ]
+    },
+    {
+      "name": "unsaved-csharp-key",
+      "value": true
+    },
+    {
+      "name": "actual-rd-result",
+      "value": {
+        "status": "unresolved",
+        "reason": "Unresolved: No verified FSMNode attribute key in this host context",
+        "requestId": "c4b468f9-b7ae-4237-998e-3a5f0a7f87bb",
+        "documentVersion": 0,
+        "session": "9c0322a3-d92a-4cb8-a80d-4ceb1aef5570",
+        "contextVersion": 384
+      }
+    },
+    {
+      "name": "csharp-context-expires-native-rows",
+      "value": [
+        {
+          "id": 9,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Orders/orders.fsm",
+          "start": 58,
+          "length": 13,
+          "valid": false,
+          "text": "AnotherFSM — 结果已过期，请刷新 Find Usages：工厂类型键 BusinessQuery · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Orders/Orders.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "BusinessQuery",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "34"
+        },
+        {
+          "id": 10,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Orders/orders.fsm",
+          "start": 116,
+          "length": 13,
+          "valid": false,
+          "text": "AnotherFSM — 结果已过期，请刷新 Find Usages：隐式类型键 BusinessQuery · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Orders/Orders.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "BusinessQuery",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "34"
+        },
+        {
+          "id": 13,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Orders/orders.fsm",
+          "start": 58,
+          "length": 13,
+          "valid": false,
+          "text": "AnotherFSM — 结果已过期，请刷新 Find Usages：工厂类型键 BusinessQuery · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Orders/Orders.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "BusinessQuery",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "34"
+        },
+        {
+          "id": 14,
+          "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+          "file": "C:/Work/AnotherFSM/rider/fixtures/Orders/orders.fsm",
+          "start": 116,
+          "length": 13,
+          "valid": false,
+          "text": "AnotherFSM — 结果已过期，请刷新 Find Usages：隐式类型键 BusinessQuery · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Orders/Orders.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration",
+          "currentSlice": "BusinessQuery",
+          "documentType": "JetBrains.RdBackend.Common.Features.Documents.RiderDocument",
+          "documentStamp": "34"
+        }
+      ]
+    },
+    {
+      "name": "actual-rd-result",
+      "value": {
+        "status": "type",
+        "reason": "FSMNode attribute convention; not proof of runtime registration",
+        "requestId": "9ab5f441-60e1-49f8-a6fc-d87057dc3a68",
+        "documentVersion": 0,
+        "session": "9c0322a3-d92a-4cb8-a80d-4ceb1aef5570",
+        "contextVersion": 391,
+        "target": {
+          "module": "feb96820-5097-4234-995e-9b0264bc5ea1(Orders)-B0F5C8B8[net8.0]",
+          "context": "net8.0",
+          "clrName": "Orders.Container+LookupWorker",
+          "consumer": "feb96820-5097-4234-995e-9b0264bc5ea1(Orders)-B0F5C8B8[net8.0]",
+          "construction": "",
+          "alias": "global"
+        }
+      }
+    },
+    {
+      "name": "action",
+      "value": "FindUsages"
+    },
+    {
+      "name": "zero-dsl-query-before-change",
+      "value": "Usages of \u0027UnusedWorker\u0027"
+    },
+    {
+      "name": "zero-dsl-query-expires-after-attribute-removal",
+      "value": true
+    },
+    {
+      "name": "action",
+      "value": "FindUsages"
+    },
+    {
+      "name": "old-same-title-page",
+      "value": "89cae731-b51b-4254-b27b-97d0d42a5db9"
+    },
+    {
+      "name": "action",
+      "value": "FindUsages"
+    },
+    {
+      "name": "fresh-same-title-page",
+      "value": "957960bc-48ee-42ec-a9b7-fa5ff8333340"
+    },
+    {
+      "name": "replayed-actual-old-query-expiry",
+      "value": {
+        "session": "9c0322a3-d92a-4cb8-a80d-4ceb1aef5570",
+        "contextVersion": 407,
+        "expiredReferences": [
+          {
+            "listId": "89cae731-b51b-4254-b27b-97d0d42a5db9",
+            "queryEpoch": 403,
+            "contextVersion": 407,
+            "owned": true,
+            "updating": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "same-title-fresh-page-not-invalidated",
+      "value": true
+    },
+    {
+      "name": "action",
+      "value": "UsageView.Rerun"
+    },
+    {
+      "name": "replayed-actual-old-query-expiry",
+      "value": {
+        "session": "9c0322a3-d92a-4cb8-a80d-4ceb1aef5570",
+        "contextVersion": 407,
+        "expiredReferences": [
+          {
+            "listId": "89cae731-b51b-4254-b27b-97d0d42a5db9",
+            "queryEpoch": 403,
+            "contextVersion": 407,
+            "owned": true,
+            "updating": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "late-old-generation-expiry-ignored",
+      "value": true
+    },
+    {
+      "name": "actual-null-psi-notifications",
+      "value": 305
+    },
+    {
+      "name": "sdk-stale-navigation-guard",
+      "value": {
+        "passed": true,
+        "valid": false,
+        "navigated": false,
+        "epoch": 361
+      }
+    }
+  ]
+}

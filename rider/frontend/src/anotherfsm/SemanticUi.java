@@ -66,8 +66,10 @@ public final class SemanticUi implements Disposable {
       var text=value.get("text").getAsString();int offset=value.getAsJsonObject("span").get("start").getAsInt();
       long line=1+text.substring(0,Math.min(offset,text.length())).chars().filter(c -> c=='\n').count();
       var instances=new ArrayList<String>();for(var instance:value.getAsJsonArray("instances"))instances.add(instance.getAsString());
+      var hosts=new ArrayList<String>();if(value.has("hosts")&&!value.get("hosts").isJsonNull())
+        for(var host:value.getAsJsonArray("hosts"))hosts.add(host.getAsString());
       return value.get("kind").getAsString()+" "+value.get("label").getAsString()+" — "+value.get("documentId").getAsString()+":"+line
-          +(instances.isEmpty()?"":" · 实例 "+String.join(", ",instances));
+          +(instances.isEmpty()?"":" · 实例 "+String.join(", ",instances))+(hosts.isEmpty()?"":" · 宿主 "+String.join(", ",hosts));
     }
   }
 
@@ -147,6 +149,9 @@ public final class SemanticUi implements Disposable {
   private void present(Ticket ticket,JsonObject reply) {
     String status=reply.get("status").getAsString();
     LOG.info("AFSM navigation status="+status+" request="+ticket.id+" contextVersion="+reply.get("contextVersion"));
+    if(status.equals("hosts")) {
+      chooseHost(ticket,reply);return;
+    }
     if(status.equals("type")) {
       var navigation=ticket.envelope.deepCopy();navigation.addProperty("action","navigateType");
       navigation.add("session",reply.get("session"));navigation.add("contextVersion",reply.get("contextVersion"));navigation.add("target",reply.get("target"));
@@ -164,6 +169,23 @@ public final class SemanticUi implements Disposable {
       var page=new ResultPage(ticket.origin,references);pages.add(page);page.replace(reply);finish(ticket);return;
     }
     finish(ticket);inform(reply.get("reason").getAsString());
+  }
+  private record HostChoice(JsonObject value) {
+    public String toString() {return value.get("label").getAsString();}
+  }
+  private void chooseHost(Ticket ticket,JsonObject reply) {
+    if(ticket.timeout!=null)ticket.timeout.cancel(false);
+    var choices=new ArrayList<HostChoice>();for(var host:reply.getAsJsonArray("hosts"))choices.add(new HostChoice(host.getAsJsonObject()));
+    var popup=JBPopupFactory.getInstance().createPopupChooserBuilder(choices).setTitle("选择消费项目 / TFM（仅本次显示）").setRequestFocus(true)
+        .setItemChosenCallback(choice -> {
+          if(!current(ticket))return;ticket.popup=null;armTimeout(ticket);
+          ticket.envelope.addProperty("host",choice.value().get("id").getAsString());
+          ticket.envelope.add("session",reply.get("session"));ticket.envelope.add("contextVersion",reply.get("contextVersion"));
+          send(ticket,ticket.envelope,result -> present(ticket,result),() -> {});
+        }).createPopup();
+    ticket.popup=popup;
+    popup.addListener(new JBPopupListener(){public void onClosed(LightweightWindowEvent event){if(!event.isOk())finish(ticket);}});
+    popup.showCenteredInCurrentWindow(project);
   }
   private void choose(Ticket ticket,JsonObject reply,java.util.List<Location> choices) {
     if(ticket.timeout!=null)ticket.timeout.cancel(false);

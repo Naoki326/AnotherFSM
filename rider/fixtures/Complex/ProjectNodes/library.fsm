@@ -1,0 +1,4 @@
+def LibraryEntry(ProjectLookupKey) {}
+def ShelfEntry(NestedLookupKey) {}
+def ConcreteEntry(ClosedBufferKey) {}
+def OverrideEntry(NamedOverrideKey) {}

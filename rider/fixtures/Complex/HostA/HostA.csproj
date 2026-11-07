@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net8.0</TargetFramework><DefineConstants>$(DefineConstants);HOST_A</DefineConstants><IsPackable>false</IsPackable></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../StaticContract/StaticContract.csproj" />
+    <ProjectReference Include="../ProjectNodes/ProjectNodes.csproj" />
+    <Reference Include="Issue34.HostLoadedNodes"><HintPath>../artifacts/dll/Issue34.HostLoadedNodes.dll</HintPath></Reference>
+    <Reference Include="Issue34.TwinLeft"><HintPath>../artifacts/dll/Issue34.TwinLeft.dll</HintPath><Aliases>global,LeftAssembly</Aliases></Reference>
+    <Reference Include="Issue34.TwinRight"><HintPath>../artifacts/dll/Issue34.TwinRight.dll</HintPath><Aliases>global,RightAssembly</Aliases></Reference>
+    <PackageReference Include="Issue34.LocalNodes" Version="[1.0.0]" />
+    <None Include="../../SharedComplex/dual-host.fsm" Link="Linked/dual-host.fsm" />
+    <Compile Include="../../SharedComplex/SharedBinding.cs" Link="Linked/SharedBinding.cs" />
+  </ItemGroup>
+</Project>

@@ -2,6 +2,17 @@ namespace AnotherFSM.Semantics.Tests;
 
 public sealed class BindingFacts
 {
+    [Fact]
+    public void Constructed_types_aliases_and_consuming_hosts_remain_distinct_even_for_the_same_definition()
+    {
+        var definition = new TypeIdentity("library", "net8.0", "Nodes.Outer`1+Inner`1", Consumer: "host-A", Construction: "System.Int32;System.String", Alias: "left");
+        Assert.NotEqual(definition, definition with { Consumer = "host-B" });
+        Assert.NotEqual(definition, definition with { Context = "net10.0" });
+        Assert.NotEqual(definition, definition with { Construction = "System.String;System.String" });
+        Assert.NotEqual(definition, definition with { Alias = "right" });
+        Assert.NotEqual(definition, definition with { Module = "another-assembly" });
+    }
+
     [Theory]
     [InlineData(false, false)]
     [InlineData(true, true)]

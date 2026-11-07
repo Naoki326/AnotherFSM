@@ -1,0 +1,65 @@
+{
+  "status": "failed",
+  "backendPid": 54840,
+  "elapsedMs": 25660.9645,
+  "productZipSha256": "a7f40bc4d63c5f5d63ce3845a08fe70191a6fc940c22ea93e705ab1e10f68461",
+  "seam": "target SDK/public core queries + real BridgeQueries; not UI acceptance",
+  "failedChecks": [
+    {
+      "name": "positive control: NegativeIdentity/net8.0/IdentityControlKey",
+      "status": "failed",
+      "detail": {
+        "binding": {
+          "state": 1,
+          "candidates": [],
+          "reason": "No verified FSMNode attribute key in this host context"
+        },
+        "catalog": [],
+        "contracts": [
+          {
+            "clr": "StateMachine.IFSMNode",
+            "module": "34000000-0000-4000-8000-000000000008(ImpostorContract)-BCA894CC[.NETStandard,Version=v2.0]",
+            "references": [
+              [
+                "ImpostorOnly"
+              ]
+            ]
+          },
+          {
+            "clr": "StateMachine.IFSMNode",
+            "module": "34000000-0000-4000-8000-000000000001(StaticContract)-FE057453[.NETStandard,Version=v2.0]",
+            "references": [
+              []
+            ]
+          }
+        ],
+        "attributes": [
+          "34000000-0000-4000-8000-000000000008(ImpostorContract)-BCA894CC[.NETStandard,Version=v2.0]",
+          "34000000-0000-4000-8000-000000000001(StaticContract)-FE057453[.NETStandard,Version=v2.0]"
+        ]
+      }
+    },
+    {
+      "name": "conditional None project item exists only in actual net8 Roots",
+      "status": "failed",
+      "detail": {
+        "eightRoots": [
+          "C:/Work/AnotherFSM/rider/fixtures/Complex/MultiTarget/framework.fsm",
+          "C:/Work/AnotherFSM/rider/fixtures/Complex/MultiTarget/net8-only.fsm",
+          "C:/Work/AnotherFSM/rider/fixtures/Complex/MultiTarget/only-eight.fsm"
+        ],
+        "tenRoots": [
+          "C:/Work/AnotherFSM/rider/fixtures/Complex/MultiTarget/framework.fsm",
+          "C:/Work/AnotherFSM/rider/fixtures/Complex/MultiTarget/net8-only.fsm",
+          "C:/Work/AnotherFSM/rider/fixtures/Complex/MultiTarget/only-eight.fsm"
+        ]
+      }
+    }
+  ],
+  "sentinel": {
+    "path": "C:\\Work\\AnotherFSM\\.scratch\\issue-32\\sandbox-run-20261107T011832.405364Z-20444928\\acceptance\\complex-business-execution.marker",
+    "configured": true,
+    "exists": false,
+    "claim": "instrumented paths only; absence is not universal execution/network safety proof"
+  }
+}

@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net8.0</TargetFramework><IsPackable>false</IsPackable></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../StaticContract/StaticContract.csproj" />
+    <ProjectReference Include="../ImpostorContract/ImpostorContract.csproj" Aliases="ImpostorOnly" />
+  </ItemGroup>
+</Project>

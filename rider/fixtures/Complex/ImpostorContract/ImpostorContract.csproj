@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>netstandard2.0</TargetFramework><AssemblyName>Issue34.ImpostorContract</AssemblyName><IsPackable>false</IsPackable></PropertyGroup>
+</Project>

@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net8.0</TargetFramework><IsPackable>false</IsPackable></PropertyGroup>
+  <ItemGroup><PackageReference Include="Issue34.LocalNodes" Version="[0.0.0-negative]" /></ItemGroup>
+</Project>

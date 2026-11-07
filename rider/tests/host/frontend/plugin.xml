@@ -8,5 +8,6 @@
   <depends>io.github.naoki326.anotherfsm</depends>
   <extensions defaultExtensionNs="com.intellij">
     <postStartupActivity implementation="anotherfsm.acceptance.HostAcceptance"/>
+    <postStartupActivity implementation="anotherfsm.acceptance.ComplexHostAcceptance"/>
   </extensions>
 </idea-plugin>

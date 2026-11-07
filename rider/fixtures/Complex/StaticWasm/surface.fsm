@@ -1,0 +1,2 @@
+// Real Microsoft.NET.Sdk.WebAssembly project context; Node, Key and C# type names differ.
+def WasmEntry(WasmSurfaceKey) {}

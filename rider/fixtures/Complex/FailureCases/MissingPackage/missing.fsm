@@ -1,0 +1,2 @@
+// This project intentionally cannot restore the package version, even after preparation.
+def AbsentPackageEntry(LocalPackageKey) {}

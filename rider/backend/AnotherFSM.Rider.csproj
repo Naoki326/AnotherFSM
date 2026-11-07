@@ -28,6 +28,8 @@
     <Reference Include="$(RiderHome)/lib/ReSharperHost/System.Text.Json.dll" Private="false" />
     <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.ReSharper.Psi.dll" Private="false" />
     <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.ReSharper.Feature.Services.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.ReSharper.Feature.Services.ExternalSources.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.ReSharper.ExternalSources.dll" Private="false" />
     <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.ReSharper.Resources.dll" Private="false" />
     <Reference Include="$(RiderHome)/lib/ReSharperHost/Rider.Backend.dll" Private="false" />
   </ItemGroup>

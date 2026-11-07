@@ -7,6 +7,7 @@
     <RiderHome Condition="'$(RiderHome)' == ''">$(LOCALAPPDATA)/Programs/Rider</RiderHome>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="ComplexBoundaryDriver.cs" Condition="'$(IncludeBoundaryAcceptance)' != 'true'" />
     <ProjectReference Include="../../../backend/AnotherFSM.Rider.csproj" />
     <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.Core.dll" Private="false" />
     <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.Util.dll" Private="false" />
@@ -19,7 +20,10 @@
     <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.Ide.dll" Private="false" />
     <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.Text.Protocol.dll" Private="false" />
     <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.ReSharper.Feature.Services.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.ReSharper.Feature.Services.ExternalSources.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.ReSharper.ExternalSources.dll" Private="false" />
     <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.ReSharper.Psi.dll" Private="false" />
+    <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.ReSharper.Resources.dll" Private="false" />
     <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Lifetimes.dll" Private="false" />
     <Reference Include="$(RiderHome)/lib/ReSharperHost/System.Text.Json.dll" Private="false" />
   </ItemGroup>

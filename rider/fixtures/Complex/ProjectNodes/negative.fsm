@@ -1,0 +1,12 @@
+// No concrete association: open generic / containing generic / non-node / abstract / invalid key.
+def OpenEntry(OpenGenericKey) {}
+def OpenOuterEntry(OpenOuterKey) {}
+def PlainEntry(PlainNotNodeKey) {}
+def AbstractEntry(AbstractOnlyKey) {}
+def ClosedNonNodeEntry(ClosedNonNodeKey) {}
+def AbstractClosedEntry(AbstractClosedKey) {}
+def UnregisteredNestedEntry(UnregisteredShelfWorker) {}
+def InvalidEntry(ForbiddenFallbackKey) {}
+def OldCtorEntry(IgnoredCtorKey) {}
+// This is a C# type spelling, not the registered factory key.
+def TypeNameEntry(DependencyWorker) {}

@@ -1,0 +1,6 @@
+<Project>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)dual-host.fsm" Link="Shared/dual-host.fsm" />
+    <Compile Include="$(MSBuildThisFileDirectory)SharedBinding.cs" Link="Shared/SharedBinding.cs" />
+  </ItemGroup>
+</Project>

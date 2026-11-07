@@ -5,21 +5,26 @@ using JetBrains.Lifetimes;
 using JetBrains.ProjectModel;
 using JetBrains.ReSharper.Feature.Services.Navigation;
 using JetBrains.ReSharper.Psi;
+using JetBrains.ReSharper.Psi.Modules;
 
 namespace AnotherFSM.Rider;
 
 /// <summary>Versioned RD payloads. All PSI work is scheduled by the host, never waited on by the UI.</summary>
 [SolutionComponent(Instantiation.ContainerAsyncPrimaryThread)]
-public sealed class BridgeQueries(IPsiServices psi, ScriptIndex index, ScriptDocuments scripts, ResultLifecycle results)
+public sealed class BridgeQueries(IPsiServices psi, ScriptIndex index, ScriptDocuments scripts, ResultLifecycle results, BindingSettings settings)
 {
     private static readonly JsonSerializerOptions Json = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, PropertyNameCaseInsensitive = true };
     private sealed record Request(string Action, string Path, string Text, long DocumentVersion, int Offset,
         string RequestId, bool Implementation = false, string? Session = null, long ContextVersion = -1, TypeIdentity? Target = null,
-        string? ListId = null, string Operation = "declaration", string QueryAction = "resolve", Location? Selected = null);
-    private sealed record Location(string DocumentId, SourceSpan Span, string Kind, string Label, IReadOnlyList<string> Instances, string Text);
+        string? ListId = null, string Operation = "declaration", string QueryAction = "resolve", Location? Selected = null, string? Host = null);
+    private sealed record Location(string DocumentId, SourceSpan Span, string Kind, string Label, IReadOnlyList<string> Instances, string Text,
+        IReadOnlyList<string>? Hosts = null);
+    private sealed record HostChoice(string Id, string Label);
+    private sealed record HostGraph(IPsiModule Module, IPsiSourceFile Source, SemanticGraph Graph);
     private sealed record Reply(string Status, string Reason, string RequestId, long DocumentVersion, string Session,
         long ContextVersion, SourceSpan? Span = null, TypeIdentity? Target = null, ReferenceQueryStatus? Reference = null,
-        IReadOnlyList<Location>? Locations = null);
+        IReadOnlyList<Location>? Locations = null, IReadOnlyList<HostChoice>? Hosts = null,
+        ExternalTypeNavigation.Result? ExternalPresentation = null);
 
     public async Task<string> Query(Lifetime lifetime, string json)
     {
@@ -42,7 +47,7 @@ public sealed class BridgeQueries(IPsiServices psi, ScriptIndex index, ScriptDoc
         {
             var validation = await psi.Files.CommitWithRetryBackgroundRead(lifetime, () => Resolve(request with { Action = "resolve" })).ConfigureAwait(false);
             reply = validation.Status == "type" && validation.Target == request.Target
-                ? await psi.Files.CommitWithRetryMainRead(lifetime, () => Navigate(request)).ConfigureAwait(false)
+                ? await psi.Files.CommitWithRetryMainRead(lifetime, () => Navigate(request, lifetime)).ConfigureAwait(false)
                 : Response(request, "stale", "Binding changed; run navigation again");
         }
         else reply = await psi.Files.CommitWithRetryBackgroundRead(lifetime, () => {
@@ -60,7 +65,7 @@ public sealed class BridgeQueries(IPsiServices psi, ScriptIndex index, ScriptDoc
     private static bool SameLocation(Location left, Location right) =>
         StringComparer.OrdinalIgnoreCase.Equals(left.DocumentId, right.DocumentId) && left.Span == right.Span
         && left.Kind == right.Kind && left.Label == right.Label && left.Text == right.Text
-        && left.Instances.SequenceEqual(right.Instances);
+        && left.Instances.SequenceEqual(right.Instances) && (left.Hosts ?? Array.Empty<string>()).SequenceEqual(right.Hosts ?? Array.Empty<string>());
     private Reply Response(Request request, string status, string reason, SourceSpan? span = null, TypeIdentity? target = null)
         => new(status, reason, request.RequestId, request.DocumentVersion, index.Session.ToString(), index.Epoch, span, target);
 
@@ -68,41 +73,51 @@ public sealed class BridgeQueries(IPsiServices psi, ScriptIndex index, ScriptDoc
     {
         if (request.Action is not ("resolve" or "references" or "templateReferences")) return Response(request, "unsupported", "Unknown operation");
         var epoch = index.Epoch;
-        var files = scripts.Find(request.Path);
-        if (files.Length > 1) return Response(request, "unresolved", "Multiple document/host contexts; select a host (complex contexts are delivered by #34)");
-        var file = files.SingleOrDefault();
-        if (file != null && file.Document.GetText() != request.Text)
-            return Response(request, "analyzing", "Waiting for the host's current unsaved buffer; retry");
-        var graph = file != null ? scripts.Graph(file.PsiModule, epoch, out _) : scripts.Local(request.Path, request.DocumentVersion, request.Text, epoch);
-        // An imported file need not itself be a project item. Its host is proven by a real import edge, not its directory.
-        if (file == null && Path.IsPathFullyQualified(request.Path))
-        {
-            var contexts = new List<(SemanticGraph Graph, IPsiSourceFile Source)>();
+        if (request.Host != null && (request.Session != index.Session.ToString() || request.ContextVersion != epoch))
+            return Response(request, "stale", "Selected host context expired; run navigation again");
+        var contexts = new List<HostGraph>();
+        if (Path.IsPathFullyQualified(request.Path))
             foreach (var module in scripts.Modules())
             {
                 var candidate = scripts.Graph(module, epoch, out var sources);
-                if (sources.TryGetValue(request.Path, out var imported)) contexts.Add((candidate, imported));
+                if (sources.TryGetValue(request.Path, out var source)) contexts.Add(new(module, source, candidate));
             }
-            if (contexts.Count > 1) return Response(request, "unresolved", "Imported script has multiple host contexts; no implicit first host");
-            if (contexts.Count == 1) { graph = contexts[0].Graph; file = contexts[0].Source; }
-        }
+        if (contexts.Any(context => context.Source.Document.GetText() != request.Text))
+            return Response(request, "analyzing", "Waiting for the host's current shared/unsaved buffer; retry");
+        var selected = request.Host == null ? null : contexts.SingleOrDefault(context => context.Module.GetPersistentID() == request.Host);
+        if (request.Host != null && selected == null) return Response(request, "stale", "Selected consuming host is no longer available");
+        // DSL source identity is independent of host selection. C# operations require an explicit choice below.
+        var current = selected ?? (contexts.Count == 1 ? contexts[0] : null);
+        var file = current?.Source;
+        var graph = current?.Graph ?? (contexts.Count > 0 ? contexts[0].Graph : scripts.Local(request.Path, request.DocumentVersion, request.Text, epoch));
         var document = graph.Documents.FirstOrDefault(item => StringComparer.OrdinalIgnoreCase.Equals(item.Document.Id, request.Path));
         if (document == null || document.Document.Text != request.Text)
             return Response(request, "analyzing", "Waiting for the current shared document buffer");
         var id = document.Document.Id;
+        var factoryHere = document.FindFactoryDeclaration(request.Offset);
+        var needsHost = request.Implementation || request.Operation == "branchMetadata" || factoryHere is { ImplicitKey: false };
+        if (request.Action == "resolve" && needsHost && request.Host == null && contexts.Count > 1)
+        {
+            var choices = contexts.Select(context => {
+                var node = context.Graph.FindNodeSource(id, request.Offset)?.Node;
+                var binding = node == null ? null : Bind(node, context.Module, id);
+                return new HostChoice(context.Module.GetPersistentID(), HostLabel(context.Module) + " — "
+                    + (binding == null ? "No intrinsic C# binding" : binding.State + ": " + binding.Reason)
+                    + (binding?.Candidates.Count > 0 ? " · " + string.Join(", ", binding.Candidates.Select(target => target.Module + ":" + target.ClrName)) : ""));
+            }).ToArray();
+            if (epoch != index.Epoch) return Response(request, "stale", "Host contexts changed; retry");
+            return Response(request, "hosts", "Choose the consuming project / TFM; selection only filters this operation") with { Hosts = choices };
+        }
         if (request.Action != "resolve")
         {
             // Aggregate exact source identities across solution scripts, not global same-name strings.
-            var queries = new List<(SemanticGraph Graph, SemanticQuery Query)> { (graph, graph.FindReferences(id, request.Offset, request.Action == "templateReferences")) };
-            if (file != null)
-                foreach (var module in scripts.Modules().Where(module => module.GetPersistentID() != file.PsiModule.GetPersistentID()))
-                {
-                    var other = scripts.Graph(module, epoch, out _);
-                    if (other.Documents.Any(item => StringComparer.OrdinalIgnoreCase.Equals(item.Document.Id, id)))
-                        queries.Add((other, other.FindReferences(id, request.Offset, request.Action == "templateReferences")));
-                }
+            var queries = new List<(SemanticGraph Graph, SemanticQuery Query, string Host)> {
+                (graph, graph.FindReferences(id, request.Offset, request.Action == "templateReferences"),
+                    contexts.FirstOrDefault(context => ReferenceEquals(context.Graph, graph)) is { } owner ? HostLabel(owner.Module) : "") };
+            foreach (var context in contexts.Where(context => !ReferenceEquals(context.Graph, graph)))
+                queries.Add((context.Graph, context.Graph.FindReferences(id, request.Offset, request.Action == "templateReferences"), HostLabel(context.Module)));
             var reply = Locations(request, epoch, queries, references: true);
-            return file == null ? reply with { Reason = reply.Reason + "; local script results only: C# host/solution context unavailable" } : reply;
+            return contexts.Count == 0 ? reply with { Reason = reply.Reason + "; local script results only: C# host/solution context unavailable" } : reply;
         }
         if (request.Operation == "branchMetadata")
         {
@@ -110,7 +125,7 @@ public sealed class BridgeQueries(IPsiServices psi, ScriptIndex index, ScriptDoc
             if (branch == null) return Response(request, "unresolved", "No reliable Node/Branch index at this position");
             var summary = $"Branch {branch.Index} of Node {branch.Owner.Node.Name}; actual DSL integer, not a C# enum or return/yield location";
             if (file == null) return Response(request, "metadata", summary + "; C# host context unavailable");
-            var branchBinding = NodeBindings.Resolve(branch.Owner.Node, index.Catalog(file.PsiModule));
+            var branchBinding = Bind(branch.Owner.Node, file.PsiModule, id);
             if (branchBinding.State != BindingState.Determined) return Response(request, "metadata", summary + "; " + branchBinding.Reason);
             var metadata = TypeCatalog.BranchMetadata(psi, branchBinding.Candidates.Single(), branch.Index);
             if (epoch != index.Epoch) return Response(request, "stale", "Branch context changed; retry");
@@ -129,23 +144,31 @@ public sealed class BridgeQueries(IPsiServices psi, ScriptIndex index, ScriptDoc
             var node = nodeSource?.Node;
             if (node == null) return Response(request, "unresolved", "This DSL symbol has no intrinsic C# type target; Output/Event/Module/instance/Namespace are not nodes");
             if (file == null) return Response(request, "unresolved", "C# host context unavailable; local DSL navigation remains available");
-            var binding = NodeBindings.Resolve(node, index.Catalog(file.PsiModule));
+            var binding = Bind(node, file.PsiModule, id);
             if (epoch != index.Epoch) return Response(request, "stale", "Context changed; retry");
             return binding.State == BindingState.Determined
                 ? Response(request, "type", binding.Reason, target: binding.Candidates.Single())
                 : Response(request, "unresolved", binding.State + ": " + binding.Reason);
         }
-        return Locations(request, epoch, new[] { (graph, graph.Navigate(id, request.Offset, request.Operation)) }, references: false);
+        var navigation = contexts.Count == 0 ? new[] { (graph, graph.Navigate(id, request.Offset, request.Operation), "") }
+            : contexts.Select(context => (context.Graph, context.Graph.Navigate(id, request.Offset, request.Operation), HostLabel(context.Module))).ToArray();
+        return Locations(request, epoch, navigation, references: false);
     }
 
-    private Reply Locations(Request request, long epoch, IEnumerable<(SemanticGraph Graph, SemanticQuery Query)> queries, bool references)
+    private NodeBinding Bind(NodeDeclaration node, IPsiModule module, string script)
+        => NodeBindings.Resolve(node, index.Catalog(module), TypeCatalog.Options(module, settings.Read(module, script)));
+    private static string HostLabel(IPsiModule module) => (BindingSettings.ProjectPath(module) ?? module.GetPersistentID()) + " / " + BindingSettings.Framework(module);
+
+    private Reply Locations(Request request, long epoch, IEnumerable<(SemanticGraph Graph, SemanticQuery Query, string Host)> queries, bool references)
     {
         var all = queries.ToArray();
         var locations = all.SelectMany(pair => pair.Query.Locations.Select(location => {
             var document = pair.Graph.Documents.Single(item => item.Document.Id == location.DocumentId).Document;
-            return new Location(location.DocumentId, location.Span, location.Kind, location.Label, location.Instances, document.Text);
-        })).GroupBy(location => (location.DocumentId, location.Span, location.Kind)).Select(group => group.First() with {
-            Instances = group.SelectMany(location => location.Instances).Distinct().Order().ToArray()
+            return new Location(location.DocumentId, location.Span, location.Kind, location.Label, location.Instances, document.Text,
+                pair.Host.Length == 0 ? Array.Empty<string>() : new[] { pair.Host });
+        })).GroupBy(location => (DocumentId: location.DocumentId.ToUpperInvariant(), location.Span, location.Kind)).Select(group => group.First() with {
+            Instances = group.SelectMany(location => location.Instances).Distinct().Order().ToArray(),
+            Hosts = group.SelectMany(location => location.Hosts ?? Array.Empty<string>()).Distinct().Order().ToArray()
         }).OrderBy(location => location.DocumentId, StringComparer.OrdinalIgnoreCase).ThenBy(location => location.Span.Start).ToArray();
         if (epoch != index.Epoch) return Response(request, "stale", "Graph changed during the query; retry");
         var reason = string.Join("; ", all.Select(pair => pair.Query.Reason).Distinct());
@@ -156,17 +179,27 @@ public sealed class BridgeQueries(IPsiServices psi, ScriptIndex index, ScriptDoc
         return Response(request, status, reason, locations.Length == 1 ? locations[0].Span : null) with { Locations = locations };
     }
 
-    private Reply Navigate(Request request)
+    private Reply Navigate(Request request, Lifetime lifetime)
     {
         if (request.Session != index.Session.ToString() || request.ContextVersion != index.Epoch || request.Target == null)
             return Response(request, "stale", "Result expired; run navigation again");
-        var files = scripts.Find(request.Path);
-        if (files.Length > 1 || scripts.CurrentText(request.Path) != request.Text)
+        if (scripts.CurrentText(request.Path) != request.Text)
             return Response(request, "stale", "Document changed; run navigation again");
         var target = TypeCatalog.Resolve(psi, request.Target);
-        if (target == null || !target.GetSourceFiles().Any()) return Response(request, "unresolved", "Current-project source unavailable");
-        target.Navigate(true);
-        // A command dispatch, not a fabricated claim that the IDE selected the correct source.
-        return Response(request, "navigationDispatched", "Navigation delegated to Rider");
+        if (target == null) return Response(request, "stale", "The determined type is no longer valid in the consuming context; resolve again");
+        if (target.GetSourceFiles().Any(source => source.IsValid()))
+        {
+            target.Navigate(true);
+            // A command dispatch, not a fabricated claim that the IDE selected the correct source.
+            return Response(request, "navigationDispatched", "Project source navigation delegated to Rider; not proof of source matching a prior binary", target: request.Target);
+        }
+        var presentation = ExternalTypeNavigation.Navigate(target, () => lifetime.IsAlive
+            && request.ContextVersion == index.Epoch && request.Session == index.Session.ToString()
+            && scripts.CurrentText(request.Path) == request.Text);
+        if (!lifetime.IsAlive || request.ContextVersion != index.Epoch)
+            return Response(request, "stale", "Binding context expired during external presentation; resolve again");
+        return Response(request, presentation.Status, "Determined C# binding retained; " + presentation.Reason
+            + "; consumer=" + request.Target.Consumer + "; consuming TFM=" + request.Target.Context,
+            target: request.Target) with { ExternalPresentation = presentation };
     }
 }

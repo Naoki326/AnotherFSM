@@ -1,0 +1,2 @@
+// Canonical host-probe path: a project item only for net8.0, absent for net10.0.
+def OnlyEightEntry(Net8OnlyKey) {}

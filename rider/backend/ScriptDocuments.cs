@@ -22,6 +22,7 @@ public sealed class ScriptDocuments
     private readonly DocumentManager documentManager;
     private readonly PsiProjectFileTypeCoordinator fileTypes;
     private readonly ScriptIndex index;
+    private readonly BindingSettings settings;
     private readonly Dictionary<string, IPsiSourceFile[]> inventory = new();
     private readonly Dictionary<string, IPsiSourceFile> dependencies = new(StringComparer.OrdinalIgnoreCase);
     private sealed record GraphEntry(SemanticGraph Graph, IReadOnlyDictionary<string, IPsiSourceFile> Sources);
@@ -31,13 +32,14 @@ public sealed class ScriptDocuments
     private bool closed;
 
     public ScriptDocuments(Lifetime lifetime, ISolution solution, IPsiServices psi, DocumentManager documentManager,
-        PsiProjectFileTypeCoordinator fileTypes, ScriptIndex index)
+        PsiProjectFileTypeCoordinator fileTypes, ScriptIndex index, BindingSettings settings)
     {
         this.solution = solution;
         this.psi = psi;
         this.documentManager = documentManager;
         this.fileTypes = fileTypes;
         this.index = index;
+        this.settings = settings;
         void InvalidateGraphs() { lock (gate) graphs.Clear(); }
         index.Invalidated += InvalidateGraphs;
         lifetime.OnTermination(() => {
@@ -71,7 +73,8 @@ public sealed class ScriptDocuments
             foreach (var item in project.GetAllProjectFiles(file => IsScriptName(file.Name)))
             {
                 JetBrains.Application.Interruption.Current.CheckAndThrow();
-                if (!item.IsValid() || !item.Location.ExistsFile) continue;
+                if (!item.IsValid() || !item.Location.ExistsFile
+                    || item.Properties.GetBuildAction(module.TargetFrameworkId) == BuildAction.UNDEFINED) continue;
                 var sources = psi.Modules.GetPsiSourceFilesFor(item).ToArray().Where(file => ScriptIndex.IsScript(file)
                     && file.PsiModule.GetPersistentID() == module.GetPersistentID()).ToArray();
                 // None/Content/physical EmbeddedResource can be project items without a language PSI view.
@@ -99,8 +102,12 @@ public sealed class ScriptDocuments
 
     public IPsiSourceFile? Import(IPsiModule module, string importingPath, string name)
     {
-        var path = ResolveImportPath(importingPath, name);
-        if (path == null) return null;
+        var configuration = settings.Read(module, importingPath);
+        var mappings = configuration.Modules.Where(item => StringComparer.OrdinalIgnoreCase.Equals(item.Name, name)).ToArray();
+        if (configuration.Error != null || mappings.Length > 1) return null;
+        var path = mappings.Length == 1
+            ? VirtualFileSystemPath.Parse(mappings[0].File, InteractionContext.SolutionContext) : ResolveImportPath(importingPath, name);
+        if (path == null || !path.ExistsFile) return null;
         // A linked file's Location is physical. No virtual project folder participates in resolution.
         return Roots(module).FirstOrDefault(file => file.GetLocation().Equals(path)) ?? TextView(path, module);
     }
@@ -152,7 +159,7 @@ public sealed class ScriptDocuments
         }, checkHostCancellation: () => {
             JetBrains.Application.Interruption.Current.CheckAndThrow();
             if (epoch != index.Epoch) throw new OperationCanceledException("AnotherFSM graph context expired");
-        });
+        }, registeredModules: path => settings.Read(module, path).Modules.Select(item => item.Name).ToArray());
         if (epoch != index.Epoch) throw new OperationCanceledException("AnotherFSM graph context expired");
         lock (gate)
         {
@@ -169,8 +176,11 @@ public sealed class ScriptDocuments
     {
         if (!Path.IsPathFullyQualified(path) || path.Contains('\0')) return null;
         var files = Find(path);
-        if (files.Length > 1) return null;
-        if (files.Length == 1) return files[0].Document.GetText();
+        if (files.Length > 0)
+        {
+            var texts = files.Select(file => file.Document.GetText()).Distinct().ToArray();
+            return texts.Length == 1 ? texts[0] : null;
+        }
         var target = VirtualFileSystemPath.Parse(path, InteractionContext.SolutionContext);
         return target.ExistsFile ? documentManager.GetOrCreateDocument(target).GetText() : null;
     }

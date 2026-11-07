@@ -69,7 +69,8 @@ public sealed class SemanticGraph
     /// and compared case-insensitively; the first supplied snapshot for an entity wins (roots precede imports).
     /// Cancellation and host cancellation exceptions propagate. No whole-solution name fallback is performed.</summary>
     public static SemanticGraph Build(IEnumerable<DocumentAnalysis> roots,
-        Func<string, string, DocumentAnalysis?> resolveImport, CancellationToken cancellation = default, Action? checkHostCancellation = null)
+        Func<string, string, DocumentAnalysis?> resolveImport, CancellationToken cancellation = default, Action? checkHostCancellation = null,
+        Func<string, IReadOnlyList<string>>? registeredModules = null)
     {
         var graph = new SemanticGraph(cancellation, checkHostCancellation) { resolveImport = resolveImport };
         var rootDocuments = new List<DocumentAnalysis>();
@@ -82,7 +83,7 @@ public sealed class SemanticGraph
         {
             graph.Check();
             var scope = new Scope(doc, doc.Document.Id);
-            graph.Process(scope);
+            graph.Process(scope, registeredModules?.Invoke(doc.Document.Id));
         }
         graph.BindNamespacePrefixes();
         return graph;
@@ -101,11 +102,19 @@ public sealed class SemanticGraph
         }
     }
     private static string PathKey(string id) => id.Replace('\\', '/');
-    private bool Process(Scope scope)
+    private bool Process(Scope scope, IReadOnlyList<string>? registered = null)
     {
         if (!loading.Add(PathKey(scope.Doc.Document.Id))) return false;
         try
         {
+            if (registered != null)
+                foreach (var group in registered.GroupBy(name => name, DeclarationRules.ModuleComparer))
+                {
+                    var name = group.Key;
+                    var (_, reason) = LoadModule(scope, name);
+                    if (group.Count() > 1 || reason.Length > 0)
+                    { scope.BlockedRegistrations.Add(name); scope.ImportFailure = true; }
+                }
             if (scope.Doc.SyntaxTree != null) Collect(scope, scope.Doc.SyntaxTree, "");
             Bind(scope);
             foreach (var instance in symbols.Where(s => s.Kind == "instance" && ReferenceEquals(s.Scope.Registry, scope.Registry)))
@@ -310,41 +319,7 @@ public sealed class SemanticGraph
         if (!Reliable(scope, context)) return;
         var names = context.STRING();
         var name = names[0].GetText();
-        scope.Registry.TryGetValue(name, out var module);
-        var reason = "";
-        if (module == null)
-        {
-            Check();
-            var imported = resolveImport(scope.Doc.Document.Id, name);
-            if (imported == null) reason = "Import target unavailable: " + name + ".fsm (requires the actual importing document directory or explicit host mapping).";
-            else
-            {
-                var key = PathKey(imported.Document.Id);
-                if (!documents.TryGetValue(key, out var actual)) documents.Add(key, actual = imported);
-                if (loading.Contains(key)) reason = "Circular import: " + name;
-                else
-                {
-                    var importedScope = new Scope(actual, actual.Document.Id, scope.Registry, scope.BlockedRegistrations);
-                    if (!Process(importedScope)) reason = "Import dependency is missing, damaged or cyclic: " + name;
-                    scope.Registry.TryGetValue(name, out module);
-                    if (module == null && reason.Length == 0)
-                    {
-                        // Runtime registration also accepts a plain script as a file-backed template.
-                        // With no interface declarations it exposes no public Inputs or Outputs.
-                        var sourceId = key + ":file-template:" + name.ToUpperInvariant();
-                        if (!moduleSources.TryGetValue(sourceId, out module))
-                        {
-                            module = new Symbol("module", name, importedScope) { Body = importedScope };
-                            symbols.Add(module);
-                            moduleSources.Add(sourceId, module);
-                            importedScope.Module = module;
-                            Add(module, importedScope, new SourceSpan(0, 0), "fileTarget");
-                        }
-                        scope.Registry[name] = module;
-                    }
-                }
-            }
-        }
+        var (module, reason) = LoadModule(scope, name);
         if (reason.Length > 0 || module?.Invalid == true || scope.BlockedRegistrations.Contains(name))
         {
             scope.ImportFailure = true;
@@ -364,6 +339,31 @@ public sealed class SemanticGraph
         if (scope.Registry.TryGetValue(alias.Name, out var existing) && (existing.Kind == "alias" ? existing.Template : existing) != targetModule)
         { scope.BlockedRegistrations.Add(alias.Name); alias.Invalid = true; }
         scope.Registry[alias.Name] = alias;
+    }
+    private (Symbol? Module, string Reason) LoadModule(Scope scope, string name)
+    {
+        if (scope.Registry.TryGetValue(name, out var known)) return (known, "");
+        Check();
+        var imported = resolveImport(scope.Doc.Document.Id, name);
+        if (imported == null) return (null, "Import target unavailable: " + name + ".fsm (requires the actual importing document directory or explicit host mapping).");
+        var key = PathKey(imported.Document.Id);
+        if (!documents.TryGetValue(key, out var actual)) documents.Add(key, actual = imported);
+        if (loading.Contains(key)) return (null, "Circular import: " + name);
+        var importedScope = new Scope(actual, actual.Document.Id, scope.Registry, scope.BlockedRegistrations);
+        if (!Process(importedScope)) return (null, "Import dependency is missing, damaged or cyclic: " + name);
+        if (scope.Registry.TryGetValue(name, out var module)) return (module, "");
+        // Runtime registration also accepts a plain script as a file-backed template.
+        var sourceId = key + ":file-template:" + name.ToUpperInvariant();
+        if (!moduleSources.TryGetValue(sourceId, out module))
+        {
+            module = new Symbol("module", name, importedScope) { Body = importedScope };
+            symbols.Add(module);
+            moduleSources.Add(sourceId, module);
+            importedScope.Module = module;
+            Add(module, importedScope, new SourceSpan(0, 0), "fileTarget");
+        }
+        scope.Registry[name] = module;
+        return (module, "");
     }
     private void DefineModule(Scope parent, P.Module_statementContext context)
     {

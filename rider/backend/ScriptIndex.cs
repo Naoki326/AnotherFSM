@@ -44,9 +44,12 @@ public sealed class ScriptIndex
         });
     }
     private static bool ScriptChanged(FileSystemChangeDelta delta) =>
-        (!delta.OldPath.IsEmpty && ScriptDocuments.IsScriptName(delta.OldPath.Name))
-        || (!delta.NewPath.IsEmpty && ScriptDocuments.IsScriptName(delta.NewPath.Name))
+        (!delta.OldPath.IsEmpty && IsRelevant(delta.OldPath.Name))
+        || (!delta.NewPath.IsEmpty && IsRelevant(delta.NewPath.Name))
         || delta.Children.Any(ScriptChanged);
+
+    private static bool IsRelevant(string name) => ScriptDocuments.IsScriptName(name)
+        || StringComparer.OrdinalIgnoreCase.Equals(name, "anotherfsm.json");
 
     private void OnPsiChanged(JetBrains.ReSharper.Psi.Tree.ITreeNode? node, PsiChangedElementType kind)
     {

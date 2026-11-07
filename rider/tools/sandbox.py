@@ -137,9 +137,9 @@ def installed_hashes() -> dict[str, str]:
     return result
 
 
-def launch_arguments(home: Path, launch: dict) -> list[str]:
-    if not FIXTURE.is_file():
-        raise ValueError(f"Original repository fixture is missing: {FIXTURE}")
+def launch_arguments(home: Path, launch: dict, fixture: Path = FIXTURE) -> list[str]:
+    if not fixture.is_file():
+        raise ValueError(f"Original repository fixture is missing: {fixture}")
     for path in (BOX / "config", BOX / "system", BOX / "plugins", IDE_LOG):
         no_links(path)
         path.mkdir(parents=True, exist_ok=True)
@@ -170,7 +170,7 @@ def launch_arguments(home: Path, launch: dict) -> list[str]:
     for path in (home / launch["javaExecutablePath"], *boot):
         if not path.is_file():
             raise ValueError(f"Missing installed host launch input: {path}")
-    return [*vm, "-cp", ";".join(p.as_posix() for p in boot), launch["mainClass"], FIXTURE.as_posix()]
+    return [*vm, "-cp", ";".join(p.as_posix() for p in boot), launch["mainClass"], fixture.as_posix()]
 
 
 def disable_sync() -> None:
@@ -221,7 +221,7 @@ def prepare(source: Path, home: Path, launch: dict, logs: Path) -> None:
     print("Daily Rider untouched. Settings Sync disabled; do not import settings or sign in for sync.")
 
 
-def launch_sandbox(home: Path, launch: dict, logs: Path, acceptance: bool = False) -> None:
+def launch_sandbox(home: Path, launch: dict, logs: Path, acceptance: bool = False, complex_contexts: bool = False) -> None:
     if os.name != "nt":
         raise ValueError("Run with native Windows Python to record the actual Windows Java PID")
     with operation():
@@ -234,9 +234,13 @@ def launch_sandbox(home: Path, launch: dict, logs: Path, acceptance: bool = Fals
         if not (BOX / "plugins" / PLUGIN).is_dir() or installed_hashes() != state.get("installedSha256"):
             raise ValueError("Prepared plugin was removed/changed; refusing launch")
         disable_sync()
-        arguments = launch_arguments(home, launch)
+        fixture = ROOT / "rider/fixtures/Complex/Complex.sln" if complex_contexts else FIXTURE
+        if complex_contexts and not acceptance:
+            raise ValueError("Complex contexts require the explicit controlled acceptance mode")
+        arguments = launch_arguments(home, launch, fixture)
         environment = clean_environment()
         environment.pop("ANOTHERFSM_ACCEPTANCE_DIR", None)
+        environment.pop("ANOTHERFSM_COMPLEX_EXECUTION_MARKER", None)
         if acceptance:
             observer = BOX / "plugins/anotherfsm-acceptance"
             if not (observer / "lib/acceptance.jar").is_file():
@@ -244,9 +248,13 @@ def launch_sandbox(home: Path, launch: dict, logs: Path, acceptance: bool = Fals
             evidence = logs / "acceptance"
             evidence.mkdir()
             properties = ["-Danotherfsm.acceptance=true", "-Danotherfsm.transportReconnectAcceptance=true", "-Danotherfsm.acceptance.dir=" + evidence.as_posix(),
-                          "-Danotherfsm.fixture.root=" + FIXTURE.parent.as_posix()]
+                          "-Danotherfsm.fixture.root=" + fixture.parent.as_posix()]
+            if complex_contexts:
+                properties.append("-Danotherfsm.complexAcceptance=true")
             arguments = properties + arguments
             environment["ANOTHERFSM_ACCEPTANCE_DIR"] = str(evidence)
+            if complex_contexts:
+                environment["ANOTHERFSM_COMPLEX_EXECUTION_MARKER"] = str(evidence / 'complex-business-execution.marker')
         args_file = logs / "launch.args"
         args_file.write_text(argfile(arguments), encoding="utf-8")
         command = [str(home / launch["javaExecutablePath"]), "@" + str(args_file)]
@@ -255,9 +263,9 @@ def launch_sandbox(home: Path, launch: dict, logs: Path, acceptance: bool = Fals
                   "jbrRelease": (home / "jbr/release").read_text(encoding="utf-8"),
                   "command": command, "windowsCommandLine": subprocess.list2cmdline(command),
                   "expandedArguments": arguments, "argfileSha256": digest(args_file.read_bytes()),
-                  "cwd": str(BOX), "fixture": str(FIXTURE), "zipSha256": state["zipSha256"],
+                  "cwd": str(BOX), "fixture": str(fixture), "zipSha256": state["zipSha256"],
                   "stdout": str(logs / "stdout.log"), "stderr": str(logs / "stderr.log"),
-                  "ideLog": str(IDE_LOG)}
+                  "ideLog": str(IDE_LOG), "complexExecutionMarker": environment.get("ANOTHERFSM_COMPLEX_EXECUTION_MARKER")}
         (logs / "command.json").write_text(json.dumps(record, indent=2), encoding="utf-8")
         # Inherit no JVM/property injection. Never use rider64.exe (daily instance routing).
         with (logs / "stdout.log").open("xb") as stdout, (logs / "stderr.log").open("xb") as stderr:
@@ -282,7 +290,10 @@ def main() -> int:
     parser.add_argument("--rider-home", type=Path, default=Path(os.environ.get("RIDER_HOME", str(DEFAULT_RIDER))))
     parser.add_argument("--zip", type=Path, default=DEFAULT_ZIP, help="prepare input ZIP (run uses the prepared installation)")
     parser.add_argument("--acceptance", action="store_true", help="run only: enable the separate controlled-fixture test plugin")
+    parser.add_argument('--complex', action='store_true', help='run --acceptance only: controlled complex-context solution')
     args = parser.parse_args()
+    if args.complex and (args.action != "run" or not args.acceptance):
+        parser.error('--complex requires run --acceptance')
     if args.action == "run" and args.zip != DEFAULT_ZIP:
         parser.error("--zip applies only to prepare")
     if args.action == "prepare" and args.acceptance:
@@ -293,7 +304,7 @@ def main() -> int:
         if args.action == "prepare":
             prepare(args.zip, home, launch, logs)
         else:
-            launch_sandbox(home, launch, logs, args.acceptance)
+            launch_sandbox(home, launch, logs, args.acceptance, args.complex)
     except (OSError, ValueError, RuntimeError, KeyError, zipfile.BadZipFile, ET.ParseError) as error:
         (logs / "error.log").write_text(str(error) + "\n", encoding="utf-8")
         print(f"ERROR: {error}\nLogs: {logs}", file=sys.stderr)

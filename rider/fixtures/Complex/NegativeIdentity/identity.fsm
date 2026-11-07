@@ -1,0 +1,5 @@
+def ControlEntry(IdentityControlKey) {}
+// Same namespace/type spelling does not establish contract/attribute identity.
+def ForeignAttributeEntry(ForeignAttributeKey) {}
+def ForeignInterfaceEntry(ForeignInterfaceKey) {}
+def ForeignPairEntry(ForeignPairKey) {}

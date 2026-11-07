@@ -1,0 +1,10 @@
+// Node identifier, factory Key, and C# type spelling deliberately differ for all four origins.
+def CurrentEntry(CurrentHostKey) {}
+def ProjectEntry(ProjectLookupKey) {}
+def BinaryEntry(HostDllKey) {}
+def PackageEntry(LocalPackageKey) {}
+def NestedEntry(NestedLookupKey) {}
+def ConstructedEntry(ClosedBufferKey) {}
+def AliasEntry(NamedOverrideKey) {}
+def LeftEntry(LeftAssemblyKey) {}
+def RightEntry(RightAssemblyKey) {}

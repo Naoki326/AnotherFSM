@@ -1,0 +1,4 @@
+def FrameworkEntry(FrameworkBindingKey) {}
+// Each of these is positive only for its matching TFM; unresolved in the other.
+def EightEntry(Net8OnlyKey) {}
+def TenEntry(Net10OnlyKey) {}

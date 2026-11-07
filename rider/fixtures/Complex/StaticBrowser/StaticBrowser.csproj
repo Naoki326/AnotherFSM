@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework><IsPackable>false</IsPackable></PropertyGroup>
+  <ItemGroup>
+    <SupportedPlatform Include="browser" />
+    <ProjectReference Include="../StaticContract/StaticContract.csproj" />
+    <Content Include="wwwroot/index.html" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <!-- No browser-wasm RID, Blazor SDK, runtime pack, workload, publish or executable entry point. -->
+</Project>
