@@ -27,7 +27,7 @@ SUITES = {
 }
 
 
-CASES = {"legacy": ("all",), "complex": ("all", "generic-native", "configuration", "source-matrix"),
+CASES = {"legacy": ("all",), "complex": ("all", "generic-native", "configuration", "source-matrix", "index-invalidation"),
          "boundary": ("all",), "source": ("all",)}
 
 

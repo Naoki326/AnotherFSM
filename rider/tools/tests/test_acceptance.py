@@ -177,7 +177,7 @@ class AcceptanceCliTests(unittest.TestCase):
         result = subprocess.run([sys.executable, str(RUNNER), "cases", "--suite", "complex"],
                                 text=True, capture_output=True, timeout=10)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertEqual(json.loads(result.stdout)["cases"], ["all", "generic-native", "configuration", "source-matrix"])
+        self.assertEqual(json.loads(result.stdout)["cases"], ["all", "generic-native", "configuration", "source-matrix", "index-invalidation"])
         with tempfile.TemporaryDirectory() as temporary:
             box = Path(temporary)
             self.prepared(box)
@@ -200,12 +200,12 @@ class AcceptanceCliTests(unittest.TestCase):
             self.prepared(box, "complex")
             jar = box / "plugins/anotherfsm-acceptance/lib/acceptance.jar"
             before = jar.read_bytes()
-            result = subprocess.run([sys.executable, str(RUNNER), "select", "--suite", "complex", "--case", "generic-native", "--sandbox", str(box)],
+            result = subprocess.run([sys.executable, str(RUNNER), "select", "--suite", "complex", "--case", "index-invalidation", "--sandbox", str(box)],
                                     text=True, capture_output=True, timeout=10)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertEqual(json.loads(result.stdout)["status"], "selected")
             self.assertEqual(before, jar.read_bytes())
-            result = self.cli(box, "complex", ["--case", "generic-native"])
+            result = self.cli(box, "complex", ["--case", "index-invalidation"])
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertFalse((box / "launcher.json").exists())
 

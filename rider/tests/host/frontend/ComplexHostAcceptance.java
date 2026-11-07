@@ -1,6 +1,13 @@
 package anotherfsm.acceptance;
 
 import anotherfsm.BackendConnection;
+import anotherfsm.SemanticUi;
+import anotherfsm.UiDiagnostics;
+import com.jetbrains.rider.protocol.ApplicationProtocolKt;
+import com.jetbrains.rider.protocol.IProtocolHostWithBackend;
+import com.jetbrains.rider.protocol.DelayedServerWire;
+import com.jetbrains.rd.framework.SocketWire;
+import java.net.Socket;
 import com.google.gson.*;
 import com.intellij.ide.DataManager;
 import com.intellij.notification.Notification;
@@ -75,6 +82,7 @@ public final class ComplexHostAcceptance implements StartupActivity.DumbAware {
     boolean createdConfiguration,aliasConfigured,isolationChecked;String originalConfiguration;VirtualFile configurationFile;
     Document pendingConfigurationDocument;String pendingConfigurationText;long pendingConfigurationAt;
     final List<Place> readiness=new ArrayList<>();final List<String> readinessStatuses=new ArrayList<>();
+    long diagnosticSequence;String diagnosticRequest;Socket disconnectedSocket;long diagnosticBackendPid;
 
     Journey(Project project) {
       this.project=project;
@@ -233,7 +241,10 @@ public final class ComplexHostAcceptance implements StartupActivity.DumbAware {
     }
     void editBuffer(String relative,UnaryOperator<String> change) {
       var editing=FileEditorManager.getInstance(project).openTextEditor(new OpenFileDescriptor(project,file(relative),0),true);
-      require(editing!=null,"No real editor for buffer edit: "+relative);var document=doc(relative);String next=change.apply(document.getText());
+      require(editing!=null,"No real editor for buffer edit: "+relative);editBufferWithoutFocus(relative,change);
+    }
+    void editBufferWithoutFocus(String relative,UnaryOperator<String> change) {
+      var document=doc(relative);String next=change.apply(document.getText());
       require(!next.equals(document.getText()),"No-op fixture edit: "+relative);
       if(!edited.containsKey(document))require(document.getText().equals(originals.get(document))&&!FileDocumentManager.getInstance().isDocumentUnsaved(document),"Refusing to overwrite pre-existing unsaved buffer: "+relative);
       var versions=ownedVersions.computeIfAbsent(document,ignored -> new HashSet<>());versions.add(next);
@@ -346,7 +357,7 @@ public final class ComplexHostAcceptance implements StartupActivity.DumbAware {
     }
 
     void specifyFocused() {
-      require(Set.of("generic-native","configuration","source-matrix").contains(caseId),"Unknown independent case: "+caseId);
+      require(Set.of("generic-native","configuration","source-matrix","index-invalidation").contains(caseId),"Unknown independent case: "+caseId);
       if(caseId.equals("source-matrix"))readiness.add(key("../SharedComplex/source-matrix.fsm","MatrixCurrentEntry","MatrixCurrentKey"));
       else readiness.addAll(List.of(key("HostA/sources.fsm","CurrentEntry","CurrentHostKey"),key("ProjectNodes/library.fsm","LibraryEntry","ProjectLookupKey")));
       for(var ignored:readiness)readinessStatuses.add("readiness only");
@@ -354,7 +365,8 @@ public final class ComplexHostAcceptance implements StartupActivity.DumbAware {
         require(Files.isRegularFile(root.resolve("Complex.sln")),"Wrong controlled fixture");checkSentinel();
         record("independent-case-scope",Map.of("case",caseId,"fullMatrixRun",false));
       },() -> {if(!verifySandbox())return false;probeReadiness();return readinessIndex==readiness.size()&&sdkFinished();},90_000));
-      if(caseId.equals("configuration"))configurationCases();
+      if(caseId.equals("index-invalidation"))indexInvalidationCases();
+      else if(caseId.equals("configuration"))configurationCases();
       else if(caseId.equals("source-matrix"))sourceMatrixCases();
       else {
         var from=key("HostA/sources.fsm","CurrentEntry","CurrentHostKey");
@@ -366,6 +378,97 @@ public final class ComplexHostAcceptance implements StartupActivity.DumbAware {
         once("restore independent generic input",() -> cleanupConfiguration());
       }
       once("record independent case completion, not whole-support-matrix pass",() -> capture("case-"+caseId+".png"));
+    }
+
+    List<UiDiagnostics.Entry> uiDiagnostics() {
+      var ui=project.getServiceIfCreated(SemanticUi.class);
+      require(ui!=null,"Formal action has not created SemanticUi");return ui.diagnosticRecords();
+    }
+    JsonObject indexDiagnostics() {
+      try {
+        var path=output.resolve("index-diagnostics.json");if(!Files.isRegularFile(path))return null;
+        var report=JsonParser.parseString(Files.readString(path)).getAsJsonObject();var nativeSample=observer();
+        if(nativeSample==null||report.get("backendPid").getAsLong()!=nativeSample.get("backendPid").getAsLong())return null;
+        require(report.get("runId").getAsString().equals(System.getProperty("anotherfsm.acceptance.runId")),"Diagnostic run identity mismatch");
+        return report;
+      }catch(java.io.IOException|JsonParseException retry){return null;}
+    }
+    void diagnosticChooser(String name) {
+      var shared=key("../SharedComplex/dual-host.fsm","SharedEntry","SharedHostKey");
+      step(name,() -> {open(shared);action(IMPL);},() -> {
+        for(var window:Window.getWindows())if(window.isShowing())for(var child:tree(window))
+          if(child instanceof JList<?> list&&list.isShowing()) {
+            var labels=model(list);
+            if(labels.size()==2&&labels.stream().anyMatch(label -> label.contains("HostA.csproj"))&&labels.stream().anyMatch(label -> label.contains("HostB.csproj"))) {
+              var accepted=uiDiagnostics().stream().filter(entry -> entry.cause()==UiDiagnostics.Cause.REPLY_ACCEPTED).reduce((a,b) -> b).orElseThrow();
+              diagnosticRequest=accepted.requestId();record("diagnostic-live-host-choice",Map.of("requestId",diagnosticRequest,"labels",labels));return true;
+            }
+          }
+        return false;
+      });
+    }
+    boolean cancelled(UiDiagnostics.Cause cause) {
+      var records=uiDiagnostics().stream().filter(entry -> entry.requestId().equals(diagnosticRequest)&&entry.cause()==cause).toList();
+      if(records.isEmpty())return false;
+      require(records.size()==1&&records.get(0).stage()==UiDiagnostics.Stage.HOST_CHOICE,"Cancellation lost actual popup stage or was duplicated");
+      record("actual-UI-cancellation",records);return true;
+    }
+    Socket projectSocket() {
+      var host=ApplicationProtocolKt.getProtocolHostIfExists(project);if(host==null)return null;
+      var wire=host.getProtocol().getWire();
+      if(wire instanceof DelayedServerWire delayed)return delayed.getRealWire().getSocketProvider().getValueOrNull();
+      if(wire instanceof SocketWire.Base base)return base.getSocketProvider().getValueOrNull();
+      return null;
+    }
+    void indexInvalidationCases() {
+      step("SDK cache-only timestamp change keeps native occurrence valid",() -> {},() -> {
+        try {
+          var path=output.resolve("complex-index-invalidation.json");if(!Files.isRegularFile(path))return false;
+          var report=JsonParser.parseString(Files.readString(path)).getAsJsonObject();
+          require(!report.get("status").getAsString().equals("failed"),"SDK cache-only regression failed: "+report);
+          if(!report.get("status").getAsString().equals("passed"))return false;
+          var sample=observer();if(sample==null||sample.get("backendPid").getAsLong()!=report.get("backendPid").getAsLong())return false;
+          require(report.get("runId").getAsString().equals(System.getProperty("anotherfsm.acceptance.runId")),"Cache-only report run mismatch");
+          record("real-SDK-cache-only-diagnostics",report);return true;
+        }catch(java.io.IOException|JsonParseException retry){return false;}
+      });
+      references("retain real result page before C# edit",at("HostA/sources.fsm","def CurrentEntry(CurrentHostKey)","CurrentEntry"),0,labels -> true);
+      diagnosticChooser("formal action holds a real consuming-host chooser before edit");
+      step("real C# buffer edit expires results and records actual request cancellation",() -> {
+        var report=indexDiagnostics();require(report!=null,"No index diagnostic snapshot before edit");diagnosticSequence=0;
+        for(var value:report.getAsJsonArray("records"))diagnosticSequence=Math.max(diagnosticSequence,value.getAsJsonObject().get("sequence").getAsLong());
+        editBufferWithoutFocus("HostA/Nodes.cs",text -> text+"\n// acceptance diagnostic input change\n");
+      },() -> {
+        if(!expired(current)||!cancelled(UiDiagnostics.Cause.DOCUMENT_CHANGED))return false;
+        var report=indexDiagnostics();if(report==null)return false;
+        for(var value:report.getAsJsonArray("records")) {
+          var entry=value.getAsJsonObject();if(entry.get("sequence").getAsLong()<=diagnosticSequence||!entry.get("cause").getAsString().equals("ActualTextChange"))continue;
+          var before=entry.getAsJsonObject("before");var after=entry.getAsJsonObject("after");
+          require(entry.get("inputChanged").getAsBoolean()&&after.get("epoch").getAsLong()>before.get("epoch").getAsLong()
+              &&!before.get("inputSummary").equals(after.get("inputSummary")),"Actual C# input change missing diagnostic state transition");
+          record("actual-CSharp-input-diagnostic",entry);capture("index-text-change.png");return true;
+        }return false;
+      });
+      step("restore real C# input and await committed readiness",() -> {restore("HostA/Nodes.cs");readinessIndex=0;},() -> {probeReadiness();return readinessIndex==readiness.size();});
+      diagnosticChooser("formal action holds a real host chooser before transport disconnect");
+      once("close only this JVM's verified live loopback backend transport",() -> {
+        var host=ApplicationProtocolKt.getProtocolHostIfExists(project);
+        require(host instanceof IProtocolHostWithBackend,"No actual backend host");
+        diagnosticBackendPid=((IProtocolHostWithBackend)host).getResharperProcess().getBackendPid();
+        var process=ProcessHandle.of(diagnosticBackendPid).orElseThrow();
+        require(process.parent().map(parent -> parent.pid()==ProcessHandle.current().pid()).orElse(false),"Backend is not this JVM's direct child");
+        disconnectedSocket=projectSocket();require(disconnectedSocket!=null&&!disconnectedSocket.isClosed()
+            &&disconnectedSocket.getInetAddress().isLoopbackAddress()&&disconnectedSocket.getLocalAddress().isLoopbackAddress(),"Not a live owned loopback transport");
+        try {disconnectedSocket.close();}catch(java.io.IOException failure){throw new IllegalStateException(failure);}
+        require(disconnectedSocket.isClosed(),"Socket close did not take effect");
+      });
+      steps.add(new Step("actual transport cancellation and automatic same-backend reconnection",() -> {},() -> {
+        if(!cancelled(UiDiagnostics.Cause.TRANSPORT_CHANGED))return false;
+        var host=ApplicationProtocolKt.getProtocolHostIfExists(project);var socket=projectSocket();
+        if(!(host instanceof IProtocolHostWithBackend backend)||backend.getResharperProcess().getBackendPid()!=diagnosticBackendPid
+            ||!Boolean.TRUE.equals(host.getProtocol().getWire().getConnected().getValue())||socket==null||socket==disconnectedSocket||socket.isClosed())return false;
+        record("verified-transport-reconnected",Map.of("backendPid",diagnosticBackendPid,"sameBackend",true));return true;
+      },60_000));
     }
 
     void sourceMatrixCases() {

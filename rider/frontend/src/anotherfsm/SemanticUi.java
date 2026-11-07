@@ -38,6 +38,8 @@ public final class SemanticUi implements Disposable {
   private String session;
   private long context=-1;
   private boolean disposed;
+  private final UiDiagnostics diagnostics=new UiDiagnostics(256);
+  public java.util.List<UiDiagnostics.Entry> diagnosticRecords(){return diagnostics.snapshot();}
 
   private static final class Origin implements Disposable {
     final Document document;final String path,action,operation;final boolean implementation;final RangeMarker anchor;
@@ -52,6 +54,7 @@ public final class SemanticUi implements Disposable {
     final Origin origin;final String text,id=UUID.randomUUID().toString();final long version;final int offset;
     final JsonObject envelope=new JsonObject();Disposable request;ScheduledFuture<?> timeout;boolean done;
     JBPopup popup;String resultSession;long resultEpoch=-1;
+    UiDiagnostics.Stage stage=UiDiagnostics.Stage.RESOLVE;
     Ticket(Origin origin) {
       this.origin=origin;text=origin.document.getText();version=origin.document.getModificationStamp();offset=origin.anchor.getStartOffset();
       envelope.addProperty("action",origin.action);envelope.addProperty("operation",origin.operation);
@@ -85,7 +88,7 @@ public final class SemanticUi implements Disposable {
           if(!live()||!relevantChange(changed))return;
           // A dependency buffer can change while the originating buffer is unchanged. Cancel local
           // in-flight operations immediately; do not wait for a later backend invalidation packet.
-          for(var ticket:new ArrayList<>(requests))finish(ticket);
+          for(var ticket:new ArrayList<>(requests))finish(ticket,UiDiagnostics.Cause.DOCUMENT_CHANGED);
           // Conservative invalidation is deliberate: a changed import/template may affect any open query.
           for(var page:pages)page.expire();
         };
@@ -93,7 +96,7 @@ public final class SemanticUi implements Disposable {
       }
     },this);
     EditorFactory.getInstance().addEditorFactoryListener(new EditorFactoryListener() {
-      public void editorReleased(EditorFactoryEvent event) {var active=navigation.remove(event.getEditor().getDocument());if(active!=null)finish(active);}
+      public void editorReleased(EditorFactoryEvent event) {var active=navigation.remove(event.getEditor().getDocument());if(active!=null)finish(active,UiDiagnostics.Cause.EDITOR_RELEASED);}
     },this);
   }
   private boolean relevantChange(Document document) {
@@ -112,23 +115,28 @@ public final class SemanticUi implements Disposable {
   }
   private void invalidated(String raw) {
     if(!live())return;
+    var invalidationCause=UiDiagnostics.Cause.INVALIDATION_UNREADABLE;
     try {
       var event=JsonParser.parseString(raw).getAsJsonObject();
-      if(event.has("transportInvalidated"))throw new IllegalStateException("Transport changed");
+      if(event.has("transportInvalidated")){invalidationCause=UiDiagnostics.Cause.TRANSPORT_CHANGED;throw new IllegalStateException("Transport changed");}
       var next=event.get("session").getAsString();long epoch=event.get("contextVersion").getAsLong();
       if(session!=null&&session.equals(next)&&epoch<context)return;
       boolean replaced=session!=null&&!session.equals(next);
       session=next;context=replaced?epoch:Math.max(context,epoch);
       for(var ticket:new ArrayList<>(requests))
-        if(replaced||(ticket.resultEpoch>=0&&(!Objects.equals(ticket.resultSession,session)||ticket.resultEpoch<context)))finish(ticket);
+        if(replaced||(ticket.resultEpoch>=0&&(!Objects.equals(ticket.resultSession,session)||ticket.resultEpoch<context)))finish(ticket,replaced?UiDiagnostics.Cause.CONTEXT_REPLACED:UiDiagnostics.Cause.CONTEXT_INVALIDATED);
       for(var page:pages)if(!Objects.equals(page.session,session)||page.epoch<context)page.expire();
     } catch(RuntimeException failure) {
-      session=null;context=-1;for(var ticket:new ArrayList<>(requests))finish(ticket);for(var page:pages)page.expire();
+      session=null;context=-1;for(var ticket:new ArrayList<>(requests))finish(ticket,invalidationCause);for(var page:pages)page.expire();
     }
   }
   private boolean current(Ticket ticket) {return live()&&!ticket.done&&requests.contains(ticket)&&ticket.sameDocument();}
-  private void finish(Ticket ticket) {
-    if(!requests.remove(ticket))return;ticket.cancel();navigation.remove(ticket.origin.document,ticket);
+  private void observe(Ticket ticket,UiDiagnostics.Cause cause){
+    diagnostics.record(ticket.id,ticket.stage,cause,ticket.origin.document.getModificationStamp(),ticket.resultEpoch,context);
+  }
+  private void finish(Ticket ticket){finish(ticket,UiDiagnostics.Cause.COMPLETED);}
+  private void finish(Ticket ticket,UiDiagnostics.Cause cause) {
+    if(!requests.remove(ticket))return;observe(ticket,cause);ticket.cancel();navigation.remove(ticket.origin.document,ticket);
     if(pages.stream().noneMatch(page -> page.origin==ticket.origin))ticket.origin.dispose();
   }
   private Ticket begin(Origin origin) {
@@ -138,10 +146,17 @@ public final class SemanticUi implements Disposable {
   private void armTimeout(Ticket ticket) {
     if(ticket.timeout!=null)ticket.timeout.cancel(false);
     ticket.timeout=AppExecutorUtil.getAppScheduledExecutorService().schedule(() -> ApplicationManager.getApplication().invokeLater(() -> {
-      if(current(ticket)){finish(ticket);inform("后端分析尚未完成，请稍后重试；没有将分析中视为无符号。");}
+      if(current(ticket)){finish(ticket,UiDiagnostics.Cause.TIMED_OUT);inform("后端分析尚未完成，请稍后重试；没有将分析中视为无符号。");}
     }),15,TimeUnit.SECONDS);
   }
   private void send(Ticket ticket,JsonObject envelope,Consumer<JsonObject> success,Runnable failed) {
+    ticket.stage=switch(envelope.get("action").getAsString()){
+      case "navigateType" -> UiDiagnostics.Stage.NAVIGATE_TYPE;
+      case "validateLocation" -> UiDiagnostics.Stage.VALIDATE_LOCATION;
+      case "references","templateReferences" -> UiDiagnostics.Stage.REFERENCES;
+      default -> UiDiagnostics.Stage.RESOLVE;
+    };
+    observe(ticket,UiDiagnostics.Cause.SUBMITTED);
     ticket.request=BackendConnection.get(project).query(envelope.toString(),raw -> {
       if(!current(ticket))return;
       try {
@@ -150,12 +165,12 @@ public final class SemanticUi implements Disposable {
           throw new IllegalStateException("Reply/document identity mismatch");
         var next=reply.get("session").getAsString();long epoch=reply.get("contextVersion").getAsLong();
         if(session!=null&&(!session.equals(next)||epoch<context))throw new IllegalStateException("Reply context expired");
-        session=next;context=Math.max(context,epoch);ticket.resultSession=next;ticket.resultEpoch=epoch;success.accept(reply);
-      } catch(RuntimeException failure) {LOG.warn("AnotherFSM response rejected",failure);finish(ticket);failed.run();inform("无法确认当前结果，已拒绝导航；请刷新。");}
-    },failure -> {if(current(ticket)){finish(ticket);failed.run();LOG.warn("AnotherFSM request failed",failure);inform("后端不可用或请求已取消；请等待重连后重试。");}});
+        session=next;context=Math.max(context,epoch);ticket.resultSession=next;ticket.resultEpoch=epoch;observe(ticket,UiDiagnostics.Cause.REPLY_ACCEPTED);success.accept(reply);
+      } catch(RuntimeException failure) {LOG.warn("AnotherFSM response rejected",failure);finish(ticket,UiDiagnostics.Cause.REPLY_REJECTED);failed.run();inform("无法确认当前结果，已拒绝导航；请刷新。");}
+    },failure -> {if(current(ticket)){finish(ticket,UiDiagnostics.Cause.REQUEST_FAILED);failed.run();LOG.warn("AnotherFSM request failed",failure);inform("后端不可用或请求已取消；请等待重连后重试。");}});
   }
   public void run(Editor editor,String action,String operation,boolean implementation) {
-    var previous=navigation.remove(editor.getDocument());if(previous!=null)finish(previous);
+    var previous=navigation.remove(editor.getDocument());if(previous!=null)finish(previous,UiDiagnostics.Cause.SUPERSEDED);
     var origin=new Origin(editor,action,operation,implementation);var ticket=begin(origin);if(ticket==null){origin.dispose();return;}
     navigation.put(origin.document,ticket);
     send(ticket,ticket.envelope,reply -> present(ticket,reply),() -> {});
@@ -188,6 +203,7 @@ public final class SemanticUi implements Disposable {
     public String toString() {return value.get("label").getAsString();}
   }
   private void chooseHost(Ticket ticket,JsonObject reply) {
+    ticket.stage=UiDiagnostics.Stage.HOST_CHOICE;
     if(ticket.timeout!=null)ticket.timeout.cancel(false);
     var choices=new ArrayList<HostChoice>();for(var host:reply.getAsJsonArray("hosts"))choices.add(new HostChoice(host.getAsJsonObject()));
     var popup=JBPopupFactory.getInstance().createPopupChooserBuilder(choices).setTitle("选择消费项目 / TFM（仅本次显示）").setRequestFocus(true)
@@ -198,10 +214,11 @@ public final class SemanticUi implements Disposable {
           send(ticket,ticket.envelope,result -> present(ticket,result),() -> {});
         }).createPopup();
     ticket.popup=popup;
-    popup.addListener(new JBPopupListener(){public void onClosed(LightweightWindowEvent event){if(!event.isOk())finish(ticket);}});
+    popup.addListener(new JBPopupListener(){public void onClosed(LightweightWindowEvent event){if(!event.isOk())finish(ticket,UiDiagnostics.Cause.USER_CANCELLED);}});
     popup.showCenteredInCurrentWindow(project);
   }
   private void choose(Ticket ticket,JsonObject reply,java.util.List<Location> choices) {
+    ticket.stage=UiDiagnostics.Stage.SOURCE_CHOICE;
     if(ticket.timeout!=null)ticket.timeout.cancel(false);
     var popup=JBPopupFactory.getInstance().createPopupChooserBuilder(choices)
         .setTitle(reply.get("reason").getAsString()).setRequestFocus(true)
@@ -212,7 +229,7 @@ public final class SemanticUi implements Disposable {
     ticket.popup=popup;
     // Rider closes an accepted popup before invoking its chosen-item callback. Only cancellation
     // ends the ticket here; otherwise onClosed would cancel the very navigation the user accepted.
-    popup.addListener(new JBPopupListener(){public void onClosed(LightweightWindowEvent event){if(!event.isOk())finish(ticket);}});
+    popup.addListener(new JBPopupListener(){public void onClosed(LightweightWindowEvent event){if(!event.isOk())finish(ticket,UiDiagnostics.Cause.USER_CANCELLED);}});
     var file=FileDocumentManager.getInstance().getFile(ticket.origin.document);
     var editor=file==null?null:FileEditorManager.getInstance(project).getSelectedTextEditor();
     if(editor!=null&&editor.getDocument()==ticket.origin.document)popup.showInBestPositionFor(editor);
@@ -270,10 +287,10 @@ public final class SemanticUi implements Disposable {
     }
     void expire() {
       if(closed)return;expired=true;content.setDisplayName("结果已过期 — AnotherFSM");summary.setText("结果已过期，请刷新；旧位置不能导航。");
-      if(active!=null){finish(active);active=null;}
+      if(active!=null){finish(active,UiDiagnostics.Cause.CONTEXT_INVALIDATED);active=null;}
     }
     void refresh() {
-      if(closed)return;if(active!=null)finish(active);summary.setText("分析中（未将分析中当作无引用）…");
+      if(closed)return;if(active!=null)finish(active,UiDiagnostics.Cause.SUPERSEDED);summary.setText("分析中（未将分析中当作无引用）…");
       var ticket=begin(origin);active=ticket;if(ticket==null){expire();return;}
       send(ticket,ticket.envelope,reply -> {
         if(active!=ticket)return;
@@ -285,13 +302,13 @@ public final class SemanticUi implements Disposable {
     void navigate() {
       var location=list.getSelectedValue();if(location==null||closed)return;
       if(expired){inform("结果已过期，请先刷新；没有跳转旧位置。");return;}
-      if(active!=null)finish(active);active=begin(origin);if(active==null){expire();return;}
+      if(active!=null)finish(active,UiDiagnostics.Cause.SUPERSEDED);active=begin(origin);if(active==null){expire();return;}
       validate(active,result,location,this::expire);
     }
-    public void dispose() {if(closed)return;closed=true;pages.remove(this);if(active!=null)finish(active);origin.dispose();model.clear();result=null;}
+    public void dispose() {if(closed)return;closed=true;pages.remove(this);if(active!=null)finish(active,UiDiagnostics.Cause.DISPOSED);origin.dispose();model.clear();result=null;}
   }
   public void dispose() {
-    disposed=true;for(var ticket:new ArrayList<>(requests))finish(ticket);for(var page:new ArrayList<>(pages))page.dispose();navigation.clear();
+    disposed=true;for(var ticket:new ArrayList<>(requests))finish(ticket,UiDiagnostics.Cause.DISPOSED);for(var page:new ArrayList<>(pages))page.dispose();navigation.clear();
   }
   /** Declarative registration keeps tool-window construction inside Rider's UI lifecycle. */
   public static final class Factory implements ToolWindowFactory {

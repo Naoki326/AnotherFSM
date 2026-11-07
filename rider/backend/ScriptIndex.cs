@@ -19,9 +19,18 @@ public sealed class ScriptIndex
 {
     private readonly object gate = new();
     private readonly IPsiServices psi;
+    private readonly IndexDiagnostics diagnostics = new();
+    private IndexState? observedDiagnosticState;
+    private string? diagnosticInputSummary;
+    public IReadOnlyList<IndexDiagnostic> DiagnosticRecords => diagnostics.Snapshot();
+    internal IndexState DiagnosticState { get { lock (gate) return CaptureDiagnosticState(); } }
+    internal IndexDiagnostics.RequestScope BeginDiagnosticRequest(string requestId) => diagnostics.BeginRequest(requestId, DiagnosticState);
     private string? inputSignature;
     private readonly HashSet<string> presentationDocuments = new(StringComparer.OrdinalIgnoreCase);
-    private sealed record TrackedDocument(IDocument Document, string Stamp, string Text);
+    private sealed record TrackedDocument(IDocument Document, string Stamp, string Text)
+    {
+        public string InputSummary { get; } = IndexDiagnostics.Summarize(Text);
+    }
     private readonly Dictionary<string, TrackedDocument> tracked = new(StringComparer.OrdinalIgnoreCase);
     private FsmWorkspace documents = new();
     private sealed record CatalogSnapshot(int PsiTimestamp, IReadOnlyList<NodeType> Types);
@@ -39,24 +48,30 @@ public sealed class ScriptIndex
     public ScriptIndex(Lifetime lifetime, IPsiServices psi, ChangeManager changes)
     {
         this.psi = psi;
+        RecordObservation(IndexDiagnosticCause.SolutionOpened, IndexDiagnosticSource.Lifetime, null);
         changes.Changed.Advise(lifetime, args => {
-            var structural = args.ChangeMap.GetChanges<PsiModuleChange>().Any(change => change.AssemblyChanges.Count > 0
-                || change.ModuleChanges.Count > 0 || change.FileChanges.Any(file => !IsPresentation(file.Item, file.Type)))
-                || args.ChangeMap.GetChanges<ProjectModelChange>().Any(RelevantProjectChange);
+            var moduleStructural = args.ChangeMap.GetChanges<PsiModuleChange>().Any(change => change.AssemblyChanges.Count > 0
+                || change.ModuleChanges.Count > 0 || change.FileChanges.Any(file => !IsPresentation(file.Item, file.Type)));
+            var structural = moduleStructural || args.ChangeMap.GetChanges<ProjectModelChange>().Any(RelevantProjectChange);
             var fileSystem = args.ChangeMap.GetChanges<FileSystemChange>().Any(change => change.Deltas.Any(ScriptChanged));
             if (structural || fileSystem)
-                Invalidate(structural, structural, fileSystem);
+                Invalidate(structural, structural, fileSystem,
+                    structural ? IndexDiagnosticCause.StructureChange : IndexDiagnosticCause.InventoryChange,
+                    moduleStructural ? IndexDiagnosticSource.PsiModuleChange
+                        : structural ? IndexDiagnosticSource.ProjectModelChange : IndexDiagnosticSource.FileSystem);
             else
             {
                 var changed = args.ChangeMap.GetChanges<DocumentChange>().Select(change => change.Document).ToArray();
-                if (changed.Length > 0) RefreshInputs(changed);
+                if (changed.Length > 0) RefreshInputs(IndexDiagnosticSource.DocumentChange, changed);
+                else lock (gate) RecordObservation(observedDiagnosticState?.PsiCacheTimestamp != psi.Files.PsiCacheTimestamp
+                    ? IndexDiagnosticCause.CacheFreshnessOnly : IndexDiagnosticCause.NoBusinessChange, IndexDiagnosticSource.ChangeManager, null);
             }
         });
         psi.Files.AfterPsiChanged += OnPsiChanged;
         lifetime.OnTermination(() => {
             psi.Files.AfterPsiChanged -= OnPsiChanged;
             lock (gate) { closed = true; documents.Dispose(); catalogs.Clear(); tracked.Clear(); presentationDocuments.Clear(); }
-            Invalidate(true);
+            Invalidate(true, cause: IndexDiagnosticCause.SolutionClosed, source: IndexDiagnosticSource.Lifetime);
             Invalidated = null;
         });
     }
@@ -71,18 +86,26 @@ public sealed class ScriptIndex
     private void OnPsiChanged(JetBrains.ReSharper.Psi.Tree.ITreeNode? node, PsiChangedElementType kind)
     {
         var source = node?.GetSourceFile();
-        if (source != null && IsPresentation(source, PsiModuleChange.ChangeType.Modified)) return;
+        if (source != null && IsPresentation(source, PsiModuleChange.ChangeType.Modified))
+        {
+            lock (gate) RecordObservation(IndexDiagnosticCause.CacheFreshnessOnly, IndexDiagnosticSource.PresentationPsi, null);
+            return;
+        }
         // Broad source PSI also describes SDK-generated external views. Check actual business inputs,
         // never the global PSI timestamp; real assembly/module deltas remain unconditional above.
         if (source?.PrimaryPsiLanguage is CSharpLanguage && source.PsiModule.ContainingProjectModule is IProject)
-            RefreshInputs();
+            RefreshInputs(IndexDiagnosticSource.ProjectCSharpPsi);
         else if (node == null)
         {
             // SDK metadata resolution can advance without a project-input change. Never retain
             // a partial symbol scope across that notification. This is cache freshness, not proof
             // that business bindings changed: generated external views must not expire UI results.
             lock (gate) catalogs.Clear();
-            RefreshInputs();
+            RefreshInputs(IndexDiagnosticSource.NullPsi);
+        }
+        else
+        {
+            lock (gate) RecordObservation(IndexDiagnosticCause.CacheFreshnessOnly, IndexDiagnosticSource.OtherPsi, null);
         }
     }
     private bool IsPresentation(IPsiSourceFile file, PsiModuleChange.ChangeType type)
@@ -140,12 +163,14 @@ public sealed class ScriptIndex
             ObjectDisposedException.ThrowIf(closed, this);
             if (tracked.Count >= 1024) { tracked.Clear(); evicted = true; }
             tracked[key] = current;
+            UpdateDiagnosticSummary();
+            RecordObservation(IndexDiagnosticCause.InputTracked, IndexDiagnosticSource.TrackDocument, null);
         }
-        if (evicted) Invalidate(false);
+        if (evicted) Invalidate(false, cause: IndexDiagnosticCause.TrackingEvicted, source: IndexDiagnosticSource.TrackDocument);
     }
-    private void RefreshInputs(IReadOnlyList<IDocument>? changed = null)
+    private void RefreshInputs(IndexDiagnosticSource source, IReadOnlyList<IDocument>? changed = null)
     {
-        bool typesChanged, textChanged = false;
+        bool typesChanged, initialized, textChanged = false;
         string signature;
         try
         {
@@ -163,7 +188,7 @@ public sealed class ScriptIndex
             signature = string.Join("\n", values.Distinct().Order(StringComparer.Ordinal));
         }
         catch (Exception error) when (error is InvalidOperationException or OperationCanceledException)
-        { Invalidate(true); return; }
+        { Invalidate(true, cause: IndexDiagnosticCause.InputObservationFailed, source: source); return; }
         KeyValuePair<string, TrackedDocument>[] watched;
         lock (gate) { if (closed) return; watched = tracked.ToArray(); }
         var updates = new List<(string Key, TrackedDocument Before, TrackedDocument After)>();
@@ -176,14 +201,37 @@ public sealed class ScriptIndex
         lock (gate)
         {
             if (closed) return;
+            initialized = inputSignature != null;
             typesChanged = inputSignature == null || inputSignature != signature; inputSignature = signature;
             foreach (var update in updates)
                 if (tracked.TryGetValue(update.Key, out var current) && ReferenceEquals(current, update.Before))
                 { textChanged |= update.Before.Text != update.After.Text; tracked[update.Key] = update.After; }
+            if (typesChanged || textChanged) UpdateDiagnosticSummary();
+            else RecordObservation(source == IndexDiagnosticSource.NullPsi || observedDiagnosticState?.PsiCacheTimestamp != psi.Files.PsiCacheTimestamp
+                ? IndexDiagnosticCause.CacheFreshnessOnly : IndexDiagnosticCause.NoBusinessChange, source, false);
         }
-        if (typesChanged || textChanged) Invalidate(typesChanged);
+        if (typesChanged || textChanged) Invalidate(typesChanged,
+            cause: !initialized && !textChanged ? IndexDiagnosticCause.InputTracked : IndexDiagnosticCause.ActualTextChange,
+            source: source, inputChanged: initialized || textChanged ? true : null);
     }
-    private void Invalidate(bool typesChanged, bool documentSetChanged = false, bool inventoryChanged = false)
+    // Called only under gate, from existing observations. The source signature contains IDs/hashes;
+    // journal data gets a further digest, including already-tracked DSL/config input, never raw text.
+    private void UpdateDiagnosticSummary() => diagnosticInputSummary = IndexDiagnostics.Summarize(
+        (inputSignature == null ? "unknown" : IndexDiagnostics.Summarize(inputSignature)) + "\n"
+        + string.Join("\n", tracked.OrderBy(pair => pair.Key, StringComparer.Ordinal).Select(pair =>
+            IndexDiagnostics.Summarize(pair.Key) + ":" + pair.Value.InputSummary)));
+    private IndexState CaptureDiagnosticState() => new(epoch, typeVersion, structureVersion, psi.Files.PsiCacheTimestamp, diagnosticInputSummary);
+    private void RecordObservation(IndexDiagnosticCause cause, IndexDiagnosticSource source, bool? inputChanged)
+    {
+        var after = CaptureDiagnosticState();
+        // Before is the last observed index state, retaining SDK stamp transitions which preceded
+        // the notification. Sampling/reading diagnostics never advances this observation baseline.
+        diagnostics.Record(observedDiagnosticState ?? after, after, cause, source, inputChanged);
+        observedDiagnosticState = after;
+    }
+    private void Invalidate(bool typesChanged, bool documentSetChanged = false, bool inventoryChanged = false,
+        IndexDiagnosticCause cause = IndexDiagnosticCause.StructureChange, IndexDiagnosticSource source = IndexDiagnosticSource.ChangeManagerStructure,
+        bool? inputChanged = null)
     {
         lock (gate)
         {
@@ -197,6 +245,7 @@ public sealed class ScriptIndex
                 documents = new FsmWorkspace();
             }
             else documents.InvalidateContext();
+            RecordObservation(cause, source, inputChanged);
         }
         Invalidated?.Invoke();
     }
@@ -236,7 +285,12 @@ public sealed class ScriptIndex
         lock (gate)
         {
             ObjectDisposedException.ThrowIf(closed, this);
-            if (catalogs.TryGetValue(key, out var cached) && cached.PsiTimestamp == timestamp) return cached.Types;
+            var reusable = catalogs.TryGetValue(key, out var cached) && cached.PsiTimestamp == timestamp;
+            RecordObservation(observedDiagnosticState?.PsiCacheTimestamp != timestamp
+                || cached != null && cached.PsiTimestamp != timestamp
+                ? IndexDiagnosticCause.CacheFreshnessOnly : IndexDiagnosticCause.NoBusinessChange,
+                IndexDiagnosticSource.Catalog, null); // Catalog freshness does not inspect business input.
+            if (reusable) return cached!.Types;
             expectedVersion = typeVersion;
         }
         var current = TypeCatalog.Read(module);
@@ -250,6 +304,8 @@ public sealed class ScriptIndex
                 if (catalogs.Count >= 128) catalogs.Clear();
                 catalogs[key] = new(timestamp, current);
             }
+            RecordObservation(timestamp != psi.Files.PsiCacheTimestamp
+                ? IndexDiagnosticCause.CacheFreshnessOnly : IndexDiagnosticCause.NoBusinessChange, IndexDiagnosticSource.Catalog, null);
         }
         return current;
     }

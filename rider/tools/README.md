@@ -61,7 +61,7 @@ python rider/tools/acceptance.py select --suite complex --case configuration
 python rider/tools/acceptance.py run --suite complex --case configuration
 ```
 
-Complex 支持 `generic-native`、`configuration`、`source-matrix`，另有保持原验收的 `all`。每个独立 case 自建所需输入并恢复，只声明自身结果；轻量 SDK `ready` 不冒充全 SDK checks passed。实际泛型场景只执行6步、约28秒，不先重放完整174步。
+Complex 支持 `generic-native`、`configuration`、`source-matrix`、`index-invalidation`，另有保持原验收的 `all`。每个独立 case 自建所需输入并恢复，只声明自身结果；轻量 SDK `ready` 不冒充全 SDK checks passed。实际泛型场景只执行6步、约28秒，不先重放完整174步。
 
 `prepare` 将 product、fixture、observer 分开，产物输入与输出 hash 均匹配才复用；阶段结果在 `acceptance-phases.json`。`--force`/`--no-cache` 强制重做。完整输入包括源码/传递引用/linked文件、props/targets、SDK/JBR/host、包和编译配置；实际子进程不继承动态 `PI_*`，不能一边忽略 fingerprint、一边让 MSBuild 消费它。
 
@@ -69,4 +69,19 @@ Complex 支持 `generic-native`、`configuration`、`source-matrix`，另有保�
 
 **安全限制**：未知构建逻辑保守 miss。Complex 的 global.json 选择和 ILLink/WebAssembly 自定义 package 输入闭包尚未证实，当前 fixture 阶段不会标 cached；不要将该限制写成已消除。需要换 case 时使用 `select`，它先核对已安装 bundle、夹具及依赖未漂移，再仅更新运行选择；它不声称重新构建过，也不替代源码/SDK变化后的 prepare。产品和 observer 阶段能分别复用，不因更换 case 而重编译。
 
-业务失效原因诊断仍是后续顺序改动；当前阶段不声称已经提供业务 epoch 事件流。
+## 结构化失效与取消诊断
+
+产品提供只读 `ScriptIndex.DiagnosticRecords` 与 `SemanticUi.diagnosticRecords()`：分别最多保留 512 / 256 条不可变 plain-data 记录。读取不会提交 PSI、刷新索引或推进业务 epoch；不增加运行时依赖。
+
+- 后端记录事件来源、实际进入的 Submitted / Commit / Resolve / Navigate / Reply 阶段、requestId、前后业务 epoch / type / structure version、PSI cache timestamp、输入摘要及是否变化。相同文本的 cache-only 观察与实际文本变化分开；摘要只有 hash，不保留路径、文档或请求全文。
+- 取消只记录实际观察到的阶段，原因无法直接证明时为 `Unknown`，保留原异常传播，不从 stamp 变化推断取消原因。
+- 前端记录真实请求阶段（含 host/source chooser）、文档版本及结果/当前 epoch，区分 document changed、transport changed、superseded、timeout、reply rejected、用户取消等原因。不保留编辑器、回复 JSON 或文本。
+- observer 导出 `index-diagnostics.json` / `ui-diagnostics.json`，附当前 runId 与进程身份；只读取已存在的产品服务，不为观察创建服务。它们是诊断，不单独充当验收成功报告。
+
+```bash
+python rider/tools/acceptance.py prepare --suite complex --case index-invalidation
+python rider/tools/acceptance.py run --suite complex --case index-invalidation
+dotnet test rider/tests/diagnostics/IndexDiagnostics.Tests.csproj --nologo
+```
+
+独立 `index-invalidation` 通过公共 SDK cache 操作、真实 C# buffer 编辑、正式动作与实际 loopback transport 断连检查业务失效与取消诊断；不伪造事件或读取产品私有字段。真实 Rider 已通过 10 步及 6 项 cache-only 检查，观察到 HOST_CHOICE 阶段的 DOCUMENT_CHANGED / TRANSPORT_CHANGED，同 backend 重连且清理后设置和夹具精确恢复。证据及范围见 [`../evidence/retro-123/README.md`](../evidence/retro-123/README.md)。纯 journal / CLI 测试及编译不等于真实 Rider 场景通过；独立 case 不外推整个 Complex 矩阵。

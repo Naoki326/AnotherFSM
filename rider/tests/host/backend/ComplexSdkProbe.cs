@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using AnotherFSM.Rider;
 using AnotherFSM.Semantics;
 using JetBrains.Application.Parts;
@@ -12,6 +13,7 @@ using JetBrains.ProjectModel;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.Modules;
 using JetBrains.ReSharper.Psi.Caches;
+using JetBrains.ReSharper.Psi.Files;
 using JetBrains.ReSharper.Psi.Impl.Search.Operations;
 using JetBrains.ReSharper.Resources.Shell;
 
@@ -34,6 +36,11 @@ public sealed class ComplexSdkProbe
     private string[] waiting = Array.Empty<string>();
     private readonly string caseId = Environment.GetEnvironmentVariable("ANOTHERFSM_ACCEPTANCE_CASE") ?? "all";
     private static readonly JsonSerializerOptions Json = new() { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+    private static readonly JsonSerializerOptions CacheJson = new(Json) {
+        Converters = { new JsonStringEnumConverter(allowIntegerValues: false) }
+    };
+    private readonly string? runId = Environment.GetEnvironmentVariable("ANOTHERFSM_ACCEPTANCE_RUN_ID");
+    private readonly long backendCreationFileTime = System.Diagnostics.Process.GetCurrentProcess().StartTime.ToUniversalTime().ToFileTimeUtc();
 
     public ComplexSdkProbe(Lifetime lifetime, ISolution solution, IPsiServices psi, ScriptDocuments scripts,
         ScriptIndex index, BindingSettings settings, BridgeQueries bridge)
@@ -54,7 +61,7 @@ public sealed class ComplexSdkProbe
                     CheckMarker();
                     if (caseId != "all")
                     {
-                        FocusedReadiness(psi, modules);
+                        FocusedReadiness(lifetime, psi, scripts, index, modules);
                         return;
                     }
                     var required = new[] { ("HostA", "net8.0", "CurrentHostKey"), ("HostB", "net10.0", "OtherHostOnlyKey"),
@@ -358,7 +365,7 @@ public sealed class ComplexSdkProbe
         catch (Exception error) { failed = true; observations.Add(new { error = error.ToString() }); Report("failed"); }
     }
 
-    private void FocusedReadiness(IPsiServices psi, IEnumerable<IPsiModule> modules)
+    private void FocusedReadiness(Lifetime lifetime, IPsiServices psi, ScriptDocuments scripts, ScriptIndex index, IEnumerable<IPsiModule> modules)
     {
         var values = modules.ToArray();
         var caches = psi.Solution.GetComponent<IPsiCachesState>();
@@ -381,7 +388,154 @@ public sealed class ComplexSdkProbe
                 .Select(alias => new { alias, assembly = ((IAssemblyPsiModule)reference.Module).Assembly.AssemblyName.FullName })).ToArray();
         observations.Add(new { name = "alias-definitions", definitions });
         observations.Add(new { name = "independent-focused-readiness", committed = true, initialUpdate = true, primaryIdle = true });
-        Report("ready"); timer?.Dispose();
+        timer?.Dispose();
+        if (caseId == "index-invalidation")
+        {
+            running = true;
+            // No frontend page/chooser handshake: the independent SDK check must finish before
+            // ready, otherwise a frontend waiting for ready before creating a page would deadlock.
+            _ = CacheOnlyEvidence(lifetime, psi, scripts, index, host);
+        }
+        else Report("ready");
+    }
+
+    private sealed record CacheOccurrence(int Ordinal, string? RuntimeType, bool Valid, string File, int Start, int Length, string Text, string Display);
+
+    private async Task CacheOnlyEvidence(Lifetime lifetime, IPsiServices psi, ScriptDocuments scripts, ScriptIndex index, IPsiModule host)
+    {
+        var cacheChecks = new List<object>();
+        var evidence = new List<object>();
+        var cacheFailed = false;
+        void Assert(string name, bool passed, object detail)
+        { cacheFailed |= !passed; cacheChecks.Add(new { name, status = passed ? "passed" : "failed", detail }); }
+        void ReportCache(string status, string? error = null)
+        {
+            if (directory == null) return;
+            try
+            {
+                var target = Path.Combine(directory, "complex-index-invalidation.json");
+                var temporary = target + $".{Environment.ProcessId}.{backendCreationFileTime}.tmp";
+                Directory.CreateDirectory(directory);
+                File.WriteAllText(temporary, JsonSerializer.Serialize(new {
+                    runId, backendPid = Environment.ProcessId, backendCreationFileTime, @case = caseId,
+                    status, phase = status == "running" ? "cache-only" : "cache-only-complete",
+                    elapsedMs = (DateTime.UtcNow - started).TotalMilliseconds,
+                    scope = "SDK cache-only check; not frontend edit/cancellation acceptance",
+                    checks = cacheChecks, observations = evidence, error,
+                    cleanup = "No text/disk/settings changes or new page; one monotonic SDK cache stamp increment, scoped to this runner-owned solution/backend"
+                }, CacheJson));
+                File.Move(temporary, target, true);
+            }
+            catch (Exception failure) { Console.Error.WriteLine("ComplexSdkProbe cache report failure: " + failure); }
+        }
+        try
+        {
+            using var scope = new LifetimeDefinition(lifetime);
+            var bounded = scope.Lifetime.CreateTerminatedAfter(TimeSpan.FromSeconds(30));
+            ReportCache("running");
+            // Already under the host read lock, with committed/initialized/idle PSI. Binding is
+            // an assertion here, never a readiness gate or reason to wait indefinitely.
+            var source = host.SourceFiles.Single(file => file.IsValid()
+                && ScriptDocuments.Id(file).EndsWith("/Complex/HostA/Nodes.cs", StringComparison.OrdinalIgnoreCase));
+            var tree = psi.Files.GetPsiFiles(source, source.PrimaryPsiLanguage, PsiLanguageCategories.Primary).Single();
+            if (!tree.IsValid() || !tree.IsPhysical() || tree.GetSourceFile() != source)
+                throw new InvalidOperationException("HostA physical project C# tree unavailable");
+            var target = psi.Symbols.GetSymbolScope(host, true, true).GetTypeElementsByCLRName("Issue34.HostA.InvoiceWorker")
+                .Single(type => type.Module.GetPersistentID() == host.GetPersistentID());
+            var script = scripts.Roots(host).Single(file => ScriptDocuments.Id(file).EndsWith("/HostA/sources.fsm", StringComparison.OrdinalIgnoreCase));
+            var collector = new Collector();
+            psi.SingleThreadedFinder.FindReferences(target, psi.SearchDomainFactory.CreateSearchDomain(script), collector, NullProgressIndicator.Create());
+            // These exact occurrences survive the increment: no reconstruction, fake event or epoch write.
+            var rows = collector.Snapshot().Select(result => new FsmOccurrenceProvider().MakeOccurrence(result)).OfType<RangeOccurrence>().ToArray();
+            if (rows.Length == 0 || rows.Any(row => !((IOccurrence)row).IsValid))
+                throw new InvalidOperationException("Real restricted Finder did not produce valid existing FSM occurrences");
+            var preparedEpoch = index.Epoch;
+            if (!bounded.IsAlive) throw new OperationCanceledException("Cache-only preparation deadline expired");
+            // SDK IShellLocksEx: queues until current readers exit, then main-thread write lock.
+            // Never synchronously upgrade this read lock. timeoutToInterrupt is NOT the deadline;
+            // the child lifetime + WaitAsync bound the queued action and prevent late side effects.
+            await psi.Solution.Locks.ExecuteOrQueueWriteLockAsyncEx(bounded, () => {
+                if (!bounded.IsAlive) throw new OperationCanceledException();
+                psi.Solution.Locks.AssertMainThread();
+                psi.Solution.Locks.AssertWriteAccessAllowed();
+                var caches = psi.Solution.GetComponent<IPsiCachesState>();
+                if (!psi.Files.AllDocumentsAreCommitted || !caches.IsInitialUpdateFinished.Value || !caches.IsPrimaryIdle.Value
+                    || !tree.IsValid() || !tree.IsPhysical() || !source.IsValid() || preparedEpoch != index.Epoch)
+                    throw new OperationCanceledException("Host changed before cache-only write-lock action");
+                var sourceText = source.Document.GetText();
+                var sourceStamp = source.Document.LastModificationStamp.ToString();
+                var scriptText = script.Document.GetText();
+                var scriptStamp = script.Document.LastModificationStamp.ToString();
+                CacheOccurrence[] SnapshotRows() => rows.Select((row, ordinal) => new CacheOccurrence(
+                    ordinal, row.GetType().FullName, ((IOccurrence)row).IsValid, ScriptDocuments.Id(row.SourceFile),
+                    row.GetTextRange().StartOffset, row.GetTextRange().Length, row.GetDocumentRange().GetText(), row.GetDisplayNameText())).ToArray();
+                var beforeRows = SnapshotRows();
+                var catalogBefore = index.Catalog(host).ToArray();
+                var baseline = index.DiagnosticRecords.Last();
+                var stampBefore = psi.Files.PsiCacheTimestamp;
+                var psiTimestampBefore = psi.Files.PsiTimestamp;
+                if (baseline.After.PsiCacheTimestamp != stampBefore || rows.Any(row => !((IOccurrence)row).IsValid))
+                    throw new OperationCanceledException("Lazy host resolution changed the cache baseline");
+                if (!bounded.IsAlive) throw new OperationCanceledException("Cache-only deadline expired before timestamp mutation");
+                var notifications = 0;
+                void Observe(JetBrains.ReSharper.Psi.Tree.ITreeNode? node, PsiChangedElementType kind) => notifications++;
+                psi.Files.AfterPsiChanged += Observe;
+                int stampAfter;
+                try
+                {
+                    // Public SDK cache API on a real file root (outside resolve-isolation scopes).
+                    // PsiFiles.IncrementModificationTimestamp does not change text or notify PSI listeners.
+                    psi.Files.IncrementModificationTimestamp(tree);
+                    stampAfter = psi.Files.PsiCacheTimestamp;
+                }
+                finally { psi.Files.AfterPsiChanged -= Observe; }
+                // The cache API publishes no event; observe through the real public catalog freshness
+                // path. Reading DiagnosticRecords alone must NOT manufacture an observation.
+                var afterIncrement = index.DiagnosticRecords;
+                Assert("read-only diagnostic snapshot does not observe/refresh the increment",
+                    afterIncrement.Count > 0 && afterIncrement.Last().Sequence == baseline.Sequence, new { baseline.Sequence });
+                var catalogAfter = index.Catalog(host).ToArray();
+                var records = index.DiagnosticRecords.Where(record => record.Sequence > baseline.Sequence).ToArray();
+                var afterRows = SnapshotRows();
+                var after = index.DiagnosticRecords.Last().After;
+                Assert("real C# tree cache timestamp changed without PSI timestamp/event",
+                    stampAfter != stampBefore && psi.Files.PsiTimestamp == psiTimestampBefore && notifications == 0,
+                    new { stampBefore, stampAfter, psiTimestampBefore, psiTimestampAfter = psi.Files.PsiTimestamp, notifications });
+                Assert("CacheFreshnessOnly records the actual before/after stamp and unchanged input summary",
+                    baseline.After.InputSummary != null && records.Any(record => record.Cause == IndexDiagnosticCause.CacheFreshnessOnly
+                        && record.Source == IndexDiagnosticSource.Catalog && record.Before.PsiCacheTimestamp == stampBefore
+                        && record.After.PsiCacheTimestamp == stampAfter && record.Before.InputSummary == record.After.InputSummary
+                        && record.Before.InputSummary == baseline.After.InputSummary
+                        && record.Before.Epoch == record.After.Epoch && record.Before.TypeVersion == record.After.TypeVersion
+                        && record.Before.StructureVersion == record.After.StructureVersion), records);
+                Assert("business epoch/versions/summary and catalog unchanged",
+                    index.Epoch == preparedEpoch && after.Epoch == baseline.After.Epoch && after.TypeVersion == baseline.After.TypeVersion
+                        && after.StructureVersion == baseline.After.StructureVersion && after.InputSummary == baseline.After.InputSummary
+                        && catalogBefore.ToHashSet().SetEquals(catalogAfter), new { before = baseline.After, after });
+                Assert("same existing FSM occurrences remain valid with unchanged ranges/display",
+                    rows.All(row => ((IOccurrence)row).IsValid) && beforeRows.SequenceEqual(afterRows),
+                    new { before = beforeRows, after = afterRows });
+                Assert("source and script buffers retain exact text and document stamps",
+                    source.Document.GetText() == sourceText && source.Document.LastModificationStamp.ToString() == sourceStamp
+                        && script.Document.GetText() == scriptText && script.Document.LastModificationStamp.ToString() == scriptStamp,
+                    new { source = ScriptDocuments.Id(source), sourceStamp, script = ScriptDocuments.Id(script), scriptStamp });
+                if (!bounded.IsAlive) throw new OperationCanceledException("Cache-only deadline expired during evidence collection");
+                evidence.Add(new { name = "public-SDK-cache-only", baseline.Sequence, before = baseline.After, after,
+                    source = ScriptDocuments.Id(source), language = source.PrimaryPsiLanguage.GetType().FullName,
+                    treeType = tree.GetType().FullName, physicalTree = tree.IsPhysical(),
+                    records, occurrenceCount = rows.Length, existingOccurrencesReused = true });
+            }, TimeSpan.FromSeconds(5), interruptPolite: false).WaitAsync(TimeSpan.FromSeconds(30)).ConfigureAwait(false);
+            ReportCache(cacheFailed ? "failed" : "passed");
+        }
+        catch (Exception error) when (error is OperationCanceledException or TimeoutException)
+        { ReportCache("pendingVerification", error.ToString()); }
+        catch (Exception error) { ReportCache("failed", error.ToString()); }
+        finally
+        {
+            // Independent cache assertion status is above; ready still means host readiness only.
+            // The frontend must check the correlated cache report, not treat ready as a pass.
+            Report(lifetime.IsAlive ? "ready" : "pendingVerification");
+        }
     }
 
     private sealed record ScriptSnapshot(string Path, string Text);
@@ -456,7 +610,7 @@ public sealed class ComplexSdkProbe
             var marker = Environment.GetEnvironmentVariable("ANOTHERFSM_COMPLEX_EXECUTION_MARKER");
             File.WriteAllText(Path.Combine(directory, "complex-sdk-probe.json"), JsonSerializer.Serialize(new {
                 status, @case = caseId, scope = caseId == "all" ? "full SDK checks" : "readiness only, not full SDK checks",
-                seam = "target SDK/public core queries + real BridgeQueries; not UI acceptance", backendPid = Environment.ProcessId,
+                seam = "target SDK/public core queries + real BridgeQueries; not UI acceptance", runId, backendPid = Environment.ProcessId, backendCreationFileTime,
                 elapsedMs = (DateTime.UtcNow - started).TotalMilliseconds, waiting, checks, observations, abandonedAttempts,
                 sentinel = new { path = marker, configured = !string.IsNullOrEmpty(marker), exists = !string.IsNullOrEmpty(marker) && File.Exists(marker), claim = "instrumented paths only; absence is not universal execution/network safety proof" },
                 notClaimed = new[] { "real UI actions/native C# Find Usages (separate journey)", "live configuration buffer/project/reference reload invalidation",

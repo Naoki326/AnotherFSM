@@ -1,6 +1,7 @@
 package anotherfsm.acceptance;
 
 import com.google.gson.Gson;
+import anotherfsm.SemanticUi;
 import com.google.gson.JsonParser;
 import com.intellij.ide.plugins.PluginManagerCore;
 import com.intellij.openapi.extensions.PluginId;
@@ -123,6 +124,10 @@ public final class AcceptanceLifecycle implements StartupActivity.DumbAware {
       write("lifecycle.json", Map.of("runId", runId, "suite", suite, "case", caseId, "fixture", fixture,
           "frontendPid", pid, "frontendStartedEpochMs", startedEpochMs, "seq", ++seq,
           "projectDisposed", project.isDisposed(), "heartbeatEpochMs", System.currentTimeMillis()));
+      if(!project.isDisposed()) {
+        var ui=project.getServiceIfCreated(SemanticUi.class);
+        if(ui!=null)write("ui-diagnostics.json",Map.of("runId",runId,"frontendPid",pid,"case",caseId,"records",ui.diagnosticRecords()));
+      }
     }
     void write(String name, Object value) throws Exception {
       Path temporary = output.resolve(name + "." + UUID.randomUUID() + ".tmp");

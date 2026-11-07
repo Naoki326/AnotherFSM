@@ -33,34 +33,65 @@ public sealed class BridgeQueries(IPsiServices psi, ScriptIndex index, ScriptDoc
         catch (JsonException) { return "{\"status\":\"invalidRequest\"}"; }
         if (request == null || request.Text == null || request.Path == null || request.RequestId == null
             || request.Offset < 0 || request.Offset > request.Text.Length) return "{\"status\":\"invalidRequest\"}";
-        Reply reply;
-        if (request.Action == "referenceStatus")
+        using var trace = index.BeginDiagnosticRequest(request.RequestId);
+        try
         {
-            reply = await psi.Files.CommitWithRetryMainRead(lifetime, () => {
-                var status = request.ListId == null ? null : results.GetStatus(request.ListId);
-                return status == null
-                    ? Response(request, "unknownQuery", "Native query identity is unavailable or ambiguous")
-                    : Response(request, "referenceStatus", "Native query status") with { Reference = status };
+            Reply reply;
+            // Commit includes waiting for the host read; Resolve/Navigate are entered only when
+            // the SDK actually invokes the callback (including retries), not when it is queued.
+            trace.Enter(IndexDiagnosticStage.Commit, index.DiagnosticState);
+            if (request.Action == "referenceStatus")
+            {
+                reply = await psi.Files.CommitWithRetryMainRead(lifetime, () => {
+                    using var attribution = trace.Activate();
+                    trace.Enter(IndexDiagnosticStage.Resolve, index.DiagnosticState);
+                    var status = request.ListId == null ? null : results.GetStatus(request.ListId);
+                    return status == null
+                        ? Response(request, "unknownQuery", "Native query identity is unavailable or ambiguous")
+                        : Response(request, "referenceStatus", "Native query status") with { Reference = status };
+                }).ConfigureAwait(false);
+            }
+            else if (request.Action == "navigateType")
+            {
+                var validation = await psi.Files.CommitWithRetryBackgroundRead(lifetime, () => {
+                    using var attribution = trace.Activate();
+                    trace.Enter(IndexDiagnosticStage.Resolve, index.DiagnosticState);
+                    return Resolve(request with { Action = "resolve" });
+                }).ConfigureAwait(false);
+                if (validation.Status == "type" && validation.Target == request.Target)
+                {
+                    trace.Enter(IndexDiagnosticStage.Commit, index.DiagnosticState);
+                    reply = await psi.Files.CommitWithRetryMainRead(lifetime, () => {
+                        using var attribution = trace.Activate();
+                        trace.Enter(IndexDiagnosticStage.Navigate, index.DiagnosticState);
+                        return Navigate(request, lifetime, validation.Reason);
+                    }).ConfigureAwait(false);
+                }
+                else reply = Response(request, "stale", "Binding changed; run navigation again");
+            }
+            else reply = await psi.Files.CommitWithRetryBackgroundRead(lifetime, () => {
+                using var attribution = trace.Activate();
+                trace.Enter(IndexDiagnosticStage.Resolve, index.DiagnosticState);
+                if (request.Action != "validateLocation") return Resolve(request);
+                if (request.Session != index.Session.ToString() || request.ContextVersion != index.Epoch || request.Selected == null)
+                    return Response(request, "stale", "Result expired; refresh before navigating");
+                var current = Resolve(request with { Action = request.QueryAction });
+                var selected = current.Locations?.SingleOrDefault(location => SameLocation(location, request.Selected));
+                return selected == null || current.ContextVersion != request.ContextVersion
+                    ? Response(request, "stale", "The exact source identity is no longer current; refresh")
+                    : current with { Status = "dsl", Span = selected.Span, Locations = new[] { selected } };
             }).ConfigureAwait(false);
+            trace.Complete(Enum.TryParse<IndexDiagnosticStatus>(reply.Status, true, out var status) ? status : IndexDiagnosticStatus.Unknown,
+                index.DiagnosticState);
+            return JsonSerializer.Serialize(reply, Json);
         }
-        else if (request.Action == "navigateType")
+        catch (OperationCanceledException)
         {
-            var validation = await psi.Files.CommitWithRetryBackgroundRead(lifetime, () => Resolve(request with { Action = "resolve" })).ConfigureAwait(false);
-            reply = validation.Status == "type" && validation.Target == request.Target
-                ? await psi.Files.CommitWithRetryMainRead(lifetime, () => Navigate(request, lifetime, validation.Reason)).ConfigureAwait(false)
-                : Response(request, "stale", "Binding changed; run navigation again");
+            // Includes cancellation of the awaited host-read Task. Do not infer a cause from
+            // a coincident stamp/epoch change or retain an exception message/request payload.
+            trace.Cancel(index.DiagnosticState);
+            throw;
         }
-        else reply = await psi.Files.CommitWithRetryBackgroundRead(lifetime, () => {
-            if (request.Action != "validateLocation") return Resolve(request);
-            if (request.Session != index.Session.ToString() || request.ContextVersion != index.Epoch || request.Selected == null)
-                return Response(request, "stale", "Result expired; refresh before navigating");
-            var current = Resolve(request with { Action = request.QueryAction });
-            var selected = current.Locations?.SingleOrDefault(location => SameLocation(location, request.Selected));
-            return selected == null || current.ContextVersion != request.ContextVersion
-                ? Response(request, "stale", "The exact source identity is no longer current; refresh")
-                : current with { Status = "dsl", Span = selected.Span, Locations = new[] { selected } };
-        }).ConfigureAwait(false);
-        return JsonSerializer.Serialize(reply, Json);
     }
     private static bool SameLocation(Location left, Location right) =>
         StringComparer.OrdinalIgnoreCase.Equals(left.DocumentId, right.DocumentId) && left.Span == right.Span

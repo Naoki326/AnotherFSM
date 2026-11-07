@@ -1,6 +1,7 @@
 using System.Collections.Specialized;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using AnotherFSM.Rider;
 using JetBrains.Application.Parts;
 using JetBrains.Application.Threading;
@@ -24,6 +25,11 @@ public sealed class HostObserver
     private readonly DateTime start = DateTime.UtcNow;
     private int nextId;
     private int queued;
+    private int diagnosticsQueued;
+    private static readonly JsonSerializerOptions DiagnosticJson = new() {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        Converters = { new JsonStringEnumConverter(allowIntegerValues: false) }
+    };
     private long sequence;
     private int nullPsiNotifications;
     private Timer? timer;
@@ -53,6 +59,24 @@ public sealed class HostObserver
             // The chained #32 + #33 journeys and transport check have independent bounded deadlines.
             // Never let the observer stop halfway and mistake a previous sample for current evidence.
             if (!lifetime.IsAlive || DateTime.UtcNow - start > TimeSpan.FromMinutes(20)) { timer?.Dispose(); return; }
+            // Independent of native sampling / PSI read-lock availability. Snapshot is plain data:
+            // do not call Catalog, Read, TrackDocument or any business refresh from this exporter.
+            if (Interlocked.Exchange(ref diagnosticsQueued, 1) == 0)
+            {
+                try
+                {
+                    var records = index.DiagnosticRecords;
+                    var target = Path.Combine(directory, "index-diagnostics.json");
+                    var temporary = target + $".{Environment.ProcessId}.{backendCreationFileTime}.tmp";
+                    File.WriteAllText(temporary, JsonSerializer.Serialize(new {
+                        runId, backendPid = Environment.ProcessId, backendCreationFileTime,
+                        elapsedMs = (DateTime.UtcNow - start).TotalMilliseconds, records
+                    }, DiagnosticJson));
+                    File.Move(temporary, target, true);
+                }
+                catch (Exception error) { Console.Error.WriteLine("HostObserver diagnostics export failure: " + error); }
+                finally { Interlocked.Exchange(ref diagnosticsQueued, 0); }
+            }
             if (Interlocked.Exchange(ref queued, 1) != 0) return;
             solution.Locks.QueueReadLock(lifetime, "AnotherFSM.TestObserver.Sample", () => {
                 try

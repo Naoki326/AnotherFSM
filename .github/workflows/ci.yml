@@ -32,6 +32,8 @@ jobs:
       run: python3 -m unittest discover -s tools/test -p 'test_release.py' -v
     - name: Test Rider acceptance tool contracts (offline)
       run: python3 -m unittest discover -s rider/tools/tests -v
+    - name: Test Rider diagnostic journal (SDK-free)
+      run: dotnet test rider/tests/diagnostics/IndexDiagnostics.Tests.csproj --nologo -p:NuGetAudit=false
     - name: Test .NET solution
       run: dotnet test AnotherFSM.sln --nologo -p:NuGetAudit=false
 

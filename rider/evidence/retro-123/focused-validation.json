@@ -1,0 +1,279 @@
+{
+  "scope": "complex/index-invalidation only; not full SDK or whole matrix",
+  "runId": "25824cbe-6037-4c4e-b24a-cd4851d756a1",
+  "artifactHash": "c9effbb115283137727c6131c59c1e306769f5bb8e123a9c5913c3d8ef6e6159",
+  "status": "succeeded",
+  "frontendIdentity": {
+    "pid": 39900,
+    "creationFileTime": 134385240227616287
+  },
+  "backendIdentities": [
+    {
+      "pid": 49824,
+      "creationFileTime": 134385240308559865
+    }
+  ],
+  "coverage": [
+    {
+      "report": "complex-host-acceptance.json",
+      "name": "independent case source/PSI readiness, not binding evidence",
+      "status": "passed"
+    },
+    {
+      "report": "complex-host-acceptance.json",
+      "name": "SDK cache-only timestamp change keeps native occurrence valid",
+      "status": "passed"
+    },
+    {
+      "report": "complex-host-acceptance.json",
+      "name": "retain real result page before C# edit",
+      "status": "passed"
+    },
+    {
+      "report": "complex-host-acceptance.json",
+      "name": "formal action holds a real consuming-host chooser before edit",
+      "status": "passed"
+    },
+    {
+      "report": "complex-host-acceptance.json",
+      "name": "real C# buffer edit expires results and records actual request cancellation",
+      "status": "passed"
+    },
+    {
+      "report": "complex-host-acceptance.json",
+      "name": "restore real C# input and await committed readiness",
+      "status": "passed"
+    },
+    {
+      "report": "complex-host-acceptance.json",
+      "name": "formal action holds a real host chooser before transport disconnect",
+      "status": "passed"
+    },
+    {
+      "report": "complex-host-acceptance.json",
+      "name": "close only this JVM's verified live loopback backend transport",
+      "status": "passed"
+    },
+    {
+      "report": "complex-host-acceptance.json",
+      "name": "actual transport cancellation and automatic same-backend reconnection",
+      "status": "passed"
+    },
+    {
+      "report": "complex-host-acceptance.json",
+      "name": "record independent case completion, not whole-support-matrix pass",
+      "status": "passed"
+    }
+  ],
+  "cacheOnlyChecks": [
+    {
+      "name": "read-only diagnostic snapshot does not observe/refresh the increment",
+      "status": "passed",
+      "detail": {
+        "sequence": 1711
+      }
+    },
+    {
+      "name": "real C# tree cache timestamp changed without PSI timestamp/event",
+      "status": "passed",
+      "detail": {
+        "stampBefore": 1808,
+        "stampAfter": 1809,
+        "psiTimestampBefore": 904,
+        "psiTimestampAfter": 904,
+        "notifications": 0
+      }
+    },
+    {
+      "name": "CacheFreshnessOnly records the actual before/after stamp and unchanged input summary",
+      "status": "passed",
+      "detail": [
+        {
+          "sequence": 1712,
+          "before": {
+            "epoch": 7,
+            "typeVersion": 7,
+            "structureVersion": 6,
+            "psiCacheTimestamp": 1808,
+            "inputSummary": "AB880B23FE5F06D33EA6D2C0ED29B75370A9D6140D7D3E87D6903BC9278ABFA1"
+          },
+          "after": {
+            "epoch": 7,
+            "typeVersion": 7,
+            "structureVersion": 6,
+            "psiCacheTimestamp": 1809,
+            "inputSummary": "AB880B23FE5F06D33EA6D2C0ED29B75370A9D6140D7D3E87D6903BC9278ABFA1"
+          },
+          "cause": "CacheFreshnessOnly",
+          "source": "Catalog",
+          "stage": "Observation",
+          "requestId": null,
+          "inputChanged": null,
+          "status": null,
+          "cancellation": "None"
+        },
+        {
+          "sequence": 1713,
+          "before": {
+            "epoch": 7,
+            "typeVersion": 7,
+            "structureVersion": 6,
+            "psiCacheTimestamp": 1809,
+            "inputSummary": "AB880B23FE5F06D33EA6D2C0ED29B75370A9D6140D7D3E87D6903BC9278ABFA1"
+          },
+          "after": {
+            "epoch": 7,
+            "typeVersion": 7,
+            "structureVersion": 6,
+            "psiCacheTimestamp": 1809,
+            "inputSummary": "AB880B23FE5F06D33EA6D2C0ED29B75370A9D6140D7D3E87D6903BC9278ABFA1"
+          },
+          "cause": "NoBusinessChange",
+          "source": "Catalog",
+          "stage": "Observation",
+          "requestId": null,
+          "inputChanged": null,
+          "status": null,
+          "cancellation": "None"
+        }
+      ]
+    },
+    {
+      "name": "business epoch/versions/summary and catalog unchanged",
+      "status": "passed",
+      "detail": {
+        "before": {
+          "epoch": 7,
+          "typeVersion": 7,
+          "structureVersion": 6,
+          "psiCacheTimestamp": 1808,
+          "inputSummary": "AB880B23FE5F06D33EA6D2C0ED29B75370A9D6140D7D3E87D6903BC9278ABFA1"
+        },
+        "after": {
+          "epoch": 7,
+          "typeVersion": 7,
+          "structureVersion": 6,
+          "psiCacheTimestamp": 1809,
+          "inputSummary": "AB880B23FE5F06D33EA6D2C0ED29B75370A9D6140D7D3E87D6903BC9278ABFA1"
+        }
+      }
+    },
+    {
+      "name": "same existing FSM occurrences remain valid with unchanged ranges/display",
+      "status": "passed",
+      "detail": {
+        "before": [
+          {
+            "ordinal": 0,
+            "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+            "valid": true,
+            "file": "C:/Work/AnotherFSM/rider/fixtures/Complex/HostA/sources.fsm",
+            "start": 113,
+            "length": 14,
+            "text": "CurrentHostKey",
+            "display": "AnotherFSM — 工厂类型键 CurrentHostKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Complex/HostA/HostA.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration"
+          }
+        ],
+        "after": [
+          {
+            "ordinal": 0,
+            "runtimeType": "AnotherFSM.Rider.FsmOccurrence",
+            "valid": true,
+            "file": "C:/Work/AnotherFSM/rider/fixtures/Complex/HostA/sources.fsm",
+            "start": 113,
+            "length": 14,
+            "text": "CurrentHostKey",
+            "display": "AnotherFSM — 工厂类型键 CurrentHostKey · FSMNode attribute convention; not proof of runtime registration · 宿主 C:/Work/AnotherFSM/rider/fixtures/Complex/HostA/HostA.csproj / net8.0 — FSMNode attribute convention; not proof of runtime registration"
+          }
+        ]
+      }
+    },
+    {
+      "name": "source and script buffers retain exact text and document stamps",
+      "status": "passed",
+      "detail": {
+        "source": "C:/Work/AnotherFSM/rider/fixtures/Complex/HostA/Nodes.cs",
+        "sourceStamp": "3",
+        "script": "C:/Work/AnotherFSM/rider/fixtures/Complex/HostA/sources.fsm",
+        "scriptStamp": "0"
+      }
+    }
+  ],
+  "uiActualCancellations": [
+    {
+      "sequence": 6,
+      "requestId": "100cd653-7f6b-4342-803e-4b420a537e4f",
+      "stage": "HOST_CHOICE",
+      "cause": "DOCUMENT_CHANGED",
+      "documentVersion": 0,
+      "resultEpoch": 7,
+      "currentEpoch": 7
+    },
+    {
+      "sequence": 9,
+      "requestId": "850bdd6a-e592-4838-89cb-1b124c76e133",
+      "stage": "HOST_CHOICE",
+      "cause": "TRANSPORT_CHANGED",
+      "documentVersion": 0,
+      "resultEpoch": 9,
+      "currentEpoch": -1
+    }
+  ],
+  "actualInputChange": [
+    {
+      "step": 4,
+      "elapsedMs": 26176,
+      "name": "actual-CSharp-input-diagnostic",
+      "value": {
+        "sequence": 3205,
+        "before": {
+          "epoch": 7,
+          "typeVersion": 7,
+          "structureVersion": 6,
+          "psiCacheTimestamp": 1809,
+          "inputSummary": "AB880B23FE5F06D33EA6D2C0ED29B75370A9D6140D7D3E87D6903BC9278ABFA1"
+        },
+        "after": {
+          "epoch": 8,
+          "typeVersion": 8,
+          "structureVersion": 6,
+          "psiCacheTimestamp": 1809,
+          "inputSummary": "05C1E60014BC10BFBC72CF59479194BEAA6248AE8EFBDAE4153341EC5F13DA10"
+        },
+        "cause": "ActualTextChange",
+        "source": "DocumentChange",
+        "stage": "Observation",
+        "inputChanged": true,
+        "cancellation": "None"
+      }
+    }
+  ],
+  "sdkReadiness": {
+    "status": "ready",
+    "scope": "readiness only, not full SDK checks",
+    "fullChecks": 0
+  },
+  "resources": {
+    "hostsStopped": true,
+    "settingsRestored": true,
+    "ownedServerStopped": true,
+    "errors": []
+  },
+  "exactSettings": {
+    "state": "restored",
+    "sha256": "e86c040b6ab4a1ab03a43c1fa76c7b126db7a34d35cb8ea8a00affaaa5be26c8",
+    "byteLength": 1469,
+    "exactBytesOrAbsenceVerified": true
+  },
+  "fixtureHashCount": 69,
+  "sourceReports": {
+    ".scratch/rider-acceptance/run-d9fe0548146a48d79a5489e5788d7bdd/result.json": "5e04838240f84c69f5ba49468c00c6936600fea7693351686a9c9b06c2912882",
+    ".scratch/rider-acceptance/run-d9fe0548146a48d79a5489e5788d7bdd/cleanup-receipt.json": "509c4306a9d3d0bcf4d1cd5c58285d09e9f9a83c9efbc2b86632d2bf7e3dc7b4",
+    ".scratch/rider-acceptance/run-d9fe0548146a48d79a5489e5788d7bdd/resources/settings-restoration.json": "f0530642184aaeac0869d2171e316f2e5bb3055b17792aa1d4ce36edad30add2",
+    ".scratch/rider-acceptance/run-d9fe0548146a48d79a5489e5788d7bdd/acceptance/complex-host-acceptance.json": "a7c80050b1881b114264fa26e03c7f28c1338de2512daea9791979dbf52cacc2",
+    ".scratch/rider-acceptance/run-d9fe0548146a48d79a5489e5788d7bdd/acceptance/complex-index-invalidation.json": "8e747716a3e4b585a876d56bf4ba69799771f35ac44b69c1608eccb86474a883",
+    ".scratch/rider-acceptance/run-d9fe0548146a48d79a5489e5788d7bdd/acceptance/index-diagnostics.json": "f93d1194669df18eff2a14ee201bb827d18b09d8403dbd6c1cb617eec87fcb37",
+    ".scratch/rider-acceptance/run-d9fe0548146a48d79a5489e5788d7bdd/acceptance/ui-diagnostics.json": "33d8c38cc35c1c1e41b5193f9b7d14c2ece3d9ae6044503370f50034a49f6647",
+    ".scratch/rider-acceptance/run-d9fe0548146a48d79a5489e5788d7bdd/acceptance/complex-sdk-probe.json": "f7428c41d43eac1b37746a84c6983a54999f12476ceaa83958f10223190b9fa4"
+  }
+}
