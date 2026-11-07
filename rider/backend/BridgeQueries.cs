@@ -47,7 +47,7 @@ public sealed class BridgeQueries(IPsiServices psi, ScriptIndex index, ScriptDoc
         {
             var validation = await psi.Files.CommitWithRetryBackgroundRead(lifetime, () => Resolve(request with { Action = "resolve" })).ConfigureAwait(false);
             reply = validation.Status == "type" && validation.Target == request.Target
-                ? await psi.Files.CommitWithRetryMainRead(lifetime, () => Navigate(request, lifetime)).ConfigureAwait(false)
+                ? await psi.Files.CommitWithRetryMainRead(lifetime, () => Navigate(request, lifetime, validation.Reason)).ConfigureAwait(false)
                 : Response(request, "stale", "Binding changed; run navigation again");
         }
         else reply = await psi.Files.CommitWithRetryBackgroundRead(lifetime, () => {
@@ -99,9 +99,9 @@ public sealed class BridgeQueries(IPsiServices psi, ScriptIndex index, ScriptDoc
         if (request.Action == "resolve" && needsHost && request.Host == null && contexts.Count > 1)
         {
             var choices = contexts.Select(context => {
-                var node = context.Graph.FindNodeSource(id, request.Offset)?.Node;
-                var binding = node == null ? null : Bind(node, context.Module, id);
-                return new HostChoice(context.Module.GetPersistentID(), HostLabel(context.Module) + " — "
+                var source = context.Graph.FindNodeSource(id, request.Offset);
+                var binding = source == null ? null : Bind(source.Node, context.Module, source.DocumentId);
+                return new HostChoice(context.Module.GetPersistentID(), BindingSettings.HostLabel(context.Module) + " — "
                     + (binding == null ? "No intrinsic C# binding" : binding.State + ": " + binding.Reason)
                     + (binding?.Candidates.Count > 0 ? " · " + string.Join(", ", binding.Candidates.Select(target => target.Module + ":" + target.ClrName)) : ""));
             }).ToArray();
@@ -113,9 +113,9 @@ public sealed class BridgeQueries(IPsiServices psi, ScriptIndex index, ScriptDoc
             // Aggregate exact source identities across solution scripts, not global same-name strings.
             var queries = new List<(SemanticGraph Graph, SemanticQuery Query, string Host)> {
                 (graph, graph.FindReferences(id, request.Offset, request.Action == "templateReferences"),
-                    contexts.FirstOrDefault(context => ReferenceEquals(context.Graph, graph)) is { } owner ? HostLabel(owner.Module) : "") };
+                    contexts.FirstOrDefault(context => ReferenceEquals(context.Graph, graph)) is { } owner ? BindingSettings.HostLabel(owner.Module) : "") };
             foreach (var context in contexts.Where(context => !ReferenceEquals(context.Graph, graph)))
-                queries.Add((context.Graph, context.Graph.FindReferences(id, request.Offset, request.Action == "templateReferences"), HostLabel(context.Module)));
+                queries.Add((context.Graph, context.Graph.FindReferences(id, request.Offset, request.Action == "templateReferences"), BindingSettings.HostLabel(context.Module)));
             var reply = Locations(request, epoch, queries, references: true);
             return contexts.Count == 0 ? reply with { Reason = reply.Reason + "; local script results only: C# host/solution context unavailable" } : reply;
         }
@@ -125,8 +125,9 @@ public sealed class BridgeQueries(IPsiServices psi, ScriptIndex index, ScriptDoc
             if (branch == null) return Response(request, "unresolved", "No reliable Node/Branch index at this position");
             var summary = $"Branch {branch.Index} of Node {branch.Owner.Node.Name}; actual DSL integer, not a C# enum or return/yield location";
             if (file == null) return Response(request, "metadata", summary + "; C# host context unavailable");
-            var branchBinding = Bind(branch.Owner.Node, file.PsiModule, id);
+            var branchBinding = Bind(branch.Owner.Node, file.PsiModule, branch.Owner.DocumentId);
             if (branchBinding.State != BindingState.Determined) return Response(request, "metadata", summary + "; " + branchBinding.Reason);
+            summary += "; " + branchBinding.Reason;
             var metadata = TypeCatalog.BranchMetadata(psi, branchBinding.Candidates.Single(), branch.Index);
             if (epoch != index.Epoch) return Response(request, "stale", "Branch context changed; retry");
             if (metadata == null) return Response(request, "metadata", summary + "; no explicit, source-locatable index metadata");
@@ -144,21 +145,19 @@ public sealed class BridgeQueries(IPsiServices psi, ScriptIndex index, ScriptDoc
             var node = nodeSource?.Node;
             if (node == null) return Response(request, "unresolved", "This DSL symbol has no intrinsic C# type target; Output/Event/Module/instance/Namespace are not nodes");
             if (file == null) return Response(request, "unresolved", "C# host context unavailable; local DSL navigation remains available");
-            var binding = Bind(node, file.PsiModule, id);
+            var binding = Bind(node, file.PsiModule, nodeSource!.DocumentId);
             if (epoch != index.Epoch) return Response(request, "stale", "Context changed; retry");
             return binding.State == BindingState.Determined
                 ? Response(request, "type", binding.Reason, target: binding.Candidates.Single())
                 : Response(request, "unresolved", binding.State + ": " + binding.Reason);
         }
         var navigation = contexts.Count == 0 ? new[] { (graph, graph.Navigate(id, request.Offset, request.Operation), "") }
-            : contexts.Select(context => (context.Graph, context.Graph.Navigate(id, request.Offset, request.Operation), HostLabel(context.Module))).ToArray();
+            : contexts.Select(context => (context.Graph, context.Graph.Navigate(id, request.Offset, request.Operation), BindingSettings.HostLabel(context.Module))).ToArray();
         return Locations(request, epoch, navigation, references: false);
     }
 
     private NodeBinding Bind(NodeDeclaration node, IPsiModule module, string script)
         => NodeBindings.Resolve(node, index.Catalog(module), TypeCatalog.Options(module, settings.Read(module, script)));
-    private static string HostLabel(IPsiModule module) => (BindingSettings.ProjectPath(module) ?? module.GetPersistentID()) + " / " + BindingSettings.Framework(module);
-
     private Reply Locations(Request request, long epoch, IEnumerable<(SemanticGraph Graph, SemanticQuery Query, string Host)> queries, bool references)
     {
         var all = queries.ToArray();
@@ -179,7 +178,7 @@ public sealed class BridgeQueries(IPsiServices psi, ScriptIndex index, ScriptDoc
         return Response(request, status, reason, locations.Length == 1 ? locations[0].Span : null) with { Locations = locations };
     }
 
-    private Reply Navigate(Request request, Lifetime lifetime)
+    private Reply Navigate(Request request, Lifetime lifetime, string bindingSource)
     {
         if (request.Session != index.Session.ToString() || request.ContextVersion != index.Epoch || request.Target == null)
             return Response(request, "stale", "Result expired; run navigation again");
@@ -187,18 +186,20 @@ public sealed class BridgeQueries(IPsiServices psi, ScriptIndex index, ScriptDoc
             return Response(request, "stale", "Document changed; run navigation again");
         var target = TypeCatalog.Resolve(psi, request.Target);
         if (target == null) return Response(request, "stale", "The determined type is no longer valid in the consuming context; resolve again");
-        if (target.GetSourceFiles().Any(source => source.IsValid()))
+        // A compiled element remains external even if the host has cached a source/decompiled file.
+        if (target is not ICompiledElement && target.Module.ContainingProjectModule is IProject
+            && target.GetSourceFiles().Any(source => source.IsValid()))
         {
             target.Navigate(true);
             // A command dispatch, not a fabricated claim that the IDE selected the correct source.
-            return Response(request, "navigationDispatched", "Project source navigation delegated to Rider; not proof of source matching a prior binary", target: request.Target);
+            return Response(request, "navigationDispatched", bindingSource + "; Project source navigation delegated to Rider; not proof of source matching a prior binary", target: request.Target);
         }
         var presentation = ExternalTypeNavigation.Navigate(target, () => lifetime.IsAlive
             && request.ContextVersion == index.Epoch && request.Session == index.Session.ToString()
             && scripts.CurrentText(request.Path) == request.Text);
         if (!lifetime.IsAlive || request.ContextVersion != index.Epoch)
             return Response(request, "stale", "Binding context expired during external presentation; resolve again");
-        return Response(request, presentation.Status, "Determined C# binding retained; " + presentation.Reason
+        return Response(request, presentation.Status, bindingSource + "; Determined C# binding retained; " + presentation.Reason
             + "; consumer=" + request.Target.Consumer + "; consuming TFM=" + request.Target.Context,
             target: request.Target) with { ExternalPresentation = presentation };
     }

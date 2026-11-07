@@ -1,6 +1,7 @@
 using System.Text.Json;
 using AnotherFSM.Semantics;
 using JetBrains.ReSharper.Psi.Resolve;
+using JetBrains.ProjectModel;
 using JetBrains.ReSharper.Psi.Util;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.CSharp;
@@ -33,24 +34,24 @@ public static class TypeCatalog
         var result = new Dictionary<TypeIdentity, NodeType>();
         foreach (var type in scope.GetAllTypeElementsGroupedByName())
         {
-                JetBrains.Application.Interruption.Current.CheckAndThrow();
-                if (type is not IClass klass || klass.IsAbstract || !type.IsValid() || !Accessible(type, module)) continue;
-                var aliases = Aliases(type, module);
-                if (aliases.Length == 0) continue;
-                var instances = type.GetAttributeInstances(AttributesSource.Self).Where(instance => {
-                    var resolved = instance.GetAttributeType().GetTypeElement();
-                    return resolved != null && resolved.GetClrName().FullName == attribute.GetClrName().FullName
-                        && ReferenceEquals(resolved.Module, attribute.Module);
-                }).ToArray();
-                if (instances.Length != 1) continue;
-                var instance = instances[0];
-                var named = instance.NamedParameters().Where(pair => pair.First == "Key").ToArray();
-                // A present but invalid named value must not fall back to the constructor argument.
-                var value = named.Length == 1 ? named[0].Second : named.Length > 1 ? AttributeValue.BAD_VALUE
-                    : instance.PositionParameter(0);
-                var key = !value.IsBadValue && value.IsConstant && value.ConstantValue.IsNotNullString(out var text) ? text : null;
-                var identity = Identity(type, module, string.Join(",", aliases));
-                result[identity] = new NodeType(identity, key, Implements(type, contract), OpenDefinition(type));
+            JetBrains.Application.Interruption.Current.CheckAndThrow();
+            if (type is not IClass klass || klass.IsAbstract || !type.IsValid() || !Accessible(type, module)) continue;
+            var aliases = Aliases(type, module);
+            if (aliases.Length == 0) continue;
+            var instances = type.GetAttributeInstances(AttributesSource.Self).Where(instance => {
+                var resolved = instance.GetAttributeType().GetTypeElement();
+                return resolved != null && resolved.GetClrName().FullName == attribute.GetClrName().FullName
+                    && ReferenceEquals(resolved.Module, attribute.Module);
+            }).ToArray();
+            if (instances.Length != 1) continue;
+            var instance = instances[0];
+            var named = instance.NamedParameters().Where(pair => pair.First == "Key").ToArray();
+            // A present but invalid named value must not fall back to the constructor argument.
+            var value = named.Length == 1 ? named[0].Second : named.Length > 1 ? AttributeValue.BAD_VALUE
+                : instance.PositionParameter(0);
+            var key = !value.IsBadValue && value.IsConstant && value.ConstantValue.IsNotNullString(out var text) ? text : null;
+            var identity = Identity(type, module, string.Join(",", aliases));
+            result[identity] = new NodeType(identity, key, Implements(type, contract), OpenDefinition(type));
         }
         return result.Values.ToArray();
     }
@@ -152,7 +153,7 @@ public static class TypeCatalog
     public static BranchMetadataLocation? BranchMetadata(IPsiServices psi, TypeIdentity identity, int index)
     {
         var type = Resolve(psi, identity);
-        if (type == null) return null;
+        if (type == null || type is ICompiledElement || type.Module.ContainingProjectModule is not IProject) return null;
         var sourceContext = type.GetSourceFiles().FirstOrDefault(file => file.IsValid());
         if (sourceContext == null) return null;
         // C# constant/collection conversion consults runtime features from the active compilation context.

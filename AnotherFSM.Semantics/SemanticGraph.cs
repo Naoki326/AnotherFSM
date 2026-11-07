@@ -7,6 +7,8 @@ namespace AnotherFSM.Semantics;
 
 /// <summary>A factory-bearing Node at its real source file, including an Input's internal Node.</summary>
 public sealed record SemanticNode(NodeDeclaration Node, string DocumentId);
+/// <summary>Configuration belongs to the root; default relative resolution belongs to the real importing file.</summary>
+public sealed record ModuleImport(string RootDocumentId, string ImportingDocumentId, string Name);
 /// <summary>Owner-scoped DSL integer index; not a C# enum or a return/yield location.</summary>
 public sealed record SemanticBranch(SemanticNode Owner, int Index);
 
@@ -35,9 +37,11 @@ public sealed class SemanticGraph
         public readonly Dictionary<int, Symbol> BranchEvents = new();
     }
     private sealed record Occurrence(Symbol? Symbol, DocumentAnalysis Doc, SourceSpan Span, string Role, string Reason = "");
-    private sealed class Scope(DocumentAnalysis doc, string id, Dictionary<string, Symbol>? registry = null, HashSet<string>? blockedRegistrations = null)
+    private sealed class Scope(DocumentAnalysis doc, string id, Dictionary<string, Symbol>? registry = null, HashSet<string>? blockedRegistrations = null,
+        string? rootDocumentId = null)
     {
         public readonly DocumentAnalysis Doc = doc;
+        public readonly string RootDocumentId = rootDocumentId ?? doc.Document.Id;
         public readonly string Id = id;
         public readonly Dictionary<string, Symbol> Nodes = new(DeclarationRules.NameComparer);
         public readonly Dictionary<string, Symbol> Events = new(DeclarationRules.NameComparer);
@@ -55,7 +59,7 @@ public sealed class SemanticGraph
     private readonly List<Symbol> symbols = new();
     private readonly Dictionary<string, Symbol> moduleSources = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> loading = new(StringComparer.OrdinalIgnoreCase);
-    private Func<string, string, DocumentAnalysis?> resolveImport = null!;
+    private Func<ModuleImport, DocumentAnalysis?> resolveImport = null!;
     private readonly CancellationToken cancellation;
     private readonly Action? checkHostCancellation;
     private SemanticGraph(CancellationToken cancellation, Action? checkHostCancellation)
@@ -70,6 +74,11 @@ public sealed class SemanticGraph
     /// Cancellation and host cancellation exceptions propagate. No whole-solution name fallback is performed.</summary>
     public static SemanticGraph Build(IEnumerable<DocumentAnalysis> roots,
         Func<string, string, DocumentAnalysis?> resolveImport, CancellationToken cancellation = default, Action? checkHostCancellation = null,
+        Func<string, IReadOnlyList<string>>? registeredModules = null)
+        => Build(roots, import => resolveImport(import.ImportingDocumentId, import.Name), cancellation, checkHostCancellation, registeredModules);
+
+    public static SemanticGraph Build(IEnumerable<DocumentAnalysis> roots,
+        Func<ModuleImport, DocumentAnalysis?> resolveImport, CancellationToken cancellation = default, Action? checkHostCancellation = null,
         Func<string, IReadOnlyList<string>>? registeredModules = null)
     {
         var graph = new SemanticGraph(cancellation, checkHostCancellation) { resolveImport = resolveImport };
@@ -344,12 +353,12 @@ public sealed class SemanticGraph
     {
         if (scope.Registry.TryGetValue(name, out var known)) return (known, "");
         Check();
-        var imported = resolveImport(scope.Doc.Document.Id, name);
+        var imported = resolveImport(new(scope.RootDocumentId, scope.Doc.Document.Id, name));
         if (imported == null) return (null, "Import target unavailable: " + name + ".fsm (requires the actual importing document directory or explicit host mapping).");
         var key = PathKey(imported.Document.Id);
         if (!documents.TryGetValue(key, out var actual)) documents.Add(key, actual = imported);
         if (loading.Contains(key)) return (null, "Circular import: " + name);
-        var importedScope = new Scope(actual, actual.Document.Id, scope.Registry, scope.BlockedRegistrations);
+        var importedScope = new Scope(actual, actual.Document.Id, scope.Registry, scope.BlockedRegistrations, scope.RootDocumentId);
         if (!Process(importedScope)) return (null, "Import dependency is missing, damaged or cyclic: " + name);
         if (scope.Registry.TryGetValue(name, out var module)) return (module, "");
         // Runtime registration also accepts a plain script as a file-backed template.
@@ -379,7 +388,7 @@ public sealed class SemanticGraph
             parent.Registry[name] = cached;
             return;
         }
-        var body = new Scope(parent.Doc, sourceId);
+        var body = new Scope(parent.Doc, sourceId, rootDocumentId: parent.RootDocumentId);
         var module = new Symbol("module", name, parent) { Body = body };
         symbols.Add(module);
         moduleSources.Add(sourceId, module);

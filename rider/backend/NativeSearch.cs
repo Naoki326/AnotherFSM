@@ -141,7 +141,7 @@ internal sealed class FsmSearcher(TypeIdentity[] targets, ScriptIndex index, Scr
         if (!ReferenceEquals(index, file.PsiModule.GetSolution().GetComponent<ScriptIndex>())) return false;
         if (epoch != index.Epoch) throw new OperationCanceledException("AnotherFSM query context expired");
         // Only the source selected by Rider's search-domain visitor may contribute results.
-        // Do not permanently mark a module/file visited: the host owns duplicate handling and resumable search.
+        // No permanent module/file visited set. Query aggregation owns cross-context deduplication.
         var graph = scripts.Graph(file.PsiModule, epoch, out _);
         var catalog = index.Catalog(file.PsiModule);
         foreach (var analysis in graph.Documents.Where(document => StringComparer.OrdinalIgnoreCase.Equals(document.Document.Id, ScriptDocuments.Id(file))))
@@ -162,29 +162,31 @@ internal sealed class FsmSearcher(TypeIdentity[] targets, ScriptIndex index, Scr
                     if (graph.FindNodeSource(analysis.Document.Id, reference.Span.Start) == null) continue;
                     var node = analysis.FindFactoryDeclaration(reference.Span.Start);
                     var reason = node == null ? "Binding source unavailable" : NodeBindings.Resolve(node, catalog, options).Reason;
-                    if (consumer.Accept(new FsmKeyResult(file, index, epoch, analysis.Document.Text, reference, target, reason,
-                        HostAssociations(file, reference, target))) == FindExecution.Stop)
+                    var hosts = HostAssociations(file, reference);
+                    if (consumer.Accept(new FsmKeyResult(file, index, epoch, analysis.Document.Text, reference, target, reason, hosts)) == FindExecution.Stop)
                         return true;
                 }
             }
         }
         return false;
     }
-    private IReadOnlyList<string> HostAssociations(IPsiSourceFile file, TypeReference reference, TypeIdentity target)
+    private IReadOnlyList<string> HostAssociations(IPsiSourceFile file, TypeReference reference)
     {
         var associations = new List<string>();
         foreach (var module in FsmSearcherFactory.ConsumerModules(targets, index, scripts))
         {
             var graph = scripts.Graph(module, epoch, out var sources);
-            if (!sources.TryGetValue(ScriptDocuments.Id(file), out var source) || source.Document.GetText() != file.Document.GetText()) continue;
+            if (!sources.TryGetValue(ScriptDocuments.Id(file), out var source)) continue;
+            if (source.Document.GetText() != file.Document.GetText())
+                throw new OperationCanceledException("Shared host buffers are not coherent; analysis is incomplete, not zero references");
             var document = graph.Documents.Single(item => StringComparer.OrdinalIgnoreCase.Equals(item.Document.Id, ScriptDocuments.Id(file)));
             var settings = module.GetSolution().GetComponent<BindingSettings>();
             var options = TypeCatalog.Options(module, settings.Read(module, document.Document.Id));
             var node = document.FindFactoryDeclaration(reference.Span.Start);
             if (node == null) continue;
             var binding = NodeBindings.Resolve(node, index.Catalog(module), options);
-            if (binding.State == BindingState.Determined && TypeCatalog.SameDefinition(binding.Candidates.Single(), target))
-                associations.Add((BindingSettings.ProjectPath(module) ?? module.GetPersistentID()) + " / " + BindingSettings.Framework(module) + " — " + binding.Reason);
+            if (binding.State == BindingState.Determined && targets.Any(target => TypeCatalog.SameDefinition(binding.Candidates.Single(), target)))
+                associations.Add(BindingSettings.HostLabel(module) + " — " + binding.Reason);
         }
         return associations.Distinct().Order().ToArray();
     }
@@ -200,6 +202,7 @@ internal sealed class FsmKeyResult(IPsiSourceFile file, ScriptIndex index, long 
     : FindResult, IFindResultWithTarget
 {
     public IPsiSourceFile File { get; } = file;
+    public string DocumentId { get; } = ScriptDocuments.Id(file);
     public ScriptIndex Index { get; } = index;
     public long Generation => epoch;
     public TypeReference Reference { get; } = reference;
@@ -210,9 +213,9 @@ internal sealed class FsmKeyResult(IPsiSourceFile file, ScriptIndex index, long 
     public IDeclaredElement Target => Current ? TypeCatalog.Resolve(File.GetPsiServices(), identity)! : null!;
     public DocumentRange Range => new(File.Document, new TextRange(Reference.Span.Start, Reference.Span.Start + Reference.Span.Length));
     public override bool Equals(object? obj) => obj is FsmKeyResult other
-        && StringComparer.OrdinalIgnoreCase.Equals(ScriptDocuments.Id(File), ScriptDocuments.Id(other.File))
+        && StringComparer.OrdinalIgnoreCase.Equals(DocumentId, other.DocumentId)
         && epoch == other.epochValue && Reference == other.Reference && TypeCatalog.SameDefinition(identity, other.identityValue);
     private long epochValue => epoch;
     private TypeIdentity identityValue => identity;
-    public override int GetHashCode() => HashCode.Combine(StringComparer.OrdinalIgnoreCase.GetHashCode(ScriptDocuments.Id(File)), epoch, Reference, identity.Module, identity.ClrName);
+    public override int GetHashCode() => HashCode.Combine(StringComparer.OrdinalIgnoreCase.GetHashCode(DocumentId), epoch, Reference, identity.Module, identity.ClrName);
 }

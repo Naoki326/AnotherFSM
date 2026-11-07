@@ -100,11 +100,14 @@ public sealed class ScriptDocuments
         return Modules().SelectMany(Roots).Where(file => StringComparer.OrdinalIgnoreCase.Equals(Id(file), path.Replace('\\', '/'))).ToArray();
     }
 
-    public IPsiSourceFile? Import(IPsiModule module, string importingPath, string name)
+    public IPsiSourceFile? Import(IPsiModule module, string importingPath, string name, string? rootDocumentId = null)
     {
         var configuration = settings.Read(module, importingPath);
-        var mappings = configuration.Modules.Where(item => StringComparer.OrdinalIgnoreCase.Equals(item.Name, name)).ToArray();
-        if (configuration.Error != null || mappings.Length > 1) return null;
+        var root = rootDocumentId == null || StringComparer.OrdinalIgnoreCase.Equals(rootDocumentId, importingPath)
+            ? configuration : settings.Read(module, rootDocumentId);
+        var mappings = configuration.Modules.Concat(root.Modules).DistinctBy(item => item.Source)
+            .Where(item => StringComparer.OrdinalIgnoreCase.Equals(item.Name, name)).ToArray();
+        if (configuration.Error != null || root.Error != null || mappings.Length > 1) return null;
         var path = mappings.Length == 1
             ? VirtualFileSystemPath.Parse(mappings[0].File, InteractionContext.SolutionContext) : ResolveImportPath(importingPath, name);
         if (path == null || !path.ExistsFile) return null;
@@ -153,8 +156,8 @@ public sealed class ScriptDocuments
             files[Id(file)] = file;
             return index.Read(file, epoch);
         }
-        var graph = SemanticGraph.Build(Roots(module).Select(Read).ToArray(), (from, name) => {
-            var file = Import(module, from, name);
+        var graph = SemanticGraph.Build(Roots(module).Select(Read).ToArray(), import => {
+            var file = Import(module, import.ImportingDocumentId, import.Name, import.RootDocumentId);
             return file == null ? null : Read(file);
         }, checkHostCancellation: () => {
             JetBrains.Application.Interruption.Current.CheckAndThrow();

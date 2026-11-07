@@ -12,6 +12,9 @@ import com.intellij.openapi.fileEditor.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.*;
 import com.intellij.openapi.util.Disposer;
+import com.intellij.openapi.util.Computable;
+import com.intellij.openapi.roots.ProjectFileIndex;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.wm.*;
 import com.intellij.ui.components.JBList;
@@ -77,7 +80,9 @@ public final class SemanticUi implements Disposable {
     this.project=project;BackendConnection.get(project).onInvalidated(this::invalidated);
     EditorFactory.getInstance().getEventMulticaster().addDocumentListener(new DocumentListener() {
       public void documentChanged(DocumentEvent event) {
+        var changed=event.getDocument();
         Runnable invalidate=() -> {
+          if(!live()||!relevantChange(changed))return;
           // A dependency buffer can change while the originating buffer is unchanged. Cancel local
           // in-flight operations immediately; do not wait for a later backend invalidation packet.
           for(var ticket:new ArrayList<>(requests))finish(ticket);
@@ -91,10 +96,19 @@ public final class SemanticUi implements Disposable {
       public void editorReleased(EditorFactoryEvent event) {var active=navigation.remove(event.getEditor().getDocument());if(active!=null)finish(active);}
     },this);
   }
+  private boolean relevantChange(Document document) {
+    if(requests.stream().anyMatch(ticket -> ticket.origin.document==document)||pages.stream().anyMatch(page -> page.origin.document==document))return true;
+    var file=FileDocumentManager.getInstance().getFile(document);if(file==null)return false;
+    String name=file.getName().toLowerCase(Locale.ROOT);
+    if(name.endsWith(".fsm")||name.endsWith(".fsmscript")||name.equals("anotherfsm.json"))return true;
+    // SDK-created decompiler/metadata documents are presentation, not edits to the consuming project.
+    // Host content membership includes linked C# files; physical directory proximity is not used.
+    return ApplicationManager.getApplication().runReadAction((Computable<Boolean>)() -> !project.isDisposed()&&ProjectFileIndex.getInstance(project).isInContent(file));
+  }
   private boolean live() {return !disposed&&!project.isDisposed();}
   private void inform(String reason) {
     if(live())NotificationGroupManager.getInstance().getNotificationGroup("AnotherFSM")
-        .createNotification("AnotherFSM："+reason,NotificationType.INFORMATION).notify(project);
+        .createNotification("AnotherFSM："+StringUtil.escapeXmlEntities(reason),NotificationType.INFORMATION).notify(project);
   }
   private void invalidated(String raw) {
     if(!live())return;
@@ -155,7 +169,7 @@ public final class SemanticUi implements Disposable {
     if(status.equals("type")) {
       var navigation=ticket.envelope.deepCopy();navigation.addProperty("action","navigateType");
       navigation.add("session",reply.get("session"));navigation.add("contextVersion",reply.get("contextVersion"));navigation.add("target",reply.get("target"));
-      send(ticket,navigation,result -> {finish(ticket);if(!"navigationDispatched".equals(result.get("status").getAsString()))inform(result.get("reason").getAsString());},() -> {});
+      send(ticket,navigation,result -> {finish(ticket);var reason=result.get("reason").getAsString();if(!reason.isBlank())inform(reason);},() -> {});
       return;
     }
     var locations=locations(reply);

@@ -124,6 +124,10 @@ public static class ExternalTypeNavigation
                         || !ReferenceEquals(m.Assembly, module.ContainingProjectModule)))
                         return MetadataOnly("Provider returned a mapping outside the bound assembly/presentation");
 
+                    // Register only the exact SDK-owned, non-user mappings validated above. Opening
+                    // these can create MiscFiles items; that presentation is not a business project change.
+                    var index = solution.GetComponent<ScriptIndex>();
+                    foreach (var mapping in mappings) index.NotePresentation(mapping.File.FullPath);
                     // Use only the public parsing/positioning helper, not its retargeting entry
                     // points. OriginalNavigationInfo is null, so there is no alternate target.
                     FileSystemPathNavigationPoint[]? points = null;

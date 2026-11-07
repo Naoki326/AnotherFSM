@@ -9,10 +9,12 @@ namespace AnotherFSM.Rider;
 
 /// <summary>Reads an optional, adjacent configuration as text. Never builds, restores, loads DLLs or invokes business code.</summary>
 [SolutionComponent(Instantiation.ContainerAsyncPrimaryThread)]
-public sealed class BindingSettings(DocumentManager documents)
+public sealed class BindingSettings(DocumentManager documents, ScriptIndex index)
 {
     public static string? ProjectPath(IPsiModule module) => module.ContainingProjectModule is IProject project
         ? project.ProjectFileLocation.FullPath.Replace('\\', '/') : null;
+
+    public static string HostLabel(IPsiModule module) => (ProjectPath(module) ?? module.GetPersistentID()) + " / " + Framework(module);
 
     public BindingOverride Read(IPsiModule module, string script)
     {
@@ -23,8 +25,9 @@ public sealed class BindingSettings(DocumentManager documents)
         // Prefer a host project document when it is a real project item; path-only buffers need not be the editor buffer.
         var project = (IProject)module.ContainingProjectModule;
         var items = project.GetAllProjectFiles(file => file.Location.Equals(path)).ToArray();
-        var text = items.Length == 1 ? documents.GetOrCreateDocument(items[0]).GetText() : documents.GetOrCreateDocument(path).GetText();
-        return BindingConfiguration.Parse(path.FullPath, text).Select(projectPath, Framework(module), script);
+        var document = items.Length == 1 ? documents.GetOrCreateDocument(items[0]) : documents.GetOrCreateDocument(path);
+        index.TrackDocument(path.FullPath.Replace('\\', '/'), document);
+        return BindingConfiguration.Parse(path.FullPath, document.GetText()).Select(projectPath, Framework(module), script);
     }
 
     public static string Framework(IPsiModule module)
