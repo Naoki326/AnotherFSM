@@ -22,4 +22,4 @@
 - 产品及完整 observer 对真实 SDK 编译通过；Java observer 有既有 deprecated API 警告。
 - 真实独立 index-invalidation：runId `25824cbe-6037-4c4e-b24a-cd4851d756a1`，`run-d9fe0548146a48d79a5489e5788d7bdd/`。10 步、6 项 cache-only 检查通过；无文本变化保持相同 Finder occurrences 有效及业务状态不变；真实 C# 编辑推进业务 epoch/输入摘要并使结果过期；HOST_CHOICE 阶段观察到 DOCUMENT_CHANGED / TRANSPORT_CHANGED；同 backend 自动重连。原 frontend/backend 已退出、设置原始 1469 字节及 69 项夹具 hash 精确匹配。
 
-SDK `ready` 始终只代表 readiness，不是 full SDK checks passed。独立 case 结果只声明自身；冻结后的全量回归及双轴审查另行记录，不能复用旧 #34 证据冒充本次通过。
+SDK `ready` 始终只代表 readiness，不是 full SDK checks passed。独立 case 结果只声明自身；冻结后的全量回归及双轴审查见 [`review.md`](review.md) 和 [`final-validation.json`](final-validation.json)。完整 UI 回归失败及初次 Python 稳定性问题保留，不能复用旧 #34 证据或后续绿色冒充本次整体最终验收通过。

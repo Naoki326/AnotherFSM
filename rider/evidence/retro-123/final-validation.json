@@ -1,0 +1,238 @@
+{
+  "baseline": "45e7ad1...849de5e",
+  "initialOffline": [
+    {
+      "name": "01-rider-python",
+      "command": [
+        "python",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "rider/tools/tests",
+        "-v"
+      ],
+      "startUtc": "2026-11-07T11:27:42.581334+00:00",
+      "receipt": {
+        "exitCode": 1,
+        "seconds": 41.40410375595093
+      },
+      "counts": {
+        "total": 47,
+        "passed": 44,
+        "failed": 2,
+        "skipped": 1
+      },
+      "log": ".scratch\\rider-acceptance\\final-offline\\01-rider-python\\output.log"
+    },
+    {
+      "name": "02-diagnostics",
+      "command": [
+        "dotnet",
+        "test",
+        "rider/tests/diagnostics/IndexDiagnostics.Tests.csproj",
+        "--nologo",
+        "-p:NuGetAudit=false"
+      ],
+      "startUtc": "2026-11-07T11:27:42.843230+00:00",
+      "receipt": {
+        "exitCode": 0,
+        "seconds": 7.109952926635742
+      },
+      "counts": {
+        "total": 13,
+        "passed": 13,
+        "failed": 0,
+        "skipped": 0
+      },
+      "log": ".scratch\\rider-acceptance\\final-offline\\02-diagnostics\\output.log"
+    },
+    {
+      "name": "03-release-python",
+      "command": [
+        "python",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tools/test",
+        "-p",
+        "test_release.py",
+        "-v"
+      ],
+      "startUtc": "2026-11-07T11:27:43.165294+00:00",
+      "receipt": {
+        "exitCode": 0,
+        "seconds": 1.4627671241760254
+      },
+      "counts": {
+        "total": 6,
+        "passed": 6,
+        "failed": 0,
+        "skipped": 0
+      },
+      "log": ".scratch\\rider-acceptance\\final-offline\\03-release-python\\output.log"
+    },
+    {
+      "name": "04-solution",
+      "command": [
+        "dotnet",
+        "test",
+        "AnotherFSM.sln",
+        "--nologo",
+        "-p:NuGetAudit=false"
+      ],
+      "startUtc": "2026-11-07T11:28:20.871448+00:00",
+      "receipt": {
+        "exitCode": 0,
+        "seconds": 23.409236192703247
+      },
+      "counts": {
+        "assemblies": 4,
+        "total": 507,
+        "passed": 507,
+        "failed": 0,
+        "skipped": 0
+      },
+      "log": ".scratch\\rider-acceptance\\final-offline\\04-solution\\output.log"
+    },
+    {
+      "name": "05-tools-node",
+      "command": [
+        "C:/Program Files/Git/bin/bash.exe",
+        "-c",
+        "node --test tools/test/*.test.mjs"
+      ],
+      "startUtc": "2026-11-07T11:27:43.594974+00:00",
+      "receipt": {
+        "exitCode": 0,
+        "seconds": 2.6825037002563477
+      },
+      "counts": {
+        "total": 22,
+        "passed": 22,
+        "failed": 0,
+        "skipped": 0
+      },
+      "log": ".scratch\\rider-acceptance\\final-offline\\05-tools-node\\output.log"
+    },
+    {
+      "name": "06-frontend-lint",
+      "command": [
+        "C:/Program Files/Git/bin/bash.exe",
+        "-c",
+        "npm --script-shell='C:/Program Files/Git/bin/bash.exe' run lint --prefix demos/FSMDemo.Frontend"
+      ],
+      "startUtc": "2026-11-07T11:27:43.989746+00:00",
+      "receipt": {
+        "exitCode": 0,
+        "seconds": 15.788705110549927
+      },
+      "counts": {
+        "testCount": null,
+        "note": "lint/typecheck; not a test runner"
+      },
+      "log": ".scratch\\rider-acceptance\\final-offline\\06-frontend-lint\\output.log"
+    },
+    {
+      "name": "07-frontend-typecheck",
+      "command": [
+        "C:/Program Files/Git/bin/bash.exe",
+        "-c",
+        "npm --script-shell='C:/Program Files/Git/bin/bash.exe' run typecheck --prefix demos/FSMDemo.Frontend"
+      ],
+      "startUtc": "2026-11-07T11:27:44.442882+00:00",
+      "receipt": {
+        "exitCode": 0,
+        "seconds": 12.827440023422241
+      },
+      "counts": {
+        "testCount": null,
+        "note": "lint/typecheck; not a test runner"
+      },
+      "log": ".scratch\\rider-acceptance\\final-offline\\07-frontend-typecheck\\output.log"
+    },
+    {
+      "name": "08-frontend-test",
+      "command": [
+        "C:/Program Files/Git/bin/bash.exe",
+        "-c",
+        "npm --script-shell='C:/Program Files/Git/bin/bash.exe' run test --prefix demos/FSMDemo.Frontend"
+      ],
+      "startUtc": "2026-11-07T11:27:44.890442+00:00",
+      "receipt": {
+        "exitCode": 0,
+        "seconds": 3.3845767974853516
+      },
+      "counts": {
+        "total": 12,
+        "passed": 12,
+        "failed": 0,
+        "skipped": 0
+      },
+      "log": ".scratch\\rider-acceptance\\final-offline\\08-frontend-test\\output.log"
+    }
+  ],
+  "latestPythonReruns": {
+    ".scratch/rider-acceptance/green-select-boundary.log": {
+      "sha256": "bb0d2018433a1c437b642f045a4b7d0d0fdf41d84c97fb49f6ad292efb928911",
+      "summary": [
+        "",
+        "----------------------------------------------------------------------",
+        "Ran 47 tests in 29.414s",
+        "",
+        "OK (skipped=1)"
+      ]
+    },
+    ".scratch/rider-acceptance/green-external-msbuild-inputs.log": {
+      "sha256": "34b1212216091e6df4603dec8b578ded260cba3fdd4ae514d7f923299b41ef4a",
+      "summary": [
+        "",
+        "----------------------------------------------------------------------",
+        "Ran 48 tests in 38.211s",
+        "",
+        "OK (skipped=1)"
+      ]
+    }
+  },
+  "unresolvedPythonStability": "Initial cleanup receipt and heartbeat-startup timing failures are retained; later passes do not establish their cause or a fix.",
+  "fullComplex": {
+    "runId": "328b4ae2-5ef5-4c4a-bd4b-bf8ddc521805",
+    "status": "assertionFailed",
+    "artifactHash": "c9effbb115283137727c6131c59c1e306769f5bb8e123a9c5913c3d8ef6e6159",
+    "coverageCounts": {
+      "passed": 9,
+      "failed": 1,
+      "notRun": 164
+    },
+    "error": "java.lang.IllegalStateException: Deadline: Web SDK static library; selected=C:/Work/AnotherFSM/rider/fixtures/Complex/StaticWeb/site.fsm:14:null; currentRows=[]; no cause inferred",
+    "sdk": {
+      "scope": "full SDK checks",
+      "status": "passed",
+      "checkCount": 183
+    },
+    "actualCancellation": [
+      {
+        "sequence": 34,
+        "requestId": "83beb597-e4dd-4b7c-be4d-080fccf994a5",
+        "stage": "NAVIGATE_TYPE",
+        "cause": "CONTEXT_INVALIDATED",
+        "documentVersion": 0,
+        "resultEpoch": 9,
+        "currentEpoch": 10
+      }
+    ],
+    "hostsStopped": true,
+    "resources": {
+      "hostsStopped": true,
+      "settingsRestored": true,
+      "ownedServerStopped": true,
+      "errors": []
+    },
+    "originalResultSha256": "57f9c7d2689ea26d2a0d52231f1a394979fe327e2d5e4f2b39ce7181c772e0c1"
+  },
+  "legacy": "Not run after Complex assertion failure; no full legacy pass claimed",
+  "overall": "Not final-acceptance passed; full UI and initial Python stability blockers retained"
+}
