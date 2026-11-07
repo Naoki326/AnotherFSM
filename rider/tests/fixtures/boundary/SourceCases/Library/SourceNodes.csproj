@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework><AssemblyName>Issue34.Source.$(SourceCase)</AssemblyName>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems><DebugType>portable</DebugType><EmbedAllSources>false</EmbedAllSources><Optimize>false</Optimize>
+    <SourceLink Condition="'$(SourceCase)' != 'nosymbols'">$(OwnedSourceLink)</SourceLink><PathMap>$(MSBuildProjectDirectory)=$(OwnedDocumentRoot)</PathMap>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(SourceCase).cs" /><Compile Include="SourceWitness.cs" /><Compile Include="$(OwnedCandidateConstant)" />
+    <Reference Include="Issue34.StaticContract"><HintPath>$(OwnedContract)</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+</Project>

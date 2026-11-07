@@ -1,0 +1,7 @@
+def ReferenceEntry(BoundaryReferenceKey) {}
+def ProjectEntry(BoundaryProjectKey) {}
+def FrameworkEntry(BoundaryFrameworkKey) {}
+def BinaryEntry(HostDllKey) {}
+Pulse -> ReferenceEntry to ProjectEntry;
+Pulse -> FrameworkEntry to ReferenceEntry;
+Pulse -> ProjectEntry to FrameworkEntry;

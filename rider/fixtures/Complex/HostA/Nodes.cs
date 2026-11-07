@@ -24,7 +24,9 @@ public static class AliasWitness
                 typeof(RightAssembly::Issue34.SameNames.CollisionWorker),
                 typeof(Issue34.BinaryLibrary.BinaryWorker),
                 typeof(Issue34.PackageLibrary.ParcelWorker),
-                typeof(Issue34.ProjectLibrary.BufferWorker<string>) };
+                typeof(Issue34.ProjectLibrary.BufferWorker<string>),
+                typeof(Issue34.ProjectLibrary.Warehouse.UnregisteredShelfWorker),
+                typeof(Issue34.ProjectLibrary.GenericWarehouse<InvoiceWorker>.SlotWorker) };
         }
     }
 }

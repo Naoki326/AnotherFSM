@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk" InitialTargets="DeclinedTrustSentinel">
+  <PropertyGroup><TargetFramework>net8.0</TargetFramework><NuGetAudit>false</NuGetAudit></PropertyGroup>
+  <!-- NEVER build/restore/accept trust for this fixture. Declining native trust must prevent execution. -->
+  <Target Name="DeclinedTrustSentinel">
+    <WriteLinesToFile File="$(MSBuildThisFileDirectory)unexpected-msbuild.marker" Lines="Trust-declined fixture unexpectedly executed MSBuild" Overwrite="false" />
+    <Error Text="Controlled trust-declined sentinel: this project must never be executed." />
+  </Target>
+</Project>

@@ -12,15 +12,18 @@ From the repository root:
 python rider/tools/prepare-complex-fixtures.py
 # Optional, if the two pinned framework packages are in another EXISTING local feed:
 python rider/tools/prepare-complex-fixtures.py --offline-framework-feed C:/local/offline-feed
-# Optional, if the three pinned WASM packages are in another EXISTING local cache/feed:
+# Optional, if the pinned WASM packages are in another EXISTING local cache/feed:
 python rider/tools/prepare-complex-fixtures.py --offline-wasm-cache C:/local/nuget-cache
 # Optional full second configuration:
 python rider/tools/prepare-complex-fixtures.py --configuration Release
+# Optional additional standalone real net8 WebAssembly SDK build (must succeed):
+python rider/tools/prepare-complex-fixtures.py --probe-net8-wasm
 ```
 
 The script is **explicit preparation**, not new passive plugin execution. It builds three controlled
 DLL producers, builds/packs one controlled NuGet producer, builds the real WebAssembly SDK project
-`StaticWasm` separately and in `Complex.sln`, queries evaluated SDK/TFM project-item properties, and
+`StaticWasm` separately and in `Complex.sln`, builds all Matrix hosts/TFMs, queries their actual SDK,
+four dependency origins and linked project items, queries TFM-exclusive project-item properties, and
 verifies two expected build failures outside the solution. It never launches Rider, loads business assemblies,
 constructs attributes, calls a factory/getter/business entry, runs a workflow, or invokes run/test/publish.
 No plugin/core/host-test files are involved. Logs and per-command results are under
@@ -31,8 +34,10 @@ Prerequisites: installed .NET 8/10 SDK/reference packs, plus existing `NETStanda
 `Microsoft.NETCore.Platforms 1.1.0` nupkgs from the installed SDK's `sdk/NuGetFallbackFolder` or a supplied
 offline feed. Additionally StaticWasm uses existing cached nupkgs `Microsoft.NET.Sdk.WebAssembly.Pack
 10.0.9`, `Microsoft.NETCore.App.Runtime.Mono.browser-wasm 10.0.9`, and `Microsoft.NET.ILLink.Tasks 10.0.8`.
-These versions are present in the existing demos/FSMDemo.Browser assets and were built with local
-SDK 10.0.300. The script copies only these five pinned prerequisites, never all cache contents, recording
+MatrixWasm/net8 additionally requires `Microsoft.NET.ILLink.Tasks 8.0.27` and
+`Microsoft.NETCore.App.Runtime.Mono.browser-wasm 8.0.28`. These net8 inputs are mandatory in the default
+preparation, preferring the already populated local fixture feed. The script stages only these seven
+pinned prerequisites, never all cache contents, recording
 the original path, source/destination SHA-256 and equality readback in summary.json. The default WASM
 cache is the existing NUGET_PACKAGES directory or ~/.nuget/packages; --offline-wasm-cache overrides it.
 No package is repacked/reconstructed; missing nupkgs fail with searched paths. The script never downloads
@@ -40,6 +45,76 @@ external packages or source, authenticates, installs a workload/SDK, or reads cr
 only at this fixture's `NuGet.Config`, audit is off, certificate revocation is offline, credentials plugins are disabled for preparation,
 and package-source mapping allows only the local `artifacts/feed`. SDK-injected installed `library-packs`
 may appear in assets source listings but is excluded by mapping. Missing prerequisites fail closed.
+
+### Separately authorized main-agent net8 package preparation
+
+The previous genuine net8 SDK attempt failed with NU1102 for Mono browser-wasm 8.0.28. Main has now
+resolved that exact gap via an explicitly authorized, official-only NuGet PackageDownload restore,
+**separate from this script and from plugin execution**. Main's restore log is
+`.scratch/issue-34/net8-pack-fetch/restore.log` (successful restore, 13.42 seconds). Its existing package is:
+
+```text
+.scratch/issue-34/net8-pack-fetch/packages/microsoft.netcore.app.runtime.mono.browser-wasm/8.0.28/microsoft.netcore.app.runtime.mono.browser-wasm.8.0.28.nupkg
+```
+
+Main copied it to `Complex/artifacts/feed/microsoft.netcore.app.runtime.mono.browser-wasm.8.0.28.nupkg`.
+The original and feed copy were read back with identical SHA-256:
+`98cde7182c0530e6a021a32fb0e1bb2de99c77d9f8247c0f4eff6f174d921b9a`.
+On a fresh offline checkout, main must first provide that existing nupkg in this feed (or the explicit
+local cache/feed). The script verifies the pinned hash, stages/reads it locally, and fails closed with
+searched paths or a hash mismatch if unavailable/changed. **Default prepare never adds a download or
+network fallback**, and does not invoke main's fetch project or any package-fetch command. Main's
+separate authorization does not authorize this script to install SDKs/workloads or access any source.
+
+A reproducible **separately authorized official-only preparation** is signed in as
+`Tooling/Net8RuntimeFetch/Fetch.csproj` and its `NuGet.Config`. The project contains only the net10 SDK
+context and one exact PackageDownload (no PackageReference, business source or custom target).
+It overrides the inherited Complex offline source/config only for this standalone project; it is
+**not in Complex.sln and is never invoked by prepare-complex-fixtures.py**. Run the following only
+when the owner explicitly authorizes this official dependency fetch, from the repository root, with
+an external 120-second command timeout. Do not build/run/publish this project or install any workload:
+
+```bash
+mkdir -p .scratch/issue-34/net8-pack-fetch
+env NUGET_PLUGIN_PATHS= NUGET_CREDENTIALPROVIDERS_PATH= \
+    NUGET_CERT_REVOCATION_MODE=offline DOTNET_CLI_TELEMETRY_OPTOUT=1 \
+    DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE=true \
+    dotnet restore rider/fixtures/Complex/Tooling/Net8RuntimeFetch/Fetch.csproj \
+    --packages .scratch/issue-34/net8-pack-fetch/packages \
+    --configfile rider/fixtures/Complex/Tooling/Net8RuntimeFetch/NuGet.Config \
+    -p:NuGetAudit=false --nologo > .scratch/issue-34/net8-pack-fetch/restore.log 2>&1
+```
+
+The config clears inherited sources and maps **only** Microsoft.NETCore.App.Runtime.Mono.browser-wasm
+to the official NuGet source. No private source or authentication is added. After an exit-code-zero
+restore, explicitly copy the nupkg and verify both source and destination against the pinned hash:
+
+```bash
+python - <<'PY' > .scratch/issue-34/net8-pack-fetch/copy-and-hash.log
+import hashlib
+from pathlib import Path
+import shutil
+source = Path('.scratch/issue-34/net8-pack-fetch/packages/microsoft.netcore.app.runtime.mono.browser-wasm/8.0.28/microsoft.netcore.app.runtime.mono.browser-wasm.8.0.28.nupkg')
+target = Path('rider/fixtures/Complex/artifacts/feed') / source.name
+expected = '98cde7182c0530e6a021a32fb0e1bb2de99c77d9f8247c0f4eff6f174d921b9a'
+def checksum(path):
+    with path.open('rb') as stream:
+        return hashlib.file_digest(stream, 'sha256').hexdigest()
+if checksum(source) != expected:
+    raise RuntimeError('Official package source SHA-256 mismatch; refusing copy')
+target.parent.mkdir(parents=True, exist_ok=True)
+shutil.copyfile(source, target)
+if checksum(target) != expected:
+    raise RuntimeError('Copied package SHA-256 mismatch')
+print(source, expected)
+print(target, expected)
+PY
+```
+
+Then use the ordinary offline preparation commands above. This helper recipe is not a new plugin
+capability or an implicit network fallback; ordinary preparation still requires existing local files.
+The checked-in recipe is a reusable equivalent of main's successful scratch fetch. This fixture agent
+has statically checked the helper and read back the existing package, not re-run its network restore.
 
 SDK 10 on this machine prefers net8 servicing packs not installed locally. `Directory.Build.targets`
 uses the **real installed 8.0.5** targeting packs for net8 and disables targeting-pack acquisition.
@@ -62,6 +137,11 @@ and report the missing prerequisite). No fabricated reference framework or retar
 | StaticWeb | Microsoft.NET.Sdk.Web / net8.0, OutputType Library | site.fsm + wwwroot; real Web SDK/static assets, no server entry point |
 | StaticBrowser | Microsoft.NET.Sdk / net10.0 | browser.fsm + wwwroot, SupportedPlatform browser, browser assembly annotation; retained auxiliary fixture, NOT WASM AC |
 | StaticWasm | Microsoft.NET.Sdk.WebAssembly / net10.0, Exe, browser-wasm | surface.fsm: WasmEntry / WasmSurfaceKey / Issue34.StaticWasm.SurfaceWorker; WasmBuildNative=false |
+| MatrixDependency | Microsoft.NET.Sdk / netstandard2.0 | Dedicated MatrixProjectKey dependency; no reference from original hosts |
+| MatrixLibrary | Microsoft.NET.Sdk / netstandard2.0 | Linked source-matrix.fsm, all four origins |
+| MatrixPlain | Microsoft.NET.Sdk / net8.0;net10.0 | Linked source-matrix.fsm, all four origins in each TFM |
+| MatrixWeb | Microsoft.NET.Sdk.Web / net8.0;net10.0, OutputType Library | Real static Web SDK, all four origins in each TFM |
+| MatrixWasm | Microsoft.NET.Sdk.WebAssembly / net8.0;net10.0, Exe, browser-wasm | Real WASM SDK, all four origins, WasmBuildNative=false, sentinel Main |
 | NegativeIdentity | Microsoft.NET.Sdk / net8.0 | identity.fsm rejects fake contract/attribute identities |
 | ImpostorContract | Microsoft.NET.Sdk / netstandard2.0 | Same StateMachine CLR names, intentionally different assembly |
 
@@ -91,6 +171,50 @@ DLL producers DllNodes/TwinLeft/TwinRight and PackageNodes are intentionally **n
 A solution-wide source scan must not masquerade as binary/package visibility. HostA consumes prepared
 DLLs, not producer ProjectReferences; HostB consumes neither DLLs nor the package. Binary assemblies
 have embedded PDB/source information; actual source-vs-metadata IDE navigation remains to be verified.
+
+## All-source project/TFM matrix
+
+The independent Matrix hosts add **seven consuming project/TFM contexts x four sources = 28 pairs**;
+HostA's coverage is not extrapolated to another SDK or TFM. Each host explicitly references
+StaticContract and MatrixDependency by ProjectReference, the prepared DllNodes DLL by HintPath, and
+exact local Issue34.LocalNodes [1.0.0] by PackageReference. MatrixDependency itself references only
+StaticContract. Original HostA/HostB/ProjectNodes reference graphs and negative keys are unchanged.
+No original host references a Matrix project, so MatrixCurrentKey/MatrixProjectKey must not leak there.
+
+| Shared script Node | Key | Type | Actual source/assembly |
+| --- | --- | --- | --- |
+| MatrixCurrentEntry | MatrixCurrentKey | Issue34.SourceMatrix.CurrentWorker | ../SharedComplex/SourceMatrix.cs, independently compiled into MatrixLibrary/MatrixPlain/MatrixWeb/MatrixWasm |
+| MatrixProjectEntry | MatrixProjectKey | Issue34.MatrixDependency.ProjectWorker | MatrixDependency/Nodes.cs, MatrixDependency.dll (netstandard2.0) |
+| MatrixBinaryEntry | HostDllKey | Issue34.BinaryLibrary.BinaryWorker | artifacts/dll/Issue34.HostLoadedNodes.dll, producer DllNodes |
+| MatrixPackageEntry | LocalPackageKey | Issue34.PackageLibrary.ParcelWorker | local Issue34.LocalNodes/1.0.0, assembly Issue34.PackagedNodes.dll |
+
+All four Matrix hosts link **one physical** ../SharedComplex/SourceMatrix.cs and source-matrix.fsm as
+Linked/SourceMatrix.cs and Linked/source-matrix.fsm. Keep project/assembly/consuming-TFM context when
+grouping the same script or C# range; CurrentWorker has four host assemblies and seven consuming contexts.
+The shared C# SourceWitness.Types and MoreTypes getters each guard first and then contain typeof for
+all four origins. This supplies **two distinct native C# type-reference ranges per origin** even after
+physical-range deduplication, so a native Find Usages journey has genuine source starting points and
+multiple candidate usages. Getters, constructors and Main must never be called to discover any type.
+Actual Find-page retention, grouping, deduplication and UI result counts require main/host evidence;
+compilation and static reference positions do not prove a successful IDE journey.
+
+Preparation builds the 15-project Complex.sln, then queries each Matrix inner TFM's actual ProjectReference,
+Reference/HintPath, PackageReference, Compile/None items and SDK properties. It fails on an incomplete
+origin graph, wrong SDK/RID/TFM or missing shared item. summary.source_matrix records all seven contexts;
+source_matrix_context_count=7 and source_matrix_origin_pair_count=28 are recorded explicitly;
+source/output hashes include every Matrix assembly, MatrixDependency and MatrixWasm's native/WebCIL
+WASM assets. No DLL/package producer source is added to the solution to manufacture source visibility.
+The original constructor/getter sentinels and the additional main-agent typeof witnesses are untouched.
+
+Optional --probe-net8-wasm additionally builds FailureCases/Net8WasmProbe with the **real WebAssembly
+SDK**, net8.0, Exe and WasmBuildNative=false. The historical path is retained outside Complex.sln, but
+it is now a **positive** offline build: a nonzero exit fails preparation rather than being accepted as
+an expected NU1102 or ignored capability failure. Its command, exit code, warning/error codes, actual
+SDK/RID properties and output hashes are recorded under summary.net8_wasm_probe and artifacts.
+Regardless of this optional flag, MatrixWasm/net8 and net10 are required positive matrix cells, with
+all four origins and per-TFM native/WebCIL WASM outputs. No ordinary SDK replacement, TFM downgrade,
+package/workload download, authentication, run or publish occurs. UI support remains main's separate
+verification; neither the resolved package gap nor a successful SDK build is a UI pass.
 
 ## Identity, alias and generic cases
 
@@ -157,7 +281,9 @@ DSL negatives are compilable project content, not a reason for the positive SDK 
 Generated outputs: each controlled project's bin/obj; `artifacts/dll/Issue34.{HostLoadedNodes,TwinLeft,
 TwinRight}.dll`; `artifacts/feed/Issue34.LocalNodes.1.0.0.nupkg` and the two copied framework packages;
 `artifacts/packages` is an isolated restore cache. Re-preparation refreshes only the controlled local
-package cache, preserving edited source, existing logs and markers. StaticWasm additionally emits
+package cache, preserving edited source, existing logs and markers. Matrix host outputs are hashed
+for every requested TFM, alongside MatrixDependency.dll. MatrixWasm emits the same categories of real
+WASM build assets as StaticWasm. StaticWasm additionally emits
 bin/<configuration>/net10.0/{StaticWasm.dll,StaticWasm.runtimeconfig.json,dotnet.native.wasm} and
 obj/<configuration>/net10.0/webcil/StaticWasm.wasm; hashes are recorded from actual queried TargetPath.
 The SDK deliberately omits browser-wasm from the output directory, despite that being the actual RID.

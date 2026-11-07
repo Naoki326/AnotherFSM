@@ -1,0 +1,1 @@
+<Project><ItemGroup Condition="'$(TargetFramework)' == 'net8.0'"><KnownFrameworkReference Update="@(KnownFrameworkReference)" TargetingPackVersion="$(OwnedNet8PackVersion)" /></ItemGroup></Project>

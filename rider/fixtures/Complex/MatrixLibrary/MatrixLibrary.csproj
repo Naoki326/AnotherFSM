@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>netstandard2.0</TargetFramework><IsPackable>false</IsPackable></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../StaticContract/StaticContract.csproj" />
+    <ProjectReference Include="../MatrixDependency/MatrixDependency.csproj" />
+    <Reference Include="Issue34.HostLoadedNodes"><HintPath>../artifacts/dll/Issue34.HostLoadedNodes.dll</HintPath></Reference>
+    <PackageReference Include="Issue34.LocalNodes" Version="[1.0.0]" />
+    <Compile Include="../../SharedComplex/SourceMatrix.cs" Link="Linked/SourceMatrix.cs" />
+    <None Include="../../SharedComplex/source-matrix.fsm" Link="Linked/source-matrix.fsm" />
+  </ItemGroup>
+</Project>

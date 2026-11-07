@@ -1,0 +1,10 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable><NuGetAudit>false</NuGetAudit>
+    <RestoreSources>$(MSBuildThisFileDirectory)</RestoreSources>
+    <RestoreAdditionalProjectSources></RestoreAdditionalProjectSources>
+    <RestoreFallbackFolders></RestoreFallbackFolders>
+    <RestoreAdditionalProjectFallbackFolders></RestoreAdditionalProjectFallbackFolders>
+  </PropertyGroup>
+</Project>

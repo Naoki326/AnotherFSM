@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <WasmBuildNative>false</WasmBuildNative>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup><ProjectReference Include="../../StaticContract/StaticContract.csproj" /></ItemGroup>
+  <!-- Optional offline capability probe, excluded from Complex.sln. Never run/publish. -->
+</Project>

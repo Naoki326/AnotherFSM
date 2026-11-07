@@ -12,6 +12,8 @@ using JetBrains.ProjectModel;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.Modules;
 using JetBrains.ReSharper.Psi.Caches;
+using JetBrains.ReSharper.Psi.Impl.Search.Operations;
+using JetBrains.ReSharper.Resources.Shell;
 
 namespace AnotherFSM.Acceptance;
 
@@ -53,7 +55,11 @@ public sealed class ComplexSdkProbe
                         ("ProjectNodes", "netstandard2.0", "ProjectLookupKey"), ("MultiTarget", "net8.0", "FrameworkBindingKey"),
                         ("MultiTarget", "net10.0", "FrameworkBindingKey"), ("StaticWeb", "net8.0", "StaticSiteKey"),
                         ("StaticBrowser", "net10.0", "BrowserCanvasKey"), ("StaticWasm", "net10.0", "WasmSurfaceKey"),
-                        ("NegativeIdentity", "net8.0", "IdentityControlKey") };
+                        ("NegativeIdentity", "net8.0", "IdentityControlKey"),
+                        ("MatrixLibrary", "netstandard2.0", "MatrixCurrentKey"),
+                        ("MatrixPlain", "net8.0", "MatrixCurrentKey"), ("MatrixPlain", "net10.0", "MatrixCurrentKey"),
+                        ("MatrixWeb", "net8.0", "MatrixCurrentKey"), ("MatrixWeb", "net10.0", "MatrixCurrentKey"),
+                        ("MatrixWasm", "net8.0", "MatrixCurrentKey"), ("MatrixWasm", "net10.0", "MatrixCurrentKey"), ("MatrixDependency", "netstandard2.0", "MatrixProjectKey") };
                     var missing = new List<string>();
                     var catalogs = new Dictionary<string, IReadOnlyList<NodeType>>();
                     var caches = solution.GetComponent<IPsiCachesState>();
@@ -77,6 +83,9 @@ public sealed class ComplexSdkProbe
                     IPsiModule Module(string name, string tfm) => modules.Single(module => Name(module) == name && BindingSettings.Framework(module) == tfm);
                     var a = Module("HostA", "net8.0"); var b = Module("HostB", "net10.0");
                     IReadOnlyList<NodeType> Catalog(IPsiModule module) => catalogs[module.GetPersistentID()];
+                    var aggregateFactory = Shell.Instance.GetComponent<FinderSearchDomainVisitorFactory>();
+                    Check("actual SDK aggregation factory registration", aggregateFactory is FsmFinderSearchDomainVisitorFactory,
+                        aggregateFactory.GetType().FullName ?? "unknown");
                     observations.Add(new { name = "ready-modules", epoch, modules = required.Select(item => {
                         var module = Module(item.Item1, item.Item2);
                         return new { project = item.Item1, framework = item.Item2, id = module.GetPersistentID(),
@@ -109,6 +118,9 @@ public sealed class ComplexSdkProbe
                             Check("full identity roundtrip: " + key, type != null && TypeCatalog.Identity(type, a, identity.Alias, identity.Construction) == identity, identity);
                             Check("consuming context preserved: " + key, identity.Consumer == a.GetPersistentID() && identity.Context == a.TargetFrameworkId.UniqueString, identity);
                             FinderCheck(psi, scripts, type!, key, new[] { "/HostA/sources.fsm" });
+                            var cached = index.Catalog(a);
+                            Check("indexed consuming catalog agrees with committed SDK snapshot: " + key,
+                                cached.ToHashSet().SetEquals(Catalog(a)), new { cached, snapshot = Catalog(a), fresh = TypeCatalog.Read(a) });
                             observations.Add(new { name = "dependency provenance (not verified source)", key, identity,
                                 definingModuleKind = type?.Module.GetType().FullName, isCompiledElement = type is ICompiledElement,
                                 assembly = (type?.Module as IAssemblyPsiModule)?.Assembly.AssemblyName.FullName,
@@ -129,6 +141,31 @@ public sealed class ComplexSdkProbe
                         && left.Alias.Split(',').Contains("LeftAssembly") && right.Alias.Split(',').Contains("RightAssembly"), new { left, right });
                     observations.Add(new { name = "alias-definitions", definitions = new[] { (identity: left, alias: "LeftAssembly"), (identity: right, alias: "RightAssembly") }
                         .Select(item => new { item.alias, identity = item.identity, assembly = (TypeCatalog.Resolve(psi, item.identity)!.Module as IAssemblyPsiModule)!.Assembly.AssemblyName.FullName }).ToArray() });
+                    foreach (var (name, tfm) in new[] { ("MatrixLibrary", "netstandard2.0"), ("MatrixPlain", "net8.0"), ("MatrixPlain", "net10.0"),
+                        ("MatrixWeb", "net8.0"), ("MatrixWeb", "net10.0"), ("MatrixWasm", "net8.0"), ("MatrixWasm", "net10.0") })
+                    {
+                        var consumer = Module(name, tfm);
+                        var catalog = Catalog(consumer);
+                        var source = scripts.Roots(consumer).Single(file => ScriptDocuments.Id(file).EndsWith("/SharedComplex/source-matrix.fsm", StringComparison.OrdinalIgnoreCase));
+                        foreach (var key in new[] { "MatrixCurrentKey", "MatrixProjectKey", "HostDllKey", "LocalPackageKey" })
+                        {
+                            var binding = Bind(key, catalog);
+                            var identity = binding.State == BindingState.Determined ? binding.Candidates.Single() : null;
+                            var target = identity == null ? null : TypeCatalog.Resolve(psi, identity);
+                            Check("source matrix binding: " + name + "/" + tfm + "/" + key, target != null && identity!.Consumer == consumer.GetPersistentID()
+                                && identity.Context == consumer.TargetFrameworkId.UniqueString && (key == "MatrixCurrentKey" ? identity.Module == consumer.GetPersistentID()
+                                    : key == "MatrixProjectKey" ? target.Module.ContainingProjectModule is IProject project && project.Name == "MatrixDependency"
+                                    : target is ICompiledElement), binding);
+                            if (target == null) continue;
+                            var found = new Collector();
+                            psi.SingleThreadedFinder.FindReferences(target, psi.SearchDomainFactory.CreateSearchDomain(source), found, NullProgressIndicator.Create());
+                            var rows = found.Snapshot().Select(result => new FsmOccurrenceProvider().MakeOccurrence(result)).OfType<RangeOccurrence>().ToArray();
+                            Check("source matrix actual restricted Finder: " + name + "/" + tfm + "/" + key,
+                                rows.Length == 1 && ((IOccurrence)rows[0]).IsValid && rows[0].GetDocumentRange().GetText() == key
+                                    && StringComparer.OrdinalIgnoreCase.Equals(ScriptDocuments.Id(rows[0].SourceFile), ScriptDocuments.Id(source)),
+                                rows.Select(row => new { file = ScriptDocuments.Id(row.SourceFile), text = row.GetDocumentRange().GetText(), display = row.GetDisplayNameText() }).ToArray());
+                        }
+                    }
                     var negative = Catalog(Module("NegativeIdentity", "net8.0"));
                     foreach (var key in new[] { "ForeignAttributeKey", "ForeignInterfaceKey", "ForeignPairKey" })
                         Check("foreign contract/attribute identity refused: " + key, Bind(key, negative).State == BindingState.Unresolved, Bind(key, negative));
@@ -324,7 +361,11 @@ public sealed class ComplexSdkProbe
         var consumer = new Collector();
         var domain = psi.SearchDomainFactory.CreateSearchDomain(type.Module.GetSolution(), false);
         psi.SingleThreadedFinder.FindReferences(type, domain, consumer, NullProgressIndicator.Create());
-        var rows = consumer.Snapshot().Select(result => new FsmOccurrenceProvider().MakeOccurrence(result))
+        var rawResults = consumer.Snapshot();
+        if (key is "HostDllKey" or "LocalPackageKey")
+            Check("ordinary C# results survive aggregation: " + key, rawResults.Any(result => result.GetType().FullName != "AnotherFSM.Rider.FsmKeyResult"),
+                rawResults.Select(result => result.GetType().FullName).Distinct().ToArray());
+        var rows = rawResults.Select(result => new FsmOccurrenceProvider().MakeOccurrence(result))
             .OfType<RangeOccurrence>().Select(occurrence => {
                 var range = occurrence.GetDocumentRange(); var span = range.TextRange;
                 var valid = range.IsValid() && ((IOccurrence)occurrence).IsValid && span.StartOffset >= 0 && span.EndOffset <= range.Document.GetTextLength();

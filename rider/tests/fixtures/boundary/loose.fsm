@@ -1,0 +1,3 @@
+// Deliberately NOT an evaluated project item. Only local DSL navigation is available.
+def LooseEntry(BoundaryReferenceKey) {}
+Pulse -> LooseEntry to LooseEntry;

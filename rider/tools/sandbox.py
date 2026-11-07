@@ -221,7 +221,8 @@ def prepare(source: Path, home: Path, launch: dict, logs: Path) -> None:
     print("Daily Rider untouched. Settings Sync disabled; do not import settings or sign in for sync.")
 
 
-def launch_sandbox(home: Path, launch: dict, logs: Path, acceptance: bool = False, complex_contexts: bool = False) -> None:
+def launch_sandbox(home: Path, launch: dict, logs: Path, acceptance: bool = False, complex_contexts: bool = False,
+                   boundary_contexts: bool = False, source_boundaries: bool = False, trust_probe: bool = False) -> None:
     if os.name != "nt":
         raise ValueError("Run with native Windows Python to record the actual Windows Java PID")
     with operation():
@@ -234,9 +235,15 @@ def launch_sandbox(home: Path, launch: dict, logs: Path, acceptance: bool = Fals
         if not (BOX / "plugins" / PLUGIN).is_dir() or installed_hashes() != state.get("installedSha256"):
             raise ValueError("Prepared plugin was removed/changed; refusing launch")
         disable_sync()
-        fixture = ROOT / "rider/fixtures/Complex/Complex.sln" if complex_contexts else FIXTURE
-        if complex_contexts and not acceptance:
-            raise ValueError("Complex contexts require the explicit controlled acceptance mode")
+        fixture = ROOT / 'rider/tests/fixtures/trust-declined/Declined.sln' if trust_probe else (
+            ROOT / 'rider/tests/fixtures/boundary/Boundary.sln' if boundary_contexts else (
+                ROOT / "rider/fixtures/Complex/Complex.sln" if complex_contexts else FIXTURE))
+        if trust_probe and (acceptance or complex_contexts or boundary_contexts or source_boundaries):
+            raise ValueError('Trust probe is a separate, decline-only native host journey')
+        if (complex_contexts or boundary_contexts) and not acceptance:
+            raise ValueError("Complex/boundary contexts require the explicit controlled acceptance mode")
+        if source_boundaries and not boundary_contexts:
+            raise ValueError('Source boundary setup requires the independent Boundary.sln')
         arguments = launch_arguments(home, launch, fixture)
         environment = clean_environment()
         environment.pop("ANOTHERFSM_ACCEPTANCE_DIR", None)
@@ -249,11 +256,15 @@ def launch_sandbox(home: Path, launch: dict, logs: Path, acceptance: bool = Fals
             evidence.mkdir()
             properties = ["-Danotherfsm.acceptance=true", "-Danotherfsm.transportReconnectAcceptance=true", "-Danotherfsm.acceptance.dir=" + evidence.as_posix(),
                           "-Danotherfsm.fixture.root=" + fixture.parent.as_posix()]
-            if complex_contexts:
+            if boundary_contexts:
+                properties.append("-Danotherfsm.boundaryAcceptance=true")
+                if source_boundaries:
+                    properties.append('-Danotherfsm.sourceBoundaryAcceptance=true')
+            elif complex_contexts:
                 properties.append("-Danotherfsm.complexAcceptance=true")
             arguments = properties + arguments
             environment["ANOTHERFSM_ACCEPTANCE_DIR"] = str(evidence)
-            if complex_contexts:
+            if complex_contexts or boundary_contexts:
                 environment["ANOTHERFSM_COMPLEX_EXECUTION_MARKER"] = str(evidence / 'complex-business-execution.marker')
         args_file = logs / "launch.args"
         args_file.write_text(argfile(arguments), encoding="utf-8")
@@ -291,9 +302,18 @@ def main() -> int:
     parser.add_argument("--zip", type=Path, default=DEFAULT_ZIP, help="prepare input ZIP (run uses the prepared installation)")
     parser.add_argument("--acceptance", action="store_true", help="run only: enable the separate controlled-fixture test plugin")
     parser.add_argument('--complex', action='store_true', help='run --acceptance only: controlled complex-context solution')
+    parser.add_argument('--boundary', action='store_true', help='run --acceptance only: independent reload/policy boundary solution')
+    parser.add_argument('--source-boundaries', action='store_true', help='run --acceptance --boundary only: explicit external-source policy suite')
+    parser.add_argument('--trust-probe', action='store_true', help='run only: decline native trust for the known never-executed fixture')
     args = parser.parse_args()
-    if args.complex and (args.action != "run" or not args.acceptance):
-        parser.error('--complex requires run --acceptance')
+    if args.trust_probe and (args.action != 'run' or args.acceptance or args.complex or args.boundary or args.source_boundaries):
+        parser.error('--trust-probe is a separate run without --acceptance/--complex/--boundary')
+    if args.source_boundaries and not args.boundary:
+        parser.error('--source-boundaries requires --boundary')
+    if args.complex and args.boundary:
+        parser.error('--complex and --boundary are separate journeys')
+    if (args.complex or args.boundary) and (args.action != "run" or not args.acceptance):
+        parser.error('--complex/--boundary requires run --acceptance')
     if args.action == "run" and args.zip != DEFAULT_ZIP:
         parser.error("--zip applies only to prepare")
     if args.action == "prepare" and args.acceptance:
@@ -304,7 +324,7 @@ def main() -> int:
         if args.action == "prepare":
             prepare(args.zip, home, launch, logs)
         else:
-            launch_sandbox(home, launch, logs, args.acceptance, args.complex)
+            launch_sandbox(home, launch, logs, args.acceptance, args.complex, args.boundary, args.source_boundaries, args.trust_probe)
     except (OSError, ValueError, RuntimeError, KeyError, zipfile.BadZipFile, ET.ParseError) as error:
         (logs / "error.log").write_text(str(error) + "\n", encoding="utf-8")
         print(f"ERROR: {error}\nLogs: {logs}", file=sys.stderr)

@@ -1,0 +1,3 @@
+// Not an evaluated consuming project; do not borrow an identically keyed type from another solution.
+def LocalOnly(BoundaryReferenceKey) {}
+Pulse -> LocalOnly to LocalOnly;

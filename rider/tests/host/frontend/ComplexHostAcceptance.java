@@ -72,6 +72,7 @@ public final class ComplexHostAcceptance implements StartupActivity.DumbAware {
     final Set<Integer> nativeDescriptors=new HashSet<>();
     final Map<Document,Set<String>> ownedVersions=new LinkedHashMap<>();
     boolean createdConfiguration,aliasConfigured,isolationChecked;String originalConfiguration;VirtualFile configurationFile;
+    Document pendingConfigurationDocument;String pendingConfigurationText;long pendingConfigurationAt;
     final List<Place> readiness=new ArrayList<>();final List<String> readinessStatuses=new ArrayList<>();
 
     Journey(Project project) {
@@ -243,11 +244,16 @@ public final class ComplexHostAcceptance implements StartupActivity.DumbAware {
       edited.remove(document);record("restored-buffer",relative);
     }
     void activate(Content page,boolean keyboard) {
-      var window=ToolWindowManager.getInstance(project).getToolWindow("AnotherFSM");window.getContentManager().setSelectedContent(page);window.show(null);
-      var list=referenceList(page);require(list!=null&&list.getModel().getSize()>0,"Missing actual result row");list.setSelectedIndex(0);list.ensureIndexIsVisible(0);
-      record("real-reference-activation",Map.of("row",String.valueOf(list.getSelectedValue()),"gesture",keyboard?"Enter":"doubleClick"));
-      if(keyboard)enter(list);
-      else {var cell=list.getCellBounds(0,0);require(cell!=null,"No actual cell bounds");list.dispatchEvent(new MouseEvent(list,MouseEvent.MOUSE_CLICKED,System.currentTimeMillis(),0,cell.x+3,cell.y+cell.height/2,2,false,MouseEvent.BUTTON1));}
+      var window=ToolWindowManager.getInstance(project).getToolWindow("AnotherFSM");
+      window.show(() -> {
+        try {
+          window.getContentManager().setSelectedContent(page);
+          var list=referenceList(page);require(list!=null&&list.getModel().getSize()>0,"Missing actual result row");list.setSelectedIndex(0);list.ensureIndexIsVisible(0);
+          record("real-reference-activation",Map.of("row",String.valueOf(list.getSelectedValue()),"gesture",keyboard?"Enter":"doubleClick"));
+          if(keyboard)enter(list);
+          else {var cell=list.getCellBounds(0,0);require(cell!=null,"No actual cell bounds");list.dispatchEvent(new MouseEvent(list,MouseEvent.MOUSE_CLICKED,System.currentTimeMillis(),0,cell.x+3,cell.y+cell.height/2,2,false,MouseEvent.BUTTON1));}
+        }catch(Throwable failure){finish(false,failure.toString());}
+      });
     }
     void refresh(Content page) {
       var buttons=tree(page.getComponent()).stream().filter(child -> child instanceof JButton button&&"刷新".equals(button.getText())).toList();
@@ -326,10 +332,44 @@ public final class ComplexHostAcceptance implements StartupActivity.DumbAware {
       // A completed, visible empty list is valid here only after the positive two/one-row assertions above.
       step("refresh restored source yields a real completed empty page",() -> refresh(oldPage),() -> !expired(oldPage)&&rows(oldPage).isEmpty());
       configurationCases();
+      sourceMatrixCases();
       once("record bounded outstanding AC, never infer all-pass",() -> {
         record("WASM-scope","Microsoft.NET.Sdk.WebAssembly static analysis only; neither execution, AOT nor publish is claimed.");
         record("remaining-acceptance-gaps",gaps);capture("complex-host-acceptance.png");
       });
+    }
+
+    void sourceMatrixCases() {
+      var contexts=List.of("MatrixLibrary.csproj / netstandard2.0","MatrixPlain.csproj / net8.0","MatrixPlain.csproj / net10.0",
+          "MatrixWeb.csproj / net8.0","MatrixWeb.csproj / net10.0","MatrixWasm.csproj / net8.0","MatrixWasm.csproj / net10.0");
+      for(var context:contexts) {
+        var current=key("../SharedComplex/source-matrix.fsm","MatrixCurrentEntry","MatrixCurrentKey");
+        chooseHost("full source matrix current: "+context,current,contexts,context,"../SharedComplex/SourceMatrix.cs","CurrentWorker");
+        nativeSearch("matrix current native reverse: "+context,null,"CurrentWorker","MatrixCurrentKey",List.of("/SharedComplex/source-matrix.fsm"),Set.of("MatrixCurrentKey"),context);
+        var project=key("../SharedComplex/source-matrix.fsm","MatrixProjectEntry","MatrixProjectKey");
+        chooseHost("full source matrix project: "+context,project,contexts,context,"MatrixDependency/Nodes.cs","ProjectWorker");
+        nativeSearch("matrix project native reverse: "+context,null,"ProjectWorker","MatrixProjectKey",List.of("/SharedComplex/source-matrix.fsm"),Set.of("MatrixProjectKey"),context);
+        for(var external:List.of(new String[]{"MatrixBinaryEntry","HostDllKey","BinaryWorker"},new String[]{"MatrixPackageEntry","LocalPackageKey","ParcelWorker"})) {
+          var place=key("../SharedComplex/source-matrix.fsm",external[0],external[1]);
+          chooseExternalMatrixHost("full source matrix external: "+context+" / "+external[1],place,contexts,context,external[2],external[1]);
+          nativeSearch("matrix external native reverse: "+context+" / "+external[1],"external",external[2],external[1],List.of("/SharedComplex/source-matrix.fsm"),Set.of(external[1]),context);
+        }
+      }
+    }
+    void chooseExternalMatrixHost(String name,Place from,List<String> expected,String selectedHost,String type,String key) {
+      step(name+": real consuming host chooser",() -> {externalAvailable=false;lastExternalFile=null;open(from);baselineNotifications();action(IMPL);},() -> {
+        for(var window:Window.getWindows())if(window.isShowing())for(var child:tree(window))
+          if(child instanceof JList<?> list&&list.isShowing()&&!"AnotherFSM.references".equals(list.getName())) {
+            var labels=model(list);if(labels.size()==expected.size()&&expected.stream().allMatch(host -> labels.stream().anyMatch(label -> label.contains(host)))) {
+              chooser=list;record("real-matrix-host-chooser",Map.of("origin",key,"selectedContext",selectedHost,"choices",labels));return true;
+            }
+          }
+        return false;
+      });
+      step(name+": selected consuming external presentation",() -> {
+        var labels=model(chooser);int selected=-1;for(int i=0;i<labels.size();i++)if(labels.get(i).contains(selectedHost)){require(selected<0,"Nonunique matrix host");selected=i;}
+        require(selected>=0,"Missing matrix host: "+selectedHost);chooser.setSelectedIndex(selected);enter(chooser);
+      },() -> observeExternal(from,type,key));
     }
 
     void restoreDiskIfAutosaved(Document document,Path path) {
@@ -382,7 +422,8 @@ public final class ComplexHostAcceptance implements StartupActivity.DumbAware {
     boolean sdkFinished() {
       try {
         var path=output.resolve("complex-sdk-probe.json");if(!Files.isRegularFile(path))return false;
-        var report=JsonParser.parseString(Files.readString(path)).getAsJsonObject();String status=report.get("status").getAsString();
+        var parsed=JsonParser.parseString(Files.readString(path));if(!parsed.isJsonObject())return false;
+        var report=parsed.getAsJsonObject();String status=report.get("status").getAsString();
         if(!Set.of("passed","failed","pendingVerification").contains(status))return false;
         var sample=observer();if(sample==null||sample.get("backendPid").getAsInt()!=report.get("backendPid").getAsInt())return false;
         record("SDK-terminal-readiness-only",Map.of("status",status,"backendPid",report.get("backendPid")));
@@ -419,10 +460,23 @@ public final class ComplexHostAcceptance implements StartupActivity.DumbAware {
         ownedVersions.computeIfAbsent(document,ignored -> new HashSet<>()).add(json);
         WriteCommandAction.runWriteCommandAction(project,() -> document.setText(json));edited.put(document,json);
         // Adjacent config need not be a project item. Exercise a real saved editor file, not an unshared path-only buffer.
-        FileDocumentManager.getInstance().saveDocument(document);String saved=Files.readString(path);
-        require(saved.replace("\r\n","\n").equals(json),"Configuration was not really saved");ownedVersions.get(document).add(saved);
-        record("real-saved-configuration-editor",Map.of("file",path.toString(),"text",json,"createdByControlledTest",createdConfiguration));
+        pendingConfigurationDocument=document;pendingConfigurationText=json;pendingConfigurationAt=System.nanoTime();
+        FileDocumentManager.getInstance().saveDocument(document);
+        record("configuration-editor-save-requested",Map.of("file",path.toString(),"text",json,"createdByControlledTest",createdConfiguration));
       }catch(java.io.IOException failure){throw new IllegalStateException(failure);}
+    }
+    boolean configurationSaved() {
+      if(pendingConfigurationDocument==null)return true;
+      try {
+        String disk=Files.readString(root.resolve("HostA/anotherfsm.json")),buffer=pendingConfigurationDocument.getText();
+        String expected=pendingConfigurationText.replace("\r\n","\n").stripTrailing();
+        if(disk.replace("\r\n","\n").stripTrailing().equals(expected)&&buffer.replace("\r\n","\n").stripTrailing().equals(expected)) {
+          ownedVersions.get(pendingConfigurationDocument).add(disk);ownedVersions.get(pendingConfigurationDocument).add(buffer);edited.put(pendingConfigurationDocument,buffer);
+          record("real-saved-configuration-editor",Map.of("file",root.resolve("HostA/anotherfsm.json").toString(),"text",disk,"createdByControlledTest",createdConfiguration));
+          pendingConfigurationDocument=null;pendingConfigurationText=null;return true;
+        }
+        require(since(pendingConfigurationAt)<10_000,"Configuration save readback did not match controlled input; no unknown content overwritten");return false;
+      }catch(java.io.IOException pendingSave){require(since(pendingConfigurationAt)<10_000,"Configuration save did not complete");return false;}
     }
     void cleanupConfiguration() {
       if(configurationFile==null)return;
@@ -476,7 +530,10 @@ public final class ComplexHostAcceptance implements StartupActivity.DumbAware {
       step("old row cannot navigate after configuration change",() -> {open(from);baselineNotifications();activate(oldPage,true);},() -> {
         require(located(from,false),"Configuration-expired list navigated old position");return explanation(text -> text.matches("(?is).*(过期|刷新|stale|refresh).*"))!=null;
       });
-      implementation("explicit mapping replaces current attribute key",from,"ProjectNodes/Nodes.cs","UnregisteredShelfWorker");
+      step("explicit mapping replaces current attribute key and visibly reports configuration source",() -> {
+        open(from);baselineNotifications();action(IMPL);
+      },() -> declaration("ProjectNodes/Nodes.cs","UnregisteredShelfWorker")
+          &&explanation(text -> text.contains("Explicit mapping")&&text.contains("anotherfsm.json"))!=null);
       nativeSearch("configured target native reverse uses overridden key",null,"UnregisteredShelfWorker","CurrentHostKey",List.of("/HostA/sources.fsm"));
       once("save invalid explicit target (must not fall back)",() -> writeConfiguration(configuration(projectTarget("../ProjectNodes/ProjectNodes.csproj","Issue34.ProjectLibrary.DoesNotExist"),1)));
       rejected("invalid explicit target refuses attribute fallback",from,"Explicit mapping.*(unavailable|unconfirmed|invalid)");
@@ -514,13 +571,17 @@ public final class ComplexHostAcceptance implements StartupActivity.DumbAware {
       once("save config-relative pre-registered Module file",() -> {
         var config=new JsonObject();config.addProperty("version",1);var contexts=new JsonArray();var context=new JsonObject();
         context.addProperty("host","HostA.csproj");var scripts=new JsonArray();scripts.add("preset.fsm");context.add("scripts",scripts);
+        var mappings=new JsonArray();var mapping=new JsonObject();mapping.addProperty("key","CurrentHostKey");mapping.add("type",target.deepCopy());mappings.add(mapping);context.add("mappings",mappings);
         var modules=new JsonArray();var module=new JsonObject();module.addProperty("name","Configured");module.addProperty("file","../../SharedComplex/registered-module.fsm");
-        modules.add(module);context.add("modules",modules);contexts.add(context);config.add("contexts",contexts);writeConfiguration(gson.toJson(config));
+        modules.add(module);var support=new JsonObject();support.addProperty("name","Support");support.addProperty("file","../../SharedComplex/registered-support.fsm");modules.add(support);
+        context.add("modules",modules);contexts.add(context);config.add("contexts",contexts);writeConfiguration(gson.toJson(config));
       });
       step("registered Module navigates to actual config-relative source without import",() -> {
         open(at("HostA/preset.fsm","use Configured as ConfiguredFlow","Configured"));action("AnotherFSM.GoToModuleDefinition");
       },() -> located(at("../SharedComplex/registered-module.fsm","module Configured","Configured"),true));
       implementation("registered Module Input retains consuming C# association",at("../SharedComplex/registered-module.fsm","input Entry","Entry"),"HostA/Nodes.cs","InvoiceWorker");
+      implementation("root-file override applies to its own factory declaration",key("HostA/preset.fsm","Finish","CurrentHostKey"),"ProjectNodes/Nodes.cs","UnregisteredShelfWorker");
+      implementation("root-file override does not leak through an Input reference into another factory source",at("HostA/preset.fsm","Enter -> Finish to ConfiguredFlow.Entry","Entry"),"HostA/Nodes.cs","InvoiceWorker");
       once("save case-sensitive explicit host mapping and unsaved lowercase key",() -> {
         var config=JsonParser.parseString(configuration(target,1)).getAsJsonObject();config.getAsJsonArray("contexts").get(0).getAsJsonObject().addProperty("keyComparison","Ordinal");
         writeConfiguration(gson.toJson(config));editBuffer("HostA/sources.fsm",text -> text.replace("CurrentEntry(CurrentHostKey)","CurrentEntry(currenthostkey)"));
@@ -531,6 +592,16 @@ public final class ComplexHostAcceptance implements StartupActivity.DumbAware {
       });
       implementation("OrdinalIgnoreCase resolves the same unsaved lowercase key",key("HostA/sources.fsm","CurrentEntry","currenthostkey"),"ProjectNodes/Nodes.cs","UnregisteredShelfWorker");
       once("restore adjacent configuration and source buffers",() -> {cleanupConfiguration();restore("HostA/sources.fsm");restore("../SharedComplex/dual-host.fsm");});
+      var restoredHost=new long[]{-1,-1,0};
+      step("restored inputs settle at independently observed stable host epochs",() -> {},() -> {
+        var sample=observer();if(sample==null)return false;
+        long sequence=sample.get("seq").getAsLong(),epoch=sample.get("epoch").getAsLong();
+        if(sequence!=restoredHost[0]) {
+          restoredHost[2]=epoch==restoredHost[1]?restoredHost[2]+1:1;restoredHost[0]=sequence;restoredHost[1]=epoch;
+        }
+        return restoredHost[2]>=4&&!Files.exists(root.resolve("HostA/anotherfsm.json"))
+            &&doc("HostA/sources.fsm").getText().equals(originals.get(doc("HostA/sources.fsm")));
+      });
       implementation("configuration restoration returns original binding",from,"HostA/Nodes.cs","InvoiceWorker");
       nativeSearch("restored current-project native reverse",null,"InvoiceWorker","CurrentHostKey",List.of("/HostA/sources.fsm"));
     }
@@ -560,13 +631,16 @@ public final class ComplexHostAcceptance implements StartupActivity.DumbAware {
       return false;
     }
     JsonObject observer() {
-      try {var path=output.resolve("native-observation.json");return Files.isRegularFile(path)?JsonParser.parseString(Files.readString(path)).getAsJsonObject():null;}
+      try {var path=output.resolve("native-observation.json");if(!Files.isRegularFile(path))return null;var parsed=JsonParser.parseString(Files.readString(path));return parsed.isJsonObject()?parsed.getAsJsonObject():null;}
       catch(java.io.IOException|JsonParseException retry){return null;}
     }
     void nativeSearch(String name,String external,String type,String key,List<String> requiredPaths) {
       nativeSearch(name,external,type,key,requiredPaths,Set.of(key));
     }
     void nativeSearch(String name,String external,String type,String key,List<String> requiredPaths,Set<String> acceptedKeys) {
+      nativeSearch(name,external,type,key,requiredPaths,acceptedKeys,null);
+    }
+    void nativeSearch(String name,String external,String type,String key,List<String> requiredPaths,Set<String> acceptedKeys,String requiredHost) {
       step(name,() -> {
         if(external!=null&&!externalAvailable) {
           String qualified=switch(type) {
@@ -599,7 +673,10 @@ public final class ComplexHostAcceptance implements StartupActivity.DumbAware {
             var row=value.getAsJsonObject();if(!row.has("runtimeType")||row.get("runtimeType").isJsonNull()||!"AnotherFSM.Rider.FsmOccurrence".equals(row.get("runtimeType").getAsString()))continue;
             require(row.get("valid").getAsBoolean(),"Completed native search exposed an invalid DSL occurrence");
             require(acceptedKeys.contains(row.get("currentSlice").getAsString()),"Native reverse search returned another key / Node name: "+row);
-            String path=row.get("file").getAsString();require(positions.add(path+":"+row.get("start")+":"+row.get("length")),"Native reverse search duplicated physical source position");
+            String path=row.get("file").getAsString();
+            if(requiredHost!=null&&path.endsWith("/SharedComplex/source-matrix.fsm"))
+              require(row.get("text").getAsString().contains(requiredHost),"Native matrix row lost its actual consuming host/TFM group: "+requiredHost+" / "+row);
+            require(positions.add(path+":"+row.get("start")+":"+row.get("length")),"Native reverse search duplicated physical source position");
             files.add(path);evidence.add(row);
           }
           if(!requiredPaths.stream().allMatch(path -> files.stream().anyMatch(file -> file.endsWith(path))))continue;
@@ -641,6 +718,7 @@ public final class ComplexHostAcceptance implements StartupActivity.DumbAware {
     }
     void tick() {
       if(done)return;require(!project.isDisposed(),"Project disposed during complex journey");checkSentinel();
+      if(!configurationSaved())return;
       if(index==steps.size()){finish(true,null);return;}require(since(begun)<900_000,"Complex journey total deadline exceeded");
       var step=steps.get(index);
       if(!step.started){step.started=true;step.begun=System.nanoTime();step.status="running";record("begin",step.name);report("running",null);step.enter.run();return;}
@@ -674,6 +752,7 @@ public final class ComplexHostAcceptance implements StartupActivity.DumbAware {
     void finish(boolean passed,String error) {
       if(done)return;done=true;generation++;if(timer!=null)timer.cancel(false);if(query!=null)Disposer.dispose(query);
       boolean incomplete=index==0&&"pendingVerification".equals(steps.get(0).status);
+      if(!passed)record("actual-failure-notifications",Arrays.stream(notifications()).filter(item -> (item.getTitle()+item.getContent()).contains("AnotherFSM")).map(item -> item.getTitle()+" "+item.getContent()).toList());
       if(!passed){if(index<steps.size()){steps.get(index).status=incomplete?"pendingVerification":"failed";steps.get(index).detail=error;}try{capture("complex-host-failure.png");}catch(Throwable failure){record("screenshot-error",failure.toString());}}
       var cleanupErrors=new ArrayList<String>();
       // Restore independent test-owned buffers even if another buffer has a concurrent edit.

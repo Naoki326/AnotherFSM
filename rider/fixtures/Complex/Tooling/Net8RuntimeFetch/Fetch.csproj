@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <NuGetAudit>false</NuGetAudit>
+    <!-- Explicitly invoked PackageDownload-only preparation, never a solution/ordinary-prepare input.
+         Override Complex's inherited offline source/config only for this standalone fetch project. -->
+    <RestoreConfigFile>$(MSBuildThisFileDirectory)NuGet.Config</RestoreConfigFile>
+    <RestoreSources>https://api.nuget.org/v3/index.json</RestoreSources>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageDownload Include="Microsoft.NETCore.App.Runtime.Mono.browser-wasm" Version="[8.0.28]" />
+  </ItemGroup>
+</Project>

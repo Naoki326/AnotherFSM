@@ -1,0 +1,10 @@
+<Project>
+  <PropertyGroup>
+    <EnableTargetingPackDownload>false</EnableTargetingPackDownload>
+    <EnableRuntimePackDownload>false</EnableRuntimePackDownload>
+    <Issue34Net8TargetingPackVersion Condition="'$(Issue34Net8TargetingPackVersion)' == ''">8.0.5</Issue34Net8TargetingPackVersion>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
+    <KnownFrameworkReference Update="@(KnownFrameworkReference)" TargetingPackVersion="$(Issue34Net8TargetingPackVersion)" />
+  </ItemGroup>
+</Project>

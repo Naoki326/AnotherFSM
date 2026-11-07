@@ -1,6 +1,7 @@
 using System.Collections.Specialized;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using AnotherFSM.Rider;
 using JetBrains.Application.Parts;
 using JetBrains.Application.Threading;
 using JetBrains.Lifetimes;
@@ -16,7 +17,7 @@ namespace AnotherFSM.Acceptance;
 [SolutionComponent(Instantiation.ContainerAsyncPrimaryThread)]
 public sealed class HostObserver
 {
-    private sealed class Identity { public int Id; public bool Matched; public bool Subscribed; }
+    private sealed class Identity { public int Id; public bool Matched; public bool Subscribed; public ObservedRow? LastSnapshot; }
     private readonly ConditionalWeakTable<object, Identity> identities = new();
     private readonly List<object> events = new();
     private readonly object gate = new();
@@ -28,7 +29,7 @@ public sealed class HostObserver
     private Timer? timer;
     private int Id(object value) => identities.GetValue(value, _ => new Identity { Id = Interlocked.Increment(ref nextId) }).Id;
 
-    public HostObserver(Lifetime lifetime, ISolution solution, SearchDescriptorRegistrations registrations, IPsiServices psi)
+    public HostObserver(Lifetime lifetime, ISolution solution, SearchDescriptorRegistrations registrations, IPsiServices psi, ScriptIndex index)
     {
         var directory = Environment.GetEnvironmentVariable("ANOTHERFSM_ACCEPTANCE_DIR");
         if (string.IsNullOrEmpty(directory)) return;
@@ -49,7 +50,7 @@ public sealed class HostObserver
                     object[] changeEvents;
                     lock (gate) changeEvents = events.ToArray();
                     var json = JsonSerializer.Serialize(new { backendPid = Environment.ProcessId, seq = Interlocked.Increment(ref sequence),
-                        elapsedMs = (DateTime.UtcNow - start).TotalMilliseconds, nullPsiNotifications, descriptors = snapshots, events = changeEvents });
+                        elapsedMs = (DateTime.UtcNow - start).TotalMilliseconds, epoch = index.Epoch, nullPsiNotifications, descriptors = snapshots, events = changeEvents });
                     _ = Task.Run(() => {
                         try
                         {
@@ -99,22 +100,32 @@ public sealed class HostObserver
         finally { asyncDescriptor.RwLock.ReadLock.Release(); }
     }
     private sealed record ObservedRow(int id, string? runtimeType, string file, int start, int length, bool valid,
-        string text, string currentSlice, string? documentType, string? documentStamp, string? error);
+        string text, string currentSlice, string? documentType, string? documentStamp, string? error, bool snapshotOnly = false, long? queryEpoch = null);
     private ObservedRow Row(IOccurrence occurrence)
     {
-        var id = Id(occurrence);
+        var state = identities.GetValue(occurrence, _ => new Identity { Id = Interlocked.Increment(ref nextId) });
+        var id = state.Id;
         var type = occurrence.GetType().FullName;
+        var generation = occurrence.GetType().GetProperty("Generation")?.GetValue(occurrence) as long?;
         try
         {
             if (occurrence is not RangeOccurrence range) return new(id, type, "", -1, 0, occurrence.IsValid, "", "", null, null, null);
             var documentRange = range.GetDocumentRange();
             var span = range.GetTextRange();
+            if (documentRange.Document == null) throw new InvalidOperationException("Host source document unavailable after context removal");
             var validRange = span.IsValid && span.StartOffset >= 0 && span.EndOffset <= documentRange.Document.GetTextLength();
             var path = (range.GetProjectFile()?.Location ?? range.SourceFile.GetLocation()).FullPath.Replace('\\', '/');
-            return new(id, type, path, span.StartOffset, span.EndOffset - span.StartOffset, occurrence.IsValid,
+            return state.LastSnapshot = new(id, type, path, span.StartOffset, span.EndOffset - span.StartOffset, occurrence.IsValid,
                 range.GetDisplayNameText(), validRange ? documentRange.Document.GetText(span) : "",
-                documentRange.Document.GetType().FullName, documentRange.Document.LastModificationStamp.ToString(), null);
+                documentRange.Document.GetType().FullName, documentRange.Document.LastModificationStamp.ToString(), null, false, generation);
         }
-        catch (Exception error) { return new(id, type, "", -1, 0, false, "", "", null, null, error.ToString()); }
+        catch (Exception error)
+        {
+            // Unloading a project can remove the host document. Preserve last-observed plain data
+            // for row identity/order evidence, explicitly NOT a current range or valid navigation target.
+            return state.LastSnapshot is { } snapshot
+                ? snapshot with { valid = false, error = error.GetType().Name, snapshotOnly = true }
+                : new(id, type, "", -1, 0, false, "", "", null, null, error.GetType().Name, true);
+        }
     }
 }

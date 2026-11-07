@@ -1,0 +1,11 @@
+<Project>
+  <!-- Main explicitly imports this into BoundaryHost.csproj; never imported by product code. -->
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)flow.fsm" Link="SourceCases/flow.fsm" />
+    <Reference Include="Issue34.Source.offline"><HintPath>$(MSBuildThisFileDirectory)artifacts/dll/Issue34.Source.offline.dll</HintPath></Reference>
+    <Reference Include="Issue34.Source.unauthorized"><HintPath>$(MSBuildThisFileDirectory)artifacts/dll/Issue34.Source.unauthorized.dll</HintPath></Reference>
+    <Reference Include="Issue34.Source.mismatch"><HintPath>$(MSBuildThisFileDirectory)artifacts/dll/Issue34.Source.mismatch.dll</HintPath></Reference>
+    <Reference Include="Issue34.Source.nosymbols"><HintPath>$(MSBuildThisFileDirectory)artifacts/dll/Issue34.Source.nosymbols.dll</HintPath></Reference>
+    <Reference Include="Issue34.Source.broken"><HintPath>$(MSBuildThisFileDirectory)artifacts/dll/Issue34.Source.broken.dll</HintPath></Reference>
+  </ItemGroup>
+</Project>

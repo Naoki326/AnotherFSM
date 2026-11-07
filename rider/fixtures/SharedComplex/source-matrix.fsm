@@ -1,0 +1,5 @@
+// One physical DSL script, four real hosts and seven host/TFM contexts. Do not collapse host identities.
+def MatrixCurrentEntry(MatrixCurrentKey) {}
+def MatrixProjectEntry(MatrixProjectKey) {}
+def MatrixBinaryEntry(HostDllKey) {}
+def MatrixPackageEntry(LocalPackageKey) {}

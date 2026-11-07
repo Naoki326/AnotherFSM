@@ -30,6 +30,22 @@ WASM_PACKAGES = (
     ("microsoft.netcore.app.runtime.mono.browser-wasm", "10.0.9"),
     ("microsoft.net.illink.tasks", "10.0.8"),
 )
+# Required by MatrixWasm/net8.0. Main separately prepared the missing official runtime nupkg;
+# this script only reads existing local files and never fetches any package or workload.
+WASM8_PACKAGES = (
+    ("microsoft.net.illink.tasks", "8.0.27"),
+    ("microsoft.netcore.app.runtime.mono.browser-wasm", "8.0.28"),
+)
+LOCAL_TOOLCHAIN_SHA256 = {
+    "microsoft.netcore.app.runtime.mono.browser-wasm.8.0.28.nupkg":
+        "98cde7182c0530e6a021a32fb0e1bb2de99c77d9f8247c0f4eff6f174d921b9a",
+}
+MATRIX_HOSTS = {
+    "MatrixLibrary": ("netstandard2.0",),
+    "MatrixPlain": ("net8.0", "net10.0"),
+    "MatrixWeb": ("net8.0", "net10.0"),
+    "MatrixWasm": ("net8.0", "net10.0"),
+}
 BINARIES = {
     "DllNodes": "Issue34.HostLoadedNodes",
     "TwinLeft": "Issue34.TwinLeft",
@@ -112,7 +128,9 @@ def main():
                         help="Existing local flat feed or SDK NuGetFallbackFolder; copies only the two pinned framework packages")
     parser.add_argument("--offline-wasm-cache", type=Path,
                         default=Path(os.environ.get("NUGET_PACKAGES", Path.home() / ".nuget/packages")),
-                        help="Existing local flat feed or NuGet package cache; copies only the three pinned WASM packages")
+                        help="Existing local flat feed or NuGet package cache; stages pinned WASM packages offline, with net8 inputs preferring the already prepared fixture feed")
+    parser.add_argument("--probe-net8-wasm", action="store_true",
+                        help="Also build the standalone real net8 WebAssembly SDK probe offline; now required to succeed when requested (the seven-context matrix always builds)")
     parser.add_argument("--configuration", choices=("Debug", "Release"), default="Debug")
     parser.add_argument("--timeout", type=int, default=110, help="Per-command seconds (15..120)")
     args = parser.parse_args()
@@ -124,7 +142,7 @@ def main():
     marker = logs / "business-execution.marker"
     report = {"status": "preparing", "preparation_only": True, "commands": [],
               "marker": str(marker), "host_navigation_verified": False,
-              "browser_kind": "StaticWasm: real Microsoft.NET.Sdk.WebAssembly/net10.0/browser-wasm; build only",
+              "browser_kind": "StaticWasm net10.0 and MatrixWasm net8.0;net10.0: real Microsoft.NET.Sdk.WebAssembly/browser-wasm; build only",
               "cleanup": {}}
     summary = logs / "summary.json"
     lock = ARTIFACTS / "prepare.lock"
@@ -187,6 +205,7 @@ def main():
             check_marker()
             text = log.read_text(encoding="utf-8", errors="replace")
             item["warning_codes"] = sorted(set(re.findall(r"\bwarning\s+([A-Z]+\d+)", text)))
+            item["error_codes"] = sorted(set(re.findall(r"\berror\s+([A-Z]+\d+)", text)))
             if expected_error:
                 if code == 0 or expected_error not in text:
                     raise RuntimeError(f"Expected failure {expected_error} not observed: {log}")
@@ -225,11 +244,15 @@ def main():
                     raise RuntimeError(f"Offline prerequisite missing: {filename}; searched {[str(path) for path in candidates]}. No network/SDK/workload installation is permitted")
                 destination = no_links(feed / filename)
                 source_hash = digest(source)
+                expected_hash = LOCAL_TOOLCHAIN_SHA256.get(filename)
+                if expected_hash and source_hash != expected_hash:
+                    raise RuntimeError(f"Local toolchain package hash mismatch: {source}; expected {expected_hash}, got {source_hash}")
                 if source != destination:
                     shutil.copyfile(source, destination)
                 copied_hash = digest(destination)
                 report[report_key].append({"source": str(source), "file": str(destination),
                                            "source_sha256": source_hash, "sha256": copied_hash,
+                                           "expected_sha256": expected_hash,
                                            "copy_readback_matches": source_hash == copied_hash})
                 save()
                 if copied_hash != source_hash:
@@ -237,6 +260,7 @@ def main():
 
         stage_packages(FRAMEWORK_PACKAGES, [args.offline_framework_feed or fallback], "offline_framework_packages")
         stage_packages(WASM_PACKAGES, [args.offline_wasm_cache], "offline_wasm_packages")
+        stage_packages(WASM8_PACKAGES, [feed, args.offline_wasm_cache], "offline_net8_wasm_packages")
         flags = ["--configuration", args.configuration, "--nologo", "-m:1", "-nr:false",
                  "-p:UseSharedCompilation=false", "-p:NuGetAudit=false", "-p:RestoreIgnoreFailedSources=false"]
         binary_dir = no_links(ARTIFACTS / "dll")
@@ -273,6 +297,64 @@ def main():
             if context["Properties"].get(key) != expected:
                 raise RuntimeError(f"Unexpected actual WASM SDK property {key}: {context}")
         run("build-complex", ["build", "Complex.sln", *flags])
+        report["source_matrix"] = []
+        matrix_outputs = []
+        shared_cs = (SHARED / "SourceMatrix.cs").resolve()
+        shared_dsl = (SHARED / "source-matrix.fsm").resolve()
+        for project, frameworks in MATRIX_HOSTS.items():
+            for tfm in frameworks:
+                evaluated = sdk_query("matrix-" + project + "-" + tfm, f"{project}/{project}.csproj",
+                    "-getProperty:TargetFramework,AssemblyName,TargetPath,UsingMicrosoftNETSdkWeb,UsingMicrosoftNETSdkWebAssembly,RuntimeIdentifier,OutputType,WasmBuildNative",
+                    "-getItem:ProjectReference,Reference,PackageReference,Compile,None", target_framework=tfm)
+                properties, items = evaluated["Properties"], evaluated["Items"]
+                project_references = {Path(item["FullPath"]).resolve() for item in items["ProjectReference"]}
+                expected_references = {(FIXTURES / "StaticContract/StaticContract.csproj").resolve(),
+                                       (FIXTURES / "MatrixDependency/MatrixDependency.csproj").resolve()}
+                binary_references = [item for item in items["Reference"] if item["Identity"] == "Issue34.HostLoadedNodes"]
+                packages = [item for item in items["PackageReference"] if item["Identity"] == "Issue34.LocalNodes"]
+                compile_items = [item for item in items["Compile"] if Path(item["FullPath"]).resolve() == shared_cs]
+                script_items = [item for item in items["None"] if Path(item["FullPath"]).resolve() == shared_dsl]
+                if (project_references != expected_references or len(binary_references) != 1 or
+                        len(packages) != 1 or packages[0].get("Version") != "[1.0.0]" or
+                        len(compile_items) != 1 or len(script_items) != 1 or
+                        properties["TargetFramework"] != tfm or properties["AssemblyName"] != project):
+                    raise RuntimeError(f"Incomplete source matrix project/TFM: {project}/{tfm}; see matrix query log")
+                hint = (FIXTURES / project / binary_references[0]["HintPath"]).resolve()
+                if hint != (binary_dir / "Issue34.HostLoadedNodes.dll").resolve():
+                    raise RuntimeError(f"Unexpected matrix binary origin: {hint}")
+                if project == "MatrixWeb" and (properties["UsingMicrosoftNETSdkWeb"] != "true" or properties["OutputType"] != "Library"):
+                    raise RuntimeError(f"MatrixWeb is not the real static Web SDK: {properties}")
+                if project == "MatrixWasm" and (properties["UsingMicrosoftNETSdkWebAssembly"] != "true" or
+                        properties["RuntimeIdentifier"] != "browser-wasm" or properties["OutputType"] != "Exe" or properties["WasmBuildNative"] != "false"):
+                    raise RuntimeError(f"MatrixWasm is not the real controlled WebAssembly SDK: {properties}")
+                assembly = Path(properties["TargetPath"])
+                matrix_outputs.append(assembly)
+                if project == "MatrixWasm":
+                    matrix_outputs.extend((assembly.parent / "dotnet.native.wasm", assembly.parent / "MatrixWasm.runtimeconfig.json",
+                        FIXTURES / "MatrixWasm/obj" / args.configuration / tfm / "webcil/MatrixWasm.wasm"))
+                report["source_matrix"].append({"project": project, "properties": properties,
+                    "shared_csharp": str(shared_cs), "shared_dsl": str(shared_dsl),
+                    "project_references": sorted(str(path) for path in project_references),
+                    "binary_hint_path": str(hint), "package": "Issue34.LocalNodes/[1.0.0]",
+                    "four_origins_verified_by_build_and_evaluation": True})
+                save()
+        report["source_matrix_context_count"] = len(report["source_matrix"])
+        report["source_matrix_origin_pair_count"] = 4 * len(report["source_matrix"])
+        if args.probe_net8_wasm:
+            run("probe-net8-wasm", ["build", "FailureCases/Net8WasmProbe/Net8WasmProbe.csproj", *flags])
+            report["net8_wasm_probe"] = {key: report["commands"][-1][key]
+                                        for key in ("command", "log", "exit_code", "result", "warning_codes", "error_codes")}
+            probe = sdk_query("net8-wasm-probe-context", "FailureCases/Net8WasmProbe/Net8WasmProbe.csproj",
+                              "-getProperty:UsingMicrosoftNETSdkWebAssembly,TargetFramework,RuntimeIdentifier,TargetPath")
+            report["net8_wasm_probe"]["sdk_context"] = probe["Properties"]
+            for key, expected in {"UsingMicrosoftNETSdkWebAssembly": "true", "TargetFramework": "net8.0",
+                                  "RuntimeIdentifier": "browser-wasm"}.items():
+                if probe["Properties"].get(key) != expected:
+                    raise RuntimeError(f"Unexpected successful net8 probe SDK context: {probe}")
+            probe_assembly = Path(probe["Properties"]["TargetPath"])
+            matrix_outputs.extend((probe_assembly, probe_assembly.parent / "Net8WasmProbe.runtimeconfig.json",
+                                   probe_assembly.parent / "dotnet.native.wasm"))
+            save()
         report["tfm_exclusive_item"] = {}
         for tfm in ("net8.0", "net10.0"):
             items = sdk_query("items-" + tfm, "MultiTarget/MultiTarget.csproj", "-getItem:None",
@@ -298,7 +380,9 @@ def main():
         # Use its queried TargetPath, not an assumed browser-wasm output directory.
         wasm_assembly = Path(context["Properties"]["TargetPath"])
         wasm_output = wasm_assembly.parent
-        outputs = [*binary_dir.glob("*.dll"), feed / "Issue34.LocalNodes.1.0.0.nupkg",
+        outputs = [*binary_dir.glob("*.dll"), *matrix_outputs,
+                   FIXTURES / "MatrixDependency/bin" / args.configuration / "netstandard2.0/MatrixDependency.dll",
+                   feed / "Issue34.LocalNodes.1.0.0.nupkg",
                    wasm_assembly, wasm_output / "StaticWasm.runtimeconfig.json", wasm_output / "dotnet.native.wasm",
                    FIXTURES / "StaticWasm/obj" / args.configuration / "net10.0/webcil/StaticWasm.wasm"]
         report["artifacts"] = {path.relative_to(ROOT).as_posix(): digest(no_links(path)) for path in outputs}

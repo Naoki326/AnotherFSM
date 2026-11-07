@@ -1,0 +1,4 @@
+module Support {
+    input Standby;
+    def Standby(CurrentHostKey) {}
+}

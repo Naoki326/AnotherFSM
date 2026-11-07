@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net8.0</TargetFramework></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Contract/BoundaryContract.csproj" />
+    <ProjectReference Include="../Nodes/BoundaryNodes.csproj" />
+    <Reference Include="Issue34.HostLoadedNodes"><HintPath>../../../../fixtures/Complex/artifacts/dll/Issue34.HostLoadedNodes.dll</HintPath></Reference>
+  </ItemGroup>
+  <Import Project="../SourceCases/Host.items.props" />
+</Project>

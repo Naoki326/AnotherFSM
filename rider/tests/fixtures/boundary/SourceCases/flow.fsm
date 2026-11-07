@@ -1,0 +1,5 @@
+def OfflineEntry(SourceOfflineKey) {}
+def RestrictedEntry(SourceUnauthorizedKey) {}
+def MismatchEntry(SourceMismatchKey) {}
+def SymbolLessEntry(SourceNoSymbolsKey) {}
+def BrokenEntry(SourceBrokenILKey) {}

@@ -1,0 +1,21 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BoundaryHost", "Host\BoundaryHost.csproj", "{0CE93083-E593-48DF-B491-725A3F5A3D35}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BoundaryNodes", "Nodes\BoundaryNodes.csproj", "{A1A11052-2B12-42C3-B624-87C5DD999A47}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BoundaryContract", "Contract\BoundaryContract.csproj", "{24A18314-6420-4392-8EB3-84768ED7A19B}"
+EndProject
+Global
+  GlobalSection(SolutionConfigurationPlatforms) = preSolution
+    Debug|Any CPU = Debug|Any CPU
+  EndGlobalSection
+  GlobalSection(ProjectConfigurationPlatforms) = postSolution
+    {0CE93083-E593-48DF-B491-725A3F5A3D35}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+    {0CE93083-E593-48DF-B491-725A3F5A3D35}.Debug|Any CPU.Build.0 = Debug|Any CPU
+    {A1A11052-2B12-42C3-B624-87C5DD999A47}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+    {A1A11052-2B12-42C3-B624-87C5DD999A47}.Debug|Any CPU.Build.0 = Debug|Any CPU
+    {24A18314-6420-4392-8EB3-84768ED7A19B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+    {24A18314-6420-4392-8EB3-84768ED7A19B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+  EndGlobalSection
+EndGlobal

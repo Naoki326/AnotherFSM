@@ -1,3 +1,4 @@
+import Support;
 module Configured {
     input Entry;
     output Done;

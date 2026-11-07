@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><IsPackable>false</IsPackable>
+    <EnableSourceControlManagerQueries>false</EnableSourceControlManagerQueries><EnableSourceLink>false</EnableSourceLink><EmbedUntrackedSources>false</EmbedUntrackedSources><EmbedAllSources>false</EmbedAllSources>
+    <NuGetAudit>false</NuGetAudit><EnableTargetingPackDownload>false</EnableTargetingPackDownload><EnableRuntimePackDownload>false</EnableRuntimePackDownload>
+    <RestoreConfigFile>$(MSBuildThisFileDirectory)NuGet.Config</RestoreConfigFile>
+    <RestorePackagesPath>$(MSBuildThisFileDirectory)artifacts/packages</RestorePackagesPath>
+    <RestoreSources>$(MSBuildThisFileDirectory)artifacts/feed</RestoreSources><RestoreAdditionalProjectSources></RestoreAdditionalProjectSources>
+    <RestoreFallbackFolders></RestoreFallbackFolders><RestoreAdditionalProjectFallbackFolders></RestoreAdditionalProjectFallbackFolders>
+  </PropertyGroup>
+</Project>

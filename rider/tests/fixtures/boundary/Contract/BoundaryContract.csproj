@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net8.0</TargetFramework><AssemblyName>Issue34.StaticContract</AssemblyName></PropertyGroup>
+  <ItemGroup><Compile Include="../../../../fixtures/Complex/StaticContract/Contract.cs" Link="Contract.cs" /></ItemGroup>
+</Project>

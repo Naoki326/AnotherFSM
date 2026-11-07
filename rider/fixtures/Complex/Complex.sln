@@ -22,6 +22,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NegativeIdentity", "Negativ
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StaticWasm", "StaticWasm\StaticWasm.csproj", "{34000000-0000-4000-8000-000000000010}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatrixDependency", "MatrixDependency\MatrixDependency.csproj", "{34000000-0000-4000-8000-000000000011}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatrixLibrary", "MatrixLibrary\MatrixLibrary.csproj", "{34000000-0000-4000-8000-000000000012}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatrixPlain", "MatrixPlain\MatrixPlain.csproj", "{34000000-0000-4000-8000-000000000013}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatrixWeb", "MatrixWeb\MatrixWeb.csproj", "{34000000-0000-4000-8000-000000000014}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatrixWasm", "MatrixWasm\MatrixWasm.csproj", "{34000000-0000-4000-8000-000000000015}"
+EndProject
 Global
   GlobalSection(SolutionConfigurationPlatforms) = preSolution
     Debug|Any CPU = Debug|Any CPU
@@ -68,5 +78,25 @@ Global
     {34000000-0000-4000-8000-000000000010}.Debug|Any CPU.Build.0 = Debug|Any CPU
     {34000000-0000-4000-8000-000000000010}.Release|Any CPU.ActiveCfg = Release|Any CPU
     {34000000-0000-4000-8000-000000000010}.Release|Any CPU.Build.0 = Release|Any CPU
+    {34000000-0000-4000-8000-000000000011}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+    {34000000-0000-4000-8000-000000000011}.Debug|Any CPU.Build.0 = Debug|Any CPU
+    {34000000-0000-4000-8000-000000000011}.Release|Any CPU.ActiveCfg = Release|Any CPU
+    {34000000-0000-4000-8000-000000000011}.Release|Any CPU.Build.0 = Release|Any CPU
+    {34000000-0000-4000-8000-000000000012}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+    {34000000-0000-4000-8000-000000000012}.Debug|Any CPU.Build.0 = Debug|Any CPU
+    {34000000-0000-4000-8000-000000000012}.Release|Any CPU.ActiveCfg = Release|Any CPU
+    {34000000-0000-4000-8000-000000000012}.Release|Any CPU.Build.0 = Release|Any CPU
+    {34000000-0000-4000-8000-000000000013}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+    {34000000-0000-4000-8000-000000000013}.Debug|Any CPU.Build.0 = Debug|Any CPU
+    {34000000-0000-4000-8000-000000000013}.Release|Any CPU.ActiveCfg = Release|Any CPU
+    {34000000-0000-4000-8000-000000000013}.Release|Any CPU.Build.0 = Release|Any CPU
+    {34000000-0000-4000-8000-000000000014}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+    {34000000-0000-4000-8000-000000000014}.Debug|Any CPU.Build.0 = Debug|Any CPU
+    {34000000-0000-4000-8000-000000000014}.Release|Any CPU.ActiveCfg = Release|Any CPU
+    {34000000-0000-4000-8000-000000000014}.Release|Any CPU.Build.0 = Release|Any CPU
+    {34000000-0000-4000-8000-000000000015}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+    {34000000-0000-4000-8000-000000000015}.Debug|Any CPU.Build.0 = Debug|Any CPU
+    {34000000-0000-4000-8000-000000000015}.Release|Any CPU.ActiveCfg = Release|Any CPU
+    {34000000-0000-4000-8000-000000000015}.Release|Any CPU.Build.0 = Release|Any CPU
   EndGlobalSection
 EndGlobal

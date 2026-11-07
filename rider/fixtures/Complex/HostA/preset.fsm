@@ -1,3 +1,4 @@
 use Configured as ConfiguredFlow;
 def Finish(CurrentHostKey) {}
+Enter -> Finish to ConfiguredFlow.Entry;
 ConfiguredFlow.Done -> Finish;

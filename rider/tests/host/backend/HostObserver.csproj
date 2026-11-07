@@ -8,6 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="ComplexBoundaryDriver.cs" Condition="'$(IncludeBoundaryAcceptance)' != 'true'" />
+    <Compile Remove="BoundaryPolicySetup.cs" Condition="'$(IncludeSourceBoundaryAcceptance)' != 'true'" />
     <ProjectReference Include="../../../backend/AnotherFSM.Rider.csproj" />
     <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.Core.dll" Private="false" />
     <Reference Include="$(RiderHome)/lib/ReSharperHost/JetBrains.Platform.Util.dll" Private="false" />
