@@ -45,6 +45,8 @@ python rider/tools/sandbox.py run
 
 ## 验证分层
 
+受监管的准备/检查/执行、suite 身份、退出监督及精确还原见 [验收 runner](tools/README.md)。修改验收工具时先跑其中的离线契约测试，再使用已准备产品包做聚焦真实宿主验证。
+
 ```bash
 # 纯核心公共查询与版本生命周期
  dotnet test tests/AnotherFSM.Semantics.Tests --nologo

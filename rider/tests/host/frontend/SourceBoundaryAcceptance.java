@@ -72,6 +72,7 @@ public final class SourceBoundaryAcceptance {
     void step(String name,Runnable enter,BooleanSupplier verify,long limit,Runnable timeout) {steps.add(new Step(name,enter,verify,limit,timeout));}
     void step(String name,Runnable enter,BooleanSupplier verify) {step(name,enter,verify,25_000,null);}
     void start() {
+      AcceptanceLifecycle.onCancellation(project,() -> finish(false,"Supervisor requested cancellation"),() -> done);
       report("running",null);timer=AppExecutorUtil.getAppScheduledExecutorService().scheduleWithFixedDelay(() -> {
         if(done||!queued.compareAndSet(false,true))return;
         ApplicationManager.getApplication().invokeLater(() -> {try{tick();}catch(Throwable failure){finish(false,failure.toString());}finally{queued.set(false);}});

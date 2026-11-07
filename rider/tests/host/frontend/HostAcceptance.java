@@ -52,6 +52,8 @@ public final class HostAcceptance implements StartupActivity.DumbAware {
     ScheduledFuture<?> timer; int stage; long stageStart; Disposable query; boolean inFlight; boolean done; Editor editor;
     Journey(Project project) { this.project=project; }
     void start() {
+      AcceptanceLifecycle.onCancellation(project,() -> finish(false,"Supervisor requested cancellation"),
+          () -> done&&originals.entrySet().stream().allMatch(entry -> entry.getKey().getText().equals(entry.getValue())));
       timer=AppExecutorUtil.getAppScheduledExecutorService().scheduleWithFixedDelay(() -> {
         if(!tickQueued.compareAndSet(false,true)) return;
         ApplicationManager.getApplication().invokeLater(() -> {

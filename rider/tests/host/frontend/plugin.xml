@@ -7,6 +7,7 @@
   <depends>com.intellij.modules.rider</depends>
   <depends>io.github.naoki326.anotherfsm</depends>
   <extensions defaultExtensionNs="com.intellij">
+    <postStartupActivity implementation="anotherfsm.acceptance.AcceptanceLifecycle"/>
     <postStartupActivity implementation="anotherfsm.acceptance.HostAcceptance"/>
     <postStartupActivity implementation="anotherfsm.acceptance.ComplexHostAcceptance"/>
   </extensions>

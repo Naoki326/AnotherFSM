@@ -222,9 +222,13 @@ def prepare(source: Path, home: Path, launch: dict, logs: Path) -> None:
 
 
 def launch_sandbox(home: Path, launch: dict, logs: Path, acceptance: bool = False, complex_contexts: bool = False,
-                   boundary_contexts: bool = False, source_boundaries: bool = False, trust_probe: bool = False) -> None:
+                   boundary_contexts: bool = False, source_boundaries: bool = False, trust_probe: bool = False,
+                   run_id: str | None = None) -> dict:
     if os.name != "nt":
         raise ValueError("Run with native Windows Python to record the actual Windows Java PID")
+    if run_id is not None:
+        if not acceptance or str(uuid.UUID(run_id)) != run_id:
+            raise ValueError('A canonical acceptance runId requires explicit acceptance mode')
     with operation():
         state_file = no_links(BOX / "prepared.json")
         if not state_file.is_file():
@@ -244,10 +248,15 @@ def launch_sandbox(home: Path, launch: dict, logs: Path, acceptance: bool = Fals
             raise ValueError("Complex/boundary contexts require the explicit controlled acceptance mode")
         if source_boundaries and not boundary_contexts:
             raise ValueError('Source boundary setup requires the independent Boundary.sln')
+        if acceptance:
+            from acceptance_contract import check_preparation
+            suite = 'source' if source_boundaries else 'boundary' if boundary_contexts else 'complex' if complex_contexts else 'legacy'
+            check_preparation(BOX, suite)
         arguments = launch_arguments(home, launch, fixture)
         environment = clean_environment()
         environment.pop("ANOTHERFSM_ACCEPTANCE_DIR", None)
         environment.pop("ANOTHERFSM_COMPLEX_EXECUTION_MARKER", None)
+        environment.pop("ANOTHERFSM_ACCEPTANCE_RUN_ID", None)
         if acceptance:
             observer = BOX / "plugins/anotherfsm-acceptance"
             if not (observer / "lib/acceptance.jar").is_file():
@@ -256,6 +265,11 @@ def launch_sandbox(home: Path, launch: dict, logs: Path, acceptance: bool = Fals
             evidence.mkdir()
             properties = ["-Danotherfsm.acceptance=true", "-Danotherfsm.transportReconnectAcceptance=true", "-Danotherfsm.acceptance.dir=" + evidence.as_posix(),
                           "-Danotherfsm.fixture.root=" + fixture.parent.as_posix()]
+            if run_id is not None:
+                properties += ['-Danotherfsm.acceptance.runId=' + run_id,
+                               '-Danotherfsm.acceptance.suite=' + suite,
+                               '-Danotherfsm.acceptance.fixture=' + str(fixture)]
+                environment['ANOTHERFSM_ACCEPTANCE_RUN_ID'] = run_id
             if boundary_contexts:
                 properties.append("-Danotherfsm.boundaryAcceptance=true")
                 if source_boundaries:
@@ -274,7 +288,7 @@ def launch_sandbox(home: Path, launch: dict, logs: Path, acceptance: bool = Fals
                   "jbrRelease": (home / "jbr/release").read_text(encoding="utf-8"),
                   "command": command, "windowsCommandLine": subprocess.list2cmdline(command),
                   "expandedArguments": arguments, "argfileSha256": digest(args_file.read_bytes()),
-                  "cwd": str(BOX), "fixture": str(fixture), "zipSha256": state["zipSha256"],
+                  "cwd": str(BOX), "fixture": str(fixture), "zipSha256": state["zipSha256"], "runId": run_id,
                   "stdout": str(logs / "stdout.log"), "stderr": str(logs / "stderr.log"),
                   "ideLog": str(IDE_LOG), "complexExecutionMarker": environment.get("ANOTHERFSM_COMPLEX_EXECUTION_MARKER")}
         (logs / "command.json").write_text(json.dumps(record, indent=2), encoding="utf-8")
@@ -293,6 +307,7 @@ def launch_sandbox(home: Path, launch: dict, logs: Path, acceptance: bool = Fals
         (logs / "windows.pid").write_text(str(process.pid) + "\n", encoding="ascii")
     print(f"Launched sandbox Java Windows PID={process.pid}\nPermanent startup logs: {logs}\nIDE logs: {IDE_LOG}")
     print("Close only the sandbox's own window to exit. Startup/navigation/RD are not thereby validated.")
+    return record
 
 
 def main() -> int:

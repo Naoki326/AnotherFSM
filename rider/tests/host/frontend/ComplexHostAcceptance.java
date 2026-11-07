@@ -96,6 +96,8 @@ public final class ComplexHostAcceptance implements StartupActivity.DumbAware {
     void step(String name,Runnable enter,BooleanSupplier verify) {steps.add(new Step(name,enter,verify,20_000));}
     void once(String name,Runnable enter) {step(name,enter,() -> true);}
     void start() {
+      AcceptanceLifecycle.onCancellation(project,() -> finish(false,"Supervisor requested cancellation"),
+          () -> done&&edited.isEmpty()&&configurationFile==null);
       report("running",null);
       timer=AppExecutorUtil.getAppScheduledExecutorService().scheduleWithFixedDelay(() -> {
         if(done||!queued.compareAndSet(false,true))return;

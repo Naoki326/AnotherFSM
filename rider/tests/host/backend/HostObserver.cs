@@ -34,6 +34,17 @@ public sealed class HostObserver
         var directory = Environment.GetEnvironmentVariable("ANOTHERFSM_ACCEPTANCE_DIR");
         if (string.IsNullOrEmpty(directory)) return;
         Directory.CreateDirectory(directory);
+        var runId = Environment.GetEnvironmentVariable("ANOTHERFSM_ACCEPTANCE_RUN_ID");
+        var backendCreationFileTime = System.Diagnostics.Process.GetCurrentProcess().StartTime.ToUniversalTime().ToFileTimeUtc();
+        if (Guid.TryParseExact(runId, "D", out _))
+        {
+            // Immutable, per-process identity survives observer replacement and backend restarts.
+            // Write BEFORE waiting for a solution read lock; cleanup must not depend on PSI readiness.
+            var target = Path.Combine(directory, $"backend-identity-{Environment.ProcessId}-{backendCreationFileTime}.json");
+            var temporary = target + "." + Guid.NewGuid().ToString("N") + ".tmp";
+            File.WriteAllText(temporary, JsonSerializer.Serialize(new { runId, backendPid = Environment.ProcessId, backendCreationFileTime }));
+            File.Move(temporary, target, true);
+        }
         void ObservePsi(JetBrains.ReSharper.Psi.Tree.ITreeNode? node, PsiChangedElementType kind)
         { if (node == null) Interlocked.Increment(ref nullPsiNotifications); }
         psi.Files.AfterPsiChanged += ObservePsi;
@@ -49,7 +60,7 @@ public sealed class HostObserver
                     var snapshots = registrations.SearchDescriptors.Select(descriptor => Sample(lifetime, descriptor)).ToArray();
                     object[] changeEvents;
                     lock (gate) changeEvents = events.ToArray();
-                    var json = JsonSerializer.Serialize(new { backendPid = Environment.ProcessId, seq = Interlocked.Increment(ref sequence),
+                    var json = JsonSerializer.Serialize(new { runId, backendPid = Environment.ProcessId, backendCreationFileTime, seq = Interlocked.Increment(ref sequence),
                         elapsedMs = (DateTime.UtcNow - start).TotalMilliseconds, epoch = index.Epoch, nullPsiNotifications, descriptors = snapshots, events = changeEvents });
                     _ = Task.Run(() => {
                         try

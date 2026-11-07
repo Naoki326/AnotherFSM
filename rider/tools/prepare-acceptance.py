@@ -12,6 +12,7 @@ sys.dont_write_bytecode = True
 from build import (ROOT, RIDER_ROOT, DEFAULT_RIDER, DEFAULT_ZIP, host, run, log_directory,
                    managed_directory, zip_bytes, argfile, digest, no_links)
 import sandbox
+from acceptance_contract import record_preparation
 
 
 def inventory(directory):
@@ -101,7 +102,9 @@ def main():
     (logs / 'fixtures-before.json').write_text(json.dumps({str(path): digest(path.read_bytes())
         for path in (RIDER_ROOT / 'fixtures').rglob('*') if path.is_file() and path.suffix in ('.fsm', '.FSMScript', '.cs')
         and not any(part in ('bin', 'obj') for part in path.parts)}, indent=2), encoding='utf-8')
-    print('Prepared separate controlled test plugin. Product ZIP bytes are unchanged.')
+    suite = 'source' if args.source_boundaries else 'boundary' if args.boundaries else 'complex' if args.complex else 'legacy'
+    record_preparation(sandbox.BOX, suite)
+    print('Prepared separate controlled test plugin for ' + suite + '. Product ZIP bytes are unchanged.')
     if args.launch:
         (logs / 'launch').mkdir()
         sandbox.launch_sandbox(home, launch, logs / 'launch', acceptance=True, complex_contexts=args.complex, boundary_contexts=args.boundaries, source_boundaries=args.source_boundaries)

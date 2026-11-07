@@ -79,7 +79,7 @@ public final class ComplexBoundaryAcceptance {
     final Set<Integer> descriptorBaseline=new HashSet<>();final AtomicBoolean queued=new AtomicBoolean();
     final long started=System.nanoTime();ScheduledFuture<?> timer;Disposable query;int index;boolean done,isolation;
     Editor editor;Document projectDocument;String originalProject,ownedProject,lastSavedReadback;
-    boolean finishing,cleanupSuccess,cleanupIncomplete,restoreRequested;String cleanupError;long cleanupStarted,lastProjectSave;
+    boolean finishing,cleanupSuccess,cleanupIncomplete,restoreRequested,fixtureCleanupComplete;String cleanupError;long cleanupStarted,lastProjectSave;
     byte[] originalBytes;Content dsl,nativePage;int nativeId;JsonArray nativeRows;List<String> dslRows;
     final Set<Window> priorWindows=Collections.newSetFromMap(new IdentityHashMap<>());
     JsonObject before,policyBefore,oldRequest,oldBinding,reply;long baselineSequence,backendPid=-1;
@@ -100,6 +100,7 @@ public final class ComplexBoundaryAcceptance {
     void once(String name,Runnable body) {step(name,body,() -> true);}
     void pending(String message) {var step=steps.get(index);step.status="pendingVerification";step.detail=message;event("pending",message);}
     void start() {
+      AcceptanceLifecycle.onCancellation(project,() -> finish(false,"Supervisor requested cancellation"),() -> done&&fixtureCleanupComplete);
       report("running",null);
       timer=AppExecutorUtil.getAppScheduledExecutorService().scheduleWithFixedDelay(() -> {
         if(done||!queued.compareAndSet(false,true))return;
@@ -667,7 +668,9 @@ public final class ComplexBoundaryAcceptance {
           }
         }
         var command=json(output.resolve("complex-boundary-observe.json"));
-        if(!awaitingNativeRestore&&command!=null&&runId.equals(command.get("runId").getAsString()))Files.deleteIfExists(output.resolve("complex-boundary-observe.json"));
+        if(awaitingNativeRestore)return;
+        if(command!=null&&runId.equals(command.get("runId").getAsString()))Files.deleteIfExists(output.resolve("complex-boundary-observe.json"));
+        fixtureCleanupComplete=true;
       }
       catch(Throwable cleanup){cleanupSuccess=false;cleanupIncomplete=false;cleanupError=String.valueOf(cleanupError)+"; cleanup="+cleanup;event("cleanup-failed",cleanup.toString());}
       done=true;if(timer!=null)timer.cancel(false);

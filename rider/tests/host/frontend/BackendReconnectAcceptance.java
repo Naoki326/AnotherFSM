@@ -99,6 +99,7 @@ public final class BackendReconnectAcceptance {
     }
 
     void start() {
+      AcceptanceLifecycle.onCancellation(project,() -> finish(false,"Supervisor requested cancellation"),() -> done);
       timer = AppExecutorUtil.getAppScheduledExecutorService().scheduleWithFixedDelay(() -> {
         if (done || !tickQueued.compareAndSet(false, true)) return;
         ApplicationManager.getApplication().invokeLater(() -> {

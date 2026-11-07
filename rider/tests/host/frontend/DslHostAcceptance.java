@@ -81,6 +81,8 @@ public final class DslHostAcceptance {
       this.project=project;this.output=output;this.root=root;this.onSuccess=onSuccess;specify();
     }
     void start() {
+      AcceptanceLifecycle.onCancellation(project,() -> finish(false,"Supervisor requested cancellation"),
+          () -> done&&originals.entrySet().stream().allMatch(entry -> entry.getKey().getText().equals(entry.getValue())));
       report("running",null);
       timer=AppExecutorUtil.getAppScheduledExecutorService().scheduleWithFixedDelay(() -> {
         if(done||!queued.compareAndSet(false,true))return;
